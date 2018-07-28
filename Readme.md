@@ -13,7 +13,7 @@ Unlike GraphQL and Falcor, Gru is built with live queries and efficient caching 
 - All the backend data is modelled as a single strongly-typed tree. Every node has a unique path from the root.
 - Leaf nodes may be scalar values, _links_ to another point in the tree (making the model a graph), or _actions_ (endpoints to perform actions with side-effects).
 - Interior nodes may be _structs_ (with a fixed set of children that may have different types) or _collections_ (with a variable set of children that all have the same type).
-- Keys (URL path segments) may be any data type, but are encoded as strings in transit.
+- Keys (path segments) may be any scalar value or a fixed-size array of scalar values. All values are encoded as strings in transit.
 
 Gru supports four operations:
 - GET: Query or subscribe to a sub-graph, or subscribe to method calls
@@ -47,7 +47,7 @@ For these examples, let's imagine we're building an app that allows users to sen
   },
   pokes: {
     1: {
-      sendTime: '2018-01-01T00:00:00',
+      time: '2018-01-01T00:00:00',
       participants: {
         poker: { __link__: 'users/1' },
         pokee: { __link__: 'users/2' }
@@ -72,12 +72,12 @@ gru.get('users/1/name')
 // Returns a promise resolving to:
 "Alice"
 ```
-Under the hoods, this is an HTTP request:
+Under the hood, this is an HTTP request:
 ```http
 GET /users/1/name
 ```
 
-However, querying objects and arrays like that does not work:
+However, querying objects and arrays in a similar way does not work as expected:
 
 ```js
 gru.get('pokes/1')
@@ -89,13 +89,13 @@ This is because Gru does not include child fields by default.
 The client must specify the fields it is interested in, using a GraphQL-like JSON structure we call the _shape_:
 
 ```js
-gru.get('pokes/1', { sendTime: true, message: true })
-{ sendTime: '2018-01-01T00:00:00', message: 'Hi!' }
+gru.get('pokes/1', { time: true, message: true })
+{ time: '2018-01-01T00:00:00', message: 'Hi!' }
 ```
 Any truthy value can be used in place of `true` to indicate fields to request. The HTTP request is:
 
 ```http
-GET /pokes/1?include=sendTime,message
+GET /pokes/1?include=time,message
 ```
 
 Links can be traversed transparently:
@@ -155,10 +155,10 @@ Key ranges support four parameters (`first`, `after`, `last` and `before`) that 
 
 ### Indexes
 
-Paginating over things by ID alone isn't very useful. More realistically, we might want the latest 10 pokes by `sendTime`:
+Paginating over things by ID alone isn't very useful. More realistically, we might want the latest 10 pokes by `time`:
 
 ```js
-gru.get(['pokesBySendTime', '*'], {
+gru.get(['pokesByTime', gru.filter({})], {
   [gru.range(last: 10)]: { message }
 })
 { __range__: { hasFirst: false, hasLast: true },
@@ -169,10 +169,10 @@ gru.get(['pokesBySendTime', '*'], {
 The HTTP query is:
 
 ```http
-GET /pokesBySendTime/*?include=(l:10)/message
+GET /pokesByTime/(:)?include=(l:10)/message
 ```
 
-`pokesBySendTime` is an _index_ of the `pokes` collection. The `*` indicates that we want all the pokes without any filtering.
+`pokesByTime` is an _index_ of the `pokes` collection.
 
 Note that all objects returned by gru have a `[Symbol.iterator]` property, so they can be used in for-of loops to iterate over the values in key order. This is particularly useful with views.
 
@@ -181,13 +181,13 @@ View keys can be used both in the `path` and `shape` arguments of `gru.get`.
 ```js
 gru.get('users', { gru.range(first: 2): {
   name: true,
-  gru.viewRange('pokes', { role: 'pokee', by: 'sendTime', last: 3 }): {
+  gru.viewRange('pokes', { role: 'pokee', by: 'time', last: 3 }): {
     message: true
   }
 } })
 ```
 ```http
-GET /users?include=(f:2)/(name,pokesBySendTime/role:pokee/(l:3)/message)
+GET /users?include=(f:2)/(name,pokesByTime/role:pokee/(l:3)/message)
 ```
 
 ## Making Live Queries (Client)
@@ -264,16 +264,22 @@ The `read` handler is a function that returns a stream of values. On an action n
 
 The `write` handler on an action node implements the action, and on any other node writes an update to the node's data.
 
-For example, say we store users in an SQL database and emit a Redis event whenever a user is created or changed:
+For example, say we store users in an database and push an event to a queue whenever a user is created or changed:
 
 ```js
-const UserCollection = {
-  ...
-  [gru.read]: shape => {
-    let current = await sql.query('SELECT * ')
-    let bufferedEvents = [];
+const server = gru.server(schema);
+
+server.read('pokes', shape => {
+
+  const pokeIds = Object.keys(shape);
+  const initial = await db.getPokes(pokeIds); // { id1: Poke1, id2: Poke2 }
+  yield current;
+
+  while (!cancelToken.isCancelled()) {
+    const event = await queue.readNext('poke');
+    if (pokeIds.includes(event.id)) yield { [event.id]: event };
   }
-}
+});
 ```
 Here, shape is a subtree of what was passed to the `gru.get()` function.
 
@@ -283,4 +289,7 @@ Here, shape is a subtree of what was passed to the `gru.get()` function.
 
 ### Changesets
 
-The values returned by the read handler (except the first value) and expected by the write handler are _changeset_ objects.
+The values returned by the read handler (except the first value) and expected by the write handler are _changeset_ objects. They are represented by JSON Merge Patch sets.
+{
+  "abc/def/ghi": {}
+}
