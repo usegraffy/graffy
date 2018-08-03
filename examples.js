@@ -4,13 +4,54 @@ import { types } from 'gru';
 import { User } from './user';
 import { Poke, PokeFilter } from './poke';
 
-const { number, string, cursor } = types;
+const { number, string, map } = types;
 
 export default const Schema = {
-  users: { [string]: User },
-  pokes: { [string]: Poke },
-  pokeByTime: { [PokeFilter]: { [cursor(number, string)]: Poke } }
+  users: map(string, User),
+  pokes: map(string, Poke),
+  pokeByTime: map(tup(PokeFilter, number, string), Poke )
 }
+
+/*
+DSL Option 1:
+
+  type Schema {
+    users: [ string: User ],
+    pokes: [ string: User ],
+    pokeByTime: [ (PokeFilter, number, string) : Poke ]
+  }
+
+Tuple:  (type1, type2, ...)
+Struct: { name1: type1, name2: type2, ... }
+
+Set:    { boundedType }
+Map:    [ boundedType: type ]
+List:   [ type ]
+
+What is a bounded type?
+- Scalars
+- Tuples containing only bounded types
+- Structs containing only bounded types
+
+Sets, Maps and Lists are always unbounded even if their members have bounded types.
+
+---------------------------------------------------
+
+JSON Option 2:
+
+  export default const Schema = {
+    users: [ string, User ],
+    pokes: [ string, User ],
+    pokesByTime: [ PokeFilter, number, string, Poke ]
+  }
+
+Array with one element: List of that type
+Array with two elements: Map from first type to second type
+Array with N elements: Map from typle of types (1 ... N-1) to the Nth type
+
+It is not possible to represent a tuple in the value position.
+
+*/
 
 // client/DataProvider.js
 
@@ -37,19 +78,17 @@ import { Read } from 'gru-react';
 
 export default class PokeList extends Component {
   render() {
-    const id = this.props.id;
-    const asPoker = filter({ role: 'poker' });
-    const asPokee = filter({ role: 'pokee' });
-    const last10 = range(-10); // Last 10 items
-
     return (
       <Read path={['users', this.props.id, 'pokes']}, shape={{
-        [asPoker]: { [last10]: { message: 1, pokee: { name: 1 } } },
-        [asPokee]: { [last10]: { message: 1, poker: { name: 1 } } }
-      }}>{({
-        [asPoker]: pokesSent,
-        [asPokee]: pokesReceived
-      }) => (
+        asPoker: slice(
+          { role: 'poker', last: 10 },
+          { message: 1, pokee: { name: 1 } }
+        ),
+        asPokee: slice(
+          { role: 'pokee', last: 10 },
+          { message: 1, pokee: { name: 1 } }
+        )
+      }}>{({ asPoker, asPokee }) => (
         <View>
           {this.renderPokes(pokesSent)}
           {this.renderPokes(pokesReceived)}
