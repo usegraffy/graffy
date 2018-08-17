@@ -1,7 +1,7 @@
 {
-  "name": "gru-core",
+  "name": "grue-core",
   "version": "1.0.0",
-  "description": "Gru Core",
+  "description": "Strongly-typed Schemas for Grue",
   "main": "dist/index.js",
   "dependencies": {
     "text-encoding-utf-8": "^1.0.2"

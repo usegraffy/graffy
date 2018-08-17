@@ -9,7 +9,7 @@ const { number, string, map } = types;
 export default const Schema = {
   users: map(string, User),
   pokes: map(string, Poke),
-  pokeByTime: map(tup(PokeFilter, number, string), Poke )
+  pokeByTime: map(PokeFilter, map(tuple(number, string), Poke))
 }
 
 /*
@@ -42,7 +42,7 @@ JSON Option 2:
   export default const Schema = {
     users: [ string, User ],
     pokes: [ string, User ],
-    pokesByTime: [ PokeFilter, number, string, Poke ]
+    pokesByTime: [ PokeFilter, [number, string], Poke ]
   }
 
 Array with one element: List of that type

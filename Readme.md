@@ -6,7 +6,7 @@ Feel free to open an issue with your thoughts, though.
 
 Gru is an HTTP-based API technology inspired by GraphQL and Falcor. Like them, Gru clients specify exact data requirements - this allows servers to evolve the schema without fear of breaking clients.
 
-Unlike GraphQL and Falcor, Gru is built with live queries and efficient caching as a first-order concern. It also creates APIs that follow familiar REST patterns and semantics.
+Unlike GraphQL and Falcor, Gru is built with live queries and efficient caching as a first-order concern. It also creates APIs that follow familiar REST semantics.
 
 ### Conceptual Model
 
