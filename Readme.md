@@ -1,12 +1,12 @@
-Gru
+Grue
 ===
 
-**Gru is, at this point, a work of fiction. We follow RDD (Readme-driven development)!**
+**Grue is, at this point, a work of fiction. We follow RDD (Readme-driven development)!**
 Feel free to open an issue with your thoughts, though.
 
-Gru is an HTTP-based API technology inspired by GraphQL and Falcor. Like them, Gru clients specify exact data requirements - this allows servers to evolve the schema without fear of breaking clients.
+Grue is an HTTP-based API technology inspired by GraphQL and Falcor. Like them, Grue clients specify exact data requirements - this allows servers to evolve the schema without fear of breaking clients.
 
-Unlike GraphQL and Falcor, Gru is built with live queries and efficient caching as a first-order concern. It also creates APIs that follow familiar REST semantics.
+Unlike GraphQL and Falcor, Grue is built with live queries and efficient caching as a first-order concern. It also creates APIs that follow familiar REST semantics.
 
 ### Conceptual Model
 
@@ -15,7 +15,7 @@ Unlike GraphQL and Falcor, Gru is built with live queries and efficient caching 
 - Interior nodes may be _structs_ (with a fixed set of children that may have different types) or _collections_ (with a variable set of children that all have the same type).
 - Keys (path segments) may be any scalar value or a fixed-size array of scalar values. All values are encoded as strings in transit.
 
-Gru supports four operations:
+Grue supports four operations:
 - GET: Query or subscribe to a sub-graph, or subscribe to method calls
 - PUT, DELETE: Idempotent, side-effect-free mutations of parts of the data model
 - POST: Calls a method, which may mutate data and have side-effects
@@ -68,7 +68,7 @@ Typically the data will not be stored in this format anywhere; a server would us
 Leaf nodes can be fetched directly using REST:
 
 ```js
-gru.get('users/1/name')
+grue.get('users/1/name')
 // Returns a promise resolving to:
 "Alice"
 ```
@@ -80,16 +80,16 @@ GET /users/1/name
 However, querying objects and arrays in a similar way does not work as expected:
 
 ```js
-gru.get('pokes/1')
+grue.get('pokes/1')
 {}
 ```
 
-This is because Gru does not include child fields by default.
+This is because Grue does not include child fields by default.
 
 The client must specify the fields it is interested in, using a GraphQL-like JSON structure we call the _shape_:
 
 ```js
-gru.get('pokes/1', { time: true, message: true })
+grue.get('pokes/1', { time: true, message: true })
 { time: '2018-01-01T00:00:00', message: 'Hi!' }
 ```
 Any truthy value can be used in place of `true` to indicate fields to request. The HTTP request is:
@@ -100,7 +100,7 @@ GET /pokes/1?include=time,message
 
 Links can be traversed transparently:
 ```js
-gru.get(['pokes', 1, 'participants', 'poker', 'name'])
+grue.get(['pokes', 1, 'participants', 'poker', 'name'])
 "Alice"
 ```
 The HTTP response contains headers listing the redirects made in resolving the query. This information helps the client library cache the request efficiently:
@@ -108,22 +108,22 @@ The HTTP response contains headers listing the redirects made in resolving the q
 GET /pokes/1/participants/poker/name
 
 200 Ok
-X-Gru-Link: pokes/1/participants/poker users/1
+X-Grue-Link: pokes/1/participants/poker users/1
 
 "Alice"
 ```
-There can be muliple `X-Gru-Link` headers in a response.
+There can be muliple `X-Grue-Link` headers in a response.
 
 Links themselves are considered scalars, which allow them to be modified with PUT and DELETE:
 ```js
-gru.get(['pokes', 1, 'participants', 'poker'])
+grue.get(['pokes', 1, 'participants', 'poker'])
 { __link__: 'users/1' }
 ```
 
 What if we need the names of all participants? We can use the `*` wildcard:
 
 ```js
-gru.get(['pokes', 1, 'participants'], { '*': { name: true } })
+grue.get(['pokes', 1, 'participants'], { '*': { name: true } })
 { poker: { name: 'Alice' },
   pokee: { name: 'Bob' } }
 ```
@@ -139,7 +139,7 @@ GET /pokes/1/participants?include=*/name
 
 Let's say we want the first 10 users, ordered by user ID:
 ```js
-gru.get('users', { [gru.range({ first: 10 })]: { name: true } })
+grue.get('users', { [grue.range({ first: 10 })]: { name: true } })
 { __range__: { hasFirst: true, hasLast: false },
   1: { name: 'Alice' },
   2: { name: 'Bob' },
@@ -149,7 +149,7 @@ gru.get('users', { [gru.range({ first: 10 })]: { name: true } })
 GET /users?include=(f:10)/name
 ```
 
-`gru.range()` returns a string representing a _key range_.
+`grue.range()` returns a string representing a _key range_.
 
 Key ranges support four parameters (`first`, `after`, `last` and `before`) that work similarly to GraphQL Connections for cursor-based pagination. `after` and `before` are interpreted as keys, while `first` and `last` are positive integers. The `__range__` object in the response is similar to a GraphQL Connection's `PageInfo`.
 
@@ -158,8 +158,8 @@ Key ranges support four parameters (`first`, `after`, `last` and `before`) that 
 Paginating over things by ID alone isn't very useful. More realistically, we might want the latest 10 pokes by `time`:
 
 ```js
-gru.get(['pokesByTime', gru.filter({})], {
-  [gru.range(last: 10)]: { message }
+grue.get(['pokesByTime', grue.filter({})], {
+  [grue.range(last: 10)]: { message }
 })
 { __range__: { hasFirst: false, hasLast: true },
   ...
@@ -174,14 +174,14 @@ GET /pokesByTime/(:)?include=(l:10)/message
 
 `pokesByTime` is an _index_ of the `pokes` collection.
 
-Note that all objects returned by gru have a `[Symbol.iterator]` property, so they can be used in for-of loops to iterate over the values in key order. This is particularly useful with views.
+Note that all objects returned by grue have a `[Symbol.iterator]` property, so they can be used in for-of loops to iterate over the values in key order. This is particularly useful with views.
 
-View keys can be used both in the `path` and `shape` arguments of `gru.get`.
+View keys can be used both in the `path` and `shape` arguments of `grue.get`.
 
 ```js
-gru.get('users', { gru.range(first: 2): {
+grue.get('users', { grue.range(first: 2): {
   name: true,
-  gru.viewRange('pokes', { role: 'pokee', by: 'time', last: 3 }): {
+  grue.viewRange('pokes', { role: 'pokee', by: 'time', last: 3 }): {
     message: true
   }
 } })
@@ -192,11 +192,11 @@ GET /users?include=(f:2)/(name,pokesByTime/role:pokee/(l:3)/message)
 
 ## Making Live Queries (Client)
 
-`gru.watch()` works with the same arguments as `gru.get()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
+`grue.watch()` works with the same arguments as `grue.get()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
 
 Two APIs are being considered. Observables:
 ```js
-const subscription = gru.watch('/users/1', { name })
+const subscription = grue.watch('/users/1', { name })
   .subscribe(value => { /* do something */ });
 
 // When we're done
@@ -205,7 +205,7 @@ subscription.unsubscribe();
 
 and Async Iterators:
 ```js
-const stream = gru.watch('/users/1', { name });
+const stream = grue.watch('/users/1', { name });
 
 for await (const value of stream) { /* do something */ }
 
@@ -221,18 +221,18 @@ Accept: text/event-stream
 
 ## Serving Queries (Server)
 
-Gru servers can be created using `gru.server(schema)`.
+Grue servers can be created using `grue.server(schema)`.
 
 ### Schema
 
-The schema object describes the shape of the data store and is a tree of objects, using Gru's type system for scalars. For example, the schema for a Poke is:
+The schema object describes the shape of the data store and is a tree of objects, using Grue's type system for scalars. For example, the schema for a Poke is:
 ```js
 const Poke = {
-  startTime: gru.date.required,
-  message: gru.string,
+  startTime: grue.date.required,
+  message: grue.string,
   participants: {
-    poker: gru.link.required,
-    pokee: gru.link.required
+    poker: grue.link.required,
+    pokee: grue.link.required
   }
 }
 ```
@@ -243,8 +243,8 @@ An example is the PokeCollection:
 
 ```js
 const PokeCollection = {
-  [gru.keyType]: gru.string,
-  [gru.valueType]: Poke
+  [grue.keyType]: grue.string,
+  [grue.valueType]: Poke
 }
 ```
 
@@ -267,7 +267,7 @@ The `write` handler on an action node implements the action, and on any other no
 For example, say we store users in an database and push an event to a queue whenever a user is created or changed:
 
 ```js
-const server = gru.server(schema);
+const server = grue.server(schema);
 
 server.read('pokes', shape => {
 
@@ -281,7 +281,7 @@ server.read('pokes', shape => {
   }
 });
 ```
-Here, shape is a subtree of what was passed to the `gru.get()` function.
+Here, shape is a subtree of what was passed to the `grue.get()` function.
 
 ### Default Handlers
 
