@@ -40,15 +40,18 @@ function wrap(shape, path) {
   return shape;
 }
 
-
 // eslint-disable-next-line no-unused-vars
 function getRange([ _, a, l, b, r, c ]) {
   const int = s => parseInt(s, 10);
-  if (l === '**') return { after: a, before: c, last: int(b) };
-  if (r === '**') return { after: a, before: c, first: int(b) };
+  if (l === '**' && a && c) return { after: a, before: c, last: int(b) };
+  if (r === '**' && c) return { after: a, before: c, first: int(b) };
+  if (l === '**' && b && c) return { before: c, last: int(b) };
+  if (r === '**') return { after: a, first: int(b) };
+  if (l === '**' && b) return { last: int(b) };
+  if (l === '**') return { first: int(a) };
   if (a && c) return { last: int(a), first: int(c), around: b };
-  if (r && c) return { first: int(c), after: b };
-  if (r) return { last: int(a), after: b };
+  // if (r && c) return { first: int(c), after: b };
+  // if (r) return { last: int(a), after: b };
   if (a && b) return { after: a, before: b };
   if (a) return { after: a };
   if (b) return { before: b };
