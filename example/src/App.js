@@ -15,12 +15,10 @@ class App extends Component {
     g.put(['pokes', id], true);
   }
 
-  handleUpdate = (value) => {
-    this.setState(value);
-  }
-
-  componentDidMount() {
-    for await (let value of g.on(['pokes']))
+  async componentDidMount() {
+    for await (let value of g.on(['pokes'])) {
+      this.setState(value);
+    }
   }
 
   render() {
