@@ -96,7 +96,7 @@ GET /users/1/name
 
 200 Ok
 
-{ users: { 1: { name: "Alice" } } }
+{ "users": { "1": { "name": "Alice" } } }
 ```
 
 However, querying objects and arrays in a similar way does not work as expected:
@@ -131,10 +131,8 @@ GET /pokes/1/participants/poker/name
 
 200 Ok
 
-{
-  pokes: { 1: { participants: { poker: 'users/1' } } },
-  users: { 1: { name: "Alice" } } }
-}
+{ "pokes": { "1": { "participants": { "poker": "users/1" } } },
+  "users": { "1": { "name": "Alice" } } } }
 ```
 
 Links themselves are considered strings, which allow them to be modified with put:
@@ -147,8 +145,8 @@ What if we need the names of all participants? We can use the `*` wildcard:
 
 ```js
 grue.get(['pokes', 1, 'participants'], { '*': { name: true } })
-{ poker: { name: 'Alice' },
-  pokee: { name: 'Bob' } }
+{ "poker": { "name": "Alice" },
+  "pokee": { "name": "Bob" } }
 ```
 ```http
 GET /pokes/1/participants/*/name
@@ -236,7 +234,7 @@ for await (const value of stream) {
 ```
 To unsubscribe, simply break out of the `for await` loop.
 
-Over HTTP, live queries use Server-Sent-Events.
+Using the default resolver, live queries use Server-Sent-Events over HTTP.
 
 ```http
 GET /users/1?include=name
