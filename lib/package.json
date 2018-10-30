@@ -17,8 +17,11 @@
   "homepage": "https://github.com/aravindet/grue#readme",
   "devDependencies": {
     "@babel/core": "^7.1.2",
+    "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
+    "@babel/runtime": "^7.1.2",
     "babel-core": "7.0.0-bridge.0",
+    "babel-eslint": "^10.0.1",
     "babel-jest": "^23.4.2",
     "eslint": "^5.4.0",
     "jest": "^23.4.2"

@@ -353,18 +353,27 @@ The property names of JS objects are _escaped_ keys, stringified pathsets or str
 class CustomProvider {
   constructor(options) {}
 
-  init(store) { this.grue = grue; }
-
-  onGet(shape, token) {
-    // Non-null token indicates it's a subscription.
-    // Return a promise that resolves to the initial value.
+  init(grue) {
+    this.grue = grue;
+    grue.onGet(this.handleGet);
+    grue.onPut(this.handlePut);
   }
 
-  onPut(changes) { }
+  async handleGet({ shape, token }, next) {
+    // A non-null token indicates it's a subscription.
+    // The token's onClose callback notifies that the
+    // subscription can be closed.
+    token.onClose(() => {});
 
-  onClose(token) {
-    // Subscription closed by the consumer. Clean up.
+    // If this provider is unable to definitively serve or
+    // reject this request (e.g. cache), yield to the next
+    // provider.
+    await next({ shape, token });
+
+    // Return a promise that resolves to the value.
   }
+
+  handlePut(changes, next) { }
 
   onSomeEvent() {
     grue.pub(tree); // publish a change set
