@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "koa-compose": "^4.1.0",
-    "koa-mount": "^4.0.0"
-  }
-}
