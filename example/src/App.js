@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
-import { Grue } from 'grue/core';
-import { Cache } from 'grue/cache';
+import Grue from 'grue/core';
+import mock from './mockVisitorList';
+// import Cache from 'grue/cache';
 
 import './App.css';
 
 const g = new Grue();
-g.use(new Cache());
+g.use(mock);
+// g.use(new Cache());
 
 class App extends Component {
-  state = { pokes: {} }
+  state = {}
 
   handleClick = () => {
     const id = `p${Date.now()}`;
@@ -16,7 +18,11 @@ class App extends Component {
   }
 
   async componentDidMount() {
-    for await (let value of g.on(['pokes'])) {
+    for await (let value of g.sub(
+      { visitorsByTime: { '**3': { id: true, ts: true } } },
+      { values: true }
+    )) {
+      // console.log('Received', value);
       this.setState(value);
     }
   }
@@ -24,8 +30,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <button onClick={this.handleClick}>Send</button>
-        <pre>{Object.keys(this.state.pokes).join('\n')}</pre>
+        <pre>{JSON.stringify(this.state, null, 2)}</pre>
       </div>
     );
   }
