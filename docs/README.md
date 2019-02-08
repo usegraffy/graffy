@@ -1,12 +1,12 @@
 Grue
 ====
 
-Grue is an API library comparable to Apollo/GraphQL, designed for efficient live queries and caching while using simple and familiar abstractions. It is heavily inspired by Netflix Falcor.
-
-It creates APIs that follow REST patterns while offering expressive power and capabilities comparable to GraphQL.
-
 **Grue is under heavy development and not ready for production use.**
 Please use it in toy projects and open issues with bugs and suggestions.
+
+Grue is an API layer comparable to GraphQL or Firebase, designed for efficient live queries and caching while using simple and familiar abstractions.
+
+It creates APIs that follow REST patterns while offering expressive power and capabilities comparable to GraphQL.
 
 ## Overview of concepts
 
@@ -14,14 +14,14 @@ Please use it in toy projects and open issues with bugs and suggestions.
 - Nodes may be symbolic links to other parts of the tree. Queries follow these links transparently to fetch related resources without multiple round trips.
 - Queries may request ranges of paths, to perform efficient pagination.
 
-## Client-side usage
+## Making queries
 
-Like Express, Grue uses middleware to provide functionality. Grue-cache provides client-side caching and Grue-client makes requests to the server.
+Like Express, Grue uses middleware to provide functionality. Grue-cache provides client-side caching and grue-http makes requests to the server.
 
 ```js
-import Grue, { range } from '@grue/core';
-import GrueCache from '@grue/cache';
-import GrueClient from '@grue/client';
+import Grue, { range } from 'grue-core';
+import GrueCache from 'grue-cache';
+import GrueHttp from 'grue-http';
 
 const store = new Grue();
 store.use(new GrueCache());
@@ -51,33 +51,14 @@ for await (const { posts } of store.sub(query)) { /* ... */ }
 React-Grue provides an alternate declarative API using React render props.
 
 ```js
-import { Query } from '@grue/react';
+import { Query } from 'react-grue';
 
 <Query live store={store} query={query}>
   {(data, error) => ( /* ... */ )}
 </Query>
 ```
 
-## Server-side usage
-
-Grue-server provides packages to run .
-
-```js
-import http from 'http';
-import Grue, { range } from '@grue/core';
-import GrueServer from '@grue/server';
-import myProvider from './provider';
-
-const store = new Grue();
-const server = new GrueServer();
-store.use(myProvider);
-store.use(server.grue);
-http.createServer(server.http).listen(4783);
-```
-
-Code for reading and writing to your data sources live in custom providers. The server uses server-sent events (event streams) for subscriptions.
-
-## Writing custom providers
+## Writing providers
 
 Providers are functions that receive a reference to the store:
 
