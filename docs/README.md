@@ -1,66 +1,103 @@
-Grue
-====
+Grue Guide
+==========
 
-**Grue is under heavy development and not ready for production use.**
-Please use it in toy projects and open issues with bugs and suggestions.
+This is a quick tutorial introducing Grue concepts by example. We'll build an API for a simple blog.
 
-Grue is an API layer comparable to GraphQL or Firebase, designed for efficient live queries and caching while using simple and familiar abstractions.
+## Data modelling
 
-It creates APIs that follow REST patterns while offering expressive power and capabilities comparable to GraphQL.
+The data model for our blog may look like this:
 
-## Overview of concepts
+![Example data model](example-model.png)
 
-- The full state of the backend is modelled as a single tree. Every node has a unique canonical path, permitting a familiar REST+JSON API.
-- Nodes may be symbolic links to other parts of the tree. Queries follow these links transparently to fetch related resources without multiple round trips.
-- Queries may request ranges of paths, to perform efficient pagination.
+Every Grue data model is a tree with a single root node, denoted by `/`. First-level children are typically nodes representing the main resources of our application, `/posts` and `/users`.
 
-## Making queries
+### Resources
 
-Like Express, Grue uses middleware to provide functionality. Grue-cache provides client-side caching and grue-http makes requests to the server.
+Under them are individual resource entities, with their unique IDs as keys. Therefore `/posts/123` is the canonical path for the post with ID 123.
+
+Resource entities typically have several fields, some of which (like `/posts/:id/author` above) may be _links_ to other places in the tree.
+
+### Indexes
+
+To fetch resources using parameters other than their ID, we use indexes like `/postsByTime`. Here, "ByTime" indicates that posts are ordered by the "time" field within this index.
+
+First level children under this index have filtering parameters as keys. Here, posts may be filtered by tags, so there are children `tags:[]` (containing posts with no tags), `tags:[tag1]` (posts with one tag, _tag1_), `tags[tag1,tag2]` (posts with both _tag1_ and _tag2_), etc.
+
+Under the filtering parameters are nodes linking to the posts at their canonical locations (like `/posts/:id`). The keys of these links are values of the ordering field (time).
+
+## Client-side usage
+
+Like Express, Grue uses middleware to provide functionality. Grue-cache provides client-side caching and Grue-client makes requests to the server.
 
 ```js
-import Grue, { range } from 'grue-core';
-import GrueCache from 'grue-cache';
-import GrueHttp from 'grue-http';
+import Grue from '@grue/core';
+import GrueCache from '@grue/cache';
+import GrueClient from '@grue/client';
 
 const store = new Grue();
-store.use(new GrueCache());
-store.use(new GrueHttp('https://example.com/api'));
+store.use(GrueCache());
+store.use(GrueClient('https://example.com/api'));
 ```
 
-Queries are specified using plain JS objects; the `range` helper turns GraphQL-like pagination parameters into a string representation. All required fields must be specified explicitly.
+Queries are specified using plain JS objects; the `filter()` and `range()` helpers [encode](Encoding.md) GraphQL-like filtering and pagination parameters into strings. All required fields must be specified explicitly.
 
 ```js
+import { filter, range } from `@grue/core`;
+
+const filterKey = filter({ tags: ['tag1'] });
+const rangeKey = range({ first: 10 });
+
 const query = {
-  posts: {
-    [range({ first: 10 })]: {
-      title: 1, body: 1, author: 1, createdAt: 1
+  postsByTime: {
+    [filterKey]: {
+      [rangeKey]: {
+        title: 1, body: 1, author: 1, createdAt: 1
+      }
     }
   }
 };
 ```
 
-Imperative APIs on the store are written using Promises and Async Iterables.
+Use `store.get()` and `store.sub()` to make a query against the store. They return Promises and Async Iterables:
 
 ```js
-const { posts } = await store.get(query);
+const result = await store.get(query);
 
-for await (const { posts } of store.sub(query)) { /* ... */ }
+for await (const result of store.sub(query)) { /* ... */ }
 ```
 
-React-Grue provides an alternate declarative API using React render props.
+React-Grue provides an alternate API using React render props.
 
 ```js
-import { Query } from 'react-grue';
+import { Query } from '@grue/react';
 
 <Query live store={store} query={query}>
   {(data, error) => ( /* ... */ )}
 </Query>
 ```
 
-## Writing providers
+## Server-side usage
 
-Providers are functions that receive a reference to the store:
+Grue-server creates HTTP request handlers that can be used with Express or with the Node HTTP servers.
+
+```js
+import http from 'http';
+import Grue, { range } from '@grue/core';
+import GrueServer from '@grue/server';
+import myProvider from './provider';
+
+const store = new Grue();
+const server = new GrueServer();
+store.use(myProvider);
+store.use(server.grue);
+http.createServer(server.http).listen(4783);
+```
+
+The server uses server-sent events (event streams) for subscriptions.
+
+## Writing custom providers
+
+Code for reading and writing to your data sources live in custom providers. Providers are functions that receive a reference to the store:
 
 ```js
 function provider(store) { /* Do things */ }
@@ -92,9 +129,6 @@ store.onGet((request, next) => {
 ```
 
 Providers are middleware: if they cannot serve a query completely (for example on cache miss), they may yield to the next provider by calling next(). It may also modify the request object to forward only part of the request to the next provider.
-
-_TODO: Add code sample_
-
 
 ## On the wire
 
