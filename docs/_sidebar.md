@@ -1,2 +1,2 @@
 * [Home](/)
-* [Example](Example.md)
+* [Encoding](Encoding.md)
