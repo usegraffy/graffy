@@ -1,15 +1,16 @@
 import merge from 'lodash.merge';
-
-import { wrap, makePath } from './path';
+import { wrap } from './path';
 import { isSet, isRange, getMatches } from './range';
+import { getLink } from './link';
 
 export default function sprout(root, rootShape) {
   let layers = [];
   function doSprout(tree, shape) {
     // console.log('sprout called', tree, shape, nextShape);
     if (typeof shape !== 'object' || !shape) return;
-    if (typeof tree === 'string' || Array.isArray(tree)) {
-      layers.push(wrap(shape, makePath(tree)));
+    const link = getLink(tree);
+    if (link) {
+      layers.push(wrap(shape, link));
       return nextShape;
     }
     if (typeof tree !== 'object' || !tree) {

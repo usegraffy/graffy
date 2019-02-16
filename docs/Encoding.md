@@ -10,7 +10,7 @@
 
 - JSON
 
-## Changesets
+## Changes
 
 - [RFC7386 JSON Merge Patch](https://tools.ietf.org/html/rfc7386)
 

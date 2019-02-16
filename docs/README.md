@@ -132,4 +132,14 @@ Providers are middleware: if they cannot serve a query completely (for example o
 
 ## On the wire
 
-_TODO: Document the HTTP and WebSockets wire protocols._
+In HTTP requests, queries are specified using the path and the `fields` parameter. For example:
+
+```http
+GET /posts/123?fields=title,author
+```
+
+The response is:
+
+```json
+
+```

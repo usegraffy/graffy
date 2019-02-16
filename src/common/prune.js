@@ -1,9 +1,11 @@
 import merge from 'lodash.merge';
 import { isSet, isRange, getMatches } from './range';
-import { makePath, getNode, wrap } from './path';
+import { getNode, wrap } from './path';
+import { getLink, setLink } from './link';
+import { META_KEY } from './constants';
 
 // Removes branches that were not requested.
-export default function prune(root, rootShape, path = [], keepLinks = false) {
+export default function prune(root, rootShape, path) {
   const layers = [];
   function doPrune(tree, shape) {
     if (typeof shape !== 'object' || !shape) {
@@ -11,9 +13,9 @@ export default function prune(root, rootShape, path = [], keepLinks = false) {
       return typeof tree !== 'object' ? tree : {};
     }
 
-    if (typeof tree === 'string' || Array.isArray(tree)) {
-      const link = makePath(tree);
-      if (keepLinks) {
+    const link = getLink(tree);
+    if (link) {
+      if (!path) {
         layers.push(doPrune(root, wrap(shape, link)));
         return tree;
       } else {
@@ -25,6 +27,8 @@ export default function prune(root, rootShape, path = [], keepLinks = false) {
     if (typeof tree !== 'object') return tree;
 
     const result = {};
+    // Should we add metadata to mark nodes where we followed a link?
+    // if (link) setLink(result, link);
     function addResult(key, subShape) {
       if (isSet(key) || isRange(key)) {
         getMatches(tree, key).keys.forEach(k => addResult(k, subShape));
@@ -44,6 +48,10 @@ export default function prune(root, rootShape, path = [], keepLinks = false) {
     return result;
   }
 
+  // If path is specified, links are grafted; return friendly version.
+  if (path) return getNode(doPrune(root, rootShape), path);
+
+  // Otherwise, return pruned tree from the root.
   layers.unshift(doPrune(root, rootShape));
-  return getNode(merge(...layers.filter(Boolean)), path);
+  return merge(...layers.filter(Boolean));
 }

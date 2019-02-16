@@ -1,4 +1,5 @@
 import Grue from '.';
+import { META_KEY } from '@grue/common/constants';
 
 describe('get', () => {
   let g;
@@ -117,17 +118,17 @@ describe('get', () => {
   describe('link', () => {
     beforeEach(() => {
       g.use(grue => {
-        grue.onGet('/foo', () => ({ foo: '/bar' }));
+        grue.onGet('/foo', () => ({ foo: { [META_KEY]: { path: ['bar'] } } }));
         grue.onGet('/bar', () => ({ bar: { baz: 3 }}));
       });
     });
 
-    test('keepLinks', async () => {
-      expect(await g.get({ foo: { baz: 1 }}, {keepLinks: true}))
-        .toEqual({ foo: '/bar', bar: { baz: 3 } });
+    test('raw', async () => {
+      expect(await g.getRaw({ foo: { baz: 1 }}))
+        .toEqual({ foo: { [META_KEY]: { path: ['bar'] } }, bar: { baz: 3 } });
     });
 
-    test('graftLinks', async () => {
+    test('friendly', async () => {
       expect(await g.get({ foo: { baz: 1 }}))
         .toEqual({ foo: { baz: 3 } });
     });
