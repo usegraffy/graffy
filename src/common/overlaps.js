@@ -1,4 +1,6 @@
-export default function overlaps(a, b) {
-  for (const k in a) if (k in b) return true;
-  return false;
+// TODO: Detect if the overlap is in a linked tree.
+
+export default function overlaps(query, data, change) {
+  // TODO: Do this properly.
+  return true;
 }

@@ -1,5 +1,5 @@
 import Grue from '.';
-import { META_KEY } from '@grue/common/constants';
+import { LINK_KEY } from '@grue/common/constants';
 
 describe('get', () => {
   let g;
@@ -51,7 +51,7 @@ describe('get', () => {
     test('all', async () => {
       const result = await g.get({ foo: { '*': { bar: 1 }}});
       expect(resolver).toBeCalledWith(
-        { shape: { foo: { '*': { bar: 1 } } } },
+        { query: { foo: { '*': { bar: 1 } } } },
         anyFn
       );
       expect(result).toEqual({ foo: {
@@ -66,7 +66,7 @@ describe('get', () => {
     test('set', async () => {
       const result = await g.get({ foo: { 'a,b': { bar: 1 }}});
       expect(resolver).toBeCalledWith(
-        { shape: { foo: { 'a,b': { bar: 1 } } } },
+        { query: { foo: { 'a,b': { bar: 1 } } } },
         anyFn
       );
       expect(result).toEqual({ foo: { a: { bar: 42 }, b: { bar: 41 }}});
@@ -108,7 +108,7 @@ describe('get', () => {
     test('multi', async () => {
       const result = await g.get({ foo: { a: { bar: 1 }, b: { baz: 1 }}});
       expect(resolver).toBeCalledWith(
-        { shape: { foo: { a: { bar: 1 }, b: { baz: 1 } } } },
+        { query: { foo: { a: { bar: 1 }, b: { baz: 1 } } } },
         anyFn
       );
       expect(result).toEqual({ foo: { a: { bar: 42 }, b: { baz: 16 }}});
@@ -118,14 +118,14 @@ describe('get', () => {
   describe('link', () => {
     beforeEach(() => {
       g.use(grue => {
-        grue.onGet('/foo', () => ({ foo: { [META_KEY]: { path: ['bar'] } } }));
+        grue.onGet('/foo', () => ({ foo: { [LINK_KEY]: ['bar'] } }));
         grue.onGet('/bar', () => ({ bar: { baz: 3 }}));
       });
     });
 
     test('raw', async () => {
       expect(await g.getRaw({ foo: { baz: 1 }}))
-        .toEqual({ foo: { [META_KEY]: { path: ['bar'] } }, bar: { baz: 3 } });
+        .toEqual({ foo: { [LINK_KEY]: ['bar'] }, bar: { baz: 3 } });
     });
 
     test('friendly', async () => {
@@ -178,6 +178,40 @@ describe('sub', () => {
       if (j === 3) break;
     }
     expect(close).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('sub2', () => {
+  let g;
+
+  beforeEach(() => {
+    g = new Grue();
+  });
+
+  test('object', async () => {
+    g.onGet('/foo', () => ({ foo: { a: 3 }}));
+    setTimeout(() => g.pub({ foo: { a: 4 }}), 10);
+    const sub = g.sub('/', { foo: { a: true }});
+    expect((await sub.next()).value).toEqual({ foo: { a: 3 }});
+    expect((await sub.next()).value).toEqual({ foo: { a: 4 }});
+  });
+
+  test('link', async () => {
+    g.onGet('/foo', () => ({ foo: { [LINK_KEY]: ['bar', 'a'] }}));
+    g.onGet('/bar', () => ({ bar: { a: { x: 3 }, b: { x: 5 } }}));
+    setTimeout(() => g.pub({ foo: { [LINK_KEY]: ['bar', 'b'] }}), 10);
+
+    const sub = g.sub('/', { foo: { x: true }});
+    expect((await sub.next()).value).toEqual({ foo: { [LINK_KEY]: ['bar', 'a'] }, bar: { a: { x: 3 }}});
+    expect((await sub.next()).value).toEqual({
+      foo: { [LINK_KEY]: ['bar', 'b'] },
+      bar: { b: { x: 5 } /*, a: null */ }
+      // TODO: Should we explicitly remove data that is no longer kept up to date, or leave that for the
+      // consumer to figure out?
+    });
+
+    // TODO: Ranges, when something in range is deleted a new entry should be sent.
+
   });
 
 });

@@ -1,21 +1,20 @@
 import merge from 'lodash.merge';
-import { wrap } from './path';
+import { wrap, getNode } from './path';
 import { isSet, isRange, getMatches } from './range';
-import { getLink } from './link';
+import { LINK_KEY } from './constants';
 
 export default function sprout(root, rootShape) {
   let layers = [];
-  function doSprout(tree, shape) {
-    // console.log('sprout called', tree, shape, nextShape);
-    if (typeof shape !== 'object' || !shape) return;
-    const link = getLink(tree);
+  function doSprout(tree, query) {
+    if (typeof tree !== 'object' || !tree) return;
+    if (typeof query !== 'object' || !query) return;
+    const link = tree[LINK_KEY];
     if (link) {
-      layers.push(wrap(shape, link));
-      return nextShape;
-    }
-    if (typeof tree !== 'object' || !tree) {
-      // return { tree, nextShape };
-      throw new Error('sprout.tree_scalar');
+      tree = getNode(root, link);
+      if (!tree) {
+        layers.push(wrap(query, link));
+        return;
+      }
     }
 
     function addResult(key, subShape) {
@@ -29,11 +28,11 @@ export default function sprout(root, rootShape) {
       }
     }
 
-    for (const key in shape) addResult(key, shape[key]);
+    for (const key in query) addResult(key, query[key]);
   }
 
   doSprout(root, rootShape, []);
-  const nextShape = merge(...layers);
+  const nextShape = merge({}, ...layers);
   // Return undefined if nextShape is empty.
   for (const _ in nextShape) return nextShape;
 }

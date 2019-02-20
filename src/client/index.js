@@ -2,8 +2,8 @@ import { getInclude } from '@grue/common';
 
 export default function GrueClient(baseUrl) {
   return function (store) {
-    store.onGet(({ shape, token }) => {
-      const url = `${baseUrl}?include=${getInclude(shape)}`;
+    store.onGet(({ query, token }) => {
+      const url = `${baseUrl}?include=${getInclude(query)}`;
 
       if (!token) {
         if (!fetch) throw Error('client.fetch.unavailable');

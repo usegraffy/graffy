@@ -1,47 +1,81 @@
+import faker from 'faker';
+import { LINK_KEY } from '@grue/common';
+
 const visitors = {};
 const visitorsByTime = {};
 
 export default function (g) {
-  g.onGet('/visitors', shape => {
-    // console.log('visitors', shape);
+  g.onGet('/visitors', query => {
+    // console.log('visitors', query);
     return { visitors };
   });
 
-  g.onGet('/visitorsByTime', shape => {
-    // console.log('visitorsByTime', shape);
+  g.onGet('/visitorsByTime', query => {
+    // console.log('visitorsByTime', JSON.stringify(query, null, 2));
     return { visitorsByTime };
   });
 
   setInterval(() => {
-    const { id, ts } = simulate();
-    // console.log('Simulated', id, ts);
-    g.pub({
-      visitors: { [id]: visitors[id] },
-      visitorsByTime: { [ts]: visitorsByTime[ts] }
-    });
-  }, 1000);
+    ts = Date.now();
+    const change = simulate();
+    g.pub(change);
+  }, 1 + Math.random() * 2000);
 }
 
-function randId() {
-  let id = '';
-  for (let i = 0; i < 1; i++) {
-    id += Math.floor(Math.random() * 10);
-  }
-  return id;
-}
-
-let ts = 100000000;
 function simulate() {
-  ts++;
-  const id = randId();
-  if (visitors[id]) {
-    delete visitorsByTime[visitors[id].ts];
-    visitors[id].ts = ts;
-  } else {
-    visitors[id] = { id, ts };
-  }
-  visitorsByTime[ts] = `/visitors/${id}`;
-  return visitors[id];
+  const change = Math.random() < 0.5 ? simulateUpdate() : Math.random() < 0.5 ? simulateEnter() : simulateLeave();
+  return change;
 }
 
-for (let i = 0; i < 1000; i++) simulate();
+function visitorInfo() {
+  return { name: faker.name.findName() };
+}
+
+let ts;
+let id = 0;
+
+function simulateEnter() {
+  let addId = Math.floor(Math.random() * id);
+  if (visitors[addId]) { addId = id; id++; }
+
+  visitors[addId] = { id: addId, ts, ...visitorInfo() };
+  visitorsByTime[ts] = { [LINK_KEY]: ['visitors', addId] };
+
+  return {
+    visitors: { [addId]: visitors[addId] },
+    visitorsByTime: { [ts]: visitorsByTime[ts] }
+  };
+}
+
+function simulateLeave() {
+  let delId;
+  do { delId = Math.floor(Math.random() * id); } while (!visitors[delId]);
+  const delTs = visitors[delId].ts;
+  delete visitors[delId];
+  delete visitorsByTime[delTs];
+  return {
+    visitors: { [delId]: null},
+    visitorsByTime: { [delTs]: null }
+  };
+}
+
+function simulateUpdate() {
+  let upId;
+  do { upId = Math.floor(Math.random() * id); } while (!visitors[upId]);
+  const change = { ...visitorInfo() };
+  visitors[upId] = { ...visitors[upId], ...change };
+  return { visitors: { [upId]: change } };
+}
+
+ts = Date.now();
+while (id < 1000) {
+  simulateEnter();
+  ts -= Math.floor(1 + Math.random() * 2000);
+}
+
+// --- for testing
+
+// setInterval(() => {
+//   ts = Date.now();
+//   simulate();
+// }, 1 + Math.random() * 1000);

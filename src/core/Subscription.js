@@ -1,6 +1,7 @@
-import { immerge, prune, overlaps } from '@grue/common';
+import { sprout, prune, overlaps } from '@grue/common';
+import merge from 'lodash.merge';
 
-function makeStream(fn) {
+export function makeStream(fn) {
   const payloads = [];
   const requests = [];
   let done = false;
@@ -26,16 +27,17 @@ function makeStream(fn) {
 }
 
 export default class Subscription {
-  constructor(shape, path, options) {
-    this.shape = shape;
-    this.path = path;
+  constructor(query, options) {
+    this.query = query;
     this.options = options;
 
-    this.data = this.options.resolve(this.shape);
+    this.data = this.options.resolve(this.query);
     this.stream = makeStream(push => {
       this.push = push;
       return options.onClose;
     });
+
+    this.earlyPayloads = [];
 
     this.init();
   }
@@ -44,18 +46,31 @@ export default class Subscription {
     // We need this line to be a separate function because the
     // constructor can't be async. We're okay even if pub is
     // called before this happens.
-    this.push(prune(await this.data, this.shape, this.path));
+    const data = await this.data;
+    for (const change of this.earlyPayloads) merge(data, change);
+    this.data = prune(data, this.query);
+    delete this.earlyPayloads;
+    this.push(this.data);
   }
 
   async pub(change) {
-    const { shape, path, options, data } = this;
-    if (!overlaps(shape, change)) return;
-    let payload;
-    if (options.values) {
-      payload = this.data = options.resolve(shape, immerge(await data, change));
-    } else {
-      payload = options.resolve(shape, change);
+    if (this.earlyPayloads) {
+      this.earlyPayloads.push(change);
+      return;
     }
-    this.push(prune(await payload, shape, path, !!options.keepLinks));
+    const { query, options, data } = this;
+    if (!overlaps(query, data, change) && !overlaps(data, change)) return;
+
+    merge(data, change);
+    const nextQuery = sprout(data, query);
+
+    if (nextQuery){
+      console.log('Next query made', change, data, query, nextQuery);
+      const linked = await options.resolve(nextQuery);
+      merge(data, linked);
+      if (!options.values) merge(change, linked);
+    }
+    this.data = prune(data, query);
+    this.push(options.values ? prune(this.data, query, options.path) : change);
   }
 }

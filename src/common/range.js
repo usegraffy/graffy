@@ -1,5 +1,5 @@
 import { sortedIndex, sortedLastIndex } from 'lodash';
-import { PAGE_INFO, MIN_KEY, MAX_KEY } from './constants';
+import { PAGE_KEY, MIN_KEY, MAX_KEY } from './constants';
 import { inter } from './interval';
 
 export const RANGE_PATTERN = /^([^*]*)(\*+)([^*]*)(\**)([^*]*)$/;
@@ -47,13 +47,13 @@ export function getMatches(tree, key) {
 
   let minKey = range.$after || MIN_KEY;
   let maxKey = range.$before || MAX_KEY;
-  const pages = inter(tree[PAGE_INFO] || [MIN_KEY, MAX_KEY], [minKey, maxKey]);
+  const pages = inter(tree[PAGE_KEY] || [MIN_KEY, MAX_KEY], [minKey, maxKey]);
   if (
     range.$first && pages[0] !== minKey ||
     range.$last && pages[pages.length - 1] !== maxKey
-  ) return { keys: [], [PAGE_INFO]: [] };
+  ) return { keys: [], [PAGE_KEY]: [] };
 
-  const keys = Object.keys(tree).filter(k => k !== PAGE_INFO).sort();
+  const keys = Object.keys(tree).filter(k => k !== PAGE_KEY).sort();
   let minIx, maxIx;
 
   if (range.$first) maxKey = min(maxKey, pages[1]);
@@ -70,5 +70,5 @@ export function getMatches(tree, key) {
   }
 
   // console.log('Range getMatches', range, keys, minIx, maxIx);
-  return { keys: keys.slice(minIx, maxIx), [PAGE_INFO]: inter(pages, [minKey, maxKey])};
+  return { keys: keys.slice(minIx, maxIx), [PAGE_KEY]: inter(pages, [minKey, maxKey])};
 }

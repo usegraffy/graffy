@@ -6,13 +6,30 @@
 
 - [RFC6901 JSON Pointer](https://tools.ietf.org/html/rfc6901) with extensions.
 
+Escape codes are:
+```
+~1: ~
+~2: /
+~3: *
+```
+
 ## Queries
 
-- JSON
+Queries are JSON objects with keys that may use range or parameter encoding (below).
+
+Responses are JSON objects.
 
 ## Changes
 
+Subscriptions payloads and mutation inputs are _changes_.
+
 - [RFC7386 JSON Merge Patch](https://tools.ietf.org/html/rfc7386)
+
+JSON Merge Patch uses sparse trees to represent changes, where `null` represents deletion.
+
+## Cache
+
+This is an implementation detail.
 
 ## Range Encoding
 

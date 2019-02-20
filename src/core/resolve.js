@@ -1,44 +1,35 @@
 import merge from 'lodash.merge';
-import { sprout, wrap } from '@grue/common';
+import { sprout, prune } from '@grue/common';
 
 export const MAX_RECURSION = 10;
 
-export default async function resolve(rootShape, rootFuncs, type, token, result) {
+export default async function resolve(rootShape, rootFuncs, type, token) {
+  let layers;
+  let result = {};
   // Invokes resolver functions and collects the returned trees into layers.
-  function build(shape, funcs, result, path = [], layers = []) {
+  function build(query, funcs) {
     if (funcs[type]) {
-      layers.push(funcs[type]({ shape: wrap(shape, path), token }));
+      layers.push(
+        Promise.resolve(funcs[type]({ query: rootShape, token }))
+          .then(tree => prune(tree, rootShape))
+      );
     }
 
-    if (typeof shape !== 'object' || !shape) return;
+    if (typeof query !== 'object' || !query) return;
 
-    for (let key in shape) {
+    for (let key in query) {
       if (key in funcs) {
-        build(
-          shape[key],
-          funcs[key],
-          result && typeof result === 'object' ? result[key] : undefined,
-          path.concat(key),
-          layers
-        );
+        build(query[key], funcs[key]);
       }
     }
     return layers;
   }
 
-  // Subscriptions already have data, resolver's role is following links only.
-  // TODO: Move this into the build function so that we skip calling resolvers
-  // for linked branches that are already in the results.
-  if (result) {
-    rootShape = sprout(result, rootShape);
-  } else {
-    result = {};
-  }
-
   let budget = MAX_RECURSION;
   while (rootShape) {
     if (--budget < 0) throw new Error('resolve.max_recursion');
-    const layers = build(rootShape, rootFuncs);
+    layers = [];
+    build(rootShape, rootFuncs);
     merge(result, await squash(layers));
     rootShape = sprout(result, rootShape);
   }

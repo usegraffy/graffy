@@ -1,9 +1,9 @@
-import { PAGE_INFO } from './constants';
+import { PAGE_KEY, LINK_KEY } from './constants';
 import { union } from './interval';
 
 // Remove nulls from a changeset immutably. Avoid copying if there are no nulls to remove.
 function denull(change) {
-  if (typeof change !== 'object' || !change) return change;
+  if (typeof change !== 'object' || !change || Array.isArray(change)) return change;
 
   let result = change;
   for (const prop in change) {
@@ -34,12 +34,16 @@ export default function immerge(branch, change) {
     if (!(prop in change)) result[prop] = branch[prop];
   }
   for (const prop in change) {
-    if (prop === PAGE_INFO) continue;
+    if (prop === PAGE_KEY) continue;
+    if (prop === LINK_KEY) {
+      result[LINK_KEY] = change[LINK_KEY];
+      continue;
+    }
     const merged = immerge(branch[prop], change[prop]);
     if (merged !== null) result[prop] = merged;
   }
-  if (PAGE_INFO in change || PAGE_INFO in branch) {
-    result[PAGE_INFO] = union(branch[PAGE_INFO] || [], change[PAGE_INFO] || []);
+  if (PAGE_KEY in change || PAGE_KEY in branch) {
+    result[PAGE_KEY] = union(branch[PAGE_KEY] || [], change[PAGE_KEY] || []);
   }
   return result;
 }

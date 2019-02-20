@@ -14,23 +14,23 @@ export const tuple = (...ts) => variants({
   isBounded: ts.some(t => t.isBounded)
 });
 
-export const struct = shape => {
-  const keys = Object.keys(shape).sort();
+export const struct = query => {
+  const keys = Object.keys(query).sort();
   keys.mapObj = fn => {
     let obj = {};
     keys.forEach(k => obj[k] = fn(k));
     return obj;
-  }
+  };
   return variants({
-    validate(val) { return keys.every(k => shape[k].validate(val[k])); },
+    validate(val) { return keys.every(k => query[k].validate(val[k])); },
     descend([i, ...path]) {
       if (i === undefined) return this;
-      return shape[i] && shape[i].descend(path);
+      return query[i] && query[i].descend(path);
     },
-    intoKey(val, arr) { keys.forEach(k => shape[k].intoKey(val[k], arr)); },
-    fromKey(arr) { return keys.mapObj(k => shape[k].fromKey(arr)); },
-    min: keys.mapObj(k => shape[k].min),
-    max: keys.mapObj(k => shape[k].max),
-    isBounded: keys.some(key => shape[key].isBounded)
+    intoKey(val, arr) { keys.forEach(k => query[k].intoKey(val[k], arr)); },
+    fromKey(arr) { return keys.mapObj(k => query[k].fromKey(arr)); },
+    min: keys.mapObj(k => query[k].min),
+    max: keys.mapObj(k => query[k].max),
+    isBounded: keys.some(key => query[key].isBounded)
   });
 };

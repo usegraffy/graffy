@@ -18,9 +18,9 @@ function ensurePath(basePath, path, ...args) {
 }
 
 function shiftFn(fn, path) {
-  return async ({ shape, ...props }, next) => {
+  return async ({ query, ...props }, next) => {
     return wrap(await fn({
-      shape: getNode(shape, path),
+      query: getNode(query, path),
       ...props
     }, next), path);
   };
@@ -35,7 +35,7 @@ export default class Grue {
       this.subs = this.root.subs;
     } else {
       this.funcs = {}; // Registered provider functions, in a tree
-      this.subs = {};  // Map of tokens to shapes for ongoing subscriptions
+      this.subs = {};  // Map of tokens to querys for ongoing subscriptions
       this.subId = 0;
     }
     this.onGet = this.register.bind(this, GET);
@@ -55,31 +55,32 @@ export default class Grue {
     provider(new Grue(this.path ? this.path.concat(path) : path, this.root || this));
   }
 
-  async get(path, shape) {
-    [path, shape] = ensurePath(this.path, path, shape);
-    shape = wrap(shape, path);
-    const result = await resolve(shape, this.funcs, GET);
-    return prune(result, shape, path);
+  async get(path, query) {
+    [path, query] = ensurePath(this.path, path, query);
+    query = wrap(query, path);
+    const result = await resolve(query, this.funcs, GET);
+    return prune(result, query, path);
   }
 
-  async getRaw(shape) {
-    if (this.path) shape = wrap(shape, this.path);
-    const result = await resolve(shape, this.funcs, GET);
-    return prune(result, shape);
+  async getRaw(query) {
+    if (this.path) query = wrap(query, this.path);
+    const result = await resolve(query, this.funcs, GET);
+    return prune(result, query);
   }
 
   async put(/* path, change */) {
     throw Error('core.put.unimplemented');
   }
 
-  sub(path, shape, options) {
-    [path, shape, options] = ensurePath(this.path, path, shape, options);
-    shape = wrap(shape, path);
+  sub(path, query, options) {
+    [path, query, options] = ensurePath(this.path, path, query, options);
+    query = wrap(query, path);
     const [token, signal] = getToken();
     const id = this.subId++;
-    const sub = new Subscription(shape, path, {
+    const sub = new Subscription(query, {
       values: options && options.values,
-      resolve: (shape, tree) => resolve(shape, this.funcs, GET, token, tree),
+      path,
+      resolve: (query, tree) => resolve(query, this.funcs, GET, token, tree),
       onClose: () => { signal(); delete this.subs[id]; }
     });
     this.subs[id] = sub;
@@ -87,6 +88,8 @@ export default class Grue {
   }
 
   pub(change) {
-    for (const id in this.subs) this.subs[id].pub(this.path ? wrap(change, this.path) : change);
+    for (const id in this.subs) this.subs[id].pub(
+      this.path ? wrap(change, this.path) : change
+    );
   }
 }

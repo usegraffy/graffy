@@ -24,8 +24,8 @@ export function makeNode(tree, path) {
   return tree;
 }
 
-export function wrap(shape, path) {
-  // return path.concat(shape);
-  for (let i = path.length - 1; i >= 0; i--) shape = { [path[i]]: shape };
-  return shape;
+export function wrap(query, path) {
+  // return path.concat(query);
+  for (let i = path.length - 1; i >= 0; i--) query = { [path[i]]: query };
+  return query;
 }

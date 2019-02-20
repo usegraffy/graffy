@@ -2,22 +2,22 @@ import { number, string, boolean, object } from './scalar';
 import { tuple, struct } from './tuple';
 import { map } from './map';
 
-export function type(shape) {
-  if (typeof shape !== 'object') throw Error('type.define.typeof_shape');
-  if (shape.base) return shape;
+export function type(query) {
+  if (typeof query !== 'object') throw Error('type.define.typeof_query');
+  if (query.base) return query;
 
-  if (Array.isArray(shape)) {
-    if (shape.length === 0) throw Error('type.define.shape_length');
-    if (shape.length === 1) return map(type(shape[0]), boolean);
-    if (shape.length === 2) return map(type(shape[0]), type(shape[1]));
+  if (Array.isArray(query)) {
+    if (query.length === 0) throw Error('type.define.query_length');
+    if (query.length === 1) return map(type(query[0]), boolean);
+    if (query.length === 2) return map(type(query[0]), type(query[1]));
     return map(
-      tuple(shape.slice(0, -1).map(type)),
-      type(shape[shape.length - 1])
+      tuple(query.slice(0, -1).map(type)),
+      type(query[query.length - 1])
     );
   }
 
   const structShape = {};
-  for (const prop in shape) structShape[prop] = type(shape[prop]);
+  for (const prop in query) structShape[prop] = type(query[prop]);
   return struct(structShape);
 }
 

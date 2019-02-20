@@ -1,11 +1,11 @@
 import prune from './prune';
-import { META_KEY } from './constants';
+import { LINK_KEY } from './constants';
 
 const tree = {
   a: {
-    b: { c: { [META_KEY]: { path: ['e'] } } },
-    d: { c: { [META_KEY]: { path: ['g'] } } },
-    l: { c: { [META_KEY]: { path: ['m'] } } }
+    b: { c: { [LINK_KEY]: ['e'] } },
+    d: { c: { [LINK_KEY]: ['g'] } },
+    l: { c: { [LINK_KEY]: ['m'] } }
   },
   e: { f: 5, h: 9 },
   g: { f: 7 },
@@ -13,10 +13,10 @@ const tree = {
 };
 
 test('wildcard', () => {
-  const shape = {
+  const query = {
     a: { '*': { 'c': { f: true, h: true } } }
   };
-  expect(prune(tree, shape, [])).toEqual({
+  expect(prune(tree, query, [])).toEqual({
     a: {
       b: { c: { f: 5, h: 9 }},
       d: { c: { f: 7 }},
@@ -26,10 +26,10 @@ test('wildcard', () => {
 });
 
 test('keyset', () => {
-  const shape = {
+  const query = {
     a: {'b,d': {'c': { f: true, h: true }}}
   };
-  expect(prune(tree, shape, [])).toEqual({
+  expect(prune(tree, query, [])).toEqual({
     a: {
       b: { c: { f: 5, h: 9 }},
       d: { c: { f: 7 }}
@@ -38,13 +38,13 @@ test('keyset', () => {
 });
 
 test('raw', () => {
-  const shape = {
+  const query = {
     a: {'b,d': {'c': { f: true, h: true }}}
   };
-  expect(prune(tree, shape)).toEqual({
+  expect(prune(tree, query)).toEqual({
     a: {
-      b: { c: { [META_KEY]: { path: ['e'] } } },
-      d: { c: { [META_KEY]: { path: ['g'] } } }
+      b: { c: { [LINK_KEY]: ['e'] } },
+      d: { c: { [LINK_KEY]: ['g'] } }
     },
     e: { f: 5, h: 9 },
     g: { f: 7 }
