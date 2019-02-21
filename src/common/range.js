@@ -38,11 +38,10 @@ const max = (a, b) => a > b ? a : b;
 
 export function getMatches(tree, key) {
   if (isSet(key)) {
-    return {keys: key.split(',').reduce((a, k) => a.concat(getMatches(tree, k)), [])};
+    return { keys: key.split(',') };
   }
 
   const range = getRange(key);
-  if (!range) return key in tree ? [key] : [];
   if (range.$around) throw Error('getMatches.around.unimplemented');
 
   let minKey = range.$after || MIN_KEY;

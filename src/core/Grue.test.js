@@ -200,6 +200,8 @@ describe('sub2', () => {
     g.onGet('/foo', () => ({ foo: { [LINK_KEY]: ['bar', 'a'] }}));
     g.onGet('/bar', () => ({ bar: { a: { x: 3 }, b: { x: 5 } }}));
     setTimeout(() => g.pub({ foo: { [LINK_KEY]: ['bar', 'b'] }}), 10);
+    setTimeout(() => g.pub({ bar: { a: { x: 7 }}}), 20);
+    setTimeout(() => g.pub({ bar: { b: { x: 1 }}}), 20);
 
     const sub = g.sub('/', { foo: { x: true }});
     expect((await sub.next()).value).toEqual({ foo: { [LINK_KEY]: ['bar', 'a'] }, bar: { a: { x: 3 }}});
@@ -209,9 +211,15 @@ describe('sub2', () => {
       // TODO: Should we explicitly remove data that is no longer kept up to date, or leave that for the
       // consumer to figure out?
     });
+    // The /bar/a update should not be sent.
+    expect((await sub.next()).value).toEqual({ bar: { b: { x: 1 }}});
+  });
 
-    // TODO: Ranges, when something in range is deleted a new entry should be sent.
+  test('range', () => {
 
   });
+
+  // TODO: Ranges, when something in range is deleted a new entry should be sent.
+
 
 });

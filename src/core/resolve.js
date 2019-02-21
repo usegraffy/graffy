@@ -1,4 +1,4 @@
-import merge from 'lodash.merge';
+import merge from 'lodash/merge';
 import { sprout, prune } from '@grue/common';
 
 export const MAX_RECURSION = 10;

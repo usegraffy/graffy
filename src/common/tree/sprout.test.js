@@ -1,5 +1,5 @@
 import sprout from './sprout';
-import { LINK_KEY } from './constants';
+import { LINK_KEY } from '../constants';
 
 const tree = {
   a: {
@@ -21,8 +21,7 @@ test('wildcard', () => {
     a: { '*': { c: { f: true, h: true } } }
   };
   expect(sprout(tree, query)).toEqual({
-    e: { f: true, h: true },
-    g: { f: true, h: true },
+    g: { h: true },
     m: { f: true, h: true }
   });
 });

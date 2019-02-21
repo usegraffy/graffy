@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "faker": "^4.1.0",
-    "lodash.merge": "^4.6.1"
+    "lodash": "^4.17.11"
   }
 }

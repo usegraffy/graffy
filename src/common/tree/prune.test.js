@@ -1,5 +1,5 @@
 import prune from './prune';
-import { LINK_KEY } from './constants';
+import { LINK_KEY } from '../constants';
 
 const tree = {
   a: {

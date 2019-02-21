@@ -1,5 +1,6 @@
-import { sprout, prune, overlaps } from '@grue/common';
-import merge from 'lodash.merge';
+import { sprout, prune, cutQuery } from '@grue/common';
+import merge from 'lodash/merge';
+import isEmpty from 'lodash/isEmpty';
 
 export function makeStream(fn) {
   const payloads = [];
@@ -59,13 +60,16 @@ export default class Subscription {
       return;
     }
     const { query, options, data } = this;
-    if (!overlaps(query, data, change) && !overlaps(data, change)) return;
+
+    // This line prunes the change object using any part of the tree that's currently
+    // referenced from the query.
+    change = merge(...cutQuery(data, query).map(subQuery => prune(change, subQuery)));
+    if (isEmpty(change)) return;
 
     merge(data, change);
     const nextQuery = sprout(data, query);
 
     if (nextQuery){
-      console.log('Next query made', change, data, query, nextQuery);
       const linked = await options.resolve(nextQuery);
       merge(data, linked);
       if (!options.values) merge(change, linked);

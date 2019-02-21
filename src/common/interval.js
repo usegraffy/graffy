@@ -7,6 +7,9 @@
   An interval set is a sorted array with an even number of elements, where
   each pair of elements form a closed interval.
 
+  e.g. The interval set [1, 2, 3, 4] represents two closed intervals, [1, 2]
+  and [3, 4].
+
   The logic flags may each be zero or 1, and they are:
   - lForR: Only keep values from the left interval set that are strictly
            outside (0) or inside (1) the right interval set

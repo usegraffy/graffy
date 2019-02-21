@@ -1,15 +1,16 @@
-import merge from 'lodash.merge';
-import { isSet, isRange, getMatches } from './range';
-import { getNode, wrap } from './path';
-import { LINK_KEY } from './constants';
+import merge from 'lodash/merge';
+import isEmpty from 'lodash/isEmpty';
+import { isSet, isRange, getMatches } from '../range';
+import { getNode, wrap } from '../path';
+import { LINK_KEY, PAGE_KEY } from '../constants';
 
 // Removes branches that were not requested.
-export default function prune(root, rootShape, path) {
+export default function prune(root, rootQuery, path) {
   const layers = [];
   function doPrune(tree, query) {
     if (typeof tree !== 'object' || !tree) return tree;
     if (!query) throw Error('prune.query_falsy');
-    if (typeof query !== 'object') return {};
+    if (typeof query !== 'object') return null;
 
     const link = tree[LINK_KEY];
     if (link) {
@@ -25,31 +26,29 @@ export default function prune(root, rootShape, path) {
     if (typeof tree !== 'object') return tree;
 
     const result = {};
-    // Should we add metadata to mark nodes where we followed a link?
+    // TODO: Should we add metadata to mark nodes where we followed a link?
     // if (link) result[LINK_KEY] = link;
-    function addResult(key, subShape) {
+    function addResult(key, subQuery) {
       if (isSet(key) || isRange(key)) {
-        getMatches(tree, key).keys.forEach(k => addResult(k, subShape));
-
-        // TODO: Populate tree[PAGE_KEY] using range and matches.
-
+        const { key, [PAGE_KEY]: page } = getMatches(tree, key).keys.forEach(k => addResult(k, subQuery));
+        tree[PAGE_KEY] = page;
         return;
       }
 
       if (key in tree) {
-        const r = doPrune(tree[key], subShape);
+        const r = doPrune(tree[key], subQuery);
         if (typeof r !== 'undefined' && r !== null) result[key] = r;
       }
     }
 
     for (const key in query) addResult(key, query[key]);
-    return result;
+    return isEmpty(result) ? null : result;
   }
 
   // If path is specified, links are grafted; return friendly version.
-  if (path) return getNode(doPrune(root, rootShape), path);
+  if (path) return getNode(doPrune(root, rootQuery), path);
 
   // Otherwise, return pruned tree from the root.
-  layers.unshift(doPrune(root, rootShape));
+  layers.unshift(doPrune(root, rootQuery));
   return merge({}, ...layers.filter(Boolean));
 }
