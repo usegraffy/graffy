@@ -37,7 +37,7 @@ Sets of keys may be requested using several patterns:
 
 ```
 String  Object                                Meaning
-*       { $all: true }                        All keys
+*       { }                                   All keys
 k*      { $after: k }                         All keys after k
 *k      { $before: k }                        All keys before k
 j*k     { $after: j, $before: k }             All keys between j and k
@@ -45,7 +45,6 @@ n**     { $first: n }                         The first n keys
 **n     { $last: n }                          The last n keys
 k*n**   { $first: n, $after: k }              First n after k
 **n*k   { $last: n, $before: k }              Last n before k
-m*k*n   { $first: n, $last: m, $around: k }   k, m before it and n after it
 j*n**k  { $first: n, $after: j, $before: k }  First n between j and k
 j**n*k  { $last: n, $after: j, $before: k }   Last n between j and k
 (j,k)   [ j, k, ... ]                         Several keys

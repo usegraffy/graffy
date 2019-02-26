@@ -31,4 +31,5 @@ test('diff', () => {
   expect(diff([1, 4, 7, 8], [0, 9])).toEqual([]);
   expect(diff([1, 4, 7, 9], [3, 8])).toEqual([1, 3, 8, 9]);
   expect(diff([1, 4, 7, 9], [3, 3, 5, 5])).toEqual([1, 4, 7, 9]);
+  expect(diff([1, 2], [1, 2])).toEqual([]);
 });

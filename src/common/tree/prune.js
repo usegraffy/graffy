@@ -2,7 +2,7 @@ import merge from 'lodash/merge';
 import isEmpty from 'lodash/isEmpty';
 import { isSet, isRange, getMatches } from '../range';
 import { getNode, wrap } from '../path';
-import { LINK_KEY, PAGE_KEY } from '../constants';
+import { LINK_KEY, PAGE_KEY, GONE_KEY } from '../constants';
 
 // Removes branches that were not requested.
 export default function prune(root, rootQuery, path) {
@@ -22,7 +22,7 @@ export default function prune(root, rootQuery, path) {
       }
     }
 
-    if (typeof tree === 'undefined' || tree === null) return;
+    if (typeof tree === 'undefined' || tree === null) return { [GONE_KEY]: true };
     if (typeof tree !== 'object') return tree;
 
     const result = {};
@@ -30,8 +30,9 @@ export default function prune(root, rootQuery, path) {
     // if (link) result[LINK_KEY] = link;
     function addResult(key, subQuery) {
       if (isSet(key) || isRange(key)) {
-        const { key, [PAGE_KEY]: page } = getMatches(tree, key).keys.forEach(k => addResult(k, subQuery));
-        tree[PAGE_KEY] = page;
+        const { keys, known } = getMatches(tree, key);
+        keys.forEach(k => addResult(k, subQuery));
+        tree[PAGE_KEY] = known;
         return;
       }
 

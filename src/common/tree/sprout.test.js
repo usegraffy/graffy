@@ -1,5 +1,5 @@
 import sprout from './sprout';
-import { LINK_KEY } from '../constants';
+import { LINK_KEY, PAGE_KEY, MIN_KEY, MAX_KEY } from '../constants';
 
 const tree = {
   a: {
@@ -31,7 +31,6 @@ test('keyset', () => {
     a: { 'b,d': { c: { f: true, h: true } } }
   };
   expect(sprout(tree, query)).toEqual({
-    e: { f: true, h: true },
-    g: { f: true, h: true }
+    g: { h: true }
   });
 });

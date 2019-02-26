@@ -43,25 +43,21 @@ import merge from 'lodash/merge';
 import isEmpty from 'lodash/isEmpty';
 import cutQuery from './cutQuery';
 import { isSet, isRange, getMatches, subtractRange } from '../range';
-
-
+import { GONE_KEY } from '../constants';
 
 function getUnknown(tree, query) {
-  if (typeof query !== 'object' || !query) return query;
-  if (typeof tree !== 'object' || !tree) return;
-  // if (tree[GONE_KEY]) return;
+  if (typeof tree === 'undefined') return query;
+  if (typeof query !== 'object' || !query || tree[GONE_KEY]) return;
 
   let result = {};
 
   function addResult(key, subQuery) {
-    if (isSet(key)) {
-      getMatches(tree, key).keys.forEach(k => addResult(k, subQuery));
+    if (isSet(key) || isRange(key)) {
+      const { keys, known, unknown } = getMatches(tree, key);
+      keys.forEach(k => getUnknown(tree[k], subQuery));
+      if (unknown) result[unknown] = subQuery;
       return;
     }
-
-    // if (isRange(key)) {
-    //   subtractRange(tree, key);
-    // }
 
     if (!(key in tree)) {
       result[key] = subQuery;
@@ -73,7 +69,7 @@ function getUnknown(tree, query) {
 
   for (const key in query) addResult(key, query[key]);
 
-  return result;
+  return isEmpty(result) ? undefined : result;
 }
 
 export default function sprout(root, rootQuery) {

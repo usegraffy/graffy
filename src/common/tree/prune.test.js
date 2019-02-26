@@ -1,5 +1,5 @@
 import prune from './prune';
-import { LINK_KEY } from '../constants';
+import { LINK_KEY, GONE_KEY } from '../constants';
 
 const tree = {
   a: {
@@ -20,7 +20,7 @@ test('wildcard', () => {
     a: {
       b: { c: { f: 5, h: 9 }},
       d: { c: { f: 7 }},
-      l: {}
+      l: { c: { [GONE_KEY]: true }}
     }
   });
 });
