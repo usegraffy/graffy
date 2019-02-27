@@ -2,5 +2,11 @@
   "name": "@grue/example-server",
   "version": "1.0.0",
   "main": "Grue.js",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "faker": "^4.1.0"
+  },
+  "browserslist": [
+    "maintained node versions"
+  ]
 }

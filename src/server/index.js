@@ -26,10 +26,15 @@ export default class GrueServer {
         // TODO: Resumable subscriptions using timestamp ID.
         // const lastId = req.headers['last-event-id'];
 
+        let start = Date.now();
         const stream = this.store.sub(path, query, { values: false });
         for await (const value of stream) {
           if (req.aborted || res.finished) break;
           res.write(`data: ${JSON.stringify(value)}\n\n`);
+          if (start) {
+            console.log('First payload after', Date.now() - start);
+            start = null;
+          }
         }
         res.end();
       } else {

@@ -8,7 +8,7 @@ import './App.css';
 
 const store = new Grue();
 // store.use(new Cache());
-store.use(Client('https://localhost:8443'));
+store.use(Client('http://localhost:8443'));
 
 class App extends Component {
   state = {};
