@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const { join } = require('path');
+const { promisify } = require('util');
+const globby = require('globby');
+
+const readFile = promisify(fs.readFile);
+const rootDir = join(__dirname, '..');
+const importRe = /import\s.*?from\s+['"](\w+|@\w+\/\w+)[^'"]*['"];/g;
+
+async function getDeps(name) {
+  const found = {};
+  const paths = globby([`${path.join(rootDir, 'src', name)}/**/*.js`, '!*.test.js'])
+
+  for (const path of paths) {
+    const source = (await readFile(join(process.cwd(), path))).toString();
+    let match;
+    while ((match = importRe.exec(source))) found[match[1]] = true;
+  }
+
+  const deps = Object.keys(found)
+    .filter(item => item !== require.resolve(item))
+    .sort();
+
+  console.log(deps);
+}
+
+getDeps();
+
+async function publishPackage(name, version) {
+  await deps = getDeps(name);
+
+}

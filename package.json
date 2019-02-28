@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "babel lib -d dist",
+    "build": "rm -rf dist && babel src -d dist --ignore 'src/example-client/**','src/example-client/**','src/**/*.test.js'",
     "server": "nodemon --exec babel-node src/example-server",
     "client": "cd src/example-client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
     "example": "(yarn client &) && yarn server"
@@ -35,6 +35,7 @@
     "babel-eslint": "^10.0.1",
     "babel-jest": "^23.4.2",
     "eslint": "^5.4.0",
+    "globby": "^9.0.0",
     "jest": "^23.4.2",
     "nodemon": "^1.18.10"
   },
