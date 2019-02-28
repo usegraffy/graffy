@@ -64,8 +64,8 @@ export function filterKeys(range, keys, pages) {
   pages = pages || [[MIN_KEY, MAX_KEY]];
   keys = keys || [];
 
-  const rangeMinKey = range.$after || MIN_KEY;
-  const rangeMaxKey = range.$before || MAX_KEY;
+  const rangeMinKey = range.after || MIN_KEY;
+  const rangeMaxKey = range.before || MAX_KEY;
 
   const minPage = getPage(rangeMinKey, pages);
   const maxPage = getPage(rangeMaxKey, pages);
@@ -74,18 +74,18 @@ export function filterKeys(range, keys, pages) {
 
   if (range.$around) {
     throw Error('filterKeys.around.unimplemented');
-  } else if (range.$first) {
+  } else if (range.first) {
     if (!minPage) return [];
     minIx = sortedIndex(keys, rangeMinKey);
     maxIx = Math.min(
-      minIx + range.$first,
+      minIx + range.first,
       sortedLastIndex(keys, minKey(rangeMaxKey, minPage[1]))
     );
-  } else if (range.$last) {
+  } else if (range.last) {
     if (!maxPage) return [];
     maxIx = sortedLastIndex(keys, rangeMaxKey);
     minIx = Math.max(
-      maxIx - range.$last,
+      maxIx - range.last,
       sortedIndex(keys, maxKey(rangeMinKey, maxPage[0]))
     );
     return keys.slice(minIx, maxIx);

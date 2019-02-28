@@ -22,36 +22,36 @@ export function decode(key) {
 
   const int = s => parseInt(s, 10);
   if (r !== '') return {
-    $after: a || MIN_KEY,
-    $before: c || MAX_KEY,
-    [ l === '**' ? '$last' : '$first' ]: int(b),
+    after: a || MIN_KEY,
+    before: c || MAX_KEY,
+    [ l === '**' ? 'last' : 'first' ]: int(b),
   };
 
   if (l === '*') return {
-    $after: a || MIN_KEY,
-    $before: b || MAX_KEY,
+    after: a || MIN_KEY,
+    before: b || MAX_KEY,
   }
 
   return {
-    $after: MIN_KEY,
-    $before: MAX_KEY,
-    [b !== '' ? '$last' : '$first']: int(b || a)
+    after: MIN_KEY,
+    before: MAX_KEY,
+    [b !== '' ? 'last' : 'first']: int(b || a)
   };
 }
 
-export function encode({ $before, $after, $first, $last }) {
-  if ($first && $last) throw Error('range.encode.first_last');
-  if ($after === MIN_KEY) $after = '';
-  if ($before === MAX_KEY) $before = '';
+export function encode({ before, after, first, last }) {
+  if (first && last) throw Error('range.encode.first_last');
+  if (after === MIN_KEY) after = '';
+  if (before === MAX_KEY) before = '';
 
   return[
-    $after,
-    $first && $after ? '*' : '',
-    $last ? '**' : '',
-    $first || $last || '*',
-    $first ? '**' : '',
-    $last && $before ? '*' : '',
-    $before,
+    after,
+    first && after ? '*' : '',
+    last ? '**' : '',
+    first || last || '*',
+    first ? '**' : '',
+    last && before ? '*' : '',
+    before,
   ].join('');
 }
 
@@ -67,18 +67,18 @@ export function getMatches(tree, key) {
     return { keys: key.split(',') };
   }
 
-  const { $first, $last, $before, $after } = decode(key);
+  const { first, last, before, after } = decode(key);
   const treePage = tree[PAGE_KEY] || [MIN_KEY, MAX_KEY];
-  const rangePage = inter(treePage, [$after, $before]);
+  const rangePage = inter(treePage, [after, before]);
   if (
-    $first && $after !== rangePage[0] ||
-    $last && $before !== rangePage[rangePage.length - 1]
+    first && after !== rangePage[0] ||
+    last && before !== rangePage[rangePage.length - 1]
   ) {
     return { keys: [], known: [], unknown: key };
   }
 
-  let minKey = $last ? rangePage[rangePage.length - 2] : $after;
-  let maxKey = $first ? rangePage[1] : $before;
+  let minKey = last ? rangePage[rangePage.length - 2] : after;
+  let maxKey = first ? rangePage[1] : before;
 
   const keys = getKeys(tree)
   let minIx = sortedIndex(keys, minKey);
@@ -86,33 +86,33 @@ export function getMatches(tree, key) {
 
   let unknown;
 
-  if ($first) {
-    if (maxIx - minIx >= $first) {
-      maxIx = minIx + $first;
+  if (first) {
+    if (maxIx - minIx >= first) {
+      maxIx = minIx + first;
       maxKey = keys[maxIx - 1];
     } else {
       const remaining = {
-        $first: $first - (maxIx - minIx) + 1,
-        $after: maxKey,
+        first: first - (maxIx - minIx) + 1,
+        after: maxKey,
       }
-      if ($last) remaining.$last = $last;
+      if (last) remaining.last = last;
       unknown = encode(remaining);
     }
-  } else if ($last) {
-    if (maxIx - minIx >= $last) {
-      minIx = maxIx - $last;
+  } else if (last) {
+    if (maxIx - minIx >= last) {
+      minIx = maxIx - last;
       minKey = keys[minIx];
     } else {
       const remaining = {
-        $last: $last - (maxIx - minIx) + 1,
-        $before: minKey,
+        last: last - (maxIx - minIx) + 1,
+        before: minKey,
       }
       unknown = encode(remaining);
     }
   } else {
-    unknown = diff([$after, $before], treePage)
+    unknown = diff([after, before], treePage)
       .map((val, i, diffs) => i % 2 ? null : encode({
-        $after: val, $before: diffs[i + 1]
+        after: val, before: diffs[i + 1]
       }))
       .filter(Boolean)
       .join(',');
