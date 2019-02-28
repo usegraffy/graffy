@@ -1,6 +1,4 @@
 import http from 'http';
-import path from 'path';
-import fs from 'fs';
 
 import Grue from '@grue/core';
 import GrueServer from '@grue/server';
@@ -17,4 +15,6 @@ http
     middle.http(req, res);
   })
   .listen(8443);
+
+// eslint-disable-next-line no-console
 console.log('Server started at 8443');

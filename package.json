@@ -12,7 +12,7 @@
     "server": "nodemon --exec babel-node src/example-server",
     "client": "cd src/example-client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
     "example": "(yarn client &) && yarn server",
-    "format": "prettier --write ./**/*.{js,css,html,json,md}"
+    "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
   "workspaces": [
     "src/*"
@@ -53,11 +53,11 @@
     }
   },
   "lint-staged": {
-    "*.{js,css,html,json,md}": [
+    "./**/*.{js,css,html,json,md}": [
       "prettier --write",
       "git add"
     ],
-    "*.js": [
+    "./**/*.js": [
       "eslint --fix",
       "git add"
     ]

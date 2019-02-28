@@ -22,7 +22,8 @@ export default function prune(root, rootQuery, path) {
       }
     }
 
-    if (typeof tree === 'undefined' || tree === null) return { [GONE_KEY]: true };
+    if (typeof tree === 'undefined' || tree === null)
+      return { [GONE_KEY]: true };
     if (typeof tree !== 'object') return tree;
 
     const result = {};

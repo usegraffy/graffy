@@ -14,7 +14,7 @@ export const tuple = (...ts) =>
       ts.forEach((t, i) => t.intoKey(val[i], arr));
     },
     fromKey(arr) {
-      return ts.map((t, i) => t.fromKey(arr));
+      return ts.map(t => t.fromKey(arr));
     },
     min: ts.map(t => t.min),
     max: ts.map(t => t.max),

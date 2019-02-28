@@ -5,12 +5,12 @@ const visitors = {};
 const visitorsByTime = {};
 
 export default function(g) {
-  g.onGet('/visitors', query => {
+  g.onGet('/visitors', () => {
     // console.log('visitors', query);
     return { visitors };
   });
 
-  g.onGet('/visitorsByTime', query => {
+  g.onGet('/visitorsByTime', () => {
     // console.log('visitorsByTime', JSON.stringify(query, null, 2));
     return { visitorsByTime };
   });

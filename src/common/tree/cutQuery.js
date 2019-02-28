@@ -3,7 +3,7 @@ import { isSet, isRange, getMatches } from '../range';
 import { LINK_KEY } from '../constants';
 
 export default function cutQuery(root, rootQuery) {
-  let layers = [ rootQuery ];
+  let layers = [rootQuery];
   function doCut(tree, query) {
     if (typeof tree !== 'object' || !tree) return;
     if (typeof query !== 'object' || !query) return;

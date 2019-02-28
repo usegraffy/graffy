@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Visitor({id, name, ts}) {
+export default function Visitor({ id, name, ts }) {
   return (
     <div className="Visitor">
       <div className="Visitor-id">{id}</div>

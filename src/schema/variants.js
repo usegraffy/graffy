@@ -14,7 +14,6 @@ const linkTo = base => (value, schema) => {
 export function variants({ validate, ...rest }) {
   const t = { validate: optional(validate), ...rest };
   t.base = t;
-  const reqd = { value: true };
   t.reqd = Object.create(t, { validate });
   t.link = Object.create(t, { validate: optional(linkTo(t)) });
   t.link.reqd = Object.create(t, { validate: linkTo(t) });

@@ -12,8 +12,8 @@ import { MIN_KEY, MAX_KEY } from './constants';
 */
 function compareKey(key, value) {
   if (!Array.isArray(value)) return 0;
-  const [ minKey, maxKey ] = value;
-  return key < minKey ? -1 : (key > maxKey ? 1 : 0);
+  const [minKey, maxKey] = value;
+  return key < minKey ? -1 : key > maxKey ? 1 : 0;
 }
 
 /*
@@ -28,14 +28,14 @@ export function getIx(key, pages) {
 
 export function getPage(key, pages) {
   const page = pages[getIx(key, pages)];
-  return (page && compareKey(key, page) === 0) ? page : undefined;
+  return page && compareKey(key, page) === 0 ? page : undefined;
 }
 
 /*
   Computes the union of two arrays of sorted, non-overlapping pages.
 */
 export function union(pages, newPages) {
-  for (const [ minKey, maxKey ] of newPages) {
+  for (const [minKey, maxKey] of newPages) {
     const minIx = getIx(minKey, pages);
     const maxIx = getIx(maxKey, pages);
     const minPage = pages[minIx];
@@ -79,14 +79,14 @@ export function filterKeys(range, keys, pages) {
     minIx = sortedIndex(keys, rangeMinKey);
     maxIx = Math.min(
       minIx + range.first,
-      sortedLastIndex(keys, minKey(rangeMaxKey, minPage[1]))
+      sortedLastIndex(keys, minKey(rangeMaxKey, minPage[1])),
     );
   } else if (range.last) {
     if (!maxPage) return [];
     maxIx = sortedLastIndex(keys, rangeMaxKey);
     minIx = Math.max(
       maxIx - range.last,
-      sortedIndex(keys, maxKey(rangeMinKey, maxPage[0]))
+      sortedIndex(keys, maxKey(rangeMinKey, maxPage[0])),
     );
     return keys.slice(minIx, maxIx);
   } else {

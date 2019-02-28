@@ -16,7 +16,7 @@ class App extends Component {
   async componentDidMount() {
     for await (let value of store.sub(
       { visitorsByTime: { '**30': { id: true, ts: true, name: true } } },
-      { values: true }
+      { values: true },
     )) {
       this.setState(value);
     }
@@ -26,7 +26,9 @@ class App extends Component {
     const { visitorsByTime = {} } = this.state;
     return (
       <div className="App">
-        {Object.keys(visitorsByTime).map(ts => <Visitor key={ts} {...visitorsByTime[ts]} />)}
+        {Object.keys(visitorsByTime).map(ts => (
+          <Visitor key={ts} {...visitorsByTime[ts]} />
+        ))}
       </div>
     );
   }
