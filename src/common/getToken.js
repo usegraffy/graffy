@@ -11,12 +11,22 @@ export default function getToken() {
   function signal() {
     signaled = true;
     listeners.forEach(fn => {
-      try { fn(); } catch(e) { /* Do nothing */ }
+      try {
+        fn();
+      } catch (e) {
+        /* Do nothing */
+      }
     });
     listeners = null;
   }
 
-  Object.defineProperty(token, 'signaled', { get: () => signaled, enumerable: true });
-  Object.defineProperty(token, 'onSignal', { value: onSignal, enumerable: true });
+  Object.defineProperty(token, 'signaled', {
+    get: () => signaled,
+    enumerable: true,
+  });
+  Object.defineProperty(token, 'onSignal', {
+    value: onSignal,
+    enumerable: true,
+  });
   return [token, signal];
 }

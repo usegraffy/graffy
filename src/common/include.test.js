@@ -14,7 +14,10 @@ describe('getShape', () => {
   });
 
   test('two-level', () => {
-    expect(getShape('baz,foo(bar(a,b))')).toEqual({ foo: { bar: { a: true, b: true } }, baz: true });
+    expect(getShape('baz,foo(bar(a,b))')).toEqual({
+      foo: { bar: { a: true, b: true } },
+      baz: true,
+    });
   });
 });
 
@@ -28,10 +31,14 @@ describe('getInclude', () => {
   });
 
   test('one-level', () => {
-    expect(getInclude({ foo: { bar: true }, baz: true })).toEqual('baz,foo(bar)');
+    expect(getInclude({ foo: { bar: true }, baz: true })).toEqual(
+      'baz,foo(bar)',
+    );
   });
 
   test('two-level', () => {
-    expect(getInclude({ foo: { bar: { a: true, b: true } }, baz: true })).toEqual('baz,foo(bar(a,b))');
+    expect(
+      getInclude({ foo: { bar: { a: true, b: true } }, baz: true }),
+    ).toEqual('baz,foo(bar(a,b))');
   });
 });

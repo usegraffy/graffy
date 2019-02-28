@@ -11,7 +11,7 @@ const store = new Grue();
 store.use(Client('http://localhost:8443'));
 
 class App extends Component {
-  state = {};
+  state = { range: { last: 30 } };
 
   async componentDidMount() {
     for await (let value of store.sub(

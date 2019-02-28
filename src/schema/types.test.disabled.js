@@ -9,13 +9,13 @@ describe('schema', () => {
 
     const val = {
       users: {
-        'asdf': { name: 'Asdf' },
-        'ghi': { name: 'Ghi' }
+        asdf: { name: 'Asdf' },
+        ghi: { name: 'Ghi' },
       },
       pokes: {
-        f324: { message: 'asdf' }
-      }
-    }
+        f324: { message: 'asdf' },
+      },
+    };
     expect(schema.validate(val)).toBe(true);
   });
 });
@@ -24,17 +24,17 @@ describe('cursor', () => {
   const cursortype = tuple(
     struct({ role: string, foo: number }),
     string,
-    number
-  )
+    number,
+  );
 
   test('deflate', () => {
     const arr = [];
     cursortype.deflate([{ role: 'poker' }, '234', 43], arr);
-    expect(arr).toEqual([undefined, "poker", "234", 43]);
+    expect(arr).toEqual([undefined, 'poker', '234', 43]);
   });
 
   test('inflate', () => {
-    const arr = [undefined, "poker", "234", 43];
+    const arr = [undefined, 'poker', '234', 43];
     expect(cursortype.inflate(arr)).toEqual([{ role: 'poker' }, '234', 43]);
   });
 });

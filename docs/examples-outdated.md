@@ -1,3 +1,4 @@
+```js
 // common/schema.js
 
 import { types } from 'grue';
@@ -6,44 +7,45 @@ import { Poke, PokeFilter } from './poke';
 
 const { number, string, map } = types;
 
-export default Schema = {
+export default (Schema = {
   users: map(string, User),
   pokes: map(string, Poke),
-  pokeByTime: map(PokeFilter, map(tuple(number, string), Poke))
-}
+  pokeByTime: map(PokeFilter, map(tuple(number, string), Poke)),
+});
+```
 
-/*
 DSL Option 1:
 
-  type Schema {
-    users: [ string: User ],
-    pokes: [ string: User ],
-    pokeByTime: [ (PokeFilter, number, string) : Poke ]
-  }
+type Schema {
+users: [ string: User ],
+pokes: [ string: User ],
+pokeByTime: [ (PokeFilter, number, string) : Poke ]
+}
 
-Tuple:  (type1, type2, ...)
+Tuple: (type1, type2, ...)
 Struct: { name1: type1, name2: type2, ... }
 
-Set:    { boundedType }
-Map:    [ boundedType: type ]
-List:   [ type ]
+Set: { boundedType }
+Map: [ boundedType: type ]
+List: [ type ]
 
 What is a bounded type?
+
 - Scalars
 - Tuples containing only bounded types
 - Structs containing only bounded types
 
 Sets, Maps and Lists are always unbounded even if their members have bounded types.
 
----------------------------------------------------
+---
 
 JSON Option 2:
 
-  export default const Schema = {
-    users: [ string, User ],
-    pokes: [ string, User ],
-    pokesByTime: [ PokeFilter, [number, string], Poke ]
-  }
+export default const Schema = {
+users: [ string, User ],
+pokes: [ string, User ],
+pokesByTime: [ PokeFilter, [number, string], Poke ]
+}
 
 Array with one element: List of that type
 Array with two elements: Map from first type to second type
@@ -51,7 +53,7 @@ Array with N elements: Map from typle of types (1 ... N-1) to the Nth type
 
 It is not possible to represent a tuple in the value position.
 
-*/
+```js
 
 // client/DataProvider.js
 
@@ -123,3 +125,50 @@ store.use('/users/:id/pokes', (shape, { id }) => {
   }
   return pokesByTimeSource(filteredShape);
 });
+
+// Store example
+
+import Store from './Store';
+
+const wait = time => new Promise(resolve => setTimeout(resolve, time));
+
+describe('store', () => {
+  let store;
+
+  before(() => {
+    store = new Store();
+
+    store.onRead('pokes/:id', async function (req, res) {
+      const ids = req.params.map(({ id }) => id);
+      await wait(50);
+      ids.forEach(id => res.send({ `pokes/${id}`: { message: `Hi ${id} 0` }}));
+      if (!req.live) return;
+      let i = 1;
+      while (true) {
+        await wait(2000);
+        const id = ids[Math.floor(Math.random() * ids.length)];
+        res.send({ `pokes/${id}`: { message: `Hi ${id} ${i}` }});
+        i++;
+      }
+    });
+  });
+
+  test('get keys', () => {
+    const a = await store.get('pokes/a', { message });
+    const b = await store.get('pokes/b', { message });
+    expect(a).toEqual({ message: 'Hi a 0' });
+    expect(b).toEqual({ message: 'Hi b 0' });
+  });
+
+  test('watch a key', () => {
+    let i = 0;
+    for await (const a of store.watch('pokes/a', { message })) {
+      expect(a).toEqual({ message: `Hi a ${i}` });
+      i++;
+      if (i >= 4) break;
+    }
+  });
+});
+
+
+```

@@ -1,5 +1,4 @@
-Grue API Reference
-==================
+# Grue API Reference
 
 ## @grue/core
 

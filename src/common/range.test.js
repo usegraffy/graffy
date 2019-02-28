@@ -3,7 +3,9 @@ import { MIN_KEY, MAX_KEY } from './constants';
 
 describe('range pattern', () => {
   const testRange = (str, groups) =>
-    test(str, () => expect([...(str.match(RANGE_PATTERN))]).toEqual([ str, ...groups ]));
+    test(str, () =>
+      expect([...str.match(RANGE_PATTERN)]).toEqual([str, ...groups]),
+    );
 
   test('non-range', () => expect('key'.match(RANGE_PATTERN)).toEqual(null));
   testRange('*', ['', '*', '', '', '']);

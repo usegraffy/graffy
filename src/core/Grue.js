@@ -1,8 +1,16 @@
-import { makePath, makeNode, getNode, wrap, prune, getToken } from '@grue/common';
+import {
+  makePath,
+  makeNode,
+  getNode,
+  wrap,
+  prune,
+  getToken,
+} from '@grue/common';
 import Subscription from './Subscription';
 import resolve from './resolve';
 import compose from './compose';
 
+export { encRange, decRange } from '@grue/common';
 export const GET = Symbol();
 export const PUT = Symbol();
 
@@ -19,10 +27,16 @@ function ensurePath(basePath, path, ...args) {
 
 function shiftFn(fn, path) {
   return async ({ query, ...props }, next) => {
-    return wrap(await fn({
-      query: getNode(query, path),
-      ...props
-    }, next), path);
+    return wrap(
+      await fn(
+        {
+          query: getNode(query, path),
+          ...props,
+        },
+        next,
+      ),
+      path,
+    );
   };
 }
 
@@ -35,7 +49,7 @@ export default class Grue {
       this.subs = this.root.subs;
     } else {
       this.funcs = {}; // Registered provider functions, in a tree
-      this.subs = {};  // Map of tokens to querys for ongoing subscriptions
+      this.subs = {}; // Map of tokens to querys for ongoing subscriptions
       this.subId = 0;
     }
     this.onGet = this.register.bind(this, GET);
@@ -52,7 +66,9 @@ export default class Grue {
 
   use(path, provider) {
     [path, provider] = ensurePath(this.path, path, provider);
-    provider(new Grue(this.path ? this.path.concat(path) : path, this.root || this));
+    provider(
+      new Grue(this.path ? this.path.concat(path) : path, this.root || this),
+    );
   }
 
   async get(path, query) {
@@ -81,15 +97,17 @@ export default class Grue {
       values: options && options.values,
       path,
       resolve: (query, tree) => resolve(query, this.funcs, GET, token, tree),
-      onClose: () => { signal(); delete this.subs[id]; }
+      onClose: () => {
+        signal();
+        delete this.subs[id];
+      },
     });
     this.subs[id] = sub;
     return sub.stream;
   }
 
   pub(change) {
-    for (const id in this.subs) this.subs[id].pub(
-      this.path ? wrap(change, this.path) : change
-    );
+    for (const id in this.subs)
+      this.subs[id].pub(this.path ? wrap(change, this.path) : change);
   }
 }

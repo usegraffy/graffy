@@ -1,7 +1,7 @@
 import { getInclude } from '@grue/common';
 
 export default function GrueClient(baseUrl) {
-  return function (store) {
+  return function(store) {
     store.onGet(({ query, token }) => {
       const url = `${baseUrl}?include=${getInclude(query)}`;
 
@@ -22,8 +22,12 @@ export default function GrueClient(baseUrl) {
             resolved = true;
           }
         };
-        source.onerror = e => { if (!resolved) reject(e); };
-        token.onSignal(() => { source.close(); });
+        source.onerror = e => {
+          if (!resolved) reject(e);
+        };
+        token.onSignal(() => {
+          source.close();
+        });
       });
     });
   };

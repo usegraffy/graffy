@@ -7,6 +7,7 @@
 - [RFC6901 JSON Pointer](https://tools.ietf.org/html/rfc6901) with extensions.
 
 Escape codes are:
+
 ```
 ~1: ~
 ~2: /
@@ -50,7 +51,6 @@ j**n*k  { $last: n, $after: j, $before: k }   Last n between j and k
 (j,k)   [ j, k, ... ]                         Several keys
 ```
 
-
 ## Parameter Encoding
 
 Parameter encoding is used to encode fixed-size data types such as tuples or structs into strings such that the encoded strings sort in the same order as the original values.
@@ -66,6 +66,7 @@ Only a subset of the types supported by Grue are allowed to be used in cursors. 
 - Strings containing the null character \0
 
 ## How are values represented?
+
 - Strings are represented as-is. Empty strings are valid keys, and they sort before all non-empty keys.
 - Numbers are represented by base64 strings. -Infinity and +Infinity can be encoded and sort as expected.
 - Booleans are encoded as a single `0` or `1` character.

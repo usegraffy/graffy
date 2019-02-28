@@ -2,9 +2,8 @@ export const splitPath = path => {
   return typeof path === 'string' ? path.split('/') : path;
 };
 
-const optional = validate => (value, schema) => (
-  value === undefined || value === null || validate(value, schema)
-);
+const optional = validate => (value, schema) =>
+  value === undefined || value === null || validate(value, schema);
 
 const linkTo = base => (value, schema) => {
   if (typeof value !== 'string') return false;

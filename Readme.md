@@ -1,5 +1,4 @@
-Grue
-====
+# Grue
 
 Grue is a JavaScript library for building familiar RESTful APIs with expressive power and capabilities that exceed GraphQL.
 
@@ -15,27 +14,27 @@ Grue providers can also perform efficient bulk reads from underlying data stores
 
 **Grue is under heavy development and not ready for production use.**
 
-| Module | Status     | Provides
-|--------|------------|-------------
-| core   | 🚧 in dev  | - |
-| client | 🚧 in dev  | EventStream/HTTP client
-| server | 🚧 in dev  | EventStream/HTTP server
-| cache  | ⌛ backlog | In-memory cache
-| react  | ⌛ backlog | Container API
-| schema | ⌛ backlog | Validation, introspection API
-| viewer | ⌛ backlog | Schema introspection client
-| auth   | ⌛ backlog | Authentication and authorization
-| limit  | ⌛ backlog | Resource consumption accounting
+| Module | Status     | Provides                         |
+| ------ | ---------- | -------------------------------- |
+| core   | 🚧 in dev  | -                                |
+| client | 🚧 in dev  | EventStream/HTTP client          |
+| server | 🚧 in dev  | EventStream/HTTP server          |
+| cache  | ⌛ backlog | In-memory cache                  |
+| react  | ⌛ backlog | Container API                    |
+| schema | ⌛ backlog | Validation, introspection API    |
+| viewer | ⌛ backlog | Schema introspection client      |
+| auth   | ⌛ backlog | Authentication and authorization |
+| limit  | ⌛ backlog | Resource consumption accounting  |
 
 ## Capabilities
 
-|                    | Grue | GraphQL | Falcor | Description
-|--------------------|:----:|:-------:|:------:|-------------
-| Narrow queries     | ✅ | ✅ | ✅ | Queries specify required fields; Allows API evolution
-| Deep queries       | ✅ | ✅ | ✅ | Queries can expand nested resources; Reduces round-trips
-| Live queries       | ✅ | ❌ | ❌ | Push changes to query results in real time
-| Pagination cursors | ✅ | ✅ | ❌ | Enables efficient pagination on the server
-| Parameters         | ✅ | ✅ | ❌ | Custom filtering criteria, etc.
-| Caching pages      | ✅ | ❌ | ✅ | Cache result of paginated queries
-| Atomic writes      | ✅ | ❌ | ✅ | Writes that trigger accurate cache invalidation
-| Non-data endpoints | ✅ | ✅ | ❌ | Mutations, subscriptions, cross-resource search
+|                    | Grue | GraphQL | Falcor | Description                                              |
+| ------------------ | :--: | :-----: | :----: | -------------------------------------------------------- |
+| Narrow queries     |  ✅  |   ✅    |   ✅   | Queries specify required fields; Allows API evolution    |
+| Deep queries       |  ✅  |   ✅    |   ✅   | Queries can expand nested resources; Reduces round-trips |
+| Live queries       |  ✅  |   ❌    |   ❌   | Push changes to query results in real time               |
+| Pagination cursors |  ✅  |   ✅    |   ❌   | Enables efficient pagination on the server               |
+| Parameters         |  ✅  |   ✅    |   ❌   | Custom filtering criteria, etc.                          |
+| Caching pages      |  ✅  |   ❌    |   ✅   | Cache result of paginated queries                        |
+| Atomic writes      |  ✅  |   ❌    |   ✅   | Writes that trigger accurate cache invalidation          |
+| Non-data endpoints |  ✅  |   ✅    |   ❌   | Mutations, subscriptions, cross-resource search          |

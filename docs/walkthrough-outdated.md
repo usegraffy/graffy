@@ -1,4 +1,5 @@
 ## Example
+
 Let's imagine we're building an app that allows users to send pokes to each other. Its data may look like:
 
 ```js
@@ -63,11 +64,13 @@ await grue.put(path, change);
 Leaf nodes can be fetched directly with their JSONPaths:
 
 ```js
-grue.get('users/1/name')
+grue.get('users/1/name');
 // Returns a promise resolving to:
-"Alice"
+('Alice');
 ```
+
 Using the default connector, this results an HTTP GET request:
+
 ```http
 GET /users/1/name
 
@@ -79,8 +82,9 @@ GET /users/1/name
 However, querying objects and arrays in a similar way does not work as expected:
 
 ```js
-grue.get('pokes/1')
-{}
+grue.get('pokes/1');
+{
+}
 ```
 
 This is because Grue does not include child fields by default.
@@ -91,6 +95,7 @@ The client must specify the fields it is interested in, using a GraphQL-like obj
 grue.get('pokes/1', { time: true, message: true })
 { time: '2018-01-01T00:00:00', message: 'Hi!' }
 ```
+
 Any truthy value can be used in place of `true` to indicate fields to request. The HTTP request is:
 
 ```http
@@ -98,11 +103,14 @@ GET /pokes/1/(time,message)
 ```
 
 Links can be traversed transparently:
+
 ```js
-grue.get(['pokes', 1, 'participants', 'poker', 'name'])
-"Alice"
+grue.get(['pokes', 1, 'participants', 'poker', 'name']);
+('Alice');
 ```
+
 The HTTP response shows the links traversed in resolving the query. This information helps the client library cache the request efficiently.
+
 ```http
 GET /pokes/1/participants/poker/name
 
@@ -113,9 +121,10 @@ GET /pokes/1/participants/poker/name
 ```
 
 Links themselves are considered strings, which allow them to be modified with put:
+
 ```js
-grue.get(['pokes', 1, 'participants', 'poker'])
-'users/1'
+grue.get(['pokes', 1, 'participants', 'poker']);
+('users/1');
 ```
 
 What if we need the names of all participants? We can use the `*` wildcard:
@@ -125,6 +134,7 @@ grue.get(['pokes', 1, 'participants'], { '*': { name: true } })
 { "poker": { "name": "Alice" },
   "pokee": { "name": "Bob" } }
 ```
+
 ```http
 GET /pokes/1/participants/*/name
 ```
@@ -134,6 +144,7 @@ GET /pokes/1/participants/*/name
 `*` should only be used for nodes that we know to have a limited number of keys. For nodes with many keys, a better approach is to use keysets that allow retrieving only some of the keys.
 
 Let's say we want the first 10 users, ordered by user ID:
+
 ```js
 grue.get('users', Map { { $first: 10 } = { name: true } })
 Map {
@@ -144,6 +155,7 @@ Map {
   hasLast: false,
 }
 ```
+
 ```http
 GET /users/10**/name
 ```
@@ -170,6 +182,7 @@ Map {
   hasLast: true
 }
 ```
+
 The HTTP query is:
 
 ```http
@@ -178,7 +191,7 @@ GET /pokesByTime/**10/message
 
 `pokesByTime` is an _index_ of the `pokes` collection. Note that instead of a shape, we are providing a pathset here.
 
-**Note:** As seen in these examples, Grue offers multiple equivalent ways to specify paths, shapes and keysets. In their normalized forms, paths are arrays, shapes are JS maps and keysets are objects or arrays. In transit (request URLs) they are all strings. For convenience, shapes can also be specified using plain JS objects or arrays similar to Falcor's *pathsets* (as seen here).
+**Note:** As seen in these examples, Grue offers multiple equivalent ways to specify paths, shapes and keysets. In their normalized forms, paths are arrays, shapes are JS maps and keysets are objects or arrays. In transit (request URLs) they are all strings. For convenience, shapes can also be specified using plain JS objects or arrays similar to Falcor's _pathsets_ (as seen here).
 
 ### Filters
 
@@ -202,6 +215,7 @@ Map {
 `grue.sub()` works with the same arguments as `grue.get()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
 
 The API is based on ES2018 Async Iterators:
+
 ```js
 const stream = grue.sub('/users/1', { name });
 
@@ -209,6 +223,7 @@ for await (const value of stream) {
   /* do something */
 }
 ```
+
 To unsubscribe, simply break out of the `for await` loop.
 
 Using the default resolver, live queries use Server-Sent-Events over HTTP.
@@ -244,15 +259,16 @@ The "Schema" Provider adds a type system and provides functionality such as intr
 ### Schema
 
 The schema object describes the shape of the data store and is represented similarly to shapes:
+
 ```js
 const Poke = {
   startTime: Schema.date.required,
   message: Schema.string,
   participants: {
     poker: Schema.link.required,
-    pokee: Schema.link.required
-  }
-}
+    pokee: Schema.link.required,
+  },
+};
 ```
 
 Here `Poke` and `Poke.participants` are _structs_, because their keys are known ahead of time. The other kind of node in schemas is the _collection_, whose keys are not known, although their types are.
@@ -268,13 +284,13 @@ const PokeCollection = [Schema.string, Poke]
 ```
 
 The root schema can be defined as:
+
 ```js
 {
   users: UserCollection,
   pokes: PokeCollection
 }
 ```
-
 
 ## <a name="reference"></a>Reference
 
@@ -306,7 +322,7 @@ j**n*k  { $last: n, $after: j, $before: k }   Last n between j and k
 
 Keysets may be represented by strings or objects as shown above.
 
-Paths can be specified using strings (`pokes/1`) and arrays (`['pokes', 1]`). In a string, path segments (keys) must be escaped and keysets must use their string representations. In an array, keys are *not* escaped, and keysets must use their object representation.
+Paths can be specified using strings (`pokes/1`) and arrays (`['pokes', 1]`). In a string, path segments (keys) must be escaped and keysets must use their string representations. In an array, keys are _not_ escaped, and keysets must use their object representation.
 
 Pathsets can also be specified with strings (`pokes/(1,2)/time`) or arrays (`['pokes', [1, 2], 'time']`). Shapes can be specified using JS objects or JS maps. It is also possible to nest shapes and pathsets inside each other.
 
@@ -323,9 +339,10 @@ Nested maps are the most general representation, and it can represent any valid 
 { users: { '(1,2)': { name: true } } } // Object with string keyset
 ```
 
-The property names of JS objects are _escaped_ keys, stringified pathsets or stringified keysets. In maps and arrays, keys are *not* escaped, and keysets and pathsets use the object or array forms.
+The property names of JS objects are _escaped_ keys, stringified pathsets or stringified keysets. In maps and arrays, keys are _not_ escaped, and keysets and pathsets use the object or array forms.
 
 ## Provider API
+
 ```js
 class CustomProvider {
   constructor(options) {}
@@ -350,7 +367,7 @@ class CustomProvider {
     // Return a promise that resolves to the value.
   }
 
-  handlePut(changes, next) { }
+  handlePut(changes, next) {}
 
   onSomeEvent() {
     grue.pub(tree); // publish a change set

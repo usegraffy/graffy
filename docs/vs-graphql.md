@@ -21,12 +21,13 @@ Some GraphQL frameworks implement live queries by resending the entire query res
 - Every node has a canonical path in the tree
 - Queries may request a range of keys in lexical order
 
-
 Backend is a middleware framework similar to Express. Planned providers (middlware) include:
+
 - Grue-Cache (which uses JS memory and works on both client and server)
 - Grue-Schema (provides type validation and introspection endpoints)
 - Grue-Http (communicates with an express-grue server)
 
 Other planned modules:
+
 - Express-Grue (express middleware that creates an HTTP and Websockets API)
 - React-Grue (react components for making queries and subscriptions)

@@ -10,8 +10,9 @@ export default async function resolve(rootShape, rootFuncs, type, token) {
   function build(query, funcs) {
     if (funcs[type]) {
       layers.push(
-        Promise.resolve(funcs[type]({ query: rootShape, token }))
-          .then(tree => prune(tree, rootShape))
+        Promise.resolve(funcs[type]({ query: rootShape, token })).then(tree =>
+          prune(tree, rootShape),
+        ),
       );
     }
 

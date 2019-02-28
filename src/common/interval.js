@@ -20,14 +20,14 @@
 function makeOperation(lForR, rForL) {
   function push(interval, bound) {
     const l = interval.length;
-    if (bound === interval[l - 1] && (!(l % 2) || (lForR + rForL) % 2)) {
+    if (bound === interval[l - 1] && (!(l % 2) || (lForR + rForL) % 2)) {
       interval.splice(-1);
     } else {
       interval.push(bound);
     }
   }
 
-  return function (left, right) {
+  return function(left, right) {
     let i = 0;
     let result = [];
 
@@ -38,7 +38,7 @@ function makeOperation(lForR, rForL) {
       if (i % 2 === rForL) push(result, right[j]);
     }
 
-    if (!lForR) for(; i < left.length; i++) push(result, left[i]);
+    if (!lForR) for (; i < left.length; i++) push(result, left[i]);
     return result;
   };
 }

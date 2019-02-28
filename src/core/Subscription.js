@@ -22,8 +22,13 @@ export function makeStream(fn) {
       return new Promise(resolve => requests.push(resolve));
     },
 
-    return(val) { done = true; close(val); },
-    [Symbol.iterator]() { return this; }
+    return(val) {
+      done = true;
+      close(val);
+    },
+    [Symbol.iterator]() {
+      return this;
+    },
   };
 }
 
@@ -63,13 +68,15 @@ export default class Subscription {
 
     // This line prunes the change object using any part of the tree that's currently
     // referenced from the query.
-    change = merge(...cutQuery(data, query).map(subQuery => prune(change, subQuery)));
+    change = merge(
+      ...cutQuery(data, query).map(subQuery => prune(change, subQuery)),
+    );
     if (isEmpty(change)) return;
 
     merge(data, change);
     const nextQuery = sprout(data, query);
 
-    if (nextQuery){
+    if (nextQuery) {
       const linked = await options.resolve(nextQuery);
       merge(data, linked);
       if (!options.values) merge(change, linked);

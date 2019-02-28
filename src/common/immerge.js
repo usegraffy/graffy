@@ -3,7 +3,8 @@ import { union } from './interval';
 
 // Remove nulls from a changeset immutably. Avoid copying if there are no nulls to remove.
 function denull(change) {
-  if (typeof change !== 'object' || !change || Array.isArray(change)) return change;
+  if (typeof change !== 'object' || !change || Array.isArray(change))
+    return change;
 
   let result = change;
   for (const prop in change) {
@@ -25,9 +26,12 @@ function denull(change) {
 */
 export default function immerge(branch, change) {
   if (
-    typeof change !== 'object' || !change ||
-    typeof branch !== 'object' || !branch
-  ) return denull(change);
+    typeof change !== 'object' ||
+    !change ||
+    typeof branch !== 'object' ||
+    !branch
+  )
+    return denull(change);
 
   let result = {};
   for (const prop in branch) {

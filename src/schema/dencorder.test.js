@@ -12,22 +12,22 @@ import {
 
 describe('dencorder', () => {
   test('average number', () => {
-    let v = -1746.5567
+    let v = -1746.5567;
     expect(v).toEqual(decodeNumber(encodeNumber(v)));
   });
 
   test('tiny number', () => {
-    let v = .0000000001
+    let v = 0.0000000001;
     expect(v).toEqual(decodeNumber(encodeNumber(v)));
   });
 
   test('huge number', () => {
-    let v = -1.74E123
+    let v = -1.74e123;
     expect(v).toEqual(decodeNumber(encodeNumber(v)));
   });
 
   test('infinity', () => {
-    let v = -Infinity
+    let v = -Infinity;
     expect(v).toEqual(decodeNumber(encodeNumber(v)));
   });
 

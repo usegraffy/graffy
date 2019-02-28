@@ -11,8 +11,10 @@ const middle = new GrueServer();
 g.use(mock);
 g.use(middle.grue);
 
-http.createServer((req, res) => {
-  res.setHeader('access-control-allow-origin', '*');
-  middle.http(req, res);
-}).listen(8443);
+http
+  .createServer((req, res) => {
+    res.setHeader('access-control-allow-origin', '*');
+    middle.http(req, res);
+  })
+  .listen(8443);
 console.log('Server started at 8443');

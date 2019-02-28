@@ -32,10 +32,18 @@ export default function syncWrap(gen) {
   return function(...args) {
     const iter = gen(...args);
     return {
-      next(val) { iter.next(val); },
-      return(val) { iter.throw(new Return(val)); },
-      throw(err) { iter.throw(err); },
-      [Symbol.iterator]() { return this; }
+      next(val) {
+        iter.next(val);
+      },
+      return(val) {
+        iter.throw(new Return(val));
+      },
+      throw(err) {
+        iter.throw(err);
+      },
+      [Symbol.iterator]() {
+        return this;
+      },
     };
   };
 }

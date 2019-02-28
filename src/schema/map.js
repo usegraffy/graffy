@@ -9,7 +9,7 @@ function pageTypes(t) {
     n: struct({ first: count, after: t }),
     p: struct({ last: count, before: t }),
     t: struct({ first: count, after: t, before: t }),
-    b: struct({ last: count, after: t, before: t })
+    b: struct({ last: count, after: t, before: t }),
   };
 }
 
@@ -27,8 +27,12 @@ export const map = (kt, vt) => {
       if (i === undefined) return this;
       return vt.descend(path);
     },
-    intoKey() { throw Error('map.intoKey'); },
-    fromKey() { throw Error('map.fromKey'); },
+    intoKey() {
+      throw Error('map.intoKey');
+    },
+    fromKey() {
+      throw Error('map.fromKey');
+    },
 
     encodeKey(val) {
       const arr = [];
@@ -58,6 +62,6 @@ export const map = (kt, vt) => {
     },
 
     isCollection: true,
-    isBounded: false
+    isBounded: false,
   });
 };

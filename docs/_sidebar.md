@@ -1,3 +1,3 @@
-* [Home](/)
-* [API Reference](Reference.md)
-* [Encoding](Encoding.md)
+- [Home](/)
+- [API Reference](Reference.md)
+- [Encoding](Encoding.md)

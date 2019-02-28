@@ -1,5 +1,4 @@
-Grue Guide
-==========
+# Grue Guide
 
 This is a quick tutorial introducing Grue concepts by example. We'll build an API for a simple blog.
 
@@ -100,7 +99,9 @@ The server uses server-sent events (event streams) for subscriptions.
 Code for reading and writing to your data sources live in custom providers. Providers are functions that receive a reference to the store:
 
 ```js
-function provider(store) { /* Do things */ }
+function provider(store) {
+  /* Do things */
+}
 ```
 
 The store has APIs to attach request handlers:

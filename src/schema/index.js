@@ -12,7 +12,7 @@ export function type(query) {
     if (query.length === 2) return map(type(query[0]), type(query[1]));
     return map(
       tuple(query.slice(0, -1).map(type)),
-      type(query[query.length - 1])
+      type(query[query.length - 1]),
     );
   }
 
