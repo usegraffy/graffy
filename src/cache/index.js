@@ -1,6 +1,4 @@
-import merge from 'lodash/merge';
-
-import { getNode, makeNode, makePath, wrap } from '@grue/common';
+import { getNode, makeNode, makePath, wrap, merge } from '@grue/common';
 
 export default class Cache {
   constructor() {

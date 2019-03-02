@@ -10,7 +10,7 @@ import Subscription from './Subscription';
 import resolve from './resolve';
 import compose from './compose';
 
-export { encRange, decRange } from '@grue/common';
+export { encRange, decRange, getPage } from '@grue/common';
 export const GET = Symbol();
 export const PUT = Symbol();
 
@@ -88,6 +88,7 @@ export default class Grue {
     throw Error('core.put.unimplemented');
   }
 
+  // TODO: Support passing a cache object to sub to share a cache.
   sub(path, query, options) {
     [path, query, options] = ensurePath(this.path, path, query, options);
     query = wrap(query, path);

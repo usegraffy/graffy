@@ -1,45 +1,4 @@
-// import merge from 'lodash/merge';
-// import isEmpty from 'lodash/isEmpty';
-// import { wrap, getNode } from '../path';
-// import { isSet, isRange, getMatches } from '../range';
-// import { LINK_KEY, GONE_KEY } from '../constants';
-
-// export default function sprout(root, rootQuery) {
-//   let layers = [];
-//   function doSprout(tree, query, path) {
-//     if (typeof tree !== 'object' || !tree) return;
-//     if (typeof query !== 'object' || !query) return;
-//     if (tree[GONE_KEY]) return;
-//
-//     const link = tree[LINK_KEY];
-//     if (link) {
-//       tree = getNode(root, link);
-//       if (!tree) {
-//         layers.push(wrap(query, link));
-//         return;
-//       }
-//     }
-//
-//     function addResult(key, subQuery) {
-//       if (isSet(key) || isRange(key)) {
-//         getMatches(tree, key).keys.forEach(k => addResult(k, subQuery));
-//         return;
-//       }
-//
-//       if (key in tree) {
-//         doSprout(tree[key], subQuery, path.concat(key));
-//       }
-//     }
-//
-//     for (const key in query) addResult(key, query[key]);
-//   }
-//
-//   doSprout(root, rootQuery, []);
-//   const nextQuery = merge({}, ...layers);
-//   return isEmpty(nextQuery) ? undefined : nextQuery;
-// }
-
-import merge from 'lodash/merge';
+import merge from '../merge';
 import isEmpty from 'lodash/isEmpty';
 import cutQuery from './cutQuery';
 import { isSet, isRange, getMatches } from '../range';

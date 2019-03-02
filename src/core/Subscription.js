@@ -1,5 +1,4 @@
-import { sprout, prune, cutQuery } from '@grue/common';
-import merge from 'lodash/merge';
+import { sprout, prune, cutQuery, merge } from '@grue/common';
 import isEmpty from 'lodash/isEmpty';
 
 export function makeStream(fn) {
@@ -69,7 +68,9 @@ export default class Subscription {
     // This line prunes the change object using any part of the tree that's currently
     // referenced from the query.
     change = merge(
-      ...cutQuery(data, query).map(subQuery => prune(change, subQuery)),
+      ...cutQuery(data, query).map(subQuery =>
+        prune(change, subQuery, null, true),
+      ),
     );
     if (isEmpty(change)) return;
 

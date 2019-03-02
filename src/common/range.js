@@ -62,6 +62,13 @@ const getKeys = tree =>
     .filter(k => k !== PAGE_KEY && k !== LINK_KEY)
     .sort();
 
+export function getPage(tree) {
+  const [start, end] = tree[PAGE_KEY] || [MIN_KEY, MAX_KEY];
+  const hasNext = end !== MAX_KEY;
+  const hasPrev = start !== MIN_KEY;
+  return { start, end, hasNext, hasPrev };
+}
+
 export function getMatches(tree, key) {
   if (isSet(key)) {
     return { keys: key.split(',') };

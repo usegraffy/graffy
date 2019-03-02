@@ -15,10 +15,11 @@ export default function GrueClient(baseUrl) {
         const source = new EventSource(url);
         let resolved = false;
         source.onmessage = ({ data }) => {
+          data = JSON.parse(data);
           if (resolved) {
-            store.pub(JSON.parse(data));
+            store.pub(data);
           } else {
-            resolve(JSON.parse(data));
+            resolve(data);
             resolved = true;
           }
         };

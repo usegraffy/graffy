@@ -13,6 +13,15 @@ module.exports = {
   },
   "plugins": ["prettier"],
   "rules": {
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+    "rules": {
+      "no-unused-vars": ["error", {
+        "ignoreRestSiblings": true,
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "_"
+      }]
+    }
   },
 };

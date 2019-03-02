@@ -11,7 +11,15 @@
     "start": "react-scripts start"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "rules": {
+      "no-unused-vars": ["error", {
+        "ignoreRestSiblings": true,
+        "varsIgnorePattern": "React|^_",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "_"
+      }]
+    }
   },
   "browserslist": [
     ">0.2%",
