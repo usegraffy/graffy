@@ -1,5 +1,5 @@
-import { wrap } from '../path';
-import { isSet, isRange, getMatches } from '../range';
+import { wrap, getNode, makeNode } from '../path';
+import { isRange, splitRange } from '../range';
 import { LINK_KEY } from '../constants';
 
 export default function cutQuery(root, rootQuery) {
@@ -15,8 +15,8 @@ export default function cutQuery(root, rootQuery) {
     }
 
     function addResult(key, subQuery) {
-      if (isSet(key) || isRange(key)) {
-        getMatches(tree, key).keys.forEach(k => addResult(k, subQuery));
+      if (isRange(key)) {
+        splitRange(tree, key).keys.forEach(k => addResult(k, subQuery));
         return;
       }
 

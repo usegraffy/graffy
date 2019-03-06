@@ -1,20 +1,20 @@
-import { getShape, getInclude } from './include';
+import { getQuery, getInclude } from './url';
 
-describe('getShape', () => {
+describe('getQuery', () => {
   test('empty', () => {
-    expect(getShape('')).toEqual({});
+    expect(getQuery('')).toEqual({});
   });
 
   test('simple', () => {
-    expect(getShape('foo,bar')).toEqual({ foo: true, bar: true });
+    expect(getQuery('foo,bar')).toEqual({ foo: true, bar: true });
   });
 
   test('one-level', () => {
-    expect(getShape('foo(bar),baz')).toEqual({ foo: { bar: true }, baz: true });
+    expect(getQuery('foo(bar),baz')).toEqual({ foo: { bar: true }, baz: true });
   });
 
   test('two-level', () => {
-    expect(getShape('baz,foo(bar(a,b))')).toEqual({
+    expect(getQuery('baz,foo(bar(a,b))')).toEqual({
       foo: { bar: { a: true, b: true } },
       baz: true,
     });

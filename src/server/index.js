@@ -3,7 +3,7 @@
   and should be written using CommonJS modules.
 */
 
-import { getShape } from '@grue/common';
+import { getQuery } from '@grue/common';
 
 const url = require('url');
 
@@ -21,7 +21,7 @@ export default class GrueServer {
     if (req.method === 'GET') {
       const parsed = url.parse(req.url, true);
       const path = parsed.pathname;
-      const query = getShape(parsed.query.include);
+      const query = getQuery(parsed.query.include);
       if (req.headers['accept'] === 'text/event-stream') {
         res.setHeader('content-type', 'text/event-stream');
 

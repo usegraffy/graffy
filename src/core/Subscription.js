@@ -1,4 +1,4 @@
-import { sprout, prune, cutQuery, merge } from '@grue/common';
+import { sprout, prune, graft, getNode, cutQuery, merge } from '@grue/common';
 import isEmpty from 'lodash/isEmpty';
 
 export function makeStream(fn) {
@@ -36,13 +36,12 @@ export default class Subscription {
     this.query = query;
     this.options = options;
 
-    this.data = this.options.resolve(this.query);
     this.stream = makeStream(push => {
       this.push = push;
       return options.onClose;
     });
 
-    this.earlyPayloads = [];
+    this.earlyChange = {};
 
     this.init();
   }
@@ -51,16 +50,16 @@ export default class Subscription {
     // We need this line to be a separate function because the
     // constructor can't be async. We're okay even if pub is
     // called before this happens.
-    const data = await this.data;
-    for (const change of this.earlyPayloads) merge(data, change);
+    const data = await this.options.resolve(this.query);
+    merge(data, this.earlyChange);
     this.data = prune(data, this.query);
-    delete this.earlyPayloads;
-    this.push(this.data);
+    delete this.earlyChanges;
+    this.push(getNode(graft(this.data), this.options.path));
   }
 
   async pub(change) {
-    if (this.earlyPayloads) {
-      this.earlyPayloads.push(change);
+    if (this.earlyChange) {
+      merge(this.earlyChanges, change);
       return;
     }
     const { query, options, data } = this;
@@ -72,10 +71,13 @@ export default class Subscription {
         prune(change, subQuery, null, true),
       ),
     );
+
     if (isEmpty(change)) return;
 
     merge(data, change);
+    console.log('START: Data after merge', data);
     const nextQuery = sprout(data, query);
+    console.log('END: NextQuery', nextQuery);
 
     if (nextQuery) {
       const linked = await options.resolve(nextQuery);
@@ -83,6 +85,8 @@ export default class Subscription {
       if (!options.values) merge(change, linked);
     }
     this.data = prune(data, query);
-    this.push(options.values ? prune(this.data, query, options.path) : change);
+    this.push(
+      options.values ? getNode(graft(this.data), options.path) : change,
+    );
   }
 }

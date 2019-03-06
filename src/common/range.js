@@ -8,10 +8,6 @@ export function isRange(key) {
   return !!key.match(RANGE_PATTERN);
 }
 
-export function isSet(key) {
-  return key.includes(',');
-}
-
 export function decode(key) {
   const match = key.match(RANGE_PATTERN);
   if (!match) throw Error('range.decode.bad_pattern');
@@ -59,7 +55,7 @@ export function encode({ before, after, first, last }) {
 
 const getKeys = tree =>
   Object.keys(tree)
-    .filter(k => k !== PAGE_KEY && k !== LINK_KEY)
+    .filter(k => k !== PAGE_KEY && k !== LINK_KEY && tree[k] !== null)
     .sort();
 
 export function getPage(tree) {
@@ -69,13 +65,18 @@ export function getPage(tree) {
   return { start, end, hasNext, hasPrev };
 }
 
-export function getMatches(tree, key) {
-  if (isSet(key)) {
-    return { keys: key.split(',') };
-  }
+/*
+  This function compares a data object with a range and returns:
 
+  - keys, the list of keys known to be in the result
+  - known, the page bounds of knowledge in the result
+  - unknown, the range of keys that are not known
+*/
+
+export function splitRange(tree, key) {
   const { first, last, before, after } = decode(key);
   const treePage = tree[PAGE_KEY] || [MIN_KEY, MAX_KEY];
+
   const rangePage = inter(treePage, [after, before]);
   if (
     (first && after !== rangePage[0]) ||
@@ -98,23 +99,23 @@ export function getMatches(tree, key) {
       maxIx = minIx + first;
       maxKey = keys[maxIx - 1];
     } else {
-      const remaining = {
+      const remaining = maxKey !== MAX_KEY && {
         first: first - (maxIx - minIx) + 1,
         after: maxKey,
       };
-      if (last) remaining.last = last;
-      unknown = encode(remaining);
+      // if (last) remaining.last = last;
+      if (remaining) unknown = encode(remaining);
     }
   } else if (last) {
     if (maxIx - minIx >= last) {
       minIx = maxIx - last;
       minKey = keys[minIx];
     } else {
-      const remaining = {
+      const remaining = minKey !== MIN_KEY && {
         last: last - (maxIx - minIx) + 1,
         before: minKey,
       };
-      unknown = encode(remaining);
+      if (remaining) unknown = encode(remaining);
     }
   } else {
     unknown = diff([after, before], treePage)

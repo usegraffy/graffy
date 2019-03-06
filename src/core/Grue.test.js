@@ -1,5 +1,5 @@
 import Grue from '.';
-import { LINK_KEY } from '@grue/common/constants';
+import { LINK_KEY, PAGE_KEY } from '@grue/common/constants';
 
 describe('get', () => {
   let g;
@@ -222,14 +222,23 @@ describe('sub2', () => {
     expect((await sub.next()).value).toEqual({
       foo: { [LINK_KEY]: ['bar', 'b'] },
       bar: { b: { x: 5 } /*, a: null */ },
-      // TODO: Should we explicitly remove data that is no longer kept up to date, or leave that for the
-      // consumer to figure out?
+      // TODO: Should we explicitly remove data that is no longer kept up to
+      // date, or leave that for the consumer to figure out?
     });
     // The /bar/a update should not be sent.
     expect((await sub.next()).value).toEqual({ bar: { b: { x: 1 } } });
   });
 
-  test('range', () => {});
+  test('range_deletion', async () => {
+    g.onGet('/foo', () => ({ foo: { a: 1, b: 2, c: 3, d: 4, e: 5 } }));
+    setTimeout(() => g.pub({ foo: { b: null } }), 10);
 
-  // TODO: Ranges, when something in range is deleted a new entry should be sent.
+    const sub = g.sub({ foo: { '3**': true } });
+    expect((await sub.next()).value).toEqual({
+      foo: { a: 1, b: 2, c: 3 },
+    });
+    expect((await sub.next()).value).toEqual({
+      foo: { b: null, c: 3, d: 4 },
+    });
+  });
 });

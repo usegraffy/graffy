@@ -4,6 +4,7 @@ import {
   getNode,
   wrap,
   prune,
+  graft,
   getToken,
 } from '@grue/common';
 import Subscription from './Subscription';
@@ -75,7 +76,7 @@ export default class Grue {
     [path, query] = ensurePath(this.path, path, query);
     query = wrap(query, path);
     const result = await resolve(query, this.funcs, GET);
-    return prune(result, query, path);
+    return getNode(graft(prune(result, query)), path);
   }
 
   async getRaw(query) {
@@ -96,7 +97,7 @@ export default class Grue {
     const id = this.subId++;
     const sub = new Subscription(query, {
       values: options && options.values,
-      path,
+      path: path || [],
       resolve: (query, tree) => resolve(query, this.funcs, GET, token, tree),
       onClose: () => {
         signal();

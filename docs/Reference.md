@@ -6,57 +6,51 @@
 
 Constructs a store. Does not accept any arguments.
 
-### store.**use**(path, provider)
+### store.**get**(query, options)
 
-Parameters: [path](Encoding#Paths), provider
+Parameters: [query](Encoding#Queries), options
+Returns: Async Iterable or Promise
 
-Mounts a provider to the store, at the given path.
+Retrieve data from the store.
 
-### store.**get**(path, query)
+**Options**
 
-Parameters: [path](Encoding#Paths), [query](Encoding#Queries)
-Returns: Promise resolving to a JSON tree
+- **once**: If false (default), makes a live query and returns an async iterable; if true, makes a one-time query and returns a promise.
+- **raw**: If false (default), returns full data objects with symbolic links replaced by the linked data; if true, returns [changes](Encoding#Changes) with symlinks preserved and linked data included at their canonical positions.
 
-Retrieve data from the store, replacing links with the linked data. If path is provided, only that subtree is returned.
+### store.**put**(change, options)
 
-### store.**getRaw**(query)
-
-Parameter: [query](Encoding#Queries)
-Returns: Promise resolving to a result tree
-
-Retrieve data from a store, leaving linked nodes in their canonical positions.
-
-### store.**put**(path, change)
-
-Parameters: [path](Encoding#Paths), [change](Encoding#Changes)
+Parameters: [change](Encoding#Changes)
 Returns: Promise that resolves on success
 
 **Unimplemented.** Writes changes into the store.
 
-### store.**sub**(path, query)
+**Options**
 
-Parameters: [path](Encoding#Paths), [query](Encoding#Queries)
-Returns: Async iterable of result trees
-
-Subscribes to data in the store, replacing links with the linked data and returning a full result object on every change. If path is provided, only that subtree is returned.
-
-### store.**subRaw**(query)
-
-Parameters: [path](Encoding#Paths), [query](Encoding#Queries)
-Returns: Async iterable of [changes](Encoding#Changes)
-
-**Unimplemented.** Subscribes to data in the store. First value is the result of the query, subsequent values are sparse objects representing changes. Linked nodes are left at their canonical positions.
-
-### store.**pub**(changes)
-
-Parameters: [change](Encoding#Changes)
-Returns: Nothing
-
-Publishes a change to the store; all subscribers interested in that change are notified.
+- **source**: A string identifying the source of the change. This value is opaque to grue, but providers may use it property to avoid echoing writes back to their source.
 
 ### store.**onGet**(path, callback)
 
 ### store.**onPut**(path, callback)
+
+### store.**use**(path, provider)
+
+Parameters: [path](Encoding#Paths), provider
+
+Mounts a provider to the store at the given path.
+
+### Grue.encode(params)
+
+
+
+### Grue.decode(key)
+
+
+
+### Grue.link(path)
+
+Parameters: [path](Encoding#Paths)
+Returns: A link object
 
 ## @grue/server
 

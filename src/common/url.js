@@ -1,6 +1,6 @@
 const includeRe = /([^,()]*)([(),]|$)/g;
 
-export function getShape(include) {
+export function getQuery(include) {
   if (!include) return {};
 
   includeRe.lastIndex = 0;

@@ -18,7 +18,7 @@ export function getNode(tree, path) {
 
 export function makeNode(tree, path) {
   for (const name of path) {
-    if (!(name in tree)) tree[name] = {};
+    if (typeof tree[name] !== 'object' || !tree[name]) tree[name] = {};
     tree = tree[name];
   }
   return tree;

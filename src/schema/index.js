@@ -16,9 +16,9 @@ export function type(query) {
     );
   }
 
-  const structShape = {};
-  for (const prop in query) structShape[prop] = type(query[prop]);
-  return struct(structShape);
+  const structQuery = {};
+  for (const prop in query) structQuery[prop] = type(query[prop]);
+  return struct(structQuery);
 }
 
 export { number, string, boolean, object, tuple, struct, map };
