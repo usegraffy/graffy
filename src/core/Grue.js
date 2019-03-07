@@ -76,7 +76,7 @@ export default class Grue {
     [path, query] = ensurePath(this.path, path, query);
     query = wrap(query, path);
     const result = await resolve(query, this.funcs, GET);
-    return getNode(graft(prune(result, query)), path);
+    return getNode(graft(result, query), path);
   }
 
   async getRaw(query) {
@@ -90,14 +90,11 @@ export default class Grue {
   }
 
   // TODO: Support passing a cache object to sub to share a cache.
-  sub(path, query, options) {
-    [path, query, options] = ensurePath(this.path, path, query, options);
-    query = wrap(query, path);
+  sub(query, options) {
     const [token, signal] = getToken();
     const id = this.subId++;
     const sub = new Subscription(query, {
       values: options && options.values,
-      path: path || [],
       resolve: (query, tree) => resolve(query, this.funcs, GET, token, tree),
       onClose: () => {
         signal();

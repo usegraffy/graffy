@@ -1,4 +1,4 @@
-import { RANGE_PATTERN, decode, encode } from './range';
+import { RANGE_PATTERN, decRange, encRange } from './range';
 import { MIN_KEY, MAX_KEY } from './constants';
 
 describe('range pattern', () => {
@@ -20,9 +20,9 @@ describe('range pattern', () => {
   testRange('key0**n*key1', ['key0', '**', 'n', '*', 'key1']);
 });
 
-describe('decode', () => {
+describe('decRange', () => {
   const testRange = (str, range) =>
-    test(str, () => expect(decode(str)).toEqual(range));
+    test(str, () => expect(decRange(str)).toEqual(range));
 
   testRange('*', { after: MIN_KEY, before: MAX_KEY });
   testRange('key1*', { after: 'key1', before: MAX_KEY });
@@ -36,9 +36,9 @@ describe('decode', () => {
   testRange('key0**3*key1', { after: 'key0', before: 'key1', last: 3 });
 });
 
-describe('encode', () => {
+describe('encRange', () => {
   const testRange = (str, range) =>
-    test(str, () => expect(encode(range)).toEqual(str));
+    test(str, () => expect(encRange(range)).toEqual(str));
 
   testRange('*', { after: MIN_KEY, before: MAX_KEY });
   testRange('key1*', { after: 'key1', before: MAX_KEY });

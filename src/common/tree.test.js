@@ -1,5 +1,5 @@
-import { prune, sprout, plant } from './tree';
-import { LINK_KEY, PAGE_KEY, MIN_KEY, MAX_KEY } from '../constants';
+import { prune, sprout, strike } from './tree';
+import { LINK_KEY, PAGE_KEY, MIN_KEY, MAX_KEY } from './constants';
 import { makePath } from './path';
 
 const link = path => ({ [LINK_KEY]: makePath(path) });
@@ -8,9 +8,9 @@ const page = (node, start, end) => {
   return node;
 };
 
-test('plant', () => {
+test('strike', () => {
   expect(
-    plant(
+    strike(
       {
         foo: page({ a: { m: 1 }, b: { m: 2 }, c: { m: 3 } }, '', 'c'),
         bar: { a: link('/foo/a'), b: link('/foo/b'), d: link('/foo/d') },
@@ -21,8 +21,15 @@ test('plant', () => {
       },
     ),
   ).toEqual({
-    foo: { b: { m: true }, c: { m: true } },
-    bar: { a: true, b: true, d: true },
+    foo: {
+      a: { n: true },
+      b: { m: true },
+      c: { m: true },
+      d: { m: true },
+      'b*c': { m: true },
+      'c*2**': { m: true },
+    },
+    bar: { a: { n: true }, b: { m: true }, c: { m: true }, d: { m: true } },
   });
 });
 

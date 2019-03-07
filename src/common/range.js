@@ -8,13 +8,13 @@ export function isRange(key) {
   return !!key.match(RANGE_PATTERN);
 }
 
-export function decode(key) {
+export function decRange(key) {
   const match = key.match(RANGE_PATTERN);
-  if (!match) throw Error('range.decode.bad_pattern');
+  if (!match) throw Error('range.decRange.bad_pattern');
 
   // eslint-disable-next-line no-unused-vars
   const [_, a, l, b, r, c] = match;
-  if (l && r && l === r) throw Error('range.decode.bad_asterisks');
+  if (l && r && l === r) throw Error('range.decRange.bad_asterisks');
 
   const int = s => parseInt(s, 10);
   if (r !== '')
@@ -37,8 +37,8 @@ export function decode(key) {
   };
 }
 
-export function encode({ before, after, first, last }) {
-  if (first && last) throw Error('range.encode.first_last');
+export function encRange({ before, after, first, last }) {
+  if (first && last) throw Error('range.encRange.first_last');
   if (after === MIN_KEY) after = '';
   if (before === MAX_KEY) before = '';
 
@@ -74,7 +74,7 @@ export function getPage(tree) {
 */
 
 export function splitRange(tree, key) {
-  const { first, last, before, after } = decode(key);
+  const { first, last, before, after } = decRange(key);
   const treePage = tree[PAGE_KEY] || [MIN_KEY, MAX_KEY];
 
   const rangePage = inter(treePage, [after, before]);
@@ -99,30 +99,30 @@ export function splitRange(tree, key) {
       maxIx = minIx + first;
       maxKey = keys[maxIx - 1];
     } else {
-      const remaining = maxKey !== MAX_KEY && {
+      const remaining = maxKey !== before && {
         first: first - (maxIx - minIx) + 1,
         after: maxKey,
       };
       // if (last) remaining.last = last;
-      if (remaining) unknown = encode(remaining);
+      if (remaining) unknown = encRange(remaining);
     }
   } else if (last) {
     if (maxIx - minIx >= last) {
       minIx = maxIx - last;
       minKey = keys[minIx];
     } else {
-      const remaining = minKey !== MIN_KEY && {
+      const remaining = minKey !== after && {
         last: last - (maxIx - minIx) + 1,
         before: minKey,
       };
-      if (remaining) unknown = encode(remaining);
+      if (remaining) unknown = encRange(remaining);
     }
   } else {
     unknown = diff([after, before], treePage)
       .map((val, i, diffs) =>
         i % 2
           ? null
-          : encode({
+          : encRange({
               after: val,
               before: diffs[i + 1],
             }),
@@ -130,6 +130,10 @@ export function splitRange(tree, key) {
       .filter(Boolean)
       .join(',');
   }
+
+  // if (key === 'c*3**') console.trace('Overflow');
+
+  // console.log('Range overflow', key, keys.slice(minIx, maxIx), unknown);
 
   return {
     keys: keys.slice(minIx, maxIx),

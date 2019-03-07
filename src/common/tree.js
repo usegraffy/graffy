@@ -1,7 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 
 import { getNode, makeNode } from './path';
-import { isRange, splitRange } from './range';
+import { isRange, splitRange, encRange } from './range';
 import { LINK_KEY, PAGE_KEY } from './constants';
 import merge from './merge';
 
@@ -15,19 +15,19 @@ import merge from './merge';
 
 function walk(root, rootQuery, visit) {
   function step(node, query, path) {
-    visit(node, query, path);
-
     if (
       typeof node !== 'object' ||
       typeof query !== 'object' ||
       !node ||
       !query
     ) {
+      visit(node, query, path);
       return;
     }
 
     const link = node[LINK_KEY];
     if (link) {
+      visit(node, query, path);
       step(getNode(root, link), query, link);
       return;
     }
@@ -81,13 +81,18 @@ export function sprout(root, rootQuery) {
   Prune (unnecessary branches)
 */
 
-export function prune(root, rootQuery) {
+export function prune(root, rootQuery, isChange) {
   const pruned = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (typeof node === 'undefined') return;
 
-    if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
+    if (
+      typeof node !== 'object' ||
+      !node ||
+      node[LINK_KEY] ||
+      (node[PAGE_KEY] && !isChange)
+    ) {
       set(pruned, path, node);
     }
   });
@@ -96,49 +101,51 @@ export function prune(root, rootQuery) {
 }
 
 /*
-  Plant: Cuts the query at link crossings and rejoins the subqueries at their
+  strike: Copies parts of the query that cross links, repeating them at their
   canonical positions.
+
+  The returned value is used to compute intersections with change objects.
 */
 
-export function plant(root, rootQuery) {
+export function strike(root, rootQuery) {
   const normalized = {};
 
   walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined') return;
-    if (typeof node !== 'object' || !node) set(normalized, path, query);
-    if (node[LINK_KEY]) set(normalized, path, true);
+    if (node && node[PAGE_KEY]) {
+      const [after, before] = node[PAGE_KEY];
+      set(normalized, path, { [encRange({ after, before })]: query });
+      return;
+    }
+
+    set(normalized, path, query);
   });
 
   return isEmpty(normalized) ? undefined : normalized;
 }
 
 // Convert a raw response into a denormalized and easy-to-consume graph.
-export function graft(tree, root) {
-  if (typeof tree !== 'object' || !tree) return tree;
+export function graft(root, rootQuery) {
+  const graph = {};
+  const links = [];
 
-  if (!root) root = tree;
-
-  let empty = true;
-  let result = {};
-
-  if (tree[LINK_KEY]) {
-    return graft(getNode(root, tree[LINK_KEY]), root);
-  }
-
-  if (tree[PAGE_KEY]) {
-    Object.defineProperty(result, PAGE_KEY, { value: PAGE_KEY });
-    empty = false;
-  }
-
-  for (const key in tree) {
-    const branch = graft(tree[key], root);
-    if (typeof branch === 'undefined') {
-      delete tree[key];
-    } else {
-      result[key] = branch;
-      empty = false;
+  walk(root, rootQuery, (node, query, path) => {
+    if (typeof node === 'undefined' || node === null) return;
+    if (typeof node !== 'object') set(graph, path, node);
+    if (node[PAGE_KEY]) {
+      const node = makeNode(graph, path);
+      Object.defineProperty(node, PAGE_KEY, { value: node[PAGE_KEY] });
     }
-  }
+    if (node[LINK_KEY]) {
+      links.push([path, node[LINK_KEY]]);
+    }
+  });
 
-  return empty ? undefined : result;
+  for (const [from, to] of links) set(graph, from, getNode(graph, to));
+
+  const prunedGraph = {};
+  walk(graph, rootQuery, (node, query, path) => {
+    if (typeof node !== 'object') set(prunedGraph, path, node);
+  });
+
+  return isEmpty(prunedGraph) ? undefined : prunedGraph;
 }

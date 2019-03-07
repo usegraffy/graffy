@@ -1,5 +1,4 @@
-import { sprout, prune, graft, getNode, cutQuery, merge } from '@grue/common';
-import isEmpty from 'lodash/isEmpty';
+import { sprout, prune, graft, strike, merge } from '@grue/common';
 
 export function makeStream(fn) {
   const payloads = [];
@@ -50,11 +49,15 @@ export default class Subscription {
     // We need this line to be a separate function because the
     // constructor can't be async. We're okay even if pub is
     // called before this happens.
-    const data = await this.options.resolve(this.query);
+    const { options, query } = this;
+    let data = await options.resolve(query);
     merge(data, this.earlyChange);
-    this.data = prune(data, this.query);
-    delete this.earlyChanges;
-    this.push(getNode(graft(this.data), this.options.path));
+
+    // TODO: Properly resolve, prune etc. after early changes are merged.
+
+    delete this.earlyChange;
+    this.data = data = prune(data, query);
+    this.push(options.values ? graft(data, query) : data);
   }
 
   async pub(change) {
@@ -63,21 +66,13 @@ export default class Subscription {
       return;
     }
     const { query, options, data } = this;
+    const struck = strike(data, query);
 
-    // This line prunes the change object using any part of the tree that's currently
-    // referenced from the query.
-    change = merge(
-      ...cutQuery(data, query).map(subQuery =>
-        prune(change, subQuery, null, true),
-      ),
-    );
-
-    if (isEmpty(change)) return;
+    change = prune(change, struck, true);
+    if (!change) return;
 
     merge(data, change);
-    console.log('START: Data after merge', data);
     const nextQuery = sprout(data, query);
-    console.log('END: NextQuery', nextQuery);
 
     if (nextQuery) {
       const linked = await options.resolve(nextQuery);
@@ -85,8 +80,6 @@ export default class Subscription {
       if (!options.values) merge(change, linked);
     }
     this.data = prune(data, query);
-    this.push(
-      options.values ? getNode(graft(this.data), options.path) : change,
-    );
+    this.push(options.values ? graft(this.data, query) : change);
   }
 }
