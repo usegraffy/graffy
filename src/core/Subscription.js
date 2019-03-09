@@ -56,8 +56,8 @@ export default class Subscription {
     // TODO: Properly resolve, prune etc. after early changes are merged.
 
     delete this.earlyChange;
-    this.data = data = prune(data, query);
-    this.push(options.values ? graft(data, query) : data);
+    this.data = data = prune(data, query) || {};
+    this.push(options.values ? graft(data, query) || {} : data);
   }
 
   async pub(change) {
@@ -66,12 +66,15 @@ export default class Subscription {
       return;
     }
     const { query, options, data } = this;
-    const struck = strike(data, query);
 
-    change = prune(change, struck, true);
-    if (!change) return;
+    // Returns early if the change does not have any overlap with the query.
+    // DO NOT prune the change to only those changes that overlap; when the
+    // overlapping portion includes a deletion in a range, the change set
+    // may contain additional items to make up.
+    if (!prune(change, strike(data, query))) return;
 
     merge(data, change);
+
     const nextQuery = sprout(data, query);
 
     if (nextQuery) {
@@ -80,6 +83,6 @@ export default class Subscription {
       if (!options.values) merge(change, linked);
     }
     this.data = prune(data, query);
-    this.push(options.values ? graft(this.data, query) : change);
+    this.push(options.values ? graft(this.data, query) || {} : change);
   }
 }

@@ -55,8 +55,6 @@ class App extends Component {
     const { visitorsByTime = {} } = this.state;
     const { hasNext, hasPrev } = getPage(visitorsByTime);
 
-    console.log(getPage(visitorsByTime));
-
     return (
       <div className="App">
         <div className="Pagination">

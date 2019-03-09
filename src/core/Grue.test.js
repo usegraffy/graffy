@@ -296,6 +296,27 @@ describe('subscriptions', () => {
       });
     });
 
+    test('accept_range_deletion_substitute', async () => {
+      const onGet = jest.fn(() => {
+        return { foo: { a: 1, b: 2, c: 3, d: 4, e: 5 } };
+      });
+      g.onGet('/foo', onGet);
+      setTimeout(
+        () => g.pub({ foo: { [PAGE_KEY]: ['c', 'd'], b: null, c: 3, d: 4 } }),
+        10,
+      );
+
+      const sub = g.sub({ foo: { '3**': true } }, { values: true });
+      expect((await sub.next()).value).toEqual({
+        foo: { a: 1, b: 2, c: 3 },
+      });
+      expect(onGet).toHaveBeenCalledTimes(1);
+      expect((await sub.next()).value).toEqual({
+        foo: { a: 1, c: 3, d: 4 },
+      });
+      expect(onGet).toHaveBeenCalledTimes(1);
+    });
+
     test('range_insertion', async () => {
       g.onGet('/foo', () => ({ foo: { a: 1, c: 3, d: 4, e: 5 } }));
       setTimeout(() => g.pub({ foo: { b: 2 } }), 10);

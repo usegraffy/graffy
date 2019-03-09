@@ -20,7 +20,6 @@ export default class GrueServer {
 
     if (req.method === 'GET') {
       const parsed = url.parse(req.url, true);
-      const path = parsed.pathname;
       const query = getQuery(parsed.query.include);
       if (req.headers['accept'] === 'text/event-stream') {
         res.setHeader('content-type', 'text/event-stream');
@@ -28,14 +27,14 @@ export default class GrueServer {
         // TODO: Resumable subscriptions using timestamp ID.
         // const lastId = req.headers['last-event-id'];
 
-        const stream = this.store.sub(path, query, { values: false });
+        const stream = this.store.sub(query, { values: false });
         for await (const value of stream) {
           if (req.aborted || res.finished) break;
           res.write(`data: ${JSON.stringify(value)}\n\n`);
         }
         res.end();
       } else {
-        const value = await this.store.get(path, query, { keepLinks: true });
+        const value = await this.store.getRaw(query);
         res.end(JSON.stringify(value));
       }
     } else {
@@ -44,3 +43,5 @@ export default class GrueServer {
     }
   };
 }
+
+// TODO: Write tests!

@@ -81,18 +81,13 @@ export function sprout(root, rootQuery) {
   Prune (unnecessary branches)
 */
 
-export function prune(root, rootQuery, isChange) {
+export function prune(root, rootQuery) {
   const pruned = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (typeof node === 'undefined') return;
 
-    if (
-      typeof node !== 'object' ||
-      !node ||
-      node[LINK_KEY] ||
-      (node[PAGE_KEY] && !isChange)
-    ) {
+    if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
       set(pruned, path, node);
     }
   });
@@ -130,13 +125,10 @@ export function graft(root, rootQuery) {
 
   walk(root, rootQuery, (node, query, path) => {
     if (typeof node === 'undefined' || node === null) return;
-    if (typeof node !== 'object') set(graph, path, node);
-    if (node[PAGE_KEY]) {
-      const node = makeNode(graph, path);
-      Object.defineProperty(node, PAGE_KEY, { value: node[PAGE_KEY] });
-    }
     if (node[LINK_KEY]) {
       links.push([path, node[LINK_KEY]]);
+    } else {
+      set(graph, path, node);
     }
   });
 
@@ -145,6 +137,10 @@ export function graft(root, rootQuery) {
   const prunedGraph = {};
   walk(graph, rootQuery, (node, query, path) => {
     if (typeof node !== 'object') set(prunedGraph, path, node);
+    if (node[PAGE_KEY]) {
+      const target = makeNode(prunedGraph, path);
+      Object.defineProperty(target, PAGE_KEY, { value: node[PAGE_KEY] });
+    }
   });
 
   return isEmpty(prunedGraph) ? undefined : prunedGraph;
