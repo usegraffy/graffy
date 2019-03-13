@@ -19,15 +19,15 @@ export function decRange(key) {
   const int = s => parseInt(s, 10);
   if (r !== '')
     return {
-      after: a || MIN_KEY,
-      before: c || MAX_KEY,
+      after: a !== '' ? a : MIN_KEY,
+      before: c !== '' ? c : MAX_KEY,
       [l === '**' ? 'last' : 'first']: int(b),
     };
 
   if (l === '*')
     return {
-      after: a || MIN_KEY,
-      before: b || MAX_KEY,
+      after: a !== '' ? a : MIN_KEY,
+      before: b !== '' ? b : MAX_KEY,
     };
 
   return {

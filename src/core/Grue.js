@@ -6,14 +6,13 @@ import {
   prune,
   graft,
   getToken,
-} from '@grue/common';
+  compose,
+} from './lib';
 import Subscription from './Subscription';
 import resolve from './resolve';
-import compose from './compose';
 
-export { encRange, decRange, getPage } from '@grue/common';
-export const GET = Symbol();
-export const PUT = Symbol();
+const GET = Symbol();
+const PUT = Symbol();
 
 function ensurePath(basePath, path, ...args) {
   if (!basePath) basePath = [];

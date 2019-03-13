@@ -1,4 +1,4 @@
-import { getInclude } from '@grue/common';
+import { getInclude } from '@grue/core';
 
 export default function GrueClient(baseUrl) {
   return function(store) {

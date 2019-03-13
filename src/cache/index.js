@@ -1,4 +1,4 @@
-import { getNode, makeNode, makePath, wrap, merge } from '@grue/common';
+import { getNode, makeNode, makePath, wrap, merge } from '@grue/core';
 
 export default class Cache {
   constructor() {

@@ -6,12 +6,16 @@ const { promisify } = require('util');
 const globby = require('globby');
 
 const readFile = promisify(fs.readFile);
+console.log(__dirname);
 const rootDir = join(__dirname, '..');
 const importRe = /import\s.*?from\s+['"](\w+|@\w+\/\w+)[^'"]*['"];/g;
 
 async function getDeps(name) {
   const found = {};
-  const paths = globby([`${path.join(rootDir, 'src', name)}/**/*.js`, '!*.test.js'])
+  const paths = await globby([
+    `${join(rootDir, 'src', name)}/**/*.js`,
+    '!**/*.test.js',
+  ]);
 
   for (const path of paths) {
     const source = (await readFile(join(process.cwd(), path))).toString();
@@ -26,9 +30,8 @@ async function getDeps(name) {
   console.log(deps);
 }
 
-getDeps();
+getDeps('core');
 
 async function publishPackage(name, version) {
-  await deps = getDeps(name);
-
+  deps = await getDeps(name);
 }

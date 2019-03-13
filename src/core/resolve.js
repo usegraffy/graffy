@@ -1,4 +1,4 @@
-import { sprout, prune, merge } from '@grue/common';
+import { sprout, prune, merge } from './lib';
 
 export const MAX_RECURSION = 10;
 

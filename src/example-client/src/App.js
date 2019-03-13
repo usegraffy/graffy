@@ -39,7 +39,18 @@ class App extends Component {
     );
 
     for await (let value of this.subscription) {
-      this.setState(value);
+      const { hasNext, hasPrev } = getPage(value.visitorsByTime);
+      if (
+        (!hasNext || !hasPrev) &&
+        (typeof range.before !== 'undefined' ||
+          typeof range.after !== 'undefined')
+      ) {
+        // We have reached the beginning or end of the list while paginating in
+        // the wrong direction; just flip the query to first or last 30.
+        this.setState({ range: { [range.first ? 'last' : 'first']: 30 } });
+      } else {
+        this.setState(value);
+      }
     }
   }
 

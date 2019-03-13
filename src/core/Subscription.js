@@ -1,4 +1,4 @@
-import { sprout, prune, graft, strike, merge } from '@grue/common';
+import { sprout, prune, graft, strike, merge } from './lib';
 
 export function makeStream(fn) {
   const payloads = [];

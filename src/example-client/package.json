@@ -5,20 +5,23 @@
   "dependencies": {
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
-    "react-scripts": "2.0.3"
+    "react-scripts": "^2.1.8"
   },
   "scripts": {
     "start": "react-scripts start"
   },
   "eslintConfig": {
     "rules": {
-      "no-unused-vars": ["error", {
-        "ignoreRestSiblings": true,
-        "varsIgnorePattern": "React|^_",
-        "argsIgnorePattern": "^_",
-        "caughtErrors": "all",
-        "caughtErrorsIgnorePattern": "_"
-      }]
+      "no-unused-vars": [
+        "error",
+        {
+          "ignoreRestSiblings": true,
+          "varsIgnorePattern": "React|^_",
+          "argsIgnorePattern": "^_",
+          "caughtErrors": "all",
+          "caughtErrorsIgnorePattern": "_"
+        }
+      ]
     }
   },
   "browserslist": [

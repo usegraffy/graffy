@@ -1,6 +1,6 @@
 {
   "name": "@grue/core",
   "version": "1.0.0",
-  "main": "Grue.js",
+  "main": "index.js",
   "license": "ISC"
 }

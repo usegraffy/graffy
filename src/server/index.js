@@ -3,7 +3,7 @@
   and should be written using CommonJS modules.
 */
 
-import { getQuery } from '@grue/common';
+import { getQuery } from '@grue/core';
 
 const url = require('url');
 

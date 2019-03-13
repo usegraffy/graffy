@@ -1,8 +1,9 @@
 import faker from 'faker';
-import { LINK_KEY } from '@grue/common';
+import { LINK_KEY } from '@grue/core/lib/constants';
 
 const visitors = {};
 const visitorsByTime = {};
+const freeIds = [];
 
 export default function(g) {
   g.onGet('/visitors', () => {
@@ -19,12 +20,12 @@ export default function(g) {
     ts = Date.now();
     const change = simulate();
     g.pub(change);
-  }, 1 + Math.random() * 2000);
+  }, 1 + Math.random() * 100);
 }
 
 function simulate() {
   const change =
-    Math.random() < 0.5
+    Math.random() < 0.9
       ? simulateUpdate()
       : Math.random() < 0.5
       ? simulateEnter()
@@ -37,14 +38,10 @@ function visitorInfo() {
 }
 
 let ts;
-let id = 0;
+let id = 1;
 
 function simulateEnter() {
-  let addId = Math.floor(Math.random() * id);
-  if (visitors[addId]) {
-    addId = id;
-    id++;
-  }
+  let addId = freeIds.length ? freeIds.pop() : id++;
 
   visitors[addId] = { id: addId, ts, ...visitorInfo() };
   visitorsByTime[ts] = { [LINK_KEY]: ['visitors', addId] };
@@ -63,6 +60,7 @@ function simulateLeave() {
   const delTs = visitors[delId].ts;
   delete visitors[delId];
   delete visitorsByTime[delTs];
+  freeIds.push(delId);
   return {
     visitors: { [delId]: null },
     visitorsByTime: { [delTs]: null },
@@ -80,9 +78,9 @@ function simulateUpdate() {
 }
 
 ts = Date.now();
-while (id < 1000) {
+while (id < 200) {
   simulateEnter();
-  ts -= Math.floor(1 + Math.random() * 2000);
+  ts -= Math.floor(1 + Math.random() * 100);
 }
 
 // --- for testing

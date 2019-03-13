@@ -1,5 +1,5 @@
 import Grue from '.';
-import { LINK_KEY, PAGE_KEY } from '@grue/common/constants';
+import { LINK_KEY, PAGE_KEY } from './lib/constants';
 
 describe('get', () => {
   let g;
