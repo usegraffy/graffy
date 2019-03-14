@@ -36,7 +36,7 @@ function simulate() {
 function visitorInfo() {
   return {
     name: faker.internet.userName(),
-    avatar: /* faker.internet.avatar() */ undefined,
+    avatar: faker.internet.avatar(),
     pageviews: {
       /* [ts]: faker.system.directoryPath() */
     },

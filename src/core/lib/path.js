@@ -10,7 +10,7 @@ export function makePath(path) {
 
 export function getNode(tree, path) {
   for (const name of path) {
-    if (!(name in tree)) return;
+    if (!tree || !(name in tree)) return;
     tree = tree[name];
   }
   return tree;
