@@ -1,8 +1,4 @@
-![Graffy logo](docs/graffy-logo.png)
-
-# Graffy
-
-![Build status](https://travis-ci.org/aravindet/graffy.svg?branch=master)
+# Graffy [![Build Status](https://travis-ci.org/aravindet/graffy.svg?branch=master)](https://travis-ci.org/aravindet/graffy)
 
 Graffy is a JavaScript library for building intuitive APIs with efficient live queries.
 
