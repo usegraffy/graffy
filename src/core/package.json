@@ -1,9 +1,27 @@
 {
   "name": "@graffy/core",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.5.1",
+  "main": "bundle.js",
+  "module": "bundle.mjs",
+  "sideEffects": "false",
+  "files": [
+    "bundle.js",
+    "bundle.mjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aravindet/graffy.git"
+  },
   "license": "ISC",
   "dependencies": {
     "lodash": "^4.17.11"
-  }
+  },
+  "scripts": {
+    "prepare": "cd .. && PKG=core yarn build-pkg"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "author": "",
+  "description": ""
 }
