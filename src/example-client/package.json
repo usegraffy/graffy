@@ -10,20 +10,6 @@
   "scripts": {
     "start": "react-scripts start"
   },
-  "eslintConfig": {
-    "rules": {
-      "no-unused-vars": [
-        "error",
-        {
-          "ignoreRestSiblings": true,
-          "varsIgnorePattern": "React|^_",
-          "argsIgnorePattern": "^_",
-          "caughtErrors": "all",
-          "caughtErrorsIgnorePattern": "_"
-        }
-      ]
-    }
-  },
   "browserslist": [
     ">0.2%",
     "not dead",

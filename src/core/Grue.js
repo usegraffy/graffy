@@ -7,9 +7,9 @@ import {
   graft,
   getToken,
   compose,
+  resolve,
 } from './lib';
 import Subscription from './Subscription';
-import resolve from './resolve';
 
 const GET = Symbol();
 const PUT = Symbol();

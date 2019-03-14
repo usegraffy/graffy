@@ -1,10 +1,12 @@
-import { sprout, prune, merge } from './lib';
+import { cap, sprout, prune, merge } from '.';
+import isEqual from 'lodash/isEqual';
 
 export const MAX_RECURSION = 10;
 
-export default async function resolve(rootQuery, rootFuncs, type, token) {
+export default async function resolve(initQuery, rootFuncs, type, token) {
   let layers;
   let result = {};
+  let rootQuery = initQuery;
   // Invokes resolver functions and collects the returned trees into layers.
   function build(query, funcs) {
     if (funcs[type]) {
@@ -31,10 +33,12 @@ export default async function resolve(rootQuery, rootFuncs, type, token) {
     layers = [];
     build(rootQuery, rootFuncs);
     merge(result, await squash(layers));
-    rootQuery = sprout(result, rootQuery);
+    const nextQuery = sprout(result, rootQuery);
+    if (isEqual(nextQuery, rootQuery)) break;
+    rootQuery = nextQuery;
   }
 
-  return result;
+  return cap(result, initQuery);
 }
 
 // Squashes layers into one (future) result tree.

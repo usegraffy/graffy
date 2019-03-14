@@ -24,6 +24,46 @@ describe('get', () => {
     });
   });
 
+  test('missing_to_null', async () => {
+    g.onGet('/foo', () => ({ foo: { bar: 45 } }));
+    expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+    expect(await g.getRaw({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+  });
+
+  test('undefined_to_null', async () => {
+    g.onGet('/foo', () => ({ foo: { bar: 45, baz: undefined } }));
+    expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+    expect(await g.getRaw({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+  });
+
+  test('empty_obj_to_null', async () => {
+    g.onGet('/foo', () => ({ foo: { bar: 45, baz: { bad: 3 } } }));
+    expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+    expect(await g.getRaw({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+  });
+
+  test('null_to_null', async () => {
+    g.onGet('/foo', () => ({ foo: { bar: 45, baz: null } }));
+    expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+    expect(await g.getRaw({ foo: { bar: 1, baz: 1 } })).toEqual({
+      foo: { bar: 45, baz: null },
+    });
+  });
+
   test('prune', async () => {
     g.use(grue => {
       grue.onGet('/foo', () => Promise.resolve({ foo: { baz: 15, bar: 42 } }));

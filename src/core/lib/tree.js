@@ -118,13 +118,26 @@ export function strike(root, rootQuery) {
   return isEmpty(normalized) ? undefined : normalized;
 }
 
+export function cap(root, rootQuery) {
+  const capped = {};
+
+  walk(root, rootQuery, (node, query, path) => {
+    set(capped, path, typeof node === 'undefined' ? null : node);
+  });
+
+  return isEmpty(capped) ? undefined : capped;
+}
+
 // Convert a raw response into a denormalized and easy-to-consume graph.
 export function graft(root, rootQuery) {
   const graph = {};
   const links = [];
 
   walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined' || node === null) return;
+    if (typeof node === 'undefined' || node === null) {
+      set(graph, path, null);
+      return;
+    }
     if (node[LINK_KEY]) {
       links.push([path, node[LINK_KEY]]);
     } else {
@@ -136,7 +149,10 @@ export function graft(root, rootQuery) {
 
   const prunedGraph = {};
   walk(graph, rootQuery, (node, query, path) => {
-    if (typeof node !== 'object') set(prunedGraph, path, node);
+    if (typeof node !== 'object' || node === null) {
+      set(prunedGraph, path, node);
+      return;
+    }
     if (node[PAGE_KEY]) {
       const target = makeNode(prunedGraph, path);
       Object.defineProperty(target, PAGE_KEY, { value: node[PAGE_KEY] });

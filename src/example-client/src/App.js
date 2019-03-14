@@ -34,7 +34,17 @@ class App extends Component {
 
     this.subscribedKey = rangeKey;
     this.subscription = store.sub(
-      { visitorsByTime: { [rangeKey]: { id: true, ts: true, name: true } } },
+      {
+        visitorsByTime: {
+          [rangeKey]: {
+            id: true,
+            ts: true,
+            name: true,
+            avatar: true,
+            pageviews: { '**3': true },
+          },
+        },
+      },
       { values: true },
     );
 
@@ -70,16 +80,18 @@ class App extends Component {
       <div className="App">
         <div className="Pagination">
           <button onClick={this.prev} disabled={!hasPrev}>
-            Previous
+            &lt;
           </button>
           <button onClick={this.next} disabled={!hasNext}>
-            Next
+            &gt;
           </button>
         </div>
         <div className="List">
-          {Object.keys(visitorsByTime).map(ts => (
-            <Visitor key={ts} {...visitorsByTime[ts]} />
-          ))}
+          {Object.keys(visitorsByTime)
+            .sort()
+            .map(ts => (
+              <Visitor key={visitorsByTime[ts].id} {...visitorsByTime[ts]} />
+            ))}
         </div>
       </div>
     );

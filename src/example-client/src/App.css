@@ -1,5 +1,6 @@
 .App {
   text-align: left;
+  margin: 6em;
 }
 
 .Visitor {
@@ -7,8 +8,14 @@
   padding: 0 5em;
 }
 
-.Visitor-id {
-  flex: 1 1 0;
+.Visitor-avatar {
+  flex: 0 0 auto;
+  width: 2em;
+  height: 2em;
+  margin: 1em;
+  background-color: #eee;
+  overflow: hidden;
+  border-radius: 100%;
 }
 
 .Visitor-name {
@@ -17,4 +24,40 @@
 
 .Visitor-ts {
   flex: 2 2 0;
+}
+
+.Pagination {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
+
+.Pagination > button {
+  font-size: 1.25em;
+  line-height: 1em;
+  padding: 1em 0;
+  width: 3em;
+  border-radius: 0;
+  border: none;
+  background: #eee;
+  color: #333;
+  cursor: pointer;
+}
+
+.Pagination > button:disabled {
+  color: #ccc;
+  cursor: default;
+}
+
+.Pagination > button:hover:not(:disabled) {
+  background: #fff;
+  box-shadow: inset 0 0 16px 0 #eee;
+}
+
+.Pagination > button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.Pagination > button:last-child {
+  border-radius: 0 4px 4px 0;
 }

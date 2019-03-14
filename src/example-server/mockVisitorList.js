@@ -34,7 +34,13 @@ function simulate() {
 }
 
 function visitorInfo() {
-  return { name: faker.name.findName() };
+  return {
+    name: faker.internet.userName(),
+    avatar: /* faker.internet.avatar() */ undefined,
+    pageviews: {
+      /* [ts]: faker.system.directoryPath() */
+    },
+  };
 }
 
 let ts;
@@ -82,6 +88,8 @@ while (id < 200) {
   simulateEnter();
   ts -= Math.floor(1 + Math.random() * 100);
 }
+
+console.log(visitors);
 
 // --- for testing
 
