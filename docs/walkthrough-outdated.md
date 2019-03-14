@@ -23,48 +23,48 @@ JSONPaths like `/pokes/1` represent links.
 
 ### Limitations
 
-- Grue cannot model lists (arrays). While maps with integer keys are possible, list-like insert / delete semantics are not supported.
-- Grue cannot store `null` as a leaf value distinct from a non-existant key.
+- Graffy cannot model lists (arrays). While maps with integer keys are possible, list-like insert / delete semantics are not supported.
+- Graffy cannot store `null` as a leaf value distinct from a non-existant key.
 
 ## Client-side usage
 
-Grue supports three operations:
+Graffy supports three operations:
 
 - get: Query
 - sub: Live query
 - put: Mutation
 
-Grue is also very modular, with most functionality being implemented in Providers.
+Graffy is also very modular, with most functionality being implemented in Providers.
 
 ```js
-import Grue, { Schema, ClientCache, Connector } from 'grue';
+import Graffy, { Schema, ClientCache, Connector } from 'graffy';
 
-const grue = new Grue();
-grue.use(new Schema(schema));
-grue.use(new ClientCache({ age: 5 * 60 }));
-grue.use(new Connector('https://example.com/api/'));
+const graffy = new Graffy();
+graffy.use(new Schema(schema));
+graffy.use(new ClientCache({ age: 5 * 60 }));
+graffy.use(new Connector('https://example.com/api/'));
 
 // One-time query
-const val = await grue.get(path, shape);
+const val = await graffy.get(path, shape);
 
 // Live query
-for await (const val of grue.sub(path, shape)) {
+for await (const val of graffy.sub(path, shape)) {
   // Handle live query value
   break; // unsubscribe
 }
 
 // Mutation
-await grue.put(path, change);
+await graffy.put(path, change);
 ```
 
-`Schema`, `Cache` and `Connector` are Grue Providers. Custom Providers can also be written.
+`Schema`, `Cache` and `Connector` are Graffy Providers. Custom Providers can also be written.
 
 ## Simple queries
 
 Leaf nodes can be fetched directly with their JSONPaths:
 
 ```js
-grue.get('users/1/name');
+graffy.get('users/1/name');
 // Returns a promise resolving to:
 ('Alice');
 ```
@@ -82,17 +82,17 @@ GET /users/1/name
 However, querying objects and arrays in a similar way does not work as expected:
 
 ```js
-grue.get('pokes/1');
+graffy.get('pokes/1');
 {
 }
 ```
 
-This is because Grue does not include child fields by default.
+This is because Graffy does not include child fields by default.
 
 The client must specify the fields it is interested in, using a GraphQL-like object we call the _shape_, a Falcor-like array we call the _pathset_, or a combination of both. These examples use shapes:
 
 ```js
-grue.get('pokes/1', { time: true, message: true })
+graffy.get('pokes/1', { time: true, message: true })
 { time: '2018-01-01T00:00:00', message: 'Hi!' }
 ```
 
@@ -105,7 +105,7 @@ GET /pokes/1/(time,message)
 Links can be traversed transparently:
 
 ```js
-grue.get(['pokes', 1, 'participants', 'poker', 'name']);
+graffy.get(['pokes', 1, 'participants', 'poker', 'name']);
 ('Alice');
 ```
 
@@ -123,14 +123,14 @@ GET /pokes/1/participants/poker/name
 Links themselves are considered strings, which allow them to be modified with put:
 
 ```js
-grue.get(['pokes', 1, 'participants', 'poker']);
+graffy.get(['pokes', 1, 'participants', 'poker']);
 ('users/1');
 ```
 
 What if we need the names of all participants? We can use the `*` wildcard:
 
 ```js
-grue.get(['pokes', 1, 'participants'], { '*': { name: true } })
+graffy.get(['pokes', 1, 'participants'], { '*': { name: true } })
 { "poker": { "name": "Alice" },
   "pokee": { "name": "Bob" } }
 ```
@@ -146,7 +146,7 @@ GET /pokes/1/participants/*/name
 Let's say we want the first 10 users, ordered by user ID:
 
 ```js
-grue.get('users', Map { { $first: 10 } = { name: true } })
+graffy.get('users', Map { { $first: 10 } = { name: true } })
 Map {
   1 = { name: 'Alice' },
   2 = { name: 'Bob' },
@@ -173,7 +173,7 @@ See the [Reference](#reference) section below for more information.
 Paginating over things by ID alone isn't very useful. More realistically, we might want the latest 10 pokes by `time`:
 
 ```js
-grue.get('pokesByTime', [ { $last: 10 }, 'message' ])
+graffy.get('pokesByTime', [ { $last: 10 }, 'message' ])
 Map {
   ...
   1999 = { message: 'Poke!' },
@@ -191,14 +191,14 @@ GET /pokesByTime/**10/message
 
 `pokesByTime` is an _index_ of the `pokes` collection. Note that instead of a shape, we are providing a pathset here.
 
-**Note:** As seen in these examples, Grue offers multiple equivalent ways to specify paths, shapes and keysets. In their normalized forms, paths are arrays, shapes are JS maps and keysets are objects or arrays. In transit (request URLs) they are all strings. For convenience, shapes can also be specified using plain JS objects or arrays similar to Falcor's _pathsets_ (as seen here).
+**Note:** As seen in these examples, Graffy offers multiple equivalent ways to specify paths, shapes and keysets. In their normalized forms, paths are arrays, shapes are JS maps and keysets are objects or arrays. In transit (request URLs) they are all strings. For convenience, shapes can also be specified using plain JS objects or arrays similar to Falcor's _pathsets_ (as seen here).
 
 ### Filters
 
 Say we want the latest 10 pokes received by user 2:
 
 ```js
-grue.get(['pokesByTime', { pokee: 'users/2' }], [{ $last: 10 }, 'message'])
+graffy.get(['pokesByTime', { pokee: 'users/2' }], [{ $last: 10 }, 'message'])
 Map {
   ...
   1999 = { message: 'Poke!' },
@@ -212,12 +212,12 @@ Map {
 
 ## Live queries
 
-`grue.sub()` works with the same arguments as `grue.get()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
+`graffy.sub()` works with the same arguments as `graffy.get()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
 
 The API is based on ES2018 Async Iterators:
 
 ```js
-const stream = grue.sub('/users/1', { name });
+const stream = graffy.sub('/users/1', { name });
 
 for await (const value of stream) {
   /* do something */
@@ -238,23 +238,23 @@ Accept: text/event-stream
 Node.js server-side is quite similar to the client.
 
 ```js
-import Grue, { Schema, SqlClient, Server } from 'grue';
+import Graffy, { Schema, SqlClient, Server } from 'graffy';
 import Express from 'express';
 
 const app = new Express();
 
-const grue = new Grue();
-grue.use(new Schema(schema));
-grue.use(new SqlClient(options));
+const graffy = new Graffy();
+graffy.use(new Schema(schema));
+graffy.use(new SqlClient(options));
 
-const { grueLink, expressLink } = new Server();
-grue.use(grueLink);
+const { graffyLink, expressLink } = new Server();
+graffy.use(graffyLink);
 app.use(expressLink);
 ```
 
 ## Type system
 
-The "Schema" Provider adds a type system and provides functionality such as introspection, validation and serialization of complex data (e.g. dates) to Grue. Its use is not mandatory but recommended.
+The "Schema" Provider adds a type system and provides functionality such as introspection, validation and serialization of complex data (e.g. dates) to Graffy. Its use is not mandatory but recommended.
 
 ### Schema
 
@@ -326,7 +326,7 @@ Paths can be specified using strings (`pokes/1`) and arrays (`['pokes', 1]`). In
 
 Pathsets can also be specified with strings (`pokes/(1,2)/time`) or arrays (`['pokes', [1, 2], 'time']`). Shapes can be specified using JS objects or JS maps. It is also possible to nest shapes and pathsets inside each other.
 
-Nested maps are the most general representation, and it can represent any valid Grue query. In contexts that don't support maps (JSON, URLs) a combination of maps and pathsets can be used:
+Nested maps are the most general representation, and it can represent any valid Graffy query. In contexts that don't support maps (JSON, URLs) a combination of maps and pathsets can be used:
 
 ```js
 // These are all equivalent
@@ -347,10 +347,10 @@ The property names of JS objects are _escaped_ keys, stringified pathsets or str
 class CustomProvider {
   constructor(options) {}
 
-  init(grue) {
-    this.grue = grue;
-    grue.onGet(this.handleGet);
-    grue.onPut(this.handlePut);
+  init(graffy) {
+    this.graffy = graffy;
+    graffy.onGet(this.handleGet);
+    graffy.onPut(this.handlePut);
   }
 
   async handleGet({ shape, token }, next) {
@@ -370,8 +370,8 @@ class CustomProvider {
   handlePut(changes, next) {}
 
   onSomeEvent() {
-    grue.pub(tree); // publish a change set
-    grue.close(token); // initiate subscription close
+    graffy.pub(tree); // publish a change set
+    graffy.close(token); // initiate subscription close
   }
 }
 ```

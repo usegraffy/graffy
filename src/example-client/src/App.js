@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import Grue, { encRange, getPage } from '@grue/core';
-import Client from '@grue/client';
-// import Cache from 'grue/cache';
+import Graffy, { encRange, getPage } from '@graffy/core';
+import Client from '@graffy/client';
+// import Cache from 'graffy/cache';
 
 import Visitor from './Visitor';
 import './App.css';
 
-const store = new Grue();
+const store = new Graffy();
 // store.use(new Cache());
 store.use(Client('http://localhost:8443'));
 

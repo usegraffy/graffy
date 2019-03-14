@@ -1,4 +1,4 @@
-# Grue vs. GraphQL
+# Graffy vs. GraphQL
 
 ## GraphQL shortcomings
 
@@ -23,11 +23,11 @@ Some GraphQL frameworks implement live queries by resending the entire query res
 
 Backend is a middleware framework similar to Express. Planned providers (middlware) include:
 
-- Grue-Cache (which uses JS memory and works on both client and server)
-- Grue-Schema (provides type validation and introspection endpoints)
-- Grue-Http (communicates with an express-grue server)
+- Graffy-Cache (which uses JS memory and works on both client and server)
+- Graffy-Schema (provides type validation and introspection endpoints)
+- Graffy-Http (communicates with an express-graffy server)
 
 Other planned modules:
 
-- Express-Grue (express middleware that creates an HTTP and Websockets API)
-- React-Grue (react components for making queries and subscriptions)
+- Express-Graffy (express middleware that creates an HTTP and Websockets API)
+- React-Graffy (react components for making queries and subscriptions)

@@ -1,7 +1,7 @@
 ```js
 // common/schema.js
 
-import { types } from 'grue';
+import { types } from 'graffy';
 import { User } from './user';
 import { Poke, PokeFilter } from './poke';
 
@@ -57,8 +57,8 @@ It is not possible to represent a tuple in the value position.
 
 // client/DataProvider.js
 
-import { Store, CacheSource, HttpSource } from 'grue';
-import { Provider } from 'grue-react';
+import { Store, CacheSource, HttpSource } from 'graffy';
+import { Provider } from 'graffy-react';
 import schema from './schema';
 
 export default class DataProvider extends Component {
@@ -75,8 +75,8 @@ export default class DataProvider extends Component {
 
 // client/PokeList.js
 
-import { filter, range } from 'grue';
-import { Read } from 'grue-react';
+import { filter, range } from 'graffy';
+import { Read } from 'graffy-react';
 
 export default class PokeList extends Component {
   render() {
@@ -102,8 +102,8 @@ export default class PokeList extends Component {
 
 // server.js
 
-import { Store, RedisCache, fromFilter } from 'grue';
-import { createServer } from 'grue-server';
+import { Store, RedisCache, fromFilter } from 'graffy';
+import { createServer } from 'graffy-server';
 import { pokeSource, pokesByTimeSource, userSource } from './sources';
 import schema from './schema';
 

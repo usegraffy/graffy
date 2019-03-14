@@ -55,11 +55,11 @@ j**n*k  { $last: n, $after: j, $before: k }   Last n between j and k
 
 Parameter encoding is used to encode fixed-size data types such as tuples or structs into strings such that the encoded strings sort in the same order as the original values.
 
-This allows Grue to reduce complex queries with filtering and cursor-based pagination to simple ranges of keys to retrieve.
+This allows Graffy to reduce complex queries with filtering and cursor-based pagination to simple ranges of keys to retrieve.
 
 ## What values are allowed in keys?
 
-Only a subset of the types supported by Grue are allowed to be used in cursors. This is motivated by the need for values to have an unambiguous sort order. The following types are not allowed:
+Only a subset of the types supported by Graffy are allowed to be used in cursors. This is motivated by the need for values to have an unambiguous sort order. The following types are not allowed:
 
 - Maps & Sets
 - Numbers with a NaN value

@@ -55,7 +55,7 @@ export const boolean = variants({
   max: true,
 });
 
-// A JSON object, which Grue should treat as a value.
+// A JSON object, which Graffy should treat as a value.
 export const object = variants({
   ...base('object'),
   intoKey() {

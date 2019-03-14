@@ -40,7 +40,7 @@ function shiftFn(fn, path) {
   };
 }
 
-export default class Grue {
+export default class Graffy {
   constructor(path, root) {
     if (root) {
       this.root = root;
@@ -67,7 +67,7 @@ export default class Grue {
   use(path, provider) {
     [path, provider] = ensurePath(this.path, path, provider);
     provider(
-      new Grue(this.path ? this.path.concat(path) : path, this.root || this),
+      new Graffy(this.path ? this.path.concat(path) : path, this.root || this),
     );
   }
 

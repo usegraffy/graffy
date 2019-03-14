@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { LINK_KEY } from '@grue/core/lib/constants';
+import { LINK_KEY } from '@graffy/core/lib/constants';
 
 const visitors = {};
 const visitorsByTime = {};

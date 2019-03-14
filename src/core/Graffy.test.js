@@ -1,23 +1,23 @@
-import Grue from '.';
+import Graffy from '.';
 import { LINK_KEY, PAGE_KEY } from './lib/constants';
 
 describe('get', () => {
   let g;
   beforeEach(() => {
-    g = new Grue();
+    g = new Graffy();
   });
 
   test('simple', async () => {
-    g.use('/foo', grue => {
-      grue.onGet('/bar', () => Promise.resolve({ bar: 42 }));
+    g.use('/foo', graffy => {
+      graffy.onGet('/bar', () => Promise.resolve({ bar: 42 }));
     });
     expect(await g.get({ foo: { bar: 1 } })).toEqual({ foo: { bar: 42 } });
   });
 
   test('overlap', async () => {
-    g.use('/foo', grue => {
-      grue.onGet('/baz', () => Promise.resolve({ baz: 15 }));
-      grue.onGet('/bar', () => Promise.resolve({ bar: 42 }));
+    g.use('/foo', graffy => {
+      graffy.onGet('/baz', () => Promise.resolve({ baz: 15 }));
+      graffy.onGet('/bar', () => Promise.resolve({ bar: 42 }));
     });
     expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
       foo: { bar: 42, baz: 15 },
@@ -65,8 +65,8 @@ describe('get', () => {
   });
 
   test('prune', async () => {
-    g.use(grue => {
-      grue.onGet('/foo', () => Promise.resolve({ foo: { baz: 15, bar: 42 } }));
+    g.use(graffy => {
+      graffy.onGet('/foo', () => Promise.resolve({ foo: { baz: 15, bar: 42 } }));
     });
     expect(await g.get({ foo: { bar: 1 } })).toEqual({ foo: { bar: 42 } });
   });
@@ -85,8 +85,8 @@ describe('get', () => {
           e: { baz: 19, bar: 38 },
         },
       });
-      g.use(grue => {
-        grue.onGet(resolver);
+      g.use(graffy => {
+        graffy.onGet(resolver);
       });
     });
 
@@ -158,9 +158,9 @@ describe('get', () => {
 
   describe('link', () => {
     beforeEach(() => {
-      g.use(grue => {
-        grue.onGet('/foo', () => ({ foo: { [LINK_KEY]: ['bar'] } }));
-        grue.onGet('/bar', () => ({ bar: { baz: 3 } }));
+      g.use(graffy => {
+        graffy.onGet('/foo', () => ({ foo: { [LINK_KEY]: ['bar'] } }));
+        graffy.onGet('/bar', () => ({ bar: { baz: 3 } }));
       });
     });
 
@@ -184,16 +184,16 @@ describe('subscriptions', () => {
     let close;
 
     beforeEach(() => {
-      g = new Grue();
+      g = new Graffy();
       close = jest.fn();
 
-      g.use('/foo', grue => {
-        grue.onGet('/bar', ({ token }) => {
+      g.use('/foo', graffy => {
+        graffy.onGet('/bar', ({ token }) => {
           let i = 1;
           expect(token).toHaveProperty('signaled');
           expect(token).toHaveProperty('onSignal');
           token.onSignal(close);
-          timer = setInterval(() => grue.pub({ bar: i++ }), 10);
+          timer = setInterval(() => graffy.pub({ bar: i++ }), 10);
           return Promise.resolve({ bar: 0 });
         });
       });
@@ -228,7 +228,7 @@ describe('subscriptions', () => {
     let g;
 
     beforeEach(() => {
-      g = new Grue();
+      g = new Graffy();
     });
 
     test('object', async () => {
@@ -292,7 +292,7 @@ describe('subscriptions', () => {
     let g;
 
     beforeEach(() => {
-      g = new Grue();
+      g = new Graffy();
     });
 
     test('object', async () => {

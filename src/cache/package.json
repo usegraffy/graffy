@@ -1,6 +1,6 @@
 {
-  "name": "@grue/cache",
+  "name": "@graffy/cache",
   "version": "1.0.0",
-  "main": "Grue.js",
+  "main": "Graffy.js",
   "license": "ISC"
 }

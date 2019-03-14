@@ -1,6 +1,6 @@
-# Grue Guide
+# Graffy Guide
 
-This is a quick tutorial introducing Grue concepts by example. We'll build an API for a simple blog.
+This is a quick tutorial introducing Graffy concepts by example. We'll build an API for a simple blog.
 
 ## Data modelling
 
@@ -8,7 +8,7 @@ The data model for our blog may look like this:
 
 ![Example data model](example-model.png)
 
-Every Grue data model is a tree with a single root node, denoted by `/`. First-level children are typically nodes representing the main resources of our application, `/posts` and `/users`.
+Every Graffy data model is a tree with a single root node, denoted by `/`. First-level children are typically nodes representing the main resources of our application, `/posts` and `/users`.
 
 ### Resources
 
@@ -26,22 +26,22 @@ Under the filtering parameters are nodes linking to the posts at their canonical
 
 ## Client-side usage
 
-Like Express, Grue uses middleware to provide functionality. Grue-cache provides client-side caching and Grue-client makes requests to the server.
+Like Express, Graffy uses middleware to provide functionality. Graffy-cache provides client-side caching and Graffy-client makes requests to the server.
 
 ```js
-import Grue from '@grue/core';
-import GrueCache from '@grue/cache';
-import GrueClient from '@grue/client';
+import Graffy from '@graffy/core';
+import GraffyCache from '@graffy/cache';
+import GraffyClient from '@graffy/client';
 
-const store = new Grue();
-store.use(GrueCache());
-store.use(GrueClient('https://example.com/api'));
+const store = new Graffy();
+store.use(GraffyCache());
+store.use(GraffyClient('https://example.com/api'));
 ```
 
 Queries are specified using plain JS objects; the `filter()` and `range()` helpers [encode](Encoding.md) GraphQL-like filtering and pagination parameters into strings. All required fields must be specified explicitly.
 
 ```js
-import { filter, range } from `@grue/core`;
+import { filter, range } from `@graffy/core`;
 
 const filterKey = filter({ tags: ['tag1'] });
 const rangeKey = range({ first: 10 });
@@ -65,10 +65,10 @@ const result = await store.get(query);
 for await (const result of store.sub(query)) { /* ... */ }
 ```
 
-React-Grue provides an alternate API using React render props.
+React-Graffy provides an alternate API using React render props.
 
 ```js
-import { Query } from '@grue/react';
+import { Query } from '@graffy/react';
 
 <Query live store={store} query={query}>
   {(data, error) => ( /* ... */ )}
@@ -77,18 +77,18 @@ import { Query } from '@grue/react';
 
 ## Server-side usage
 
-Grue-server creates HTTP request handlers that can be used with Express or with the Node HTTP servers.
+Graffy-server creates HTTP request handlers that can be used with Express or with the Node HTTP servers.
 
 ```js
 import http from 'http';
-import Grue, { range } from '@grue/core';
-import GrueServer from '@grue/server';
+import Graffy, { range } from '@graffy/core';
+import GraffyServer from '@graffy/server';
 import myProvider from './provider';
 
-const store = new Grue();
-const server = new GrueServer();
+const store = new Graffy();
+const server = new GraffyServer();
 store.use(myProvider);
-store.use(server.grue);
+store.use(server.graffy);
 http.createServer(server.http).listen(4783);
 ```
 

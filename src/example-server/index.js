@@ -1,13 +1,13 @@
 import http from 'http';
 
-import Grue from '@grue/core';
-import GrueServer from '@grue/server';
+import Graffy from '@graffy/core';
+import GraffyServer from '@graffy/server';
 import mock from './mockVisitorList';
 
-const g = new Grue();
-const middle = new GrueServer();
+const g = new Graffy();
+const middle = new GraffyServer();
 g.use(mock);
-g.use(middle.grue);
+g.use(middle.graffy);
 
 http
   .createServer((req, res) => {

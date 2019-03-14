@@ -1,5 +1,5 @@
 {
-  "name": "@grue/example-client",
+  "name": "@graffy/example-client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

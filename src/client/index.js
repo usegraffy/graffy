@@ -1,6 +1,6 @@
-import { getInclude } from '@grue/core';
+import { getInclude } from '@graffy/core';
 
-export default function GrueClient(baseUrl) {
+export default function GraffyClient(baseUrl) {
   return function(store) {
     store.onGet(({ query, token }) => {
       const url = `${baseUrl}?include=${getInclude(query)}`;

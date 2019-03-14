@@ -1,8 +1,8 @@
-# Grue API Reference
+# Graffy API Reference
 
-## @grue/core
+## @graffy/core
 
-### new Grue()
+### new Graffy()
 
 Constructs a store. Does not accept any arguments.
 
@@ -27,7 +27,7 @@ Returns: Promise that resolves on success
 
 **Options**
 
-- **source**: A string identifying the source of the change. This value is opaque to grue, but providers may use it property to avoid echoing writes back to their source.
+- **source**: A string identifying the source of the change. This value is opaque to graffy, but providers may use it property to avoid echoing writes back to their source.
 
 ### store.**onGet**(path, callback)
 
@@ -39,21 +39,21 @@ Parameters: [path](Encoding#Paths), provider
 
 Mounts a provider to the store at the given path.
 
-### Grue.encode(params)
+### Graffy.encode(params)
 
 
 
-### Grue.decode(key)
+### Graffy.decode(key)
 
 
 
-### Grue.link(path)
+### Graffy.link(path)
 
 Parameters: [path](Encoding#Paths)
 Returns: A link object
 
-## @grue/server
+## @graffy/server
 
-## @grue/client
+## @graffy/client
 
-## @grue/cache
+## @graffy/cache

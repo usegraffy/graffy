@@ -20,7 +20,7 @@ Cons:
 
 Decision: Keep cached data in a tree with symlinks
 
-## Should Grue Server have full REST compatibility?
+## Should Graffy Server have full REST compatibility?
 
 This would require:
 - returning just the branch at path, rather than sparse trees from the root

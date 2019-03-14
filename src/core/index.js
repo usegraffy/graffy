@@ -1,4 +1,4 @@
-import Grue from './Grue';
-export default Grue;
+import Graffy from './Graffy';
+export default Graffy;
 
 export { getQuery, getInclude, encRange, decRange, getPage } from './lib';

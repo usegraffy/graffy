@@ -3,12 +3,12 @@
   and should be written using CommonJS modules.
 */
 
-import { getQuery } from '@grue/core';
+import { getQuery } from '@graffy/core';
 
 const url = require('url');
 
-export default class GrueServer {
-  grue = s => {
+export default class GraffyServer {
+  graffy = s => {
     this.store = s;
   };
 

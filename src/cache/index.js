@@ -1,13 +1,13 @@
-import { getNode, makeNode, makePath, wrap, merge } from '@grue/core';
+import { getNode, makeNode, makePath, wrap, merge } from '@graffy/core';
 
 export default class Cache {
   constructor() {
     this.data = {};
   }
 
-  init(grue) {
-    grue.onGet(this.get);
-    grue.onPut(this.put);
+  init(graffy) {
+    graffy.onGet(this.get);
+    graffy.onPut(this.put);
   }
 
   get(path) {

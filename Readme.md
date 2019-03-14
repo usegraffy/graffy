@@ -1,22 +1,22 @@
-![Grue logo](docs/grue-logo.png)
+![Graffy logo](docs/graffy-logo.png)
 
-# Grue
+# Graffy
 
-![Build status](https://travis-ci.org/aravindet/grue.svg?branch=master)
+![Build status](https://travis-ci.org/aravindet/graffy.svg?branch=master)
 
-Grue is a JavaScript library for building familiar RESTful APIs with expressive power and capabilities that exceed GraphQL.
+Graffy is a JavaScript library for building intuitive APIs with efficient live queries.
 
-Grue was inspired by (and borrows from) GraphQL and Falcor. Compared to GraphQL, Grue offers a simpler and more intuitive data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
+Graffy was inspired by (and borrows from) GraphQL and Falcor. Compared to GraphQL, Graffy offers a simpler and more intuitive data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
 
-Unlike GraphQL resolvers and Falcor data providers, Grue providers can be _composed_ like Express/Koa middleware. This allows authentication, validation, custom caches and resource limiting to be implemented in a straightforward manner.
+Unlike GraphQL resolvers and Falcor data providers, Graffy providers can be _composed_ like Express/Koa middleware. This allows authentication, validation, custom caches and resource limiting to be implemented in a straightforward manner.
 
-Grue providers can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries). This is particularly hard to do with GraphQL (see dataloader) and Falcor.
+Graffy providers can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries). This is particularly hard to do with GraphQL (see dataloader) and Falcor.
 
-## [Documentation](https://aravindet.github.io/grue)
+## [Documentation](https://aravindet.github.io/graffy)
 
 ## Development status
 
-**Grue is under heavy development and not ready for production use.**
+**Graffy is under heavy development and not ready for production use.**
 
 | Module | Status     | Provides                         |
 | ------ | ---------- | -------------------------------- |
@@ -32,7 +32,7 @@ Grue providers can also perform efficient bulk reads from underlying data stores
 
 ## Capabilities
 
-|                    | Grue | GraphQL | Falcor | Description                                              |
+|                    | Graffy | GraphQL | Falcor | Description                                              |
 | ------------------ | :--: | :-----: | :----: | -------------------------------------------------------- |
 | Narrow queries     |  ✅  |   ✅    |   ✅   | Queries specify required fields; Allows API evolution    |
 | Deep queries       |  ✅  |   ✅    |   ✅   | Queries can expand nested resources; Reduces round-trips |

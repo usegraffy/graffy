@@ -1,10 +1,10 @@
 {
-  "name": "grue",
+  "name": "graffy",
   "version": "1.0.0",
-  "description": "Grue Project",
+  "description": "Graffy Project",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aravindet/grue.git"
+    "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
     "test": "jest",
@@ -21,9 +21,9 @@
   "author": "aravindet",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/aravindet/grue/issues"
+    "url": "https://github.com/aravindet/graffy/issues"
   },
-  "homepage": "https://github.com/aravindet/grue#readme",
+  "homepage": "https://github.com/aravindet/graffy#readme",
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.1.2",

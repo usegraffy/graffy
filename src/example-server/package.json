@@ -1,7 +1,7 @@
 {
-  "name": "@grue/example-server",
+  "name": "@graffy/example-server",
   "version": "1.0.0",
-  "main": "Grue.js",
+  "main": "Graffy.js",
   "license": "ISC",
   "dependencies": {
     "faker": "^4.1.0"
