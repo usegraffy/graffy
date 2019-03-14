@@ -1,4 +1,8 @@
+![Grue logo](docs/grue-logo.png)
+
 # Grue
+
+![Build status](https://travis-ci.org/aravindet/grue.svg?branch=master)
 
 Grue is a JavaScript library for building familiar RESTful APIs with expressive power and capabilities that exceed GraphQL.
 
