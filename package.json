@@ -8,14 +8,15 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "rm -rf dist && babel src -d dist --ignore 'src/example-client/**','src/example-client/**','src/**/*.test.js'",
-    "server": "nodemon --exec babel-node src/example-server",
-    "client": "cd src/example-client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
+    "build": "rm -rf dist && babel src -d dist",
+    "server": "nodemon --exec babel-node examples/server",
+    "client": "cd examples/client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
     "example": "(yarn client &) && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
   "workspaces": [
-    "src/*"
+    "src/*",
+    "examples/*"
   ],
   "private": true,
   "author": "aravindet",

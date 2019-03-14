@@ -1,6 +1,6 @@
 module.exports = {
   verbose: true,
-  testURL: "http://localhost/",
-  rootDir: "src",
-  modulePaths: ["<rootDir>/src"],
+  testURL: 'http://localhost/',
+  modulePaths: ['<rootDir>/src'],
+  collectCoverage: true,
 };
