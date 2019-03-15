@@ -1,9 +1,9 @@
-import { getInclude } from '@graffy/core';
+import getPath from './getPath';
 
 export default function GraffyClient(baseUrl) {
   return function(store) {
     store.onGet(({ query, token }) => {
-      const url = `${baseUrl}?include=${getInclude(query)}`;
+      const url = `${baseUrl}?include=${getPath(query)}`;
 
       if (!token) {
         if (!fetch) throw Error('client.fetch.unavailable');

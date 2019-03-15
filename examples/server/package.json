@@ -1,8 +1,8 @@
 {
   "name": "@graffy/example-server",
   "version": "1.0.0",
-  "main": "Graffy.js",
-  "license": "ISC",
+  "main": "index.js",
+  "private": true,
   "dependencies": {
     "faker": "^4.1.0"
   },

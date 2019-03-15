@@ -1,4 +1,4 @@
-import Graffy from '.';
+import Graffy from './Graffy';
 import { LINK_KEY, PAGE_KEY } from './lib/constants';
 
 describe('get', () => {
@@ -66,7 +66,9 @@ describe('get', () => {
 
   test('prune', async () => {
     g.use(graffy => {
-      graffy.onGet('/foo', () => Promise.resolve({ foo: { baz: 15, bar: 42 } }));
+      graffy.onGet('/foo', () =>
+        Promise.resolve({ foo: { baz: 15, bar: 42 } }),
+      );
     });
     expect(await g.get({ foo: { bar: 1 } })).toEqual({ foo: { bar: 42 } });
   });

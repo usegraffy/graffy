@@ -1,4 +1,5 @@
-import { sortedIndex, sortedLastIndex } from 'lodash';
+import sortedIndex from 'lodash/sortedIndex';
+import sortedLastIndex from 'lodash/sortedLastIndex';
 import { PAGE_KEY, LINK_KEY, MIN_KEY, MAX_KEY } from './constants';
 import { inter, diff } from './interval';
 

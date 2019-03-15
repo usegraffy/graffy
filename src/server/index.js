@@ -3,7 +3,7 @@
   and should be written using CommonJS modules.
 */
 
-import { getQuery } from '@graffy/core';
+import getQuery from './getQuery';
 
 const url = require('url');
 

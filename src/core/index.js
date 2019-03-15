@@ -1,4 +1,2 @@
-import Graffy from './Graffy';
-export default Graffy;
-
-export { getQuery, getInclude, encRange, decRange, getPage } from './lib';
+export { default as Graffy } from './Graffy';
+export { encRange, decRange, getPage } from './lib';

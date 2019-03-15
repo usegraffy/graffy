@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "rm -rf dist && babel src -d dist",
+    "build-pkg": "rollup -c",
     "server": "nodemon --exec babel-node examples/server",
     "client": "cd examples/client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
     "example": "(yarn client &) && yarn server",
@@ -20,7 +20,7 @@
   ],
   "private": true,
   "author": "aravindet",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/aravindet/graffy/issues"
   },
@@ -35,6 +35,7 @@
     "@babel/runtime": "^7.1.2",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^24.3.1",
+    "babel-plugin-async-to-promises": "^1.0.5",
     "eslint": "^5.4.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
@@ -43,6 +44,10 @@
     "jest": "^24.3.1",
     "nodemon": "^1.18.10",
     "prettier": "^1.16.4",
-    "rollup": "^1.6.0"
+    "rollup": "^1.6.0",
+    "rollup-plugin-analyzer": "^3.0.0",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^9.2.1",
+    "rollup-plugin-node-resolve": "^4.0.1"
   }
 }

@@ -1,6 +1,21 @@
 {
   "name": "@graffy/client",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "ISC"
+  "author": "aravind (github.com/aravindet)",
+  "description": "HTTP client library for Graffy",
+  "main": "bundle.js",
+  "module": "bundle.mjs",
+  "sideEffects": "false",
+  "files": [
+    "bundle.js",
+    "bundle.mjs"
+  ],
+  "scripts": {
+    "prepare": "cd .. && PKG=client yarn build-pkg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aravindet/graffy.git"
+  },
+  "license": "Apache-2.0"
 }

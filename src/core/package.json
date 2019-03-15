@@ -1,6 +1,8 @@
 {
   "name": "@graffy/core",
   "version": "0.5.1",
+  "author": "aravind (github.com/aravindet)",
+  "description": "Live queries on graphs",
   "main": "bundle.js",
   "module": "bundle.mjs",
   "sideEffects": "false",
@@ -8,20 +10,15 @@
     "bundle.js",
     "bundle.mjs"
   ],
+  "scripts": {
+    "prepare": "cd .. && PKG=core yarn build-pkg"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aravindet/graffy.git"
   },
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "lodash": "^4.17.11"
-  },
-  "scripts": {
-    "prepare": "cd .. && PKG=core yarn build-pkg"
-  },
-  "directories": {
-    "lib": "lib"
-  },
-  "author": "",
-  "description": ""
+  }
 }

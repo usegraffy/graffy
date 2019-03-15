@@ -1,6 +1,6 @@
 const includeRe = /([^,()]*)([(),]|$)/g;
 
-export function getQuery(include) {
+export default function getQuery(include) {
   if (!include) return {};
 
   includeRe.lastIndex = 0;
@@ -26,15 +26,4 @@ export function getQuery(include) {
 
   if (stack.length !== 1) throw 'parse.missing_close';
   return stack[0];
-}
-
-export function getInclude(query) {
-  return Object.keys(query)
-    .sort()
-    .map(key =>
-      typeof query[key] === 'object'
-        ? `${key}(${getInclude(query[key])})`
-        : key,
-    )
-    .join(',');
 }

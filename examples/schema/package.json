@@ -2,5 +2,6 @@
   "name": "@graffy/schema",
   "version": "1.0.0",
   "main": "Graffy.js",
-  "license": "ISC"
+  "license": "Apache-2.0",
+  "private": true
 }

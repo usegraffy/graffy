@@ -1,4 +1,5 @@
-import { cap, sprout, prune, merge } from '.';
+import { cap, sprout, prune } from './tree';
+import merge from './merge';
 import isEqual from 'lodash/isEqual';
 
 export const MAX_RECURSION = 10;
