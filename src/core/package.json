@@ -1,6 +1,6 @@
 {
   "name": "@graffy/core",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "author": "aravind (github.com/aravindet)",
   "description": "Live queries on graphs",
   "main": "bundle.js",
