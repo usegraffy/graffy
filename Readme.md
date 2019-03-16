@@ -1,3 +1,5 @@
+<img src="docs/graffy-logo.png" srcset="docs/graffy-logo.png 1x,docs/graffy-logo-2x.png 2x" />
+
 # Graffy [![Build Status](https://travis-ci.org/aravindet/graffy.svg?branch=master)](https://travis-ci.org/aravindet/graffy)
 
 Graffy is a JavaScript library for building intuitive APIs with efficient live queries.
@@ -16,11 +18,11 @@ Graffy providers can also perform efficient bulk reads from underlying data stor
 
 | Module | Status     | Provides                         |
 | ------ | ---------- | -------------------------------- |
-| core   | 🚧 in dev  | -                                |
-| client | 🚧 in dev  | EventStream/HTTP client          |
-| server | 🚧 in dev  | EventStream/HTTP server          |
+| core   | [![npm version](http://img.shields.io/npm/v/@graffy/core.svg?style=flat)](https://npmjs.org/package/@graffy/core "@graffy/core on npm")  | -                                |
+| client | [![npm version](http://img.shields.io/npm/v/@graffy/client.svg?style=flat)](https://npmjs.org/package/@graffy/client "@graffy/client on npm")  | EventStream/HTTP client          |
+| server | [![npm version](http://img.shields.io/npm/v/@graffy/server.svg?style=flat)](https://npmjs.org/package/@graffy/server "@graffy/server on npm")  | EventStream/HTTP server          |
 | cache  | ⌛ backlog | In-memory cache                  |
-| react  | ⌛ backlog | Container API                    |
+| react  | ⌛ backlog | Container and hooks API          |
 | schema | ⌛ backlog | Validation, introspection API    |
 | viewer | ⌛ backlog | Schema introspection client      |
 | auth   | ⌛ backlog | Authentication and authorization |
