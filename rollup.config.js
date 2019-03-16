@@ -50,10 +50,7 @@ export default {
 
 function onAnalysis({ bundleSize, bundleOrigSize, moduleCount, modules }) {
   console.log(
-    'Summary',
-    moduleCount,
-    bundleSize,
-    (bundleSize * 100) / bundleOrigSize,
+    '\n----------------------------------------- Summary -----------------------------------------',
   );
 
   const { own, deps, max } = modules
@@ -61,7 +58,6 @@ function onAnalysis({ bundleSize, bundleOrigSize, moduleCount, modules }) {
     .reduce(
       (acc, { id, size, dependents }) => {
         acc.own[id] = (acc.own[id] || 0) + size;
-        console.log('dropping', id, dependents[0]);
         dependents.forEach(d => {
           acc.deps[d] = (acc.deps[d] || 0) + size;
         });

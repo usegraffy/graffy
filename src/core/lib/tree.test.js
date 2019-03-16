@@ -1,12 +1,8 @@
 import { prune, sprout, strike } from './tree';
-import { LINK_KEY, PAGE_KEY, MIN_KEY, MAX_KEY } from './constants';
-import { makePath } from './path';
+import { MIN_KEY, MAX_KEY, makeLink, makePage } from './constants';
 
-const link = path => ({ [LINK_KEY]: makePath(path) });
-const page = (node, start, end) => {
-  node[PAGE_KEY] = [start, end];
-  return node;
-};
+const link = makeLink;
+const page = makePage;
 
 test('strike', () => {
   expect(
@@ -53,9 +49,9 @@ test('sprout 1', () => {
 
 const tree = {
   a: {
-    b: { c: { [LINK_KEY]: ['e'] } },
-    d: { c: { [LINK_KEY]: ['g'] } },
-    l: { c: { [LINK_KEY]: ['m'] } },
+    b: { c: link('/e') },
+    d: { c: link('/g') },
+    l: { c: link('/m') },
   },
   e: { f: 5, h: 9 },
   g: { f: 7 },
@@ -81,12 +77,15 @@ test('prune 2', () => {
     a: { '*': { c: { f: true, h: true } } },
   };
   expect(prune(tree, query)).toEqual({
-    a: {
-      [PAGE_KEY]: [MIN_KEY, MAX_KEY],
-      b: { c: { [LINK_KEY]: ['e'] } },
-      d: { c: { [LINK_KEY]: ['g'] } },
-      l: { c: { [LINK_KEY]: ['m'] } },
-    },
+    a: page(
+      {
+        b: { c: link('/e') },
+        d: { c: link('/g') },
+        l: { c: link('/m') },
+      },
+      MIN_KEY,
+      MAX_KEY,
+    ),
     e: { f: 5, h: 9 },
     g: { f: 7 },
   });

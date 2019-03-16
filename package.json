@@ -9,7 +9,7 @@
   "scripts": {
     "test": "jest",
     "build-pkg": "rollup -c",
-    "server": "nodemon --exec babel-node examples/server",
+    "server": "node examples/server",
     "client": "cd examples/client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
     "example": "(yarn client &) && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"

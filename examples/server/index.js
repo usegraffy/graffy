@@ -1,8 +1,8 @@
-import http from 'http';
+const http = require('http');
 
-import Graffy from '@graffy/core';
-import GraffyServer from '@graffy/server';
-import mock from './mockVisitorList';
+const Graffy = require('@graffy/core');
+const GraffyServer = require('@graffy/server');
+const mock = require('./mockVisitorList');
 
 const g = new Graffy();
 const middle = new GraffyServer();

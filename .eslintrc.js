@@ -14,14 +14,12 @@ module.exports = {
   "plugins": ["react", "prettier"],
   "rules": {
     "prettier/prettier": "error",
-    "rules": {
-      "no-unused-vars": ["error", {
-        "ignoreRestSiblings": true,
-        "varsIgnorePattern": "^_",
-        "argsIgnorePattern": "^_",
-        "caughtErrors": "all",
-        "caughtErrorsIgnorePattern": "_"
-      }]
-    }
+    "no-unused-vars": ["error", {
+      "ignoreRestSiblings": true,
+      "varsIgnorePattern": "^_",
+      "argsIgnorePattern": "^_",
+      "caughtErrors": "all",
+      "caughtErrorsIgnorePattern": "_"
+    }]
   },
 };

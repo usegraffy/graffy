@@ -4,9 +4,8 @@
   "main": "index.js",
   "private": true,
   "dependencies": {
-    "faker": "^4.1.0"
-  },
-  "browserslist": [
-    "maintained node versions"
-  ]
+    "faker": "^4.1.0",
+    "@graffy/core": "x",
+    "@graffy/server": "x"
+  }
 }

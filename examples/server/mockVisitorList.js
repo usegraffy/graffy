@@ -1,11 +1,11 @@
-import faker from 'faker';
-import { LINK_KEY } from '@graffy/core/lib/constants';
+const faker = require('faker');
+const { makeLink } = require('@graffy/core');
 
 const visitors = {};
 const visitorsByTime = {};
 const freeIds = [];
 
-export default function(g) {
+module.exports = function(g) {
   g.onGet('/visitors', () => {
     // console.log('visitors', query);
     return { visitors };
@@ -21,7 +21,7 @@ export default function(g) {
     const change = simulate();
     g.pub(change);
   }, 1 + Math.random() * 100);
-}
+};
 
 function simulate() {
   const change =
@@ -38,7 +38,7 @@ function visitorInfo() {
     name: faker.internet.userName(),
     avatar: faker.internet.avatar(),
     pageviews: {
-      /* [ts]: faker.system.directoryPath() */
+      [ts]: faker.internet.url(),
     },
   };
 }
@@ -50,7 +50,7 @@ function simulateEnter() {
   let addId = freeIds.length ? freeIds.pop() : id++;
 
   visitors[addId] = { id: addId, ts, ...visitorInfo() };
-  visitorsByTime[ts] = { [LINK_KEY]: ['visitors', addId] };
+  visitorsByTime[ts] = makeLink(['visitors', addId]);
 
   return {
     visitors: { [addId]: visitors[addId] },
@@ -78,9 +78,9 @@ function simulateUpdate() {
   do {
     upId = Math.floor(Math.random() * id);
   } while (!visitors[upId]);
-  const change = { ...visitorInfo() };
-  visitors[upId] = { ...visitors[upId], ...change };
-  return { visitors: { [upId]: change } };
+  const url = faker.internet.url();
+  visitors[upId].pageviews.ts = url;
+  return { visitors: { [upId]: { pageviews: { [ts]: url } } } };
 }
 
 ts = Date.now();
@@ -89,7 +89,7 @@ while (id < 200) {
   ts -= Math.floor(1 + Math.random() * 100);
 }
 
-console.log(visitors);
+// console.log(visitors);
 
 // --- for testing
 
