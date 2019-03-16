@@ -1,4 +1,4 @@
-<img src="docs/graffy-logo.png" srcset="docs/graffy-logo.png 1x,docs/graffy-logo-2x.png 2x" />
+![Graffy logo](docs/graffy-logo.svg)
 
 # Graffy [![Build Status](https://travis-ci.org/aravindet/graffy.svg?branch=master)](https://travis-ci.org/aravindet/graffy)
 
