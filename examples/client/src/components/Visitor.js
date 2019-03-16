@@ -8,13 +8,13 @@ const scales = [
   [Infinity, 'hour', 3600000],
 ];
 
-export default function Visitor({ avatar, name, ts, pageviews }) {
+export default function Visitor({ avatar, name, ts, pageviews, muted }) {
   const timeDiff = ts - Date.now();
   const [_, unit, divisor] = scales.find(([max]) => -timeDiff < max);
   const timeString = rtf.format(Math.floor(timeDiff / divisor), unit);
 
   return (
-    <div className="Visitor">
+    <div className={`Visitor ${muted ? 'Visitor--muted' : ''}`}>
       <img className="Visitor-avatar" src={avatar} alt={name} />
       <div className="Visitor-meta">
         <div className="Visitor-name">{name}</div>

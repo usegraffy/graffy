@@ -34,6 +34,10 @@ code {
   cursor: pointer;
 }
 
+.Visitor--muted {
+  opacity: 0.25;
+}
+
 .Visitor:hover:not(:disabled) {
   background: #fff;
   box-shadow: inset 0 0 16px 8px #eee;
@@ -135,4 +139,18 @@ code {
 
 .Pagination > button:last-child {
   border-radius: 0 100% 100% 0;
+}
+
+/* ---------- Spinner ---------- */
+
+.Spinner {
+  position: fixed;
+  top: 0; right: 0; left: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  text-shadow: 0 0 8px #000;
 }
