@@ -1,6 +1,6 @@
 {
   "name": "@graffy/client",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": "aravind (github.com/aravindet)",
   "description": "HTTP client library for Graffy",
   "main": "bundle.js",
