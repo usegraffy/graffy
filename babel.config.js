@@ -7,6 +7,7 @@ module.exports = {
         modules: process.env.NODE_ENV === 'test' && 'auto',
       },
     ],
+    ['@babel/preset-react'],
   ],
   plugins: [
     [

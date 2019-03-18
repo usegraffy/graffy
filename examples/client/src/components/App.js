@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { encRange, getPage } from '@graffy/core';
-import { useGraffy } from '../useGraffy';
+import { useGraffy } from '@graffy/react';
 
 import VisitorList from './VisitorList';
 import Pagination from './Pagination';

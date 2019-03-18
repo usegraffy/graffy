@@ -4,4 +4,5 @@ dist
 bundle.js
 bundle.mjs
 *.pem
+*.map
 yarn-error.log

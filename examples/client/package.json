@@ -1,8 +1,9 @@
 {
   "name": "@graffy/example-client",
-  "version": "0.1.0",
+  "version": "0.7.1",
   "private": true,
   "dependencies": {
+    "@graffy/react": "x",
     "@graffy/client": "x",
     "@graffy/core": "x",
     "react": "^16.8.4",

@@ -1,11 +1,11 @@
 {
   "name": "@graffy/example-server",
-  "version": "1.0.0",
+  "version": "0.7.1",
   "main": "index.js",
   "private": true,
   "dependencies": {
-    "faker": "^4.1.0",
     "@graffy/core": "x",
-    "@graffy/server": "x"
+    "@graffy/server": "x",
+    "faker": "^4.1.0"
   }
 }

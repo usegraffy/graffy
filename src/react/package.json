@@ -1,8 +1,8 @@
 {
-  "name": "@graffy/core",
+  "name": "@graffy/react",
   "version": "0.7.1",
   "author": "aravind (github.com/aravindet)",
-  "description": "Live queries on graphs",
+  "description": "React API for Graffy",
   "main": "bundle.js",
   "module": "bundle.mjs",
   "sideEffects": "false",
@@ -11,13 +11,17 @@
     "bundle.mjs"
   ],
   "scripts": {
-    "prepare": "cd .. && PKG=core yarn build-pkg"
+    "prepare": "cd .. && PKG=react yarn build-pkg"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "license": "Apache-2.0",
+  "peerDependencies": {
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4"
+  },
   "dependencies": {
     "lodash": "^4.17.11"
   }
