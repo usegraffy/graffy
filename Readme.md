@@ -2,7 +2,7 @@
 
 # Graffy [![Build Status](https://travis-ci.org/aravindet/graffy.svg?branch=master)](https://travis-ci.org/aravindet/graffy)
 
-Graffy is a JavaScript library for building intuitive APIs with efficient live queries.
+Graffy is a batteries-included live query library for the browser and Node.js.
 
 Graffy was inspired by (and borrows from) GraphQL and Falcor. Compared to GraphQL, Graffy offers a simpler and more intuitive data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
 

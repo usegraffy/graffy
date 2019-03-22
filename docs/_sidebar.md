@@ -1,3 +1,4 @@
 - [Home](/)
+- [Guide](Guide.md)
 - [API Reference](Reference.md)
 - [Encoding](Encoding.md)

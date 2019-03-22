@@ -1,19 +1,65 @@
-# Graffy vs. GraphQL
+# Graffy vs GraphQL
 
-## GraphQL shortcomings
+## Live queries, not subscriptions
 
-- Live queries: Subscriptions are a poor fit for the typical use case where the client needs some data to be kept up-to-date with the server.
+Quite often, clients need to keep the query results up-to-date as they change on the server. Polling is an obvious solution to this, but the latencies and resource usage make this infeasible for most use-cases.
 
-GraphQL queries encourage fetching deeply nested relations in one round trip, and for complex business logic to be delegated to the backend. On the other hand, subscriptions require the frontend to implement state transition logic, often duplicating what's already there on the server.
+GraphQL offers subscriptions as the mechanism to do this, but GraphQL subsccriptions are are very a poor fit for this use case.
 
-Some GraphQL frameworks implement live queries by resending the entire query result over the wire every time there's a change. This does not scale.
+A key benefit of using GraphQL for one-time queries is that deeply nested relations can be fetched in one round trip. It also makes it easy to keep complex business logic on the backend and compute and send results to the client only when requested.
 
-- Underspecified: The GraphQL specification covers only a small part of what is required to build real-world applications; pagination is specified in Relay, and there is no standard transport layer for Subscriptions making interoperable implementations difficult.
+Unfortunately subscriptions do not provide these benefits; nested relations are difficult to support and perform poorly, and using subscriptions to synchronize state with the server requires the client to implement state transition logic, duplicating server-side logic.
 
-## Similarities
+The GraphQL docs [explain](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries) why Facebook decided not to support live queries. Here's the gist:
 
-- Queries must specify the full set of required fields
-- Queries can expand related entities several levels deep
+Even something as simple as the "Person and 3 others liked this" message change on lots of events:
+- Someone liked or unliked your post 👍
+- Someone who liked your post deactivated or re-activated their account
+- Someone who liked your post changed their name
+- Facebook's algorithm for choosing the clickbaitiest name changed 🙄
+
+Building a live query framework that updates all interested clients when any of these things happen is understandably hard. In their words,
+
+> “Implementing live queries for this set of data proved to be immensely complicated.”
+
+Translation: It’s a hard problem, so let the frontend do it. 😂
+
+As I understand it, GraphQL's recommendation is that the frontend:
+1. query the initial state
+2. subscribe to frequent events (likes and unlikes)
+3. update the count (using frontend logic) when they happen
+4. call it a day.
+
+Infrequent events, like Facebook changing their algorithm, are okay to ignore until the user refreshes the page. This is perfectly reasonable - this is essentially manual polling, and for infrequent changes polling is an efficient approach.
+
+However, it's not explained is why each user should poll separately; it would be a lot cheaper for the API server to poll the database periodically and send updates to subscribers.
+
+There are likely solid technical reasons why this is hard to do at Facebook - legacy services, infrastructure, scale, etc. However, Facebook's problems are not your problems, and a technology that's narrowly tailored to solve Facebook's problems might not be the best fit for you.
+
+
+### Problems with the recommended approach
+
+“Query, then subscribe?” Events that occurred in between will be dropped.
+“Subscribe, then query?” Events already accounted for in the query result may be re-sent.
+Solution: Subscribe, then query, then de-duplicate in event-specific ways. 😭
+Event-handling logic is duplicated on the backend and frontend.
+Different parts of the frontend update on different sets of events and fall inconsistent.
+
+
+### The DB Centered approach
+
+Create / update / delete subscriptions for each entity type
+AKA shitty live queries on top of a protocol that really doesn’t want it.
+Subscription payloads duplicate records
+Pagination is hard to do
+Expanding linked resources (the “graph” in GraphQL) does not work
+
+## Path-specific middleware over Type-specific resolvers
+
+Note: Graffy will have an _optional_ type system for automatic validation and self-documenting APIs.
+
+
+
 
 ## Differences
 
