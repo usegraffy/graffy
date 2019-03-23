@@ -18,33 +18,9 @@ Implement:
 
 - Add timestamps (vector?) to results and payloads
 
-Done:
 
-- Experiment with the "changes are trees, data is a graph" approach.
-- Page Info
-- Rename Token to Signal
-- Move refs to **ref**
 
-Get Options
 
-- Live: Subscribe to changes rather returning a one-time result
-- keepLinks: Leave links as atoms rather than fetching the remote
-  [Unnecessary if we switch to __ref__?]
-- values: Get a full object every time something changes
-
-Primary API:
-
-- get
-- sub
-- put
-
-Provider API
-
-- getRaw: Preserve links
-- subRaw: Changes only, preserve links
-- onGet
-- onPut
-- pub: Publish
 
 Write articles:
 
