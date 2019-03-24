@@ -3,23 +3,31 @@
 function compose() {
   const middleware = [];
 
-  function exec(context, next) {
+  function exec(startPayload, startOptions, next) {
     // last called middleware #
     let index = -1;
-    function dispatch(i) {
-      if (i <= index)
-        return Promise.reject(new Error('next() called multiple times'));
+    function dispatch(i, payload, options) {
+      if (i <= index) return Promise.reject(new Error('compose.multiple_next'));
+      if (!payload || !options) {
+        return Promise.reject(new Error('compose.missing_arg'));
+      }
       index = i;
       let fn = middleware[i];
       if (i === middleware.length) fn = next;
       if (!fn) return Promise.resolve();
       try {
-        return fn(context, dispatch.bind(null, i + 1));
+        const r = fn(
+          payload,
+          options,
+          (nextPayload = payload, nextOptions = options) =>
+            dispatch(i + 1, nextPayload, nextOptions),
+        );
+        return r;
       } catch (err) {
         return Promise.reject(err);
       }
     }
-    return dispatch(0);
+    return dispatch(0, startPayload, startOptions);
   }
 
   exec.push = middleware.push.bind(middleware);

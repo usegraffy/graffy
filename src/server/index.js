@@ -27,14 +27,14 @@ export default class GraffyServer {
         // TODO: Resumable subscriptions using timestamp ID.
         // const lastId = req.headers['last-event-id'];
 
-        const stream = this.store.sub(query, { values: false });
+        const stream = this.store.get(query, { live: true, raw: true });
         for await (const value of stream) {
           if (req.aborted || res.finished) break;
           res.write(`data: ${JSON.stringify(value)}\n\n`);
         }
         res.end();
       } else {
-        const value = await this.store.getRaw(query);
+        const value = await this.store.get(query, { raw: true });
         res.end(JSON.stringify(value));
       }
     } else {

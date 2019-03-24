@@ -26,30 +26,19 @@ function ensurePath(basePath, path, ...args) {
 }
 
 function shiftFn(fn, path) {
-  return async ({ query, ...props }, next) => {
-    return wrap(
-      await fn(
-        {
-          query: getNode(query, path),
-          ...props,
-        },
-        next,
-      ),
-      path,
-    );
+  return async (payload, options, next) => {
+    return wrap(await fn(getNode(payload, path), options, next), path);
   };
 }
 
 const wrapHandler = {
   [GET]: function(handle) {
-    return async function({ query, token }, next) {
-      const result = await handle({ query, token }, next);
+    return async function(query, options, next) {
+      const result = await handle(query, options, next);
       return prune(result, query);
     };
   },
-  [PUT]: function(handle) {
-    return handle;
-  },
+  [PUT]: null,
 };
 
 export default class Graffy {
@@ -92,9 +81,10 @@ export default class Graffy {
     if (!options.once) {
       const [token, signal] = getToken();
       const id = this.subId++;
+      const resolveOptions = { token };
       const sub = new Subscription(query, {
         values: !options.raw,
-        resolve: query => resolve(query, this.funcs, GET, token),
+        resolve: query => resolve(this.funcs, GET, query, resolveOptions),
         onClose: () => {
           signal();
           delete this.subs[id];
@@ -103,32 +93,21 @@ export default class Graffy {
       this.subs[id] = sub;
       return sub.stream;
     } else {
-      const result = resolve(query, this.funcs, GET);
+      const result = resolve(this.funcs, GET, query, {});
       return options.raw
         ? result
         : result.then(tree => getNode(graft(tree, query), path));
     }
   }
 
-  put(/* path, change */) {
-    throw Error('core.put.unimplemented');
+  async put(path, change, options) {
+    [path, change, options] = ensurePath(this.path, path, change, options);
+    options = options || {};
+    change = wrap(change, path);
+    change = await resolve(this.funcs, PUT, change, options);
+    for (const id in this.subs) this.subs[id].pub(change);
+    return change;
   }
-
-  // // TODO: Support passing a cache object to sub to share a cache.
-  // sub(query, options) {
-  //   const [token, signal] = getToken();
-  //   const id = this.subId++;
-  //   const sub = new Subscription(query, {
-  //     values: options && options.values,
-  //     resolve: (query, tree) => resolve(query, this.funcs, GET, token, tree),
-  //     onClose: () => {
-  //       signal();
-  //       delete this.subs[id];
-  //     },
-  //   });
-  //   this.subs[id] = sub;
-  //   return sub.stream;
-  // }
 
   pub(change) {
     for (const id in this.subs)

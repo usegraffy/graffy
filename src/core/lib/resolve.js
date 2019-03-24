@@ -4,7 +4,7 @@ import isEqual from 'lodash/isEqual';
 
 export const MAX_RECURSION = 10;
 
-export default async function resolve(initQuery, rootFuncs, type, token) {
+export default async function resolve(rootFuncs, type, initQuery, options) {
   let result = {};
   let rootQuery = initQuery;
 
@@ -18,13 +18,15 @@ export default async function resolve(initQuery, rootFuncs, type, token) {
     );
   }
 
-  function build(query, funcs) {
+  async function build(query, funcs) {
     const handle = funcs[type];
     if (!handle) return buildChildren(query, funcs);
 
-    return handle({ query: rootQuery, token }, ({ query }) =>
+    const res = await handle(rootQuery, options, query =>
       buildChildren(query, funcs),
-    ).then(res => merge(result, res));
+    );
+
+    merge(result, res);
   }
 
   let budget = MAX_RECURSION;

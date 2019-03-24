@@ -2,7 +2,7 @@ import getPath from './getPath';
 
 export default function GraffyClient(baseUrl) {
   return function(store) {
-    store.onGet(({ query, token }) => {
+    store.onGet((query, { token }) => {
       const url = `${baseUrl}?include=${getPath(query)}`;
 
       if (!token) {

@@ -106,10 +106,7 @@ describe('get', () => {
 
     test('all', async () => {
       const result = await g.get({ foo: { '*': { bar: 1 } } }, { once: true });
-      expect(resolver).toBeCalledWith(
-        { query: { foo: { '*': { bar: 1 } } } },
-        anyFn,
-      );
+      expect(resolver).toBeCalledWith({ foo: { '*': { bar: 1 } } }, {}, anyFn);
       expect(result).toEqual({
         foo: {
           a: { bar: 42 },
@@ -190,7 +187,8 @@ describe('get', () => {
         { once: true },
       );
       expect(resolver).toBeCalledWith(
-        { query: { foo: { a: { bar: 1 }, b: { baz: 1 } } } },
+        { foo: { a: { bar: 1 }, b: { baz: 1 } } },
+        {},
         anyFn,
       );
       expect(result).toEqual({ foo: { a: { bar: 42 }, b: { baz: 16 } } });
@@ -233,7 +231,7 @@ describe('subscriptions', () => {
       close = jest.fn();
 
       g.use('/foo', graffy => {
-        graffy.onGet('/bar', ({ token }) => {
+        graffy.onGet('/bar', (_, { token }) => {
           let i = 1;
           expect(token).toHaveProperty('signaled');
           expect(token).toHaveProperty('onSignal');
