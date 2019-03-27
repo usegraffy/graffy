@@ -87,7 +87,6 @@ describe('get', () => {
 
   describe('range-prune', () => {
     let resolver;
-    const anyFn = expect.any(Function);
     beforeEach(() => {
       resolver = jest.fn();
       resolver.mockReturnValue({
@@ -106,7 +105,7 @@ describe('get', () => {
 
     test('all', async () => {
       const result = await g.get({ foo: { '*': { bar: 1 } } }, { once: true });
-      expect(resolver).toBeCalledWith({ foo: { '*': { bar: 1 } } }, {}, anyFn);
+      expect(resolver).toBeCalledWith({ foo: { '*': { bar: 1 } } }, {});
       expect(result).toEqual({
         foo: {
           a: { bar: 42 },
@@ -189,7 +188,6 @@ describe('get', () => {
       expect(resolver).toBeCalledWith(
         { foo: { a: { bar: 1 }, b: { baz: 1 } } },
         {},
-        anyFn,
       );
       expect(result).toEqual({ foo: { a: { bar: 42 }, b: { baz: 16 } } });
     });

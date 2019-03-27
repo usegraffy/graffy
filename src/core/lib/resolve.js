@@ -1,42 +1,51 @@
-import { cap, sprout } from './tree';
+import { getNode } from './path';
 import merge from './merge';
 import isEqual from 'lodash/isEqual';
 
 export const MAX_RECURSION = 10;
 
-export default async function resolve(rootFuncs, type, initQuery, options) {
+export default async function resolve(
+  rootHandlers,
+  type,
+  initPayload,
+  options,
+) {
   let result = {};
-  let rootQuery = initQuery;
+  let rootPayload = initPayload;
 
-  function buildChildren(query, funcs) {
-    if (typeof query !== 'object' || !query) return;
+  function buildChildren(path) {
+    const payload = getNode(rootPayload, path);
+    const handlers = getNode(rootHandlers, path);
+    if (typeof payload !== 'object' || !payload) return;
 
     return Promise.all(
-      Object.keys(query).map(
-        key => key in funcs && build(query[key], funcs[key]),
+      Object.keys(payload).map(
+        key => key in handlers && build(path.concat(key)),
       ),
     );
   }
 
-  async function build(query, funcs) {
-    const handle = funcs[type];
-    if (!handle) return buildChildren(query, funcs);
+  async function build(path) {
+    const handlers = getNode(rootHandlers, path);
+    const handle = handlers[type];
+    if (!handle) return buildChildren(path);
 
-    const res = await handle(rootQuery, options, query =>
-      buildChildren(query, funcs),
-    );
+    const res = await handle(rootPayload, options, newPayload => {
+      rootPayload = newPayload;
+      if (rootPayload) buildChildren(path);
+    });
 
     merge(result, res);
   }
 
   let budget = MAX_RECURSION;
-  while (rootQuery) {
+  let prevPayload = rootPayload;
+  while (rootPayload) {
     if (--budget < 0) throw new Error('resolve.max_recursion');
-    await build(rootQuery, rootFuncs);
-    const nextQuery = sprout(result, rootQuery);
-    if (isEqual(nextQuery, rootQuery)) break;
-    rootQuery = nextQuery;
+    await build([]);
+    if (isEqual(prevPayload, rootPayload)) break;
+    prevPayload = rootPayload;
   }
 
-  return cap(result, initQuery);
+  return result;
 }

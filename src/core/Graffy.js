@@ -4,10 +4,14 @@ import {
   getNode,
   wrap,
   prune,
+  sprout,
+  diff,
   graft,
+  cap,
   getToken,
   compose,
   resolve,
+  merge,
 } from './lib';
 import Subscription from './Subscription';
 
@@ -34,11 +38,20 @@ function shiftFn(fn, path) {
 const wrapHandler = {
   [GET]: function(handle) {
     return async function(query, options, next) {
-      const result = await handle(query, options, next);
+      const result = prune(await handle(query, options), query);
+      const nextQuery = sprout(result, query);
+      if (nextQuery) merge(result, await next(nextQuery));
       return prune(result, query);
     };
   },
-  [PUT]: null,
+  [PUT]: function(handle) {
+    return async function(change, options, next) {
+      const result = await handle(change, options);
+      const pendingChange = diff(change, result);
+      if (pendingChange) merge(result, await next(pendingChange));
+      return result;
+    };
+  },
 };
 
 export default class Graffy {
@@ -59,8 +72,8 @@ export default class Graffy {
 
   register(type, path, fn) {
     [path, fn] = ensurePath(this.path, path, fn);
-    if (this.path) fn = shiftFn(fn, this.path);
     if (wrapHandler[type]) fn = wrapHandler[type](fn);
+    if (this.path) fn = shiftFn(fn, this.path);
     const node = makeNode(this.funcs, path);
     node[type] = node[type] || compose();
     node[type].push(fn);
@@ -84,7 +97,10 @@ export default class Graffy {
       const resolveOptions = { token };
       const sub = new Subscription(query, {
         values: !options.raw,
-        resolve: query => resolve(this.funcs, GET, query, resolveOptions),
+        resolve: query =>
+          resolve(this.funcs, GET, query, resolveOptions).then(result =>
+            cap(result, query),
+          ),
         onClose: () => {
           signal();
           delete this.subs[id];
@@ -93,7 +109,9 @@ export default class Graffy {
       this.subs[id] = sub;
       return sub.stream;
     } else {
-      const result = resolve(this.funcs, GET, query, {});
+      const result = resolve(this.funcs, GET, query, {}).then(result =>
+        cap(result, query),
+      );
       return options.raw
         ? result
         : result.then(tree => getNode(graft(tree, query), path));
