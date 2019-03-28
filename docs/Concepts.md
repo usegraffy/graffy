@@ -1,50 +1,16 @@
-# Graffy
+# Concepts
 
-Graffy is a batteries-included live query library for the browser and Node.js. It uses just a few simple, intuitive yet powerful concepts:
+Graffy uses just a few simple, intuitive yet powerful concepts:
 
-### One giant tree
+### JSON Graph
 
-All the data (across databases) is modeled as a single JSON-like tree.
-
-```js
-{
-  users: {     // "users" is a key of the root node
-    1: { … },  // "1" is a key of the "users" node
-    2: { … },
-    …
-  },
-  posts: {
-    1: { … },
-    2: { … },
-    …
-  }
-}
-```
-
-### Narrow queries
-
-Queries specify all the nodes (down to leaf nodes) they want to fetch, in a tree that mirrors the expected result:
+The state of the system is modeled as a single JSON document, with symbolic links (making it a graph). If you've used Falcor, this should be familiar.
 
 ```js
-// Query
-{ users: { 1: { avatar: true } } }
-
-// Result:
-{ users: { 1: { avatar: "👧" } } }
-```
-
-Any truthy value can be used in queries as a placeholder for leaf nodes. This allows queries can be specified in plain JSON rather than a DSL.
-
-### Links
-
-Some nodes may be links (like symbolic links) to other paths in the tree. Queries traverse them automatically.
-
-```js
-// Data
 {
   users: {
-    1: { avatar: 👧, … },
-    2: { avatar: 👨, … },
+    1: { name: 'Alice', avatar: '👧', … },
+    2: { name: 'Bob', avatar: '👨', … },
     …
   },
   posts: {
@@ -53,17 +19,33 @@ Some nodes may be links (like symbolic links) to other paths in the tree. Querie
     …
   }
 }
+```
+
+### Narrow Queries
+
+Queries specify all the nodes (down to leaf nodes) they want to fetch, in a tree that mirrors the expected result. This works just like GraphQL.
+
+Queries cross links transparently.
+
+```js
+// Query
+{ users: { 1: { avatar: true } } }
+
+// Result
+{ users: { 1: { avatar: '👧' } } }
 
 // Query
 { posts: { 1: { author: { avatar: true } } } }
 
 // Result
-{ posts: { 1: { author: { avatar: 👨 } } } }
+{ posts: { 1: { author: { avatar: '👨' } } } }
 ```
+
+Queries are specified in plain JSON, and any truthy value can be used in queries as a placeholder for leaf nodes.
 
 ### Slices
 
-Instead of specifying exact keys to fetch, queries may instead specify slices of keys, like `{ first: 10 }`, `{ last: 10, before: 'some-value' }`, etc.
+To paginate, queries may specify _slices_ of keys, like `{ first: 10 }` or `{ last: 10, before: 'some-key' }`.
 
 Slices are calculated with the keys sorted alphabetically.
 
