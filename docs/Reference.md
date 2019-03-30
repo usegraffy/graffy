@@ -28,7 +28,7 @@ Writes changes into the store.
 #### options
 
 - **source**: A string identifying the source of the change. This value is opaque to Graffy, but providers may use it to avoid echoing writes back to their source.
-- **clock**: A numeric timestamp for the change. Graffy uses this value to achieve eventual consistency in environments where changes are received out-of-order.
+- **clock**: A numeric timestamp for the change. Graffy uses this value to achieve eventual consistency between stores that receive changes in different orders.
 
 ### store.**onGet**(path, handler)
 
