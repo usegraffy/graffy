@@ -1,45 +1,13 @@
-import { sprout, prune, graft, strike, merge } from './lib';
-
-export function makeStream(fn) {
-  const payloads = [];
-  const requests = [];
-  let done = false;
-
-  const push = payload => {
-    if (done) return;
-    payload = { value: payload, done: false };
-    if (!requests.length) return payloads.push(payload);
-    requests.shift()(payload);
-  };
-  const close = fn(push);
-
-  return {
-    next() {
-      if (done) return Promise.resolve({ value: void 0, done: true });
-      if (payloads.length) return Promise.resolve(payloads.shift());
-      return new Promise(resolve => requests.push(resolve));
-    },
-
-    return(val) {
-      done = true;
-      close(val);
-    },
-    [Symbol.iterator]() {
-      return this;
-    },
-  };
-}
+import { sprout, prune, graft, strike, merge, makeStream } from './lib';
 
 export default class Subscription {
   constructor(query, options) {
     this.query = query;
     this.options = options;
 
-    this.stream = makeStream(push => {
-      this.push = push;
-      return options.onClose;
-    });
-
+    const [push, stream] = makeStream(options.onClose);
+    this.stream = stream;
+    this.push = push;
     this.earlyChange = {};
 
     this.init();
@@ -62,7 +30,7 @@ export default class Subscription {
 
   async pub(change) {
     if (this.earlyChange) {
-      merge(this.earlyChanges, change);
+      merge(this.earlyChange, change);
       return;
     }
     const { query, options, data } = this;

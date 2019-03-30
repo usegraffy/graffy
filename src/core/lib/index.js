@@ -6,3 +6,4 @@ export { makePath, getNode, makeNode, wrap } from './path';
 export { encRange, decRange } from './range';
 export { default as resolve } from './resolve';
 export { cap, prune, graft, sprout, strike } from './tree';
+export { default as makeStream } from './makeStream';
