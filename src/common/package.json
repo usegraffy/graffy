@@ -6,7 +6,8 @@
   "sideEffects": "false",
   "files": [
     "bundle.js",
-    "bundle.mjs"
+    "bundle.mjs",
+    "Readme.md"
   ],
   "scripts": {
     "prepare": "cd .. && PKG=common yarn build-pkg"

@@ -1,7 +1,23 @@
 {
   "name": "@graffy/cache",
   "version": "0.7.1",
-  "main": "Graffy.js",
+  "main": "bundle.js",
+  "module": "bundle.mjs",
+  "sideEffects": "false",
+  "files": [
+    "bundle.js",
+    "bundle.mjs",
+    "Readme.md"
+  ],
+  "scripts": {
+    "prepare": "cd .. && PKG=common yarn build-pkg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aravindet/graffy.git"
+  },
   "license": "Apache-2.0",
-  "private": true
+  "dependencies": {
+    "lodash": "^4.17.11"
+  }
 }
