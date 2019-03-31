@@ -1,4 +1,4 @@
-import { getNode, makeNode, makePath, wrap, merge } from '@graffy/core';
+import { getNode, makeNode, makePath, wrap, merge } from '@graffy/common';
 
 export default class Cache {
   constructor() {
