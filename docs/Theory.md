@@ -25,25 +25,67 @@ Queries may contain an infinite number of paths, when intervals of keys are requ
 ### Formal definitions
 
 ```
-Graff         := { Leaf }
-Leaf          := ( CanonicalPath , { LinkedPath } , Value, Clock )
-CanonicalPath := Path
-LinkedPath    := Path
+Graff         ::= {* Leaf *}
+Leaf          ::= LeafPaths, Value, Clock
+LeafPaths     ::= CanonicalPath, LinkedPaths
+CanonicalPath ::= { Key }
+LinkedPaths   ::= {* LinkedPath *}
+LinkedPath    ::= { Key }, LeafKey
+LeafKey       ::= Key | KeyRange
 
-Query         := { QueryPath }
+Query         ::= {* QueryPath *}
+QueryPath     ::= { QueryKey }
+QueryKey      ::= Key | KeyRange | KeyRangeFirst | KeyRangeLast
 
-Path          := [ Key ]
-Key           := String
-Value         := Scalar | Null
-Clock         := Non-negative Real
+Key           ::= String
+KeyRange      ::= MinKey, MaxKey
+KeyRangeFirst ::= MinKey, MaxKey, First
+KeyRangeLast  ::= MinKey, MaxKey, Last
+Value         ::= Scalar | Null
+Clock         ::= Non-negative Real
+First         ::= Non-negative Integer
+Last          ::= Non-negative Integer
 
-where { ... } denotes a set, ( ... ) a tuple and [ ... ] a list.
+# {* ... *} indicates a set: no two items may be equivalent
 ```
 
 ### Equivalence
 
 ```
-Leaf₁ ~ Leaf₂ ⇔ CanonicalPath(Leaf₁) = CanonicalPath(Leaf₂)
+# Leaves with the same canonical path are equivalent
+Leaf₁ ~ Leaf₂ ⇔ CanonicalPath₁ = CanonicalPath₂
+
+# Paths are equivalent if their segments, taken in order, are equivalent.
+
+# KeyRanges that overlap are equivalent
+KeyRange₁ ~ KeyRange₂ ⇔ (MinKey₁ ≤ MinKey₂ ∧ MaxKey₁ ≥ MinKey₂) ∨
+                        (MinKey₁ ≤ MaxKey₂ ∧ MaxKey₁ ≥ MaxKey₂)
+
+# KeyRangeFirst and KeyRangeLast are equivalent if the anchor matches
+KeyRangeFirst₁ ~ KeyRangeFirst₂ ⇔ MinKey₁ = MinKey₂
+KeyRangeLast₁ ~ KeyRangeLast₂ ⇔ MaxKey₁ = MaxKey₂
+```
+
+If an operation would result in two equivalent elements in a set, the union of
+those elements is used instead.
+
+```
+Leaf₁ + Leaf₂ ::=
+  CanonicalPath, LinkedPaths₁ + LinkedPaths₂, Value₁, Clock₁ if Clock₁ > Clock₂
+  CanonicalPath, LinkedPaths₁ + LinkedPaths₂, Value₂, Clock₂ if Clock₂ > Clock₁
+
+# Leaf union is not defined if the clocks are identical and the values differ.
+
+# Path unions are calculated by the union of their segments taken in order.
+
+KeyRange₁ + KeyRange₂ ::=
+  min(MinKey₁, MinKey₂), max(MaxKey₁, MaxKey₂)
+
+KeyRangeFirst₁ + KeyRangeFirst₂ ::=
+  MinKey, max(MaxKey₁, MaxKey₂), max(First₁, First₂)
+
+KeyRangeLast₁ + KeyRangeLast₂ ::=
+  max(MinKey₁, MinKey₂), MaxKey, max(Last₁, Last₂)
 ```
 
 ## Operations
@@ -61,13 +103,6 @@ Graff₁ + Graff₂ = {
   Leaf₁ + Leaf₂ where Leaf₁ ~ Leaf₂
   ∀ Leaf₁ ∈ Graff₁, Leaf₂ ∈ Graff₂
 }
-
-Leaf₁ + Leaf₂ = (
-  CanonicalPath,
-  LinkedPath(Leaf₁) + LinkedPath(Leaf₂),
-  Value(Leaf₁) if Clock(Leaf₁) > Clock(Leaf₂); Value(Leaf₂) otherwise,
-  Max(Clock(Leaf₁), Clock(Leaf₂))
-)
 ```
 
 If both Graffs contain equivalent leaves (i.e. with the same canonical path),
