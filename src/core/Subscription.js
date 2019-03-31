@@ -1,4 +1,4 @@
-import { sprout, prune, graft, strike, merge, makeStream } from './lib';
+import { sprout, prune, graft, strike, merge, makeStream } from '@graffy/common';
 
 export default class Subscription {
   constructor(query, options) {

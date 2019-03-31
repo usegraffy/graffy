@@ -6,7 +6,7 @@ import {
   makePage,
   getLink,
   makeLink,
-} from './lib';
+} from '@graffy/common';
 
 export default Graffy;
 export { encRange, decRange, getPage, makePage, getLink, makeLink };

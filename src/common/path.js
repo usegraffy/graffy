@@ -1,3 +1,6 @@
+import sortedIndex from 'lodash/sortedIndex';
+import { PAGE_KEY } from './constants';
+
 export const PATH_SEPARATOR = '/';
 
 export function makePath(path) {
@@ -8,18 +11,25 @@ export function makePath(path) {
   return path.split(PATH_SEPARATOR).slice(1);
 }
 
+function known(node, key) {
+  if (!node[PAGE_KEY] || !node[PAGE_KEY].length) return;
+  const ix = sortedIndex(node[PAGE_KEY], key);
+  return !(ix % 2);
+}
+
 export function getNode(tree, path) {
-  for (const name of path) {
-    if (!tree || !(name in tree)) return;
-    tree = tree[name];
+  for (const key of path) {
+    if (!tree) return;
+    if (!(key in tree)) return known(tree, key) ? null : undefined;
+    tree = tree[key];
   }
   return tree;
 }
 
 export function makeNode(tree, path) {
-  for (const name of path) {
-    if (typeof tree[name] !== 'object' || !tree[name]) tree[name] = {};
-    tree = tree[name];
+  for (const key of path) {
+    if (typeof tree[key] !== 'object' || !tree[key]) tree[key] = {};
+    tree = tree[key];
   }
   return tree;
 }

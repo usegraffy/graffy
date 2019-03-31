@@ -1,4 +1,4 @@
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from './isEmpty';
 
 import { getNode, makeNode } from './path';
 import { isRange, splitRange, encRange } from './range';
@@ -71,7 +71,9 @@ export function sprout(root, rootQuery) {
   const nextQuery = {};
 
   walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined') set(nextQuery, path, query);
+    if (typeof node === 'undefined' || node === null) {
+      set(nextQuery, path, query);
+    }
   });
 
   return isEmpty(nextQuery) ? undefined : nextQuery;

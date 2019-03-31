@@ -12,7 +12,7 @@ import {
   compose,
   resolve,
   merge,
-} from './lib';
+} from '@graffy/common';
 import Subscription from './Subscription';
 
 const GET = Symbol();

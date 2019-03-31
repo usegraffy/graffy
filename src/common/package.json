@@ -1,0 +1,22 @@
+{
+  "name": "@graffy/common",
+  "version": "0.7.1",
+  "main": "bundle.js",
+  "module": "bundle.mjs",
+  "sideEffects": "false",
+  "files": [
+    "bundle.js",
+    "bundle.mjs"
+  ],
+  "scripts": {
+    "prepare": "cd .. && PKG=common yarn build-pkg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aravindet/graffy.git"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "lodash": "^4.17.11"
+  }
+}
