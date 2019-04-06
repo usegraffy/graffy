@@ -1,22 +1,21 @@
 import {
   makePath,
   makeNode,
-  getNode,
+  unwrap,
   wrap,
   prune,
   sprout,
   diff,
   graft,
   cap,
-  getToken,
   compose,
   resolve,
   merge,
 } from '@graffy/common';
-import Subscription from './Subscription';
 
 const GET = Symbol();
 const PUT = Symbol();
+const SUB = Symbol();
 
 function ensurePath(basePath, path, ...args) {
   if (!basePath) basePath = [];
@@ -31,7 +30,7 @@ function ensurePath(basePath, path, ...args) {
 
 function shiftFn(fn, path) {
   return async (payload, options, next) => {
-    return wrap(await fn(getNode(payload, path), options, next), path);
+    return wrap(await fn(unwrap(payload, path), options, next), path);
   };
 }
 
@@ -52,6 +51,9 @@ const wrapHandler = {
       return result;
     };
   },
+  [SUB]: function(handle) {
+    return async function*(query, options, next) {};
+  },
 };
 
 export default class Graffy {
@@ -63,10 +65,11 @@ export default class Graffy {
       this.subs = this.root.subs;
     } else {
       this.funcs = {}; // Registered provider functions, in a tree
-      this.subs = {}; // Map of tokens to querys for ongoing subscriptions
+      this.subs = {}; // Map of tokens to queries for ongoing subscriptions
       this.subId = 0;
     }
     this.onGet = this.register.bind(this, GET);
+    this.onSub = this.register.bind(this, SUB);
     this.onPut = this.register.bind(this, PUT);
   }
 
@@ -91,32 +94,24 @@ export default class Graffy {
     options = options || {};
     query = wrap(query, path);
 
-    if (!options.once) {
-      const [token, signal] = getToken();
-      const id = this.subId++;
-      const resolveOptions = { token };
-      const sub = new Subscription(query, {
-        values: !options.raw,
-        resolve: query =>
-          resolve(this.funcs, GET, query, resolveOptions).then(result =>
-            cap(result, query),
-          ),
-        onClose: () => {
-          signal();
-          delete this.subs[id];
-        },
-      });
-      this.subs[id] = sub;
-      return sub.stream;
-    } else {
-      const result = resolve(this.funcs, GET, query, {}).then(result =>
-        cap(result, query),
-      );
-      return options.raw
-        ? result
-        : result.then(tree => getNode(graft(tree, query), path));
-    }
+    const result = resolve(this.funcs, GET, query, options).then(result =>
+      cap(result, query),
+    );
+    return options.raw
+      ? result
+      : result.then(tree => unwrap(graft(tree, query), path));
   }
+
+  sub = async function*(path, query, options) {
+    [path, query, options] = ensurePath(this.path, path, query, options);
+    options = options || {};
+    query = wrap(query, path);
+
+    const stream = resolve(this.funcs, SUB, query, options);
+    for await (const value of stream) {
+      yield* options.raw ? value : unwrap(graft(value, query), path);
+    }
+  };
 
   async put(path, change, options) {
     [path, change, options] = ensurePath(this.path, path, change, options);

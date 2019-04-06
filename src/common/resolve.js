@@ -1,4 +1,4 @@
-import { getNode } from './path';
+import { unwrap } from './path';
 import merge from './merge';
 import isEqual from 'lodash/isEqual';
 
@@ -14,8 +14,8 @@ export default async function resolve(
   let rootPayload = initPayload;
 
   function buildChildren(path) {
-    const payload = getNode(rootPayload, path);
-    const handlers = getNode(rootHandlers, path);
+    const payload = unwrap(rootPayload, path);
+    const handlers = unwrap(rootHandlers, path);
     if (typeof payload !== 'object' || !payload) return;
 
     return Promise.all(
@@ -26,7 +26,7 @@ export default async function resolve(
   }
 
   async function build(path) {
-    const handlers = getNode(rootHandlers, path);
+    const handlers = unwrap(rootHandlers, path);
     const handle = handlers[type];
     if (!handle) return buildChildren(path);
 

@@ -1,9 +1,15 @@
 import isEmpty from 'lodash/isEmpty';
 
-import { getNode, makeNode } from './path';
-import { isRange, splitRange, encRange } from './range';
-import { LINK_KEY, PAGE_KEY } from './constants';
-import merge from './merge';
+import {
+  unwrap,
+  makeNode,
+  isRange,
+  splitRange,
+  encRange,
+  LINK_KEY,
+  PAGE_KEY,
+  merge,
+} from '@graffy/common';
 
 /*
   Given a tree, a query and a visitor callback, the walk function invokes
@@ -28,7 +34,7 @@ function walk(root, rootQuery, visit) {
     const link = node[LINK_KEY];
     if (link) {
       visit(node, query, path);
-      step(getNode(root, link), query, link);
+      step(unwrap(root, link), query, link);
       return;
     }
 
@@ -67,7 +73,7 @@ function set(object, path, value) {
   input query that are not present in the tree.
 */
 
-export function sprout(root, rootQuery) {
+export function getUnknown(rootQuery, root) {
   const nextQuery = {};
 
   walk(root, rootQuery, (node, query, path) => {
@@ -78,10 +84,10 @@ export function sprout(root, rootQuery) {
 }
 
 /*
-  Prune (unnecessary branches)
+  getKnown (returns only parts of the graph that exist in query)
 */
 
-export function prune(root, rootQuery) {
+export function getKnown(rootQuery, root) {
   const pruned = {};
 
   walk(root, rootQuery, (node, query, path) => {
@@ -95,6 +101,13 @@ export function prune(root, rootQuery) {
   return isEmpty(pruned) ? undefined : pruned;
 }
 
+/* hasKnown (check if query matches any part of graph) */
+
+export function hasKnown(rootQuery, root) {
+  // TODO: Make this more efficient.
+  return !!getKnown(rootQuery, root);
+}
+
 /*
   strike: Copies parts of the query that cross links, repeating them at their
   canonical positions.
@@ -102,7 +115,7 @@ export function prune(root, rootQuery) {
   The returned value is used to compute intersections with change objects.
 */
 
-export function strike(root, rootQuery) {
+export function linkKnown(rootQuery, root) {
   const normalized = {};
 
   walk(root, rootQuery, (node, query, path) => {
@@ -116,48 +129,4 @@ export function strike(root, rootQuery) {
   });
 
   return isEmpty(normalized) ? undefined : normalized;
-}
-
-export function cap(root, rootQuery) {
-  const capped = {};
-
-  walk(root, rootQuery, (node, query, path) => {
-    set(capped, path, typeof node === 'undefined' ? null : node);
-  });
-
-  return isEmpty(capped) ? undefined : capped;
-}
-
-// Convert a raw response into a denormalized and easy-to-consume graph.
-export function graft(root, rootQuery) {
-  const graph = {};
-  const links = [];
-
-  walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined' || node === null) {
-      set(graph, path, null);
-      return;
-    }
-    if (node[LINK_KEY]) {
-      links.push([path, node[LINK_KEY]]);
-    } else {
-      set(graph, path, node);
-    }
-  });
-
-  for (const [from, to] of links) set(graph, from, getNode(graph, to));
-
-  const prunedGraph = {};
-  walk(graph, rootQuery, (node, query, path) => {
-    if (typeof node !== 'object' || node === null) {
-      set(prunedGraph, path, node);
-      return;
-    }
-    if (node[PAGE_KEY]) {
-      const target = makeNode(prunedGraph, path);
-      Object.defineProperty(target, PAGE_KEY, { value: node[PAGE_KEY] });
-    }
-  });
-
-  return isEmpty(prunedGraph) ? undefined : prunedGraph;
 }

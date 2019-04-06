@@ -1,6 +1,6 @@
 import isEmpty from './isEmpty';
 
-import { getNode, makeNode } from './path';
+import { unwrap, makeNode } from './path';
 import { isRange, splitRange, encRange } from './range';
 import { LINK_KEY, PAGE_KEY } from './constants';
 import merge from './merge';
@@ -28,7 +28,7 @@ function walk(root, rootQuery, visit) {
     const link = node[LINK_KEY];
     if (link) {
       visit(node, query, path);
-      step(getNode(root, link), query, link);
+      step(unwrap(root, link), query, link);
       return;
     }
 
@@ -147,7 +147,7 @@ export function graft(root, rootQuery) {
     }
   });
 
-  for (const [from, to] of links) set(graph, from, getNode(graph, to));
+  for (const [from, to] of links) set(graph, from, unwrap(graph, to));
 
   const prunedGraph = {};
   walk(graph, rootQuery, (node, query, path) => {

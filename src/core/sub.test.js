@@ -1,5 +1,5 @@
 import Graffy from './Graffy';
-import { LINK_KEY, PAGE_KEY } from '@graffy/common/constants';
+import { LINK_KEY, PAGE_KEY } from '@graffy/common';
 
 describe('subscriptions', () => {
   describe('stream', () => {

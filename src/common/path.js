@@ -1,5 +1,5 @@
 import sortedIndex from 'lodash/sortedIndex';
-import { PAGE_KEY } from './constants';
+import { PAGE_KEY, LINK_KEY, MIN_KEY, MAX_KEY } from './constants';
 
 export const PATH_SEPARATOR = '/';
 
@@ -17,7 +17,7 @@ function known(node, key) {
   return !(ix % 2);
 }
 
-export function getNode(tree, path) {
+export function unwrap(tree, path) {
   for (const key of path) {
     if (!tree) return;
     if (!(key in tree)) return known(tree, key) ? null : undefined;
@@ -38,4 +38,24 @@ export function wrap(query, path) {
   // return path.concat(query);
   for (let i = path.length - 1; i >= 0; i--) query = { [path[i]]: query };
   return query;
+}
+
+export function getPage(tree) {
+  const [start, end] = tree[PAGE_KEY] || [MIN_KEY, MAX_KEY];
+  const hasNext = end !== MAX_KEY;
+  const hasPrev = start !== MIN_KEY;
+  return { start, end, hasNext, hasPrev };
+}
+
+export function getLink(node) {
+  return node[LINK_KEY];
+}
+
+export function makeLink(path) {
+  return { [LINK_KEY]: makePath(path) };
+}
+
+export function makePage(node, start, end) {
+  node[PAGE_KEY] = [start, end];
+  return node;
 }

@@ -10,7 +10,7 @@
     "Readme.md"
   ],
   "scripts": {
-    "prepare": "cd .. && PKG=common yarn build-pkg"
+    "prepare": "cd .. && PKG=cache yarn build-pkg"
   },
   "repository": {
     "type": "git",

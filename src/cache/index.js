@@ -1,23 +1,37 @@
-import { getNode, makeNode, makePath, wrap, merge } from '@graffy/common';
+import { merge } from '@graffy/common';
+import Cache from './Cache';
 
-export default class Cache {
-  constructor() {
-    this.data = {};
-  }
+module.exports = function(cacheOptions = {}) {
+  return store => {
+    let mainCache = new Cache(store, cacheOptions);
 
-  init(graffy) {
-    graffy.onGet(this.get);
-    graffy.onPut(this.put);
-  }
+    store.onGet(async (query, options, next) => {
+      const [value, unknown] = mainCache.getValue(query);
+      if (!unknown) return value;
+      const nextValue = await next(unknown);
+      mainCache.putValue(nextValue);
+      return merge(value, nextValue);
+    });
 
-  get(path) {
-    path = makePath(path);
-    return wrap(getNode(this.data, path), path);
-  }
+    store.onSub(async function*(query, options, next) {
+      let stream;
 
-  put(path, data) {
-    path = makePath(path);
-    const node = makeNode(this.data, path);
-    merge(node, data);
-  }
-}
+      if (options.skipCache === mainCache.id) {
+        stream = next();
+        const firstValue = stream.next().value; // Ensure stream is ready
+        yield store.get(query);
+        yield firstValue;
+      } else {
+        const cache = options.raw ? new Cache() : mainCache;
+        stream = cache.getStream(query);
+      }
+
+      yield* stream;
+    });
+
+    store.onPut((graph, options, next) => {
+      mainCache.putValue(graph);
+      return next(graph, options);
+    });
+  };
+};

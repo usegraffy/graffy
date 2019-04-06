@@ -1,10 +1,12 @@
 import Graffy from './Graffy';
-import { LINK_KEY, PAGE_KEY } from '@graffy/common/constants';
+// import cache from '@graffy/cache';
+import { LINK_KEY } from '@graffy/common';
 
 describe('get', () => {
   let g;
   beforeEach(() => {
     g = new Graffy();
+    // g.use(cache());
   });
 
   test('simple', async () => {
