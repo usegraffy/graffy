@@ -1,8 +1,8 @@
 import {
-  sprout,
-  prune,
+  getUnknown,
+  getKnown,
   graft,
-  strike,
+  linkKnown,
   merge,
   getToken,
   makeStream,
@@ -37,31 +37,31 @@ export default function(store) {
       }
 
       // Returns early if the change does not have any overlap with the query.
-      // DO NOT prune the change to only those changes that overlap; when the
+      // DO NOT getKnown the change to only those changes that overlap; when the
       // overlapping portion includes a deletion in a range, the change set
       // may contain additional items to make up.
-      if (!prune(change, strike(data, query))) return;
+      if (!getKnown(change, linkKnown(data, query))) return;
 
       merge(data, change);
 
-      const nextQuery = sprout(data, query);
+      const nextQuery = getUnknown(data, query);
 
       if (nextQuery) {
         const linked = await store.get(nextQuery, options);
         merge(data, linked);
         if (!options.values) merge(change, linked);
       }
-      data = prune(data, query);
+      data = getKnown(data, query);
       push(options.values ? graft(data, query) || {} : change);
     };
 
     data = await next(query, options);
     merge(data, earlyChange);
 
-    // TODO: Properly resolve, prune etc. after early changes are merged.
+    // TODO: Properly resolve, getKnown etc. after early changes are merged.
 
     earlyChange = null;
-    data = prune(data, query) || {};
+    data = getKnown(data, query) || {};
     push(data);
 
     return stream;

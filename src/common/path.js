@@ -55,7 +55,7 @@ export function makeLink(path) {
   return { [LINK_KEY]: makePath(path) };
 }
 
-export function makePage(node, start, end) {
+export function makePage(node, start = MIN_KEY, end = MAX_KEY) {
   node[PAGE_KEY] = [start, end];
   return node;
 }

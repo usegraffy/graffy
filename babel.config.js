@@ -10,10 +10,12 @@ module.exports = {
     ['@babel/preset-react'],
   ],
   plugins: [
-    [
-      '@babel/plugin-transform-runtime',
-      { regenerator: true, useESModules: process.env.NODE_ENV !== 'test' },
-    ],
+    process.env.NODE_ENV === 'test'
+      ? [
+          '@babel/plugin-transform-runtime',
+          { regenerator: true, useESModules: false },
+        ]
+      : undefined,
     '@babel/plugin-proposal-class-properties',
-  ],
+  ].filter(Boolean),
 };

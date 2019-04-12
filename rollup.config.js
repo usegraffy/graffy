@@ -52,7 +52,8 @@ export default {
       include: 'node_modules/**',
     }),
     babel({
-      runtimeHelpers: true,
+      // externalHelpers: true,
+      // runtimeHelpers: true,
       exclude: 'node_modules/**', // only transpile our source code
     }),
     minify({ comments: false }),

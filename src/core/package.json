@@ -20,6 +20,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.11",
+    "merge-async-iterators": "^0.2.1",
+    "@graffy/common": "^0.7.1"
   }
 }

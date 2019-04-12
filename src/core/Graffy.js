@@ -1,21 +1,15 @@
 import {
   makePath,
-  makeNode,
   unwrap,
   wrap,
-  prune,
-  sprout,
+  getKnown,
+  getUnknown,
   diff,
   graft,
-  cap,
-  compose,
-  resolve,
   merge,
 } from '@graffy/common';
 
-const GET = Symbol();
-const PUT = Symbol();
-const SUB = Symbol();
+import resolve from './resolve';
 
 function ensurePath(basePath, path, ...args) {
   if (!basePath) basePath = [];
@@ -29,57 +23,68 @@ function ensurePath(basePath, path, ...args) {
 }
 
 function shiftFn(fn, path) {
+  if (!path || !path.length) return fn;
   return async (payload, options, next) => {
-    return wrap(await fn(unwrap(payload, path), options, next), path);
+    return wrap(
+      await fn(unwrap(payload, path), options, nextPayload =>
+        next(wrap(nextPayload, path)),
+      ),
+      path,
+    );
   };
 }
 
-const wrapHandler = {
-  [GET]: function(handle) {
-    return async function(query, options, next) {
-      const result = prune(await handle(query, options), query);
-      const nextQuery = sprout(result, query);
-      if (nextQuery) merge(result, await next(nextQuery));
-      return prune(result, query);
-    };
-  },
-  [PUT]: function(handle) {
-    return async function(change, options, next) {
-      const result = await handle(change, options);
-      const pendingChange = diff(change, result);
-      if (pendingChange) merge(result, await next(pendingChange));
-      return result;
-    };
-  },
-  [SUB]: function(handle) {
-    return async function*(query, options, next) {};
-  },
-};
+function wrapGetHandler(handle) {
+  return async function(query, options, next) {
+    const result = getKnown(await handle(query, options), query);
+    const nextQuery = result ? getUnknown(result, query) : query;
+    if (nextQuery) merge(result, await next(nextQuery));
+    return getKnown(result, query);
+  };
+}
+
+function wrapPutHandler(handle) {
+  return async function(change, options, next) {
+    const result = await handle(change, options);
+    const pendingChange = diff(change, result);
+    if (pendingChange) merge(result, await next(pendingChange));
+    return result;
+  };
+}
 
 export default class Graffy {
   constructor(path, root) {
     if (root) {
       this.root = root;
       this.path = path;
-      this.funcs = this.root.funcs;
-      this.subs = this.root.subs;
+      this.getHandlers = this.root.getHandlers;
+      this.putHandlers = this.root.putHandlers;
+      this.subHandlers = this.root.subHandlers;
     } else {
-      this.funcs = {}; // Registered provider functions, in a tree
-      this.subs = {}; // Map of tokens to queries for ongoing subscriptions
-      this.subId = 0;
+      this.getHandlers = [];
+      this.putHandlers = [];
+      this.subHandlers = [];
     }
-    this.onGet = this.register.bind(this, GET);
-    this.onSub = this.register.bind(this, SUB);
-    this.onPut = this.register.bind(this, PUT);
   }
 
-  register(type, path, fn) {
-    [path, fn] = ensurePath(this.path, path, fn);
-    if (wrapHandler[type]) fn = wrapHandler[type](fn);
-    if (this.path) fn = shiftFn(fn, this.path);
-    const node = makeNode(this.funcs, path);
-    node[type] = node[type] || compose();
-    node[type].push(fn);
+  onGet(path, handle) {
+    [path, handle] = ensurePath(this.path, path, handle);
+    handle = wrapGetHandler(handle);
+    if (this.path) handle = shiftFn(handle, this.path);
+    this.getHandlers.push({ path, handle });
+  }
+
+  onPut(path, handle) {
+    [path, handle] = ensurePath(this.path, path, handle);
+    handle = wrapPutHandler(handle);
+    if (this.path) handle = shiftFn(handle, this.path);
+    this.putHandlers.push({ path, handle });
+  }
+
+  onSub(path, handle) {
+    [path, handle] = ensurePath(this.path, path, handle);
+    if (this.path) handle = shiftFn(handle, this.path);
+    this.subHandlers.push({ path, handle });
   }
 
   use(path, provider) {
@@ -94,30 +99,31 @@ export default class Graffy {
     options = options || {};
     query = wrap(query, path);
 
-    const result = resolve(this.funcs, GET, query, options).then(result =>
-      cap(result, query),
-    );
+    const result = resolve(this.getHandlers, query, options);
     return options.raw
       ? result
       : result.then(tree => unwrap(graft(tree, query), path));
   }
 
-  sub = async function*(path, query, options) {
+  async *sub(path, query, options) {
     [path, query, options] = ensurePath(this.path, path, query, options);
     options = options || {};
     query = wrap(query, path);
 
-    const stream = resolve(this.funcs, SUB, query, options);
+    const stream = await resolve(this.subHandlers, query, options);
+
+    // console.log('Stream is', await stream);
+
     for await (const value of stream) {
-      yield* options.raw ? value : unwrap(graft(value, query), path);
+      yield options.raw ? value : unwrap(graft(value, query), path);
     }
-  };
+  }
 
   async put(path, change, options) {
     [path, change, options] = ensurePath(this.path, path, change, options);
     options = options || {};
     change = wrap(change, path);
-    change = await resolve(this.funcs, PUT, change, options);
+    change = await resolve(this.putHandlers, change, options);
     for (const id in this.subs) this.subs[id].pub(change);
     return change;
   }

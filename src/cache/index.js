@@ -16,15 +16,18 @@ module.exports = function(cacheOptions = {}) {
     store.onSub(async function*(query, options, next) {
       let stream;
 
-      if (options.skipCache === mainCache.id) {
-        stream = next();
+      if (options.skipCache) {
+        stream = await next(query);
+        console.log('Result of calling next with ', query, 'is', stream);
         const firstValue = stream.next().value; // Ensure stream is ready
         yield store.get(query);
         yield firstValue;
       } else {
-        const cache = options.raw ? new Cache() : mainCache;
-        stream = cache.getStream(query);
+        const cache = options.raw ? new Cache(store) : mainCache;
+        stream = await cache.getStream(query);
       }
+
+      console.log('Stream', stream);
 
       yield* stream;
     });

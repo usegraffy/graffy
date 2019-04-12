@@ -1,4 +1,4 @@
-import { cap, sprout } from './tree';
+import { cap, getUnknown } from './tree';
 import merge from './merge';
 import isEqual from 'lodash/isEqual';
 
@@ -29,7 +29,7 @@ export default async function distribute(initChange, rootFuncs, type, options) {
   while (rootChange) {
     if (--budget < 0) throw new Error('resolve.max_recursion');
     await build(rootChange, rootFuncs);
-    const nextdChange = sprout(result, rootChange);
+    const nextdChange = getUnknown(result, rootChange);
     if (isEqual(nextdChange, rootChange)) break;
     rootChange = nextdChange;
   }

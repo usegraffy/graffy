@@ -1,15 +1,10 @@
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from './isEmpty';
 
-import {
-  unwrap,
-  makeNode,
-  isRange,
-  splitRange,
-  encRange,
-  LINK_KEY,
-  PAGE_KEY,
-  merge,
-} from '@graffy/common';
+import { unwrap, makeNode } from './path';
+import { isRange, splitRange, encRange } from './range';
+import { LINK_KEY, PAGE_KEY } from './constants';
+import merge from './merge';
+import { includes } from './interval';
 
 /*
   Given a tree, a query and a visitor callback, the walk function invokes
@@ -39,9 +34,17 @@ function walk(root, rootQuery, visit) {
     }
 
     for (const key in query) {
+      if (key === PAGE_KEY) continue;
+
       const subQuery = query[key];
       if (!isRange(key)) {
-        step(node[key], subQuery, path.concat(key));
+        const childNode =
+          key in node
+            ? node[key]
+            : includes(node[PAGE_KEY] || [], key)
+            ? null
+            : undefined;
+        step(childNode, subQuery, path.concat(key));
         continue;
       }
 
@@ -68,7 +71,7 @@ function set(object, path, value) {
 }
 
 /*
-  Sprout (new branches)
+  getUnknown (new branches)
   Given a cached tree and a query, return a new query representing parts of the
   input query that are not present in the tree.
 */
@@ -88,17 +91,17 @@ export function getUnknown(rootQuery, root) {
 */
 
 export function getKnown(rootQuery, root) {
-  const pruned = {};
+  const getKnownd = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (typeof node === 'undefined') return;
 
     if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
-      set(pruned, path, node);
+      set(getKnownd, path, node);
     }
   });
 
-  return isEmpty(pruned) ? undefined : pruned;
+  return isEmpty(getKnownd) ? undefined : getKnownd;
 }
 
 /* hasKnown (check if query matches any part of graph) */
@@ -109,7 +112,7 @@ export function hasKnown(rootQuery, root) {
 }
 
 /*
-  strike: Copies parts of the query that cross links, repeating them at their
+  linkKnown: Copies parts of the query that cross links, repeating them at their
   canonical positions.
 
   The returned value is used to compute intersections with change objects.

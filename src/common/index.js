@@ -15,5 +15,12 @@ export { default as getToken } from './getToken';
 export { default as merge } from './merge';
 export { isRange, encRange, decRange, splitRange } from './range';
 export { default as resolve } from './resolve';
-export { cap, prune, graft, sprout, strike } from './tree';
+export { graft } from './tree';
 export { default as makeStream } from './makeStream';
+export { default as mergeStreams } from './mergeStreams';
+export { addQueries, subtractQueries, simplifyQuery } from './queryOperations';
+export { linkKnown, hasKnown, getKnown, getUnknown } from './cacheOperations';
+
+export function diff(changes) {
+  return changes;
+}

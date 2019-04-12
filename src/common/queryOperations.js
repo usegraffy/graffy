@@ -16,6 +16,8 @@ export function addQueries(a, b) {
 
     sum[key] = addQueries(a[key], b[key]);
   }
+
+  return sum;
 }
 
 export function subtractQueries(a, b) {

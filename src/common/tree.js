@@ -4,6 +4,7 @@ import { unwrap, makeNode } from './path';
 import { isRange, splitRange, encRange } from './range';
 import { LINK_KEY, PAGE_KEY } from './constants';
 import merge from './merge';
+import { includes } from './interval';
 
 /*
   Given a tree, a query and a visitor callback, the walk function invokes
@@ -33,9 +34,17 @@ function walk(root, rootQuery, visit) {
     }
 
     for (const key in query) {
+      if (key === PAGE_KEY) continue;
+
       const subQuery = query[key];
       if (!isRange(key)) {
-        step(node[key], subQuery, path.concat(key));
+        const childNode =
+          key in node
+            ? node[key]
+            : includes(node[PAGE_KEY] || [], key)
+            ? null
+            : undefined;
+        step(childNode, subQuery, path.concat(key));
         continue;
       }
 
@@ -62,16 +71,16 @@ function set(object, path, value) {
 }
 
 /*
-  Sprout (new branches)
+  getUnknown (new branches)
   Given a cached tree and a query, return a new query representing parts of the
   input query that are not present in the tree.
 */
 
-export function sprout(root, rootQuery) {
+export function getUnknown(root, rootQuery) {
   const nextQuery = {};
 
   walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined' || node === null) {
+    if (typeof node === 'undefined') {
       set(nextQuery, path, query);
     }
   });
@@ -80,31 +89,34 @@ export function sprout(root, rootQuery) {
 }
 
 /*
-  Prune (unnecessary branches)
+  getKnown (unnecessary branches)
 */
 
-export function prune(root, rootQuery) {
-  const pruned = {};
+export function getKnown(root, rootQuery) {
+  const getKnownd = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (typeof node === 'undefined') return;
 
     if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
-      set(pruned, path, node);
+      set(getKnownd, path, node);
+      return;
     }
+
+    set(getKnownd, path, null);
   });
 
-  return isEmpty(pruned) ? undefined : pruned;
+  return isEmpty(getKnownd) ? undefined : getKnownd;
 }
 
 /*
-  strike: Copies parts of the query that cross links, repeating them at their
+  linkKnown: Copies parts of the query that cross links, repeating them at their
   canonical positions.
 
   The returned value is used to compute intersections with change objects.
 */
 
-export function strike(root, rootQuery) {
+export function linkKnown(root, rootQuery) {
   const normalized = {};
 
   walk(root, rootQuery, (node, query, path) => {
@@ -118,16 +130,6 @@ export function strike(root, rootQuery) {
   });
 
   return isEmpty(normalized) ? undefined : normalized;
-}
-
-export function cap(root, rootQuery) {
-  const capped = {};
-
-  walk(root, rootQuery, (node, query, path) => {
-    set(capped, path, typeof node === 'undefined' ? null : node);
-  });
-
-  return isEmpty(capped) ? undefined : capped;
 }
 
 // Convert a raw response into a denormalized and easy-to-consume graph.
@@ -149,17 +151,17 @@ export function graft(root, rootQuery) {
 
   for (const [from, to] of links) set(graph, from, unwrap(graph, to));
 
-  const prunedGraph = {};
+  const getKnowndGraph = {};
   walk(graph, rootQuery, (node, query, path) => {
     if (typeof node !== 'object' || node === null) {
-      set(prunedGraph, path, node);
+      set(getKnowndGraph, path, node);
       return;
     }
     if (node[PAGE_KEY]) {
-      const target = makeNode(prunedGraph, path);
+      const target = makeNode(getKnowndGraph, path);
       Object.defineProperty(target, PAGE_KEY, { value: node[PAGE_KEY] });
     }
   });
 
-  return isEmpty(prunedGraph) ? undefined : prunedGraph;
+  return isEmpty(getKnowndGraph) ? undefined : getKnowndGraph;
 }

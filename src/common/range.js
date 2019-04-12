@@ -69,7 +69,7 @@ const getKeys = tree =>
 
 export function splitRange(tree, key) {
   const { first, last, before, after } = decRange(key);
-  const treePage = tree[PAGE_KEY] || [MIN_KEY, MAX_KEY];
+  const treePage = tree[PAGE_KEY] || [];
 
   const rangePage = inter(treePage, [after, before]);
   if (

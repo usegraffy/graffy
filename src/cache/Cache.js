@@ -1,7 +1,15 @@
-import { deepEqual } from 'lodash/deepEqual';
-import { makeStream, merge } from '@graffy/common';
-import { addQueries, subtractQueries, simplifyQuery } from './queryOperations';
-import { linkKnown, hasKnown, getKnown, getUnknown } from './cacheOperations';
+import isEqual from 'lodash/isEqual';
+import {
+  makeStream,
+  merge,
+  addQueries,
+  subtractQueries,
+  simplifyQuery,
+  linkKnown,
+  hasKnown,
+  getKnown,
+  getUnknown,
+} from '@graffy/common';
 
 export default class Cache {
   constructor(store, cacheOptions) {
@@ -19,7 +27,8 @@ export default class Cache {
 
   async resubscribe() {
     const query = simplifyQuery(this.sumQuery);
-    if (deepEqual(this.upstreamQuery, query)) return;
+    console.log('Making query', query, this.upstreamQuery);
+    if (isEqual(this.upstreamQuery, query)) return;
     this.upstreamQuery = query;
     if (this.upstream) this.upstream.cancel();
     this.upstream = this.store.sub(query, { skipCache: this.id });
@@ -38,8 +47,10 @@ export default class Cache {
 
     */
 
+    console.log('Query', query);
+
     const id = this.lastListenerId++;
-    const [stream, push] = makeStream(() => {
+    const [push, stream] = makeStream(() => {
       delete this.listeners[id];
       this.sumQuery = subtractQueries(this.sumQuery, query);
       return this.resubscribe();
@@ -51,6 +62,7 @@ export default class Cache {
       push,
     };
     this.sumQuery = addQueries(this.sumQuery, query);
+    console.log('sumQuery', this.sumQuery);
     this.resubscribe();
     return stream;
   }
@@ -74,6 +86,8 @@ export default class Cache {
       Othersiwe, call listeners with values from cache
     */
 
+    console.log('PutValue', value);
+
     merge(this.data, value);
     const linkedQuery = subtractQueries(
       linkKnown(this.sumQuery, value),
@@ -82,6 +96,7 @@ export default class Cache {
     const unknown = getUnknown(linkedQuery, value);
 
     if (unknown) {
+      console.log('Unknown', unknown);
       // The change added a link to some data we don't have in the cache.
       // We need to fetch it, but we don't need to resubscribe; the existing
       // subscription now matches this data (via the link) and will send us

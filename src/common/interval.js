@@ -1,3 +1,5 @@
+import sortedIndex from 'lodash/sortedIndex';
+
 /*
   makeOperation: Return an interval operation for the given logic flags.
 
@@ -46,3 +48,7 @@ function makeOperation(lForR, rForL) {
 export const union = makeOperation(0, 0);
 export const inter = makeOperation(1, 1);
 export const diff = makeOperation(0, 1);
+
+export function includes(interval, key) {
+  return !!(sortedIndex(interval, key) % 2);
+}

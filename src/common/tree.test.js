@@ -1,12 +1,12 @@
-import { prune, sprout, strike } from './tree';
+import { getKnown, getUnknown, linkKnown } from './tree';
 import { MIN_KEY, MAX_KEY, makeLink, makePage } from './constants';
 
 const link = makeLink;
 const page = makePage;
 
-test('strike', () => {
+test('linkKnown', () => {
   expect(
-    strike(
+    linkKnown(
       {
         foo: page({ a: { m: 1 }, b: { m: 2 }, c: { m: 3 } }, '', 'c'),
         bar: { a: link('/foo/a'), b: link('/foo/b'), d: link('/foo/d') },
@@ -29,9 +29,9 @@ test('strike', () => {
   });
 });
 
-test('sprout 1', () => {
+test('getUnknown 1', () => {
   expect(
-    sprout(
+    getUnknown(
       {
         foo: page({ a: { m: 1 }, b: { m: 2 }, c: { m: 3 } }, '', 'c'),
         bar: { a: link('/foo/a'), b: link('/foo/b'), d: link('/foo/d') },
@@ -62,21 +62,21 @@ const tree = {
 //   a: { b: { c: '/e' } }
 // };
 
-test('sprout 2', () => {
+test('getUnknown 2', () => {
   const query = {
     a: { '*': { c: { f: true, h: true } } },
   };
-  expect(sprout(tree, query)).toEqual({
+  expect(getUnknown(tree, query)).toEqual({
     g: { h: true },
     m: { f: true, h: true },
   });
 });
 
-test('prune 2', () => {
+test('getKnown 2', () => {
   const query = {
     a: { '*': { c: { f: true, h: true } } },
   };
-  expect(prune(tree, query)).toEqual({
+  expect(getKnown(tree, query)).toEqual({
     a: page(
       {
         b: { c: link('/e') },
