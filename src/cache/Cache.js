@@ -27,7 +27,7 @@ export default class Cache {
 
   async resubscribe() {
     const query = simplifyQuery(this.sumQuery);
-    console.log('Making query', query, this.upstreamQuery);
+    console.log('Resubscribe: Making query', query, this.upstreamQuery);
     if (isEqual(this.upstreamQuery, query)) return;
     this.upstreamQuery = query;
     if (this.upstream) this.upstream.cancel();
@@ -47,7 +47,7 @@ export default class Cache {
 
     */
 
-    console.log('Query', query);
+    console.log('getStream invoked', query);
 
     const id = this.lastListenerId++;
     const [push, stream] = makeStream(() => {
@@ -71,10 +71,11 @@ export default class Cache {
     for await (const value of stream) this.putValue(value);
   }
 
-  async getValue(query) {
+  getValue(query) {
     /* Return resuts as well as "unknown" query */
     const value = getKnown(this.data, query);
     const unknown = getUnknown(this.data, query);
+    console.log('getValue', query, this.data, value, unknown);
     return [value, unknown];
   }
 
@@ -86,7 +87,7 @@ export default class Cache {
       Othersiwe, call listeners with values from cache
     */
 
-    console.log('PutValue', value);
+    // console.log('PutValue', value);
 
     merge(this.data, value);
     const linkedQuery = subtractQueries(

@@ -26,8 +26,8 @@ function shiftFn(fn, path) {
   if (!path || !path.length) return fn;
   return async (payload, options, next) => {
     return wrap(
-      await fn(unwrap(payload, path), options, nextPayload =>
-        next(wrap(nextPayload, path)),
+      await fn(unwrap(payload, path), options, async nextPayload =>
+        unwrap(await next(wrap(nextPayload, path)), path),
       ),
       path,
     );
@@ -38,8 +38,17 @@ function wrapGetHandler(handle) {
   return async function(query, options, next) {
     const result = getKnown(await handle(query, options), query);
     const nextQuery = result ? getUnknown(result, query) : query;
-    if (nextQuery) merge(result, await next(nextQuery));
+    if (nextQuery) {
+      const nextValue = await next(nextQuery);
+      merge(result, nextValue);
+    }
     return getKnown(result, query);
+  };
+}
+
+function wrapSubHandler(handle) {
+  return async function(query, options, next) {
+    const stream = handle(query, options);
   };
 }
 
@@ -57,34 +66,35 @@ export default class Graffy {
     if (root) {
       this.root = root;
       this.path = path;
-      this.getHandlers = this.root.getHandlers;
-      this.putHandlers = this.root.putHandlers;
-      this.subHandlers = this.root.subHandlers;
+      this.handlers = this.root.handlers;
     } else {
-      this.getHandlers = [];
-      this.putHandlers = [];
-      this.subHandlers = [];
+      this.handlers = {};
     }
+  }
+
+  on(type, path, handle) {
+    this.handlers[type] = this.handlers[type] || [];
+    this.handlers[type].push({ path, handle });
   }
 
   onGet(path, handle) {
     [path, handle] = ensurePath(this.path, path, handle);
     handle = wrapGetHandler(handle);
     if (this.path) handle = shiftFn(handle, this.path);
-    this.getHandlers.push({ path, handle });
+    this.on('get', path, handle);
   }
 
   onPut(path, handle) {
     [path, handle] = ensurePath(this.path, path, handle);
     handle = wrapPutHandler(handle);
     if (this.path) handle = shiftFn(handle, this.path);
-    this.putHandlers.push({ path, handle });
+    this.on('put', path, handle);
   }
 
   onSub(path, handle) {
     [path, handle] = ensurePath(this.path, path, handle);
-    if (this.path) handle = shiftFn(handle, this.path);
-    this.subHandlers.push({ path, handle });
+    // if (this.path) handle = shiftFn(handle, this.path);
+    this.on('sub', path, handle);
   }
 
   use(path, provider) {
@@ -99,7 +109,7 @@ export default class Graffy {
     options = options || {};
     query = wrap(query, path);
 
-    const result = resolve(this.getHandlers, query, options);
+    const result = resolve(this.handlers.get, query, options);
     return options.raw
       ? result
       : result.then(tree => unwrap(graft(tree, query), path));
@@ -110,7 +120,9 @@ export default class Graffy {
     options = options || {};
     query = wrap(query, path);
 
-    const stream = await resolve(this.subHandlers, query, options);
+    console.log('Sub called with', path, query, options);
+
+    const stream = await resolve(this.handlers.sub, query, options);
 
     // console.log('Stream is', await stream);
 
@@ -123,7 +135,7 @@ export default class Graffy {
     [path, change, options] = ensurePath(this.path, path, change, options);
     options = options || {};
     change = wrap(change, path);
-    change = await resolve(this.putHandlers, change, options);
+    change = await resolve(this.handlers.put, change, options);
     for (const id in this.subs) this.subs[id].pub(change);
     return change;
   }

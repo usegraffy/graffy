@@ -12,13 +12,27 @@ describe('changes', () => {
     g.use(cache());
   });
 
+  test('simple', async () => {
+    let value = { foo: { a: 3 } };
+    g.onSub('/foo', async function*() {
+      yield value;
+      await sleep(10);
+      value.foo.a = 4;
+      yield value;
+    });
+    const sub = g.sub({ foo: { a: true } }, { skipCache: true });
+
+    expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
+    expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
+  });
+
   test('link', async () => {
     g.onSub('/foo', async function*() {
-      console.log('Foo called');
       yield { foo: { [LINK_KEY]: ['bar', 'a'] } };
       await sleep(10);
       yield { foo: { [LINK_KEY]: ['bar', 'b'] } };
     });
+
     g.onSub('/bar', () => ({ bar: { a: { x: 3 }, b: { x: 5 } } }));
     setTimeout(() => g.pub(), 10);
     setTimeout(() => g.pub({ bar: { a: { x: 7 } } }), 20);
