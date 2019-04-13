@@ -3,8 +3,8 @@
   "version": "0.7.1",
   "author": "aravind (github.com/aravindet)",
   "description": "Live queries on graphs",
-  "main": "bundle.js",
-  "module": "bundle.mjs",
+  "main": "index.js",
+  
   "sideEffects": "false",
   "files": [
     "bundle.js",

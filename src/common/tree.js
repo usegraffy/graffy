@@ -71,45 +71,6 @@ function set(object, path, value) {
 }
 
 /*
-  getUnknown (new branches)
-  Given a cached tree and a query, return a new query representing parts of the
-  input query that are not present in the tree.
-*/
-
-export function getUnknown(root, rootQuery) {
-  const nextQuery = {};
-
-  walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined') {
-      set(nextQuery, path, query);
-    }
-  });
-
-  return isEmpty(nextQuery) ? undefined : nextQuery;
-}
-
-/*
-  getKnown (unnecessary branches)
-*/
-
-export function getKnown(root, rootQuery) {
-  const getKnownd = {};
-
-  walk(root, rootQuery, (node, query, path) => {
-    if (typeof node === 'undefined') return;
-
-    if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
-      set(getKnownd, path, node);
-      return;
-    }
-
-    set(getKnownd, path, null);
-  });
-
-  return isEmpty(getKnownd) ? undefined : getKnownd;
-}
-
-/*
   linkKnown: Copies parts of the query that cross links, repeating them at their
   canonical positions.
 
@@ -117,19 +78,19 @@ export function getKnown(root, rootQuery) {
 */
 
 export function linkKnown(root, rootQuery) {
-  const normalized = {};
+  const result = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (node && node[PAGE_KEY]) {
       const [after, before] = node[PAGE_KEY];
-      set(normalized, path, { [encRange({ after, before })]: query });
+      set(result, path, { [encRange({ after, before })]: query });
       return;
     }
 
-    set(normalized, path, query);
+    set(result, path, query);
   });
 
-  return isEmpty(normalized) ? undefined : normalized;
+  return isEmpty(result) ? undefined : result;
 }
 
 // Convert a raw response into a denormalized and easy-to-consume graph.
@@ -151,17 +112,17 @@ export function graft(root, rootQuery) {
 
   for (const [from, to] of links) set(graph, from, unwrap(graph, to));
 
-  const getKnowndGraph = {};
+  const result = {};
   walk(graph, rootQuery, (node, query, path) => {
     if (typeof node !== 'object' || node === null) {
-      set(getKnowndGraph, path, node);
+      set(result, path, node);
       return;
     }
     if (node[PAGE_KEY]) {
-      const target = makeNode(getKnowndGraph, path);
+      const target = makeNode(result, path);
       Object.defineProperty(target, PAGE_KEY, { value: node[PAGE_KEY] });
     }
   });
 
-  return isEmpty(getKnowndGraph) ? undefined : getKnowndGraph;
+  return isEmpty(result) ? undefined : result;
 }

@@ -1,8 +1,8 @@
 {
   "name": "@graffy/common",
   "version": "0.7.1",
-  "main": "bundle.js",
-  "module": "bundle.mjs",
+  "main": "index.js",
+  
   "sideEffects": "false",
   "files": [
     "bundle.js",

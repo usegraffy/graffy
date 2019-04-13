@@ -58,7 +58,7 @@ export default class Cache {
 
     this.listeners[id] = {
       originalQuery: query,
-      query: linkKnown(query, this.data),
+      query: linkKnown(this.data, query),
       push,
     };
     this.sumQuery = addQueries(this.sumQuery, query);
@@ -73,8 +73,8 @@ export default class Cache {
 
   async getValue(query) {
     /* Return resuts as well as "unknown" query */
-    const value = getKnown(query, this.data);
-    const unknown = getUnknown(query, this.data);
+    const value = getKnown(this.data, query);
+    const unknown = getUnknown(this.data, query);
     return [value, unknown];
   }
 
@@ -90,10 +90,10 @@ export default class Cache {
 
     merge(this.data, value);
     const linkedQuery = subtractQueries(
-      linkKnown(this.sumQuery, value),
+      linkKnown(value, this.sumQuery),
       this.sumQuery,
     );
-    const unknown = getUnknown(linkedQuery, value);
+    const unknown = getUnknown(value, linkedQuery);
 
     if (unknown) {
       console.log('Unknown', unknown);
@@ -109,11 +109,11 @@ export default class Cache {
     for (const id in this.listeners) {
       const { originalQuery, push } = this.listeners[id];
       let { query } = this.listeners[id];
-      if (!hasKnown(query, value)) continue;
+      if (!hasKnown(value, query)) continue;
       if (linkedQuery) {
-        query = this.listeners[id].query = linkKnown(originalQuery, this.data);
+        query = this.listeners[id].query = linkKnown(this.data, originalQuery);
       }
-      push(getKnown(query, this.data));
+      push(getKnown(this.data, query));
     }
   }
 }

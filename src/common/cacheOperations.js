@@ -76,7 +76,7 @@ function set(object, path, value) {
   input query that are not present in the tree.
 */
 
-export function getUnknown(rootQuery, root) {
+export function getUnknown(root, rootQuery) {
   const nextQuery = {};
 
   walk(root, rootQuery, (node, query, path) => {
@@ -90,23 +90,27 @@ export function getUnknown(rootQuery, root) {
   getKnown (returns only parts of the graph that exist in query)
 */
 
-export function getKnown(rootQuery, root) {
-  const getKnownd = {};
+export function getKnown(root, rootQuery) {
+  const result = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (typeof node === 'undefined') return;
 
     if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
-      set(getKnownd, path, node);
+      set(result, path, node);
+      return;
     }
+
+    // Node is an object, but query is a leaf.
+    set(result, path, null);
   });
 
-  return isEmpty(getKnownd) ? undefined : getKnownd;
+  return isEmpty(result) ? undefined : result;
 }
 
 /* hasKnown (check if query matches any part of graph) */
 
-export function hasKnown(rootQuery, root) {
+export function hasKnown(root, rootQuery) {
   // TODO: Make this more efficient.
   return !!getKnown(rootQuery, root);
 }
@@ -118,18 +122,18 @@ export function hasKnown(rootQuery, root) {
   The returned value is used to compute intersections with change objects.
 */
 
-export function linkKnown(rootQuery, root) {
-  const normalized = {};
+export function linkKnown(root, rootQuery) {
+  const result = {};
 
   walk(root, rootQuery, (node, query, path) => {
     if (node && node[PAGE_KEY]) {
       const [after, before] = node[PAGE_KEY];
-      set(normalized, path, { [encRange({ after, before })]: query });
+      set(result, path, { [encRange({ after, before })]: query });
       return;
     }
 
-    set(normalized, path, query);
+    set(result, path, query);
   });
 
-  return isEmpty(normalized) ? undefined : normalized;
+  return isEmpty(result) ? undefined : result;
 }
