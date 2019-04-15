@@ -1,7 +1,13 @@
 import isEmpty from 'lodash/isEmpty';
 
 export function addQueries(a, b) {
-  if (typeof a === 'number' && typeof b === 'number') return a + b;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') {
+    return (
+      (typeof a === 'number' ? a : Number(!!a)) +
+      (typeof b === 'number' ? b : Number(!!b))
+    );
+  }
+
   const sum = {};
 
   for (const key in a) {
@@ -21,18 +27,22 @@ export function addQueries(a, b) {
 }
 
 export function subtractQueries(a, b) {
-  if (typeof a === 'number' && typeof b === 'number') return Math.max(0, a - b);
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') {
+    return Math.max(
+      0,
+      (typeof a === 'number' ? a : Number(!!a)) -
+        (typeof b === 'number' ? b : Number(!!b)),
+    );
+  }
+
   const diff = {};
 
   for (const key in a) {
-    if (!(key in b)) diff[key] = b[key];
+    if (!(key in b)) diff[key] = a[key];
   }
 
   for (const key in b) {
-    if (!(key in a)) {
-      diff[key] = b[key];
-      continue;
-    }
+    if (!(key in a)) continue;
 
     const keyDiff = subtractQueries(a[key], b[key]);
     if (keyDiff) diff[key] = keyDiff;

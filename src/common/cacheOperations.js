@@ -112,7 +112,7 @@ export function getKnown(root, rootQuery) {
 
 export function hasKnown(root, rootQuery) {
   // TODO: Make this more efficient.
-  return !!getKnown(rootQuery, root);
+  return !!getKnown(root, rootQuery);
 }
 
 /*

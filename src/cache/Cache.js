@@ -11,13 +11,15 @@ import {
   getUnknown,
 } from '@graffy/common';
 
+let cacheId = 0;
+
 export default class Cache {
   constructor(store, cacheOptions) {
     this.store = store;
     this.cacheOptions = cacheOptions;
   }
 
-  id = Symbol('Cache ID');
+  id = cacheId++;
   data = {};
   listeners = {};
   lastListenerId = 0;
@@ -26,12 +28,12 @@ export default class Cache {
   upstream = null;
 
   async resubscribe() {
-    const query = simplifyQuery(this.sumQuery);
-    console.log('Resubscribe: Making query', query, this.upstreamQuery);
+    const query = linkKnown(this.data, simplifyQuery(this.sumQuery));
+    console.log(this.id, 'Resubscribe', query, this.upstreamQuery);
     if (isEqual(this.upstreamQuery, query)) return;
     this.upstreamQuery = query;
-    if (this.upstream) this.upstream.cancel();
-    this.upstream = this.store.sub(query, { skipCache: this.id });
+    if (this.upstream) this.upstream.return();
+    this.upstream = this.store.sub(query, { skipCache: this.id, raw: true });
     this.putStream(this.upstream);
   }
 
@@ -47,7 +49,7 @@ export default class Cache {
 
     */
 
-    console.log('getStream invoked', query);
+    // console.log('getStream invoked', query);
 
     const id = this.lastListenerId++;
     const [push, stream] = makeStream(() => {
@@ -62,7 +64,6 @@ export default class Cache {
       push,
     };
     this.sumQuery = addQueries(this.sumQuery, query);
-    console.log('sumQuery', this.sumQuery);
     this.resubscribe();
     return stream;
   }
@@ -75,7 +76,6 @@ export default class Cache {
     /* Return resuts as well as "unknown" query */
     const value = getKnown(this.data, query);
     const unknown = getUnknown(this.data, query);
-    console.log('getValue', query, this.data, value, unknown);
     return [value, unknown];
   }
 
@@ -87,7 +87,8 @@ export default class Cache {
       Othersiwe, call listeners with values from cache
     */
 
-    // console.log('PutValue', value);
+    console.log(this.id, 'PutValue', value);
+    if (typeof value === 'undefined') return;
 
     merge(this.data, value);
     const linkedQuery = subtractQueries(
@@ -97,24 +98,29 @@ export default class Cache {
     const unknown = getUnknown(value, linkedQuery);
 
     if (unknown) {
-      console.log('Unknown', unknown);
       // The change added a link to some data we don't have in the cache.
-      // We need to fetch it, but we don't need to resubscribe; the existing
-      // subscription now matches this data (via the link) and will send us
-      // future updates.
-      const linkedData = await this.store.get(unknown);
+      // We need to fetch it and also resubscribe.
+      await this.resubscribe();
+      const linkedData = await this.store.get(unknown, { raw: true });
       merge(this.data, linkedData);
       merge(value, linkedData);
     }
 
+    // console.log('Ready to push', value);
+    // console.log('Data', this.data);
+
     for (const id in this.listeners) {
       const { originalQuery, push } = this.listeners[id];
       let { query } = this.listeners[id];
-      if (!hasKnown(value, query)) continue;
+      if (!hasKnown(value, query)) {
+        console.log(this.id, 'Skipping push', value, query);
+        continue;
+      }
       if (linkedQuery) {
         query = this.listeners[id].query = linkKnown(this.data, originalQuery);
       }
-      push(getKnown(this.data, query));
+      console.log(this.id, 'pushing from cache', value);
+      push(value);
     }
   }
 }

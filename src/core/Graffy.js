@@ -7,6 +7,7 @@ import {
   diff,
   graft,
   merge,
+  mergeStreams,
 } from '@graffy/common';
 
 import resolve from './resolve';
@@ -48,7 +49,15 @@ function wrapGetHandler(handle) {
 
 function wrapSubHandler(handle) {
   return async function(query, options, next) {
-    const stream = handle(query, options);
+    let stream = handle(query, options);
+    try {
+      const nextStream = await next(query);
+      stream = mergeStreams([stream, nextStream]);
+    } catch (_) {
+      /* TODO: re-throw if not a resolve.unfulfilled */
+    }
+
+    return stream;
   };
 }
 
@@ -93,6 +102,7 @@ export default class Graffy {
 
   onSub(path, handle) {
     [path, handle] = ensurePath(this.path, path, handle);
+    handle = wrapSubHandler(handle);
     // if (this.path) handle = shiftFn(handle, this.path);
     this.on('sub', path, handle);
   }
@@ -120,13 +130,14 @@ export default class Graffy {
     options = options || {};
     query = wrap(query, path);
 
-    console.log('Sub called with', path, query, options);
+    // console.log('Sub called with', path, query, options);
 
     const stream = await resolve(this.handlers.sub, query, options);
 
     // console.log('Stream is', await stream);
 
     for await (const value of stream) {
+      // console.log(query, 'Yielding', value, options);
       yield options.raw ? value : unwrap(graft(value, query), path);
     }
   }
@@ -138,10 +149,5 @@ export default class Graffy {
     change = await resolve(this.handlers.put, change, options);
     for (const id in this.subs) this.subs[id].pub(change);
     return change;
-  }
-
-  pub(change) {
-    for (const id in this.subs)
-      this.subs[id].pub(this.path ? wrap(change, this.path) : change);
   }
 }

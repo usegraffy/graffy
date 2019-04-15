@@ -24,7 +24,7 @@ export default function makeStream(close) {
       close(val);
     },
 
-    [Symbol.iterator]() {
+    [Symbol.asyncIterator]() {
       return this;
     },
   };
