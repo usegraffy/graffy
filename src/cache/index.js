@@ -1,7 +1,7 @@
-import { merge, getUnknown } from '@graffy/common';
+import { merge } from '@graffy/common';
 import Cache from './Cache';
 
-module.exports = function(cacheOptions = {}) {
+export default function(cacheOptions = {}) {
   return store => {
     let mainCache = new Cache(store, cacheOptions);
 
@@ -40,4 +40,4 @@ module.exports = function(cacheOptions = {}) {
       return next(graph, options);
     });
   };
-};
+}

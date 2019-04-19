@@ -9,8 +9,8 @@
   "scripts": {
     "test": "jest",
     "build-pkg": "NODE_ENV=production rollup -c",
-    "server": "node examples/server",
-    "client": "cd examples/client && SKIP_PREFLIGHT_CHECK=true react-scripts start",
+    "server": "NODE_ENV=test babel-node examples/server",
+    "client": "cd examples/client && SKIP_PREFLIGHT_CHECK=true NODE_ENV=test react-scripts start",
     "example": "(yarn client &) && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },

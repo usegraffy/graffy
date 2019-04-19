@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { encRange, getPage } from '@graffy/core';
+import { encRange, getPage } from '@graffy/common';
 import { useGraffy } from '@graffy/react';
 
 import VisitorList from './VisitorList';

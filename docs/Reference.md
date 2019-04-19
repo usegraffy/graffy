@@ -9,13 +9,21 @@ Constructs a store. Does not accept any arguments.
 ### store.**get**(path, query, options)
 
 - Arguments: *[path](Encoding#Paths)*, [query](Encoding#Queries), *options*
-- Returns: Async Iterable or Promise, depending on options
+- Returns: Promise<Graph>
 
 Retrieve data from the store.
 
 #### options
 
-- **once**: If false (default), makes a live query and returns an async iterable; if true, makes a one-time query and returns a promise.
+- **raw**: If false (default), returns a JS graph, symbolic links replaced by object references; if true, returns [changes](Encoding#Changes) with symlinks preserved and linked data included at their canonical positions.
+
+### store.**sub**(path, query, options)
+
+- Arguments: *[path](Encoding#Paths)*, [query](Encoding#Queries), *options*
+- Returns: AsyncIterable<Graph>
+
+#### options
+
 - **raw**: If false (default), returns full data objects with symbolic links replaced by the linked data; if true, returns [changes](Encoding#Changes) with symlinks preserved and linked data included at their canonical positions.
 
 ### store.**put**(path, change, options)

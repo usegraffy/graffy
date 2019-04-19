@@ -7,17 +7,9 @@ import getQuery from './getQuery';
 
 const url = require('url');
 
-export default class GraffyServer {
-  graffy = s => {
-    this.store = s;
-  };
-
-  http = async (req, res) => {
-    if (!this.store) {
-      res.writeHead(502);
-      res.end('Server not ready');
-    }
-
+export default function server(store) {
+  if (!store) throw new Error('server.store_undef');
+  return async (req, res) => {
     if (req.method === 'GET') {
       const parsed = url.parse(req.url, true);
       const query = getQuery(parsed.query.include);
@@ -27,14 +19,15 @@ export default class GraffyServer {
         // TODO: Resumable subscriptions using timestamp ID.
         // const lastId = req.headers['last-event-id'];
 
-        const stream = this.store.get(query, { live: true, raw: true });
+        const stream = store.sub(query, { raw: true });
+        // TODO: call stream.return() when aborted
         for await (const value of stream) {
           if (req.aborted || res.finished) break;
           res.write(`data: ${JSON.stringify(value)}\n\n`);
         }
         res.end();
       } else {
-        const value = await this.store.get(query, { raw: true });
+        const value = await store.get(query, { raw: true });
         res.end(JSON.stringify(value));
       }
     } else {

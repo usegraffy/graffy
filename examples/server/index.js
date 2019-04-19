@@ -1,18 +1,21 @@
 const http = require('http');
 
-const Graffy = require('@graffy/core');
-const GraffyServer = require('@graffy/server');
-const mock = require('./mockVisitorList');
+import Graffy from '@graffy/core';
+import GraffyCache from '@graffy/cache';
+import GraffyServer from '@graffy/server';
+import mock from './mockVisitorList';
+
+console.log(Graffy);
 
 const g = new Graffy();
-const middle = new GraffyServer();
+g.use(GraffyCache());
 g.use(mock);
-g.use(middle.graffy);
+const graffyHandle = new GraffyServer(g);
 
 http
   .createServer((req, res) => {
     res.setHeader('access-control-allow-origin', '*');
-    middle.http(req, res);
+    graffyHandle(req, res);
   })
   .listen(8443);
 

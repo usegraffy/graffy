@@ -1,9 +1,11 @@
 const faker = require('faker');
-const { makeLink } = require('@graffy/core');
+const { makeLink } = require('@graffy/common');
 
 const visitors = {};
 const visitorsByTime = {};
 const freeIds = [];
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 module.exports = function(g) {
   g.onGet('/visitors', () => {
@@ -16,11 +18,13 @@ module.exports = function(g) {
     return { visitorsByTime };
   });
 
-  setInterval(() => {
-    ts = Date.now();
-    const change = simulate();
-    g.pub(change);
-  }, 1 + Math.random() * 100);
+  g.onSub(async function*() {
+    while (true) {
+      ts = Date.now();
+      yield simulate();
+      await sleep(1 + Math.random() * 100);
+    }
+  });
 };
 
 function simulate() {

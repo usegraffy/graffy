@@ -1,4 +1,4 @@
-import { default as Graffy } from './Graffy';
+import Graffy from './Graffy';
 // import {
 //   encRange,
 //   decRange,
