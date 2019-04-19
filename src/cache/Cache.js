@@ -11,15 +11,12 @@ import {
   getUnknown,
 } from '@graffy/common';
 
-let cacheId = 0;
-
 export default class Cache {
   constructor(store, cacheOptions) {
     this.store = store;
     this.cacheOptions = cacheOptions;
   }
 
-  id = cacheId++;
   data = {};
   listeners = {};
   lastListenerId = 0;
@@ -29,11 +26,10 @@ export default class Cache {
 
   async resubscribe() {
     const query = linkKnown(this.data, simplifyQuery(this.sumQuery));
-    console.log(this.id, 'Resubscribe', query, this.upstreamQuery);
     if (isEqual(this.upstreamQuery, query)) return;
     this.upstreamQuery = query;
     if (this.upstream) this.upstream.return();
-    this.upstream = this.store.sub(query, { skipCache: this.id, raw: true });
+    this.upstream = this.store.sub(query, { skipCache: true, raw: true });
     this.putStream(this.upstream);
   }
 
@@ -69,14 +65,17 @@ export default class Cache {
   }
 
   async putStream(stream) {
+    // TODO: Add backpressure here; pause pulling if all downstream listeners
+    // are saturated.
     for await (const value of stream) this.putValue(value);
   }
 
-  getValue(query) {
-    /* Return resuts as well as "unknown" query */
-    const value = getKnown(this.data, query);
-    const unknown = getUnknown(this.data, query);
-    return [value, unknown];
+  getKnown(query) {
+    return getKnown(this.data, query);
+  }
+
+  getUnknown(query) {
+    return getUnknown(this.data, query);
   }
 
   async putValue(value) {
@@ -87,39 +86,26 @@ export default class Cache {
       Othersiwe, call listeners with values from cache
     */
 
-    console.log(this.id, 'PutValue', value);
-    if (typeof value === 'undefined') return;
-
+    if (typeof value === 'undefined') value = {};
     merge(this.data, value);
-    const linkedQuery = subtractQueries(
-      linkKnown(value, this.sumQuery),
-      this.sumQuery,
-    );
-    const unknown = getUnknown(value, linkedQuery);
 
+    const unknown = getUnknown(this.data, this.sumQuery);
     if (unknown) {
       // The change added a link to some data we don't have in the cache.
       // We need to fetch it and also resubscribe.
       await this.resubscribe();
-      const linkedData = await this.store.get(unknown, { raw: true });
+      const linkedData = await this.store.get(unknown, {
+        skipCache: true,
+        raw: true,
+      });
       merge(this.data, linkedData);
       merge(value, linkedData);
     }
 
-    // console.log('Ready to push', value);
-    // console.log('Data', this.data);
-
     for (const id in this.listeners) {
       const { originalQuery, push } = this.listeners[id];
-      let { query } = this.listeners[id];
-      if (!hasKnown(value, query)) {
-        console.log(this.id, 'Skipping push', value, query);
-        continue;
-      }
-      if (linkedQuery) {
-        query = this.listeners[id].query = linkKnown(this.data, originalQuery);
-      }
-      console.log(this.id, 'pushing from cache', value);
+      const query = linkKnown(this.data, originalQuery);
+      if (!hasKnown(value, query)) continue;
       push(value);
     }
   }

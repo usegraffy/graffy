@@ -51,7 +51,7 @@ function walk(root, rootQuery, visit) {
       const { keys, known, unknown } = splitRange(node, key);
       keys.forEach(k => step(node[k], subQuery, path.concat(k)));
       if (unknown) step(undefined, subQuery, path.concat(unknown));
-      if (known) visit({ [PAGE_KEY]: known }, subQuery, path);
+      if (known.length) visit({ [PAGE_KEY]: known }, subQuery, path);
     }
   }
 
@@ -62,7 +62,7 @@ function set(object, path, value) {
   const key = path[path.length - 1];
   const node = makeNode(object, path.slice(0, -1));
   if (typeof value !== 'object' || !value) {
-    node[key] = value;
+    if (typeof node[key] !== 'object' || !node[key]) node[key] = value;
     return;
   }
 

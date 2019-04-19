@@ -14,7 +14,7 @@ export function makePath(path) {
 function known(node, key) {
   if (!node[PAGE_KEY] || !node[PAGE_KEY].length) return;
   const ix = sortedIndex(node[PAGE_KEY], key);
-  return !(ix % 2);
+  return !!(ix % 2);
 }
 
 export function unwrap(tree, path) {

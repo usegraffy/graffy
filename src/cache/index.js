@@ -6,7 +6,9 @@ module.exports = function(cacheOptions = {}) {
     let mainCache = new Cache(store, cacheOptions);
 
     store.on('get', [], async (query, options, next) => {
-      const [value = {}, unknown] = mainCache.getValue(query);
+      if (options.skipCache) return next(query);
+      const value = mainCache.getKnown(query) || {};
+      const unknown = mainCache.getUnknown(query);
       if (!unknown) return value;
       let nextValue;
       try {
@@ -21,25 +23,16 @@ module.exports = function(cacheOptions = {}) {
     });
 
     store.on('sub', [], async function*(query, options, next) {
-      let stream;
-
-      // console.log('onSub called');
-
       if (options.skipCache) {
-        stream = await next(query);
-        // console.log('Result of calling next with ', query, 'is', stream);
-        // We have to pull the first value from the stream to make sure the
-        // stream is ready before we do a store.get()
-        const firstValue = (await stream.next()).value || {};
-        const unknown = getUnknown(firstValue, query);
-        if (unknown) merge(firstValue, await store.get(unknown, { raw: true }));
-        yield firstValue;
+        yield* await next(query);
+      } else if (options.raw) {
+        yield* new Cache(store).getStream(query);
       } else {
-        const cache = options.raw ? new Cache(store) : mainCache;
-        stream = await cache.getStream(query);
+        for await (const _ of mainCache.getStream(query)) {
+          // console.log('Change is', _, 'pushing', mainCache.getKnown(query));
+          yield mainCache.getKnown(query);
+        }
       }
-
-      yield* stream;
     });
 
     store.onPut((graph, options, next) => {

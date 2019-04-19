@@ -1,8 +1,25 @@
 import Graffy from '@graffy/core';
-import { LINK_KEY, PAGE_KEY, makeLink, makePage } from '@graffy/common';
+import { PAGE_KEY, makeLink, makePage, merge } from '@graffy/common';
 import cache from './index.js';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const mockStream = (payloads, delay, gap, state) => {
+  let i = 0;
+  return async function*() {
+    if (delay) {
+      // console.log('Stream yields undefined');
+      yield;
+      sleep(delay);
+      delay = 0;
+    }
+    while (i < payloads.length) {
+      // console.log('Stream yields', payloads[i]);
+      if (gap) sleep(gap);
+      if (state) merge(state, payloads[i]);
+      yield payloads[i++];
+    }
+  };
+};
 
 describe('changes', () => {
   let g;
@@ -13,11 +30,7 @@ describe('changes', () => {
   });
 
   test('simple-skipCache', async () => {
-    g.onSub('/foo', async function*() {
-      yield { foo: { a: 3 } };
-      await sleep(10);
-      yield { foo: { a: 4 } };
-    });
+    g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
     const sub = g.sub({ foo: { a: 1 } }, { skipCache: 1 });
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
@@ -25,11 +38,7 @@ describe('changes', () => {
   });
 
   test('simple', async () => {
-    g.onSub('/foo', async function*() {
-      yield { foo: { a: 3 } };
-      await sleep(10);
-      yield { foo: { a: 4 } };
-    });
+    g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
     const sub = g.sub({ foo: { a: 1 } });
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
@@ -38,89 +47,51 @@ describe('changes', () => {
 
   test('overlap', async () => {
     g.onGet(() => ({ foo: { a: 2 }, bar: { b: 2 } }));
-    g.onSub('/foo', () => {
-      console.log('Foo called');
-      return (async function*() {
-        console.log('Foo entered');
-        yield { foo: { a: 3 } };
-        await sleep(10);
-        yield { foo: { a: 4 } };
-      })();
-    });
-
-    g.onSub('/bar', () => {
-      console.log('Bar called');
-      return (async function*() {
-        console.log('Bar entered');
-        yield { bar: { a: 7 } };
-        await sleep(10);
-        console.log('Yielding bar:b:6');
-        yield { bar: { b: 6 } };
-      })();
-    });
-
+    g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
+    g.onSub('/bar', mockStream([{ bar: { a: 7 } }, { bar: { b: 6 } }], 0, 10));
     const sub = g.sub({ foo: { a: 1 }, bar: { b: 1 } }, { raw: true });
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 }, bar: { b: 2 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
-    console.log('OK');
     expect((await sub.next()).value).toEqual({ bar: { b: 6 } });
   });
 
   test('link', async () => {
-    const fooStream = (async function*() {
-      yield { foo: makeLink(['bar', 'a']) };
-      await sleep(10);
-      yield { foo: makeLink(['bar', 'b']) };
-    })();
-
-    const barStream = (async function*() {
-      console.log('bar first');
-      yield;
-      await sleep(110);
-      console.log('bar second');
-      yield { bar: { a: { x: 7 } } };
-      await sleep(10);
-      console.log('bar third');
-      yield { bar: { b: { x: 1 } } };
-    })();
-
-    g.onSub('/foo', () => {
-      console.log('foo called');
-      return fooStream;
-    });
-
+    g.onSub(
+      '/foo',
+      mockStream(
+        [{ foo: makeLink(['bar', 'a']) }, { foo: makeLink(['bar', 'b']) }],
+        0,
+        10,
+      ),
+    );
+    g.onSub(
+      '/bar',
+      mockStream([{ bar: { a: { x: 7 } } }, { bar: { b: { x: 3 } } }], 30, 10),
+    );
     g.onGet('/bar', () => ({ bar: { a: { x: 3 }, b: { x: 5 } } }));
 
-    g.onSub('/bar', () => {
-      console.log('bar called');
-      return barStream;
-    });
-
-    const sub = g.sub({ foo: { x: 1 } }, { raw: 1 });
+    const sub = g.sub({ foo: { x: 1 } }, { raw: true });
     expect((await sub.next()).value).toEqual({
       foo: makeLink(['bar', 'a']),
       bar: { a: { x: 3 } },
     });
-    console.log('First assertion passed;');
     expect((await sub.next()).value).toEqual({
       foo: makeLink(['bar', 'b']),
-      bar: { b: { x: 5 } /*, a: null */ },
-      // TODO: Should we explicitly remove data that is no longer kept up to
-      // date, or leave that for the consumer to figure out?
+      bar: { b: { x: 5 } },
     });
-    console.log('Second assertion passed;');
 
     // The /bar/a update should not be sent.
-    expect((await sub.next()).value).toEqual({ bar: { b: { x: 5 } } });
-    console.log('Third assertion passed;');
+    expect((await sub.next()).value).toEqual({ bar: { b: { x: 3 } } });
   });
 
   test('range_deletion', async () => {
-    g.onSub('/foo', () => ({ foo: { a: 1, b: 2, c: 3, d: 4, e: 5 } }));
-    setTimeout(() => g.pub({ foo: { b: null } }), 10);
+    g.onGet('/foo', () => ({
+      foo: makePage({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
+    }));
+    g.onSub('/foo', mockStream([{ foo: { b: null } }], 10, 10));
 
-    const sub = g.sub({ foo: { '3**': 1 } }, { raw: 1 });
+    const sub = g.sub({ foo: { '3**': 1 } }, { raw: true });
     expect((await sub.next()).value).toEqual({
       foo: { [PAGE_KEY]: ['', 'c'], a: 1, b: 2, c: 3 },
     });
@@ -130,10 +101,17 @@ describe('changes', () => {
   });
 
   test('range_insertion', async () => {
-    g.onSub('/foo', () => ({ foo: { a: 1, c: 3, d: 4, e: 5 } }));
-    setTimeout(() => g.pub({ foo: { b: 2 } }), 10);
+    g.onGet('/foo', () => ({
+      foo: makePage({ a: 1, c: 3, d: 4, e: 5 }),
+    }));
+    const fooStream = (async function*() {
+      yield;
+      await sleep(10);
+      yield { foo: { b: 2 } };
+    })();
+    g.onSub('/foo', () => fooStream);
 
-    const sub = g.sub({ foo: { '3**': 1 } }, { raw: 1 });
+    const sub = g.sub({ foo: { '3**': 1 } }, { raw: true });
     expect((await sub.next()).value).toEqual({
       foo: { [PAGE_KEY]: ['', 'd'], a: 1, c: 3, d: 4 },
     });
@@ -148,39 +126,56 @@ describe('values', () => {
 
   beforeEach(() => {
     g = new Graffy();
+    g.use(cache());
   });
 
   test('object', async () => {
-    g.onSub('/foo', () => ({ foo: { a: 3 } }));
-    setTimeout(() => g.pub({ foo: { a: 4 } }), 10);
+    g.onGet('/foo', () => ({ foo: { a: 3 } }));
+    g.onSub('/foo', mockStream([{ foo: { a: 4 } }], 10));
+
     const sub = g.sub({ foo: { a: 1 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
   });
 
   test('link', async () => {
-    g.onSub('/foo', () => ({ foo: makeLink(['bar', 'a']) }));
-    g.onSub('/bar', () => ({ bar: { a: { x: 3 }, b: { x: 5 } } }));
-    setTimeout(() => g.pub({ foo: makeLink(['bar', 'b']) }), 10);
-    setTimeout(() => g.pub({ bar: { a: { x: 7 } } }), 20);
-    setTimeout(() => g.pub({ bar: { b: { x: 1 } } }), 20);
+    let state = { bar: { a: { x: 5 }, b: { x: 6 } } };
+    g.onSub(
+      '/foo',
+      mockStream(
+        [{ foo: makeLink(['bar', 'a']) }, { foo: makeLink(['bar', 'b']) }],
+        0,
+        10,
+        state,
+      ),
+    );
+    g.onSub(
+      '/bar',
+      mockStream(
+        [{ bar: { a: { x: 7 } } }, { bar: { b: { x: 3 } } }],
+        30,
+        10,
+        state,
+      ),
+    );
+    g.onGet(() => state);
 
     const sub = g.sub({ foo: { x: 1 } });
     expect((await sub.next()).value).toEqual({
-      foo: { x: 3 },
+      foo: { x: 5 },
     });
     expect((await sub.next()).value).toEqual({
-      foo: { x: 5 },
-      // TODO: Should we explicitly remove data that is no longer kept up to
-      // date, or leave that for the consumer to figure out?
+      foo: { x: 6 },
     });
     // The /bar/a update should not be sent.
-    expect((await sub.next()).value).toEqual({ foo: { x: 1 } });
+    expect((await sub.next()).value).toEqual({ foo: { x: 3 } });
   });
 
   test('range_deletion', async () => {
-    g.onSub('/foo', () => ({ foo: { a: 1, b: 2, c: 3, d: 4, e: 5 } }));
-    setTimeout(() => g.pub({ foo: { b: null } }), 10);
+    g.onGet('/foo', () => ({
+      foo: makePage({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
+    }));
+    g.onSub('/foo', mockStream([{ foo: { b: null } }], 10, 10));
 
     const sub = g.sub({ foo: { '3**': 1 } });
     expect((await sub.next()).value).toEqual({
