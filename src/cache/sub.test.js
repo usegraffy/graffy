@@ -187,29 +187,33 @@ describe('values', () => {
   });
 
   test('accept_range_deletion_substitute', async () => {
-    const onSub = jest.fn(() => {
-      return { foo: { a: 1, b: 2, c: 3, d: 4, e: 5 } };
+    const onGet = jest.fn(() => {
+      return { foo: makePage({ a: 1, b: 2, c: 3, d: 4, e: 5 }) };
     });
-    g.onSub('/foo', onSub);
-    setTimeout(
-      () => g.pub({ foo: { [PAGE_KEY]: ['c', 'd'], b: null, c: 3, d: 4 } }),
-      10,
+    g.onGet('/foo', onGet);
+    g.onSub(
+      '/foo',
+      mockStream(
+        [{ foo: { [PAGE_KEY]: ['c', 'd'], b: null, c: 3, d: 4 } }],
+        10,
+        10,
+      ),
     );
 
     const sub = g.sub({ foo: { '3**': 1 } });
     expect((await sub.next()).value).toEqual({
       foo: { a: 1, b: 2, c: 3 },
     });
-    expect(onSub).toHaveBeenCalledTimes(1);
+    expect(onGet).toHaveBeenCalledTimes(1);
     expect((await sub.next()).value).toEqual({
       foo: { a: 1, c: 3, d: 4 },
     });
-    expect(onSub).toHaveBeenCalledTimes(1);
+    expect(onGet).toHaveBeenCalledTimes(1);
   });
 
   test('range_insertion', async () => {
-    g.onSub('/foo', () => ({ foo: { a: 1, c: 3, d: 4, e: 5 } }));
-    setTimeout(() => g.pub({ foo: { b: 2 } }), 10);
+    g.onGet('/foo', () => ({ foo: makePage({ a: 1, c: 3, d: 4, e: 5 }) }));
+    g.onSub('/foo', mockStream([{ foo: { b: 2 } }], 10, 10));
 
     const sub = g.sub({ foo: { '3**': 1 } });
     expect((await sub.next()).value).toEqual({
