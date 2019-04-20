@@ -1,3 +1,4 @@
+import '@babel/polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Graffy from '@graffy/core';
@@ -6,11 +7,11 @@ import GraffyClient from '@graffy/client';
 import { GraffyProvider } from '@graffy/react';
 
 import App from './components/App';
-import './index.css';
+// import './index.css';
 
 const store = new Graffy();
 store.use(GraffyCache());
-store.use(GraffyClient('http://localhost:8443'));
+store.use(GraffyClient('/api'));
 
 ReactDOM.render(
   <GraffyProvider store={store}>

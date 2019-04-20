@@ -13,7 +13,7 @@ export default function GraffyClient(baseUrl) {
       if (!EventSource) throw Error('client.sse.unavailable');
       const url = `${baseUrl}?include=${getPath(query)}`;
       const source = new EventSource(url);
-      const [stream, push] = makeStream(() => {
+      const [push, stream] = makeStream(() => {
         source.close();
       });
 

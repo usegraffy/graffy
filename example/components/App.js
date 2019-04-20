@@ -25,9 +25,9 @@ export default function App() {
   const query = getQuery(range);
   const [loading, data] = useGraffy(query);
 
-  // console.log(loading, data, query);
+  console.log(loading, data, query);
 
-  if (!data) {
+  if (!data || !data.visitorsByTime) {
     // We are still loading
     return <Spinner />;
   }

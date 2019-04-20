@@ -1,4 +1,9 @@
-import { getKnown, getUnknown, linkKnown } from './cacheOperations';
+import {
+  getKnown,
+  getMaxKnown,
+  getUnknown,
+  linkKnown,
+} from './cacheOperations';
 import { MIN_KEY, MAX_KEY } from './constants';
 import { makeLink as link, makePage as page } from './path.js';
 
@@ -31,9 +36,9 @@ test('linkKnown1', () => {
 });
 
 test('linkKnown2', () => {
-  expect(linkKnown({ foo: { a: null } }, { foo: { '**3': { x: 1 } } })).toEqual(
-    { foo: { '**3': { x: 1 } } },
-  );
+  expect(
+    linkKnown({ foo: { a: null, b: { x: 1 } } }, { foo: { '**3': { x: 1 } } }),
+  ).toEqual({ foo: { '**3': { x: 1 } } });
 });
 
 test('getUnknown1', () => {
@@ -96,4 +101,13 @@ test('getKnown2', () => {
     e: { f: 5, h: 9 },
     g: { f: 7 },
   });
+});
+
+test('getMaxKnown', () => {
+  expect(
+    getMaxKnown(
+      { foo: { a: null }, bar: null },
+      { foo: { '*': { x: 1 } }, bar: { x: 1 }, baz: 1 },
+    ),
+  ).toEqual({ foo: { a: null }, bar: null });
 });

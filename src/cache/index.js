@@ -14,6 +14,7 @@ export default function(cacheOptions = {}) {
       try {
         nextValue = await next(unknown);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('ERROR!!!', e.message, unknown);
         return;
       }

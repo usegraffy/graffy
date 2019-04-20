@@ -15,7 +15,7 @@ export default async function resolve(handlers, firstPayload, options) {
       if (--budget === 0) throw Error('resolve.max_recursion');
       if (isEqual(payload, prevPayload)) {
         // console.log('Unfulfilled', firstPayload, payload);
-        throw Error('resolve.unfulfilled');
+        throw Error('resolve.unfulfilled ' + i + ' ' + JSON.stringify(payload));
       }
       prevPayload = payload;
       return run(0, payload);

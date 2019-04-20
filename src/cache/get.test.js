@@ -31,7 +31,7 @@ describe('get', () => {
   test('missing_to_null', async () => {
     g.onGet('/foo', () => ({ foo: makePage({ bar: 45 }) }));
     expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
-      foo: { bar: 45, baz: null },
+      foo: { bar: 45 },
     });
     expect(await g.get({ foo: { bar: 1, baz: 1 } }, { raw: true })).toEqual({
       foo: { bar: 45, baz: null },
@@ -41,7 +41,7 @@ describe('get', () => {
   test('empty_obj_to_null', async () => {
     g.onGet('/foo', () => ({ foo: { bar: 45, baz: { bad: 3 } } }));
     expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
-      foo: { bar: 45, baz: null },
+      foo: { bar: 45 },
     });
     expect(await g.get({ foo: { bar: 1, baz: 1 } }, { raw: true })).toEqual({
       foo: { bar: 45, baz: null },
@@ -51,7 +51,7 @@ describe('get', () => {
   test('null_to_null', async () => {
     g.onGet('/foo', () => ({ foo: { bar: 45, baz: null } }));
     expect(await g.get({ foo: { bar: 1, baz: 1 } })).toEqual({
-      foo: { bar: 45, baz: null },
+      foo: { bar: 45 },
     });
     expect(await g.get({ foo: { bar: 1, baz: 1 } }, { raw: true })).toEqual({
       foo: { bar: 45, baz: null },

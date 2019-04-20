@@ -49,6 +49,7 @@ function walk(root, rootQuery, visit) {
       }
 
       const { keys, known, unknown } = splitRange(node, key);
+      // console.log('split', node, key, keys, known, unknown);
       keys.forEach(k => step(node[k], subQuery, path.concat(k)));
       if (unknown) step(undefined, subQuery, path.concat(unknown));
       if (known.length) visit({ [PAGE_KEY]: known }, subQuery, path);
@@ -108,6 +109,27 @@ export function getKnown(root, rootQuery) {
   return isEmpty(result) ? undefined : result;
 }
 
+export function getMaxKnown(root, rootQuery) {
+  const result = {};
+
+  walk(root, rootQuery, (node, query, path) => {
+    // console.log('step', path, node, query);
+    if (typeof node === 'undefined') {
+      return;
+    }
+
+    if (typeof node !== 'object' || !node || node[LINK_KEY] || node[PAGE_KEY]) {
+      set(result, path, node);
+      return;
+    }
+
+    // Node is an object, but query is a leaf.
+    set(result, path, null);
+  });
+
+  return isEmpty(result) ? undefined : result;
+}
+
 /* hasKnown (check if query matches any part of graph) */
 
 export function hasKnown(root, rootQuery) {
@@ -126,6 +148,7 @@ export function linkKnown(root, rootQuery) {
   const result = {};
 
   walk(root, rootQuery, (node, query, path) => {
+    // console.log('step', path, node, query);
     if (node && node[PAGE_KEY]) {
       const [after, before] = node[PAGE_KEY];
       set(result, path, { [encRange({ after, before })]: query });

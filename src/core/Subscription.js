@@ -1,4 +1,11 @@
-import { getUnknown, getKnown, graft, linkKnown, merge, makeStream } from '@graffy/common';
+import {
+  getUnknown,
+  getKnown,
+  graft,
+  linkKnown,
+  merge,
+  makeStream,
+} from '@graffy/common';
 
 export default class Subscription {
   constructor(query, options) {

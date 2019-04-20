@@ -1,7 +1,7 @@
 import isEmpty from './isEmpty';
 
 import { unwrap, makeNode } from './path';
-import { isRange, splitRange, encRange } from './range';
+import { isRange, splitRange } from './range';
 import { LINK_KEY, PAGE_KEY } from './constants';
 import merge from './merge';
 import { includes } from './interval';
@@ -70,37 +70,17 @@ function set(object, path, value) {
   merge(node[key], value);
 }
 
-/*
-  linkKnown: Copies parts of the query that cross links, repeating them at their
-  canonical positions.
-
-  The returned value is used to compute intersections with change objects.
-*/
-
-export function linkKnown(root, rootQuery) {
-  const result = {};
-
-  walk(root, rootQuery, (node, query, path) => {
-    if (node && node[PAGE_KEY]) {
-      const [after, before] = node[PAGE_KEY];
-      set(result, path, { [encRange({ after, before })]: query });
-      return;
-    }
-
-    set(result, path, query);
-  });
-
-  return isEmpty(result) ? undefined : result;
-}
-
 // Convert a raw response into a denormalized and easy-to-consume graph.
 export function graft(root, rootQuery) {
   const graph = {};
   const links = [];
 
+  // console.log('GRAFTED');
+
   walk(root, rootQuery, (node, query, path) => {
+    // console.log('step', path, node, query);
     if (typeof node === 'undefined' || node === null) {
-      set(graph, path, null);
+      // set(graph, path, null);
       return;
     }
     if (node[LINK_KEY]) {
@@ -114,7 +94,11 @@ export function graft(root, rootQuery) {
 
   const result = {};
   walk(graph, rootQuery, (node, query, path) => {
-    if (typeof node !== 'object' || node === null) {
+    if (typeof node === 'undefined' || node === null) {
+      // set(graph, path, null);
+      return;
+    }
+    if (typeof node !== 'object') {
       set(result, path, node);
       return;
     }

@@ -6,15 +6,19 @@ import {
   subtractQueries,
   simplifyQuery,
   linkKnown,
-  hasKnown,
+  // hasKnown,
   getKnown,
+  getMaxKnown,
   getUnknown,
 } from '@graffy/common';
+
+let id = 0;
 
 export default class Cache {
   constructor(store, cacheOptions) {
     this.store = store;
     this.cacheOptions = cacheOptions;
+    this.id = id++;
   }
 
   data = {};
@@ -88,25 +92,59 @@ export default class Cache {
 
     if (typeof value === 'undefined') value = {};
     merge(this.data, value);
+    // console.log(this.id, 'value', value);
 
-    const unknown = getUnknown(this.data, this.sumQuery);
-    if (unknown) {
+    const gaps = getUnknown(this.data, this.sumQuery);
+    let fillData;
+    if (gaps) {
       // The change added a link to some data we don't have in the cache.
       // We need to fetch it and also resubscribe.
       await this.resubscribe();
-      const linkedData = await this.store.get(unknown, {
-        skipCache: true,
-        raw: true,
-      });
-      merge(this.data, linkedData);
-      merge(value, linkedData);
+      try {
+        fillData = await this.store.get(gaps, {
+          skipCache: true,
+          raw: true,
+        });
+      } catch (e) {
+        console.log('Error fetching fillData for', value);
+        console.log('this.data', this.data);
+        console.log('gaps', gaps);
+        console.log('this.sumQuery', this.sumQuery);
+        console.error(e);
+        // process.exit(-1);
+      }
+      if (fillData) {
+        merge(this.data, fillData);
+        merge(value, fillData);
+      }
     }
 
     for (const id in this.listeners) {
-      const { originalQuery, push } = this.listeners[id];
-      const query = linkKnown(this.data, originalQuery);
-      if (!hasKnown(value, query)) continue;
-      push(value);
+      const { lastQuery = {}, originalQuery, push } = this.listeners[id];
+      const nextQuery = linkKnown(this.data, originalQuery);
+      const query = addQueries(lastQuery, nextQuery);
+      this.listeners[id].lastQuery = nextQuery;
+
+      const payload = getKnown(value, query);
+      // if (
+      //   value.visitors &&
+      //   value.visitorsByTime &&
+      //   payload &&
+      //   (payload.visitors || payload.visitorsByTime) &&
+      //   (!payload.visitors || !payload.visitorsByTime)
+      // ) {
+      //   console.error('Mismatched updates', {
+      //     value,
+      //     payload,
+      //     lastQuery,
+      //     nextQuery,
+      //   });
+      // }
+      if (payload) push(payload);
     }
+
+    // if (fillData) {
+    //   merge(this.data, fillData);
+    // }
   }
 }

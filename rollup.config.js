@@ -5,58 +5,36 @@ import babel from 'rollup-plugin-babel';
 import minify from 'rollup-plugin-babel-minify';
 import analyze from 'rollup-plugin-analyzer';
 
-const pkg = process.env.PKG;
-if (!pkg) {
-  console.log('No package to build; did you run this from inside a workspace?');
-  console.log('Try yarn workspace <package> prepare');
-  process.exit(1);
-}
-
 if (process.env.NODE_ENV === 'production') {
   console.log('Production build');
 }
 
-const input = `src/${pkg}/index.js`;
-const manifest = require(`./src/${pkg}/package.json`);
-const extDeps = {
-  ...(manifest.dependencies || {}),
-  ...(manifest.peerDependencies || {}),
-};
+const input = `example/client.js`;
 
 export default {
   input,
-  output: [
-    {
-      file: `src/${pkg}/bundle.js`,
-      format: 'cjs',
-      sourcemap: true,
-    },
-    {
-      file: `src/${pkg}/bundle.mjs`,
-      format: 'esm',
-      sourcemap: true,
-    },
-  ],
-  external: id => {
-    if (id[0] === '.') return false;
-    const segs = id.split('/');
-    id = segs[0][0] === '@' ? segs.slice(0, 2).join('/') : segs[0];
-    return !!extDeps[id];
+  output: {
+    file: `example/public/bundle.js`,
+    format: 'iife',
+    sourcemap: true,
   },
   plugins: [
     replace({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-    }),
-    resolve(),
-    commonjs({
-      include: 'node_modules/**',
     }),
     babel({
       // externalHelpers: true,
       // runtimeHelpers: true,
       exclude: 'node_modules/**', // only transpile our source code
     }),
-    minify({ comments: false }),
+    resolve(),
+    commonjs({
+      include: 'node_modules/**',
+      namedExports: {
+        'node_modules/react/index.js': ['useState'],
+      },
+    }),
+    // minify({ comments: false }),
     analyze({ skipFormatted: true, onAnalysis }),
   ],
 };

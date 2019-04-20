@@ -17,7 +17,13 @@ export { graft } from './tree';
 export { default as makeStream } from './makeStream';
 export { default as mergeStreams } from './mergeStreams';
 export { addQueries, subtractQueries, simplifyQuery } from './queryOperations';
-export { linkKnown, hasKnown, getKnown, getUnknown } from './cacheOperations';
+export {
+  linkKnown,
+  hasKnown,
+  getKnown,
+  getMaxKnown,
+  getUnknown,
+} from './cacheOperations';
 
 export function diff(changes) {
   return changes;

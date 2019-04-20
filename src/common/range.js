@@ -56,7 +56,7 @@ export function encRange({ before, after, first, last }) {
 
 const getKeys = tree =>
   Object.keys(tree)
-    .filter(k => k !== PAGE_KEY && k !== LINK_KEY && tree[k] !== null)
+    .filter(k => k !== PAGE_KEY && k !== LINK_KEY)
     .sort();
 
 /*
@@ -82,7 +82,8 @@ export function splitRange(tree, key) {
   let minKey = last ? rangePage[rangePage.length - 2] : after;
   let maxKey = first ? rangePage[1] : before;
 
-  const keys = getKeys(tree);
+  const keysWithNulls = getKeys(tree);
+  const keys = keysWithNulls.filter(key => tree[key] !== null);
   let minIx = sortedIndex(keys, minKey);
   let maxIx = sortedLastIndex(keys, maxKey);
 
@@ -128,9 +129,11 @@ export function splitRange(tree, key) {
   // if (key === 'c*3**') console.trace('Overflow');
 
   // console.log('Range overflow', key, keys.slice(minIx, maxIx), unknown);
+  minIx = sortedIndex(keysWithNulls, minKey);
+  maxIx = sortedLastIndex(keysWithNulls, maxKey);
 
   return {
-    keys: keys.slice(minIx, maxIx),
+    keys: keysWithNulls.slice(minIx, maxIx),
     known: inter(treePage, [minKey, maxKey]),
     unknown,
   };

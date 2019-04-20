@@ -5,6 +5,8 @@ module.exports = {
       {
         loose: true,
         modules: process.env.NODE_ENV === 'test' && 'auto',
+        useBuiltIns: 'entry',
+        corejs: 3,
       },
     ],
     ['@babel/preset-react'],

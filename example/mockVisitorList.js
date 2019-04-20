@@ -1,8 +1,8 @@
 const faker = require('faker');
-const { makeLink } = require('@graffy/common');
+const { makeLink, makePage } = require('@graffy/common');
 
 const visitors = {};
-const visitorsByTime = {};
+const visitorsByTime = makePage({});
 const freeIds = [];
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -41,9 +41,9 @@ function visitorInfo() {
   return {
     name: faker.internet.userName(),
     avatar: faker.internet.avatar(),
-    pageviews: {
+    pageviews: makePage({
       [ts]: faker.internet.url(),
-    },
+    }),
   };
 }
 
@@ -56,6 +56,7 @@ function simulateEnter() {
   visitors[addId] = { id: addId, ts, ...visitorInfo() };
   visitorsByTime[ts] = makeLink(['visitors', addId]);
 
+  console.log('create', addId, ts);
   return {
     visitors: { [addId]: visitors[addId] },
     visitorsByTime: { [ts]: visitorsByTime[ts] },
@@ -71,6 +72,7 @@ function simulateLeave() {
   delete visitors[delId];
   delete visitorsByTime[delTs];
   freeIds.push(delId);
+  console.log('delete', delId, delTs);
   return {
     visitors: { [delId]: null },
     visitorsByTime: { [delTs]: null },
@@ -84,11 +86,12 @@ function simulateUpdate() {
   } while (!visitors[upId]);
   const url = faker.internet.url();
   visitors[upId].pageviews.ts = url;
+  console.log('updated', upId);
   return { visitors: { [upId]: { pageviews: { [ts]: url } } } };
 }
 
 ts = Date.now();
-while (id < 200) {
+while (id < 20) {
   simulateEnter();
   ts -= Math.floor(1 + Math.random() * 100);
 }
