@@ -38,19 +38,6 @@ export default class Cache {
   }
 
   getStream(query) {
-    /*
-      Create a stream, which on end calls contractSubscriptions(query)
-        Decrement sumQuery by Query, detecting if any leaves were removed
-        If so, cancel and recreate upstream subscription
-      Add the query and the stream's push function to listeners.
-      expandSubscriptions(query);
-        Increment sumQuery by query, detecting if any leaves were added
-        If so, cancel and recreate upstream subscription
-
-    */
-
-    // console.log('getStream invoked', query);
-
     const id = this.lastListenerId++;
     const [push, stream] = makeStream(() => {
       delete this.listeners[id];
@@ -106,12 +93,7 @@ export default class Cache {
           raw: true,
         });
       } catch (e) {
-        console.log('Error fetching fillData for', value);
-        console.log('this.data', this.data);
-        console.log('gaps', gaps);
-        console.log('this.sumQuery', this.sumQuery);
         console.error(e);
-        // process.exit(-1);
       }
       if (fillData) {
         merge(this.data, fillData);
@@ -126,25 +108,7 @@ export default class Cache {
       this.listeners[id].lastQuery = nextQuery;
 
       const payload = getKnown(value, query);
-      // if (
-      //   value.visitors &&
-      //   value.visitorsByTime &&
-      //   payload &&
-      //   (payload.visitors || payload.visitorsByTime) &&
-      //   (!payload.visitors || !payload.visitorsByTime)
-      // ) {
-      //   console.error('Mismatched updates', {
-      //     value,
-      //     payload,
-      //     lastQuery,
-      //     nextQuery,
-      //   });
-      // }
       if (payload) push(payload);
     }
-
-    // if (fillData) {
-    //   merge(this.data, fillData);
-    // }
   }
 }

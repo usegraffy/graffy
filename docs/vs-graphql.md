@@ -10,13 +10,15 @@ A key benefit of using GraphQL for one-time queries is that deeply nested relati
 
 Unfortunately subscriptions do not provide these benefits; nested relations are difficult to support and perform poorly, and using subscriptions to synchronize state with the server requires the client to implement state transition logic, duplicating server-side logic.
 
+### Why GraphQL does not have live queries
+
 The GraphQL docs [explain](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries) why Facebook decided not to support live queries. Here's the gist:
 
 Even something as simple as the "Person and 3 others liked this" message change on lots of events:
 - Someone liked or unliked your post 👍
 - Someone who liked your post deactivated or re-activated their account
 - Someone who liked your post changed their name
-- Facebook's algorithm for choosing the clickbaitiest name changed 🙄
+- Facebook's algorithm for choosing your bestest friend changed 🙄
 
 Building a live query framework that updates all interested clients when any of these things happen is understandably hard. In their words,
 
@@ -24,56 +26,40 @@ Building a live query framework that updates all interested clients when any of 
 
 Translation: It’s a hard problem, so let the frontend do it. 😂
 
-As I understand it, GraphQL's recommendation is that the frontend:
-1. query the initial state
+### GraphQL live queries vs Graffy
+
+As I understand it, GraphQL's recommendation for frontends that require real-time view of data is:
+
+1. query the current count
 2. subscribe to frequent events (likes and unlikes)
 3. update the count (using frontend logic) when they happen
-4. call it a day.
+4. repeat when the user refreshes the page
 
-Infrequent events, like Facebook changing their algorithm, are okay to ignore until the user refreshes the page. This is perfectly reasonable - this is essentially manual polling, and for infrequent changes polling is an efficient approach.
+In comparison, with Graffy the frontend would do this:
 
-However, it's not explained is why each user should poll separately; it would be a lot cheaper for the API server to poll the database periodically and send updates to subscribers.
+1. make a live query to the like count
+2. there is no step 2
 
-There are likely solid technical reasons why this is hard to do at Facebook - legacy services, infrastructure, scale, etc. However, Facebook's problems are not your problems, and a technology that's narrowly tailored to solve Facebook's problems might not be the best fit for you.
+There are several problems with GraphQL's recommended approach.
 
+First is the need to write state update logic on the frontend - this logic already exists on the backend, and reimplementing it on the frontend will cause maintainability and consistency problems down the line.
 
-### Problems with the recommended approach
+With Graffy, the frontend receives a diff between the old and new states rather than the raw event.
 
-“Query, then subscribe?” Events that occurred in between will be dropped.
-“Subscribe, then query?” Events already accounted for in the query result may be re-sent.
-Solution: Subscribe, then query, then de-duplicate in event-specific ways. 😭
-Event-handling logic is duplicated on the backend and frontend.
-Different parts of the frontend update on different sets of events and fall inconsistent.
+Second, the lack of an atomic "query and subscribe" operation makes consistency hard. If we query and then subscribe, events that occurred in between will be dropped; if we subscribe and then query, events already accounted for in the query result may be re-sent, and we will require even more frontend logic to de-duplicate them.
 
+With Graffy, the live query is an atomic operation. The Graffy backend guarantees this even when there are delays between the different upstream providers, by using the subscribe-first approach and using data structures (CRDTs) that make state updates idempotent (i.e. applying a change twice has no effect).
 
-### The DB Centered approach
+Third, as the subscription does not include infrequent events, it relies on the user refreshing the page periodically and manually polling the backend for changes.
 
-Create / update / delete subscriptions for each entity type
-AKA shitty live queries on top of a protocol that really doesn’t want it.
-Subscription payloads duplicate records
-Pagination is hard to do
-Expanding linked resources (the “graph” in GraphQL) does not work
+With Graffy, providers can perform this polling automatically on the backend instead, and push changes to all users in their live update streams. Polling becomes much cheaper (by doing it once for thousands of users) and can be made much more frequent; clients do not need to do anything different.
+
+## Parameters vs Paths, Filters and Ranges
+
+TODO
 
 ## Path-specific middleware over Type-specific resolvers
 
 Note: Graffy will have an _optional_ type system for automatic validation and self-documenting APIs.
 
-
-
-
-## Differences
-
-- All data is placed in a single tree with symlinks
-- Every node has a canonical path in the tree
-- Queries may request a range of keys in lexical order
-
-Backend is a middleware framework similar to Express. Planned providers (middlware) include:
-
-- Graffy-Cache (which uses JS memory and works on both client and server)
-- Graffy-Schema (provides type validation and introspection endpoints)
-- Graffy-Http (communicates with an express-graffy server)
-
-Other planned modules:
-
-- Express-Graffy (express middleware that creates an HTTP and Websockets API)
-- React-Graffy (react components for making queries and subscriptions)
+TODO

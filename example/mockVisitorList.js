@@ -91,7 +91,7 @@ function simulateUpdate() {
 }
 
 ts = Date.now();
-while (id < 20) {
+while (id < 200) {
   simulateEnter();
   ts -= Math.floor(1 + Math.random() * 100);
 }

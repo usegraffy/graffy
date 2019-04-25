@@ -67,10 +67,10 @@ const result = await store.get(query);
 for await (const result of store.sub(query)) { /* ... */ }
 ```
 
-React-Graffy provides an alternate API using React render props.
+React-Graffy provides an alternate API using React hooks.
 
 ```js
-import { Query } from '@graffy/react';
+import { useQuery } from '@graffy/react';
 
 <Query live store={store} query={query}>
   {(data, error) => ( /* ... */ )}
@@ -88,10 +88,8 @@ import GraffyServer from '@graffy/server';
 import myProvider from './provider';
 
 const store = new Graffy();
-const server = new GraffyServer();
 store.use(myProvider);
-store.use(server.graffy);
-http.createServer(server.http).listen(4783);
+http.createServer(new GraffyServer(store)).listen(4783);
 ```
 
 The server uses server-sent events (event streams) for subscriptions.

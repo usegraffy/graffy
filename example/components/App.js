@@ -51,13 +51,14 @@ export default function App() {
     // We have reached the beginning or end of the list while paginating in
     // the wrong direction; just flip the query to the first or last 30.
     setRange({ [range.first ? 'last' : 'first']: 30 });
-    return 'Loading...';
+    return <Spinner />;
   }
 
   return (
     <div className="App">
       <Pagination
         onPrev={hasPrev && (() => setRange({ last: 31, before: start }))}
+        count={visitors.length}
         onNext={hasNext && (() => setRange({ first: 31, after: end }))}
       />
       <VisitorList visitors={visitors} anchor={anchor} />

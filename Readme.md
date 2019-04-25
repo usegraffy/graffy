@@ -2,9 +2,13 @@
 
 # Graffy [![Build Status](https://travis-ci.org/aravindet/graffy.svg?branch=master)](https://travis-ci.org/aravindet/graffy)
 
-Graffy is a batteries-included live query library for the browser and Node.js.
+Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's built on a sound [set-theoretic model of queries and graphs](docs/Theory.md).
 
-Graffy was inspired by (and borrows from) GraphQL and Falcor. Compared to GraphQL, Graffy offers a simpler and more intuitive data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
+## Why Graffy?
+
+Graffy provides advanced [live queries](docs/LiveQuery.md) capabilities, providing clients a real-time view of of server data. Graffy supports complex live queries with nested graph traversals and pagination, while exposing a simple and intuitive API for building clients and servers.
+
+Graffy was inspired by (and borrows from) Facebook's GraphQL and Netflix's Falcor. Compared to GraphQL, Graffy offers a more familiar data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
 
 Unlike GraphQL resolvers and Falcor data providers, Graffy providers can be _composed_ like Express/Koa middleware. This allows authentication, validation, custom caches and resource limiting to be implemented in a straightforward manner.
 
@@ -21,8 +25,9 @@ Graffy providers can also perform efficient bulk reads from underlying data stor
 | core   | [![npm version](http://img.shields.io/npm/v/@graffy/core.svg?style=flat)](https://npmjs.org/package/@graffy/core "@graffy/core on npm") | -                                |
 | client | [![npm version](http://img.shields.io/npm/v/@graffy/client.svg?style=flat)](https://npmjs.org/package/@graffy/client "@graffy/client on npm") | EventStream/HTTP client          |
 | server | [![npm version](http://img.shields.io/npm/v/@graffy/server.svg?style=flat)](https://npmjs.org/package/@graffy/server "@graffy/server on npm") | EventStream/HTTP server          |
-| cache  | ⌛ backlog | In-memory cache                  |
+| cache  | ⌛ in dev  | In-memory cache                  |
 | react  | [![npm version](http://img.shields.io/npm/v/@graffy/react.svg?style=flat)](https://npmjs.org/package/@graffy/react "@graffy/react on npm") | Container and hooks API          |
+| gql    | ⌛ backlog | GraphQL subset DSL for queries   |
 | schema | ⌛ backlog | Validation, introspection API    |
 | viewer | ⌛ backlog | Schema introspection client      |
 | auth   | ⌛ backlog | Authentication and authorization |

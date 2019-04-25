@@ -2,19 +2,19 @@
 
 ## Data structures
 
-Graffy defines two data structures, Graff (a subset of graphs) and Query, and several operations on them.
+Graffy defines two data structures, Graph (a subset of graphs) and Query, and several operations on them.
 
-### Graffs
+### Graphs
 
-**Graffs** are partial views of the application’s data.
+**Graphs** are partial views of the application’s data.
 
 They are connected, directed graphs with a few restrictions. They must have exactly one “root” node (a node with no incoming edges). Only “leaf” nodes (nodes with no outgoing edges) store values, which may be null to indicate the absence of a value. All edges must have string labels.
 
 Such a Graph is completely described by its set of leaf nodes, where each leaf node contains a value and a set of paths (sequences of labels) from the root to that leaf. A leaf might have infinitely many paths - graphs are not required to be (and in practice aren’t) acyclic.
 
-Every leaf must have exactly one path that is its “canonical” path. Leaves are considered equivalent if they have the same canonical path, and all Graffs that include a leaf must include its canonical path.
+Every leaf must have exactly one path that is its “canonical” path. Leaves are considered equivalent if they have the same canonical path, and all Graphs that include a leaf must include its canonical path.
 
-Graffs often contain finite number of non-null leaves and an infinite number of null leaves that represent keys that are known to not exist. In practice, all the paths to these null leaves can be succinct represented as open intervals of lexicographically ordered strings (e.g. All keys in the range [“parrot”…“python”] are null).
+Graphs often contain finite number of non-null leaves and an infinite number of null leaves that represent keys that are known to not exist. In practice, all the paths to these null leaves can be succinct represented as open intervals of lexicographically ordered strings (e.g. All keys in the range [“parrot”…“python”] are null).
 
 ### Queries
 
@@ -25,7 +25,7 @@ Queries may contain an infinite number of paths, when intervals of keys are requ
 ### Formal definitions
 
 ```
-Graff         ::= {* Leaf *}
+Graph         ::= {* Leaf *}
 Leaf          ::= LeafPaths, Value, Clock
 LeafPaths     ::= CanonicalPath, LinkedPaths
 CanonicalPath ::= { Key }
@@ -90,22 +90,22 @@ KeyRangeLast₁ + KeyRangeLast₂ ::=
 
 ## Operations
 
-### Graff union
+### Graph union
 
 - **G₁ + G₂ = G₃**
 
-As Graffs are sets of leaves, this is analogous to a set union.
+As Graphs are sets of leaves, this is analogous to a set union.
 
 ```
-Graff₁ + Graff₂ = {
+Graph₁ + Graph₂ = {
   Leaf₁ where ∄ Leaf₂ : Leaf₁ ~ Leaf₂
   Leaf₂ where ∄ Leaf₁ : Leaf₁ ~ Leaf₂
   Leaf₁ + Leaf₂ where Leaf₁ ~ Leaf₂
-  ∀ Leaf₁ ∈ Graff₁, Leaf₂ ∈ Graff₂
+  ∀ Leaf₁ ∈ Graph₁, Leaf₂ ∈ Graph₂
 }
 ```
 
-If both Graffs contain equivalent leaves (i.e. with the same canonical path),
+If both Graphs contain equivalent leaves (i.e. with the same canonical path),
 
 In Graffy, this operation is used to merge changes into the cache and to aggregate results from multiple sources. This operation should be commutative and associative:
 
@@ -123,20 +123,20 @@ Aggregate queries from multiple components. This operation should be commutative
 - Q₁ + Q₂ = Q₂ + Q₁
 - Q₁ + (Q₂ + Q₃) = (Q₁ + Q₂) + Q₃
 
-### Graff difference
+### Graph difference
 
 - **G₁ − G₂ = G₃**
 
-As Graffs are sets of leaves, this is analogous to a set difference.
+As Graphs are sets of leaves, this is analogous to a set difference.
 
 ```
-Graff₁ − Graff₂ = {
-  Leaf₁ where ∄ Leaf₂ ∈ Graff₂ : Leaf₁ ~ Leaf₂
-  ∀ Leaf₁ ∈ Graff₁
+Graph₁ − Graph₂ = {
+  Leaf₁ where ∄ Leaf₂ ∈ Graph₂ : Leaf₁ ~ Leaf₂
+  ∀ Leaf₁ ∈ Graph₁
 }
 ```
 
-When processing a write operation with multiple sinks, compute the pending changes after each partial write. It should be reversible using Graff union:
+When processing a write operation with multiple sinks, compute the pending changes after each partial write. It should be reversible using Graph union:
 
 - (G₁ − G₂) + G₂ = G₁
 
@@ -147,17 +147,17 @@ When processing a write operation with multiple sinks, compute the pending chang
 When fulfilling a read operation from multiple sources, compute the pending query after partial read. Also used to compute additional data requirements before notifying a change to each live query.
 
 ```
-Query − Graff = {
-  QueryPath ∀ QueryPath ∈ Query where ∄ LeafPath ∈ Leaf ∈ Graff :
+Query − Graph = {
+  QueryPath ∀ QueryPath ∈ Query where ∄ LeafPath ∈ Leaf ∈ Graph :
     LeafPath = QueryPath
 }
 ```
 
-### Query normalization
+### Query multiplication
 
 - **Q₁ * G = Q₂**
 
-Replace the paths in Q that match a non-canonical path in G with the corresponding canonical paths. This prepares live queries for filtering change graffs, which will always include canonical paths but may not include the non-canonical paths used in the original query.
+For each path in Q that matches a non-canonical path in G, add the corresponding canonical paths to the query. This prepares live queries for filtering change graphs, which will always include canonical paths but may not include the non-canonical paths used in the original query.
 
 ### Query intersection
 
@@ -166,13 +166,13 @@ Replace the paths in Q that match a non-canonical path in G with the correspondi
 This is analogous to an intersection between the sets of paths; both CanonicalPath and LinkedPaths are considered paths of a Leaf.
 
 ```
-Query ∩ Graff = {
-  Leaf ∀ Leaf ∈ Graff where ∃ LeafPath ∈ Leaf, QueryPath ∈ Query :
+Query ∩ Graph = {
+  Leaf ∀ Leaf ∈ Graph where ∃ LeafPath ∈ Leaf, QueryPath ∈ Query :
     LeafPath = QueryPath
 }
 ```
 
-Fulfil a query using information in a cache. When a change has been written, computes the parts of that change that are relevant to each pending live query.
+Fulfil a query using information in a cache. When a change has been written, compute the parts of that change that are relevant to each pending live query.
 
 This operation should be distributive over Query Union:
 
@@ -180,4 +180,32 @@ This operation should be distributive over Query Union:
 
 ---
 
-TODO: Write formal definitions of each operation, and proofs that the identities hold.
+## Properties
+
+### CRDT Property
+
+### Live Query Property
+
+The live query property requires that the final state of the client's knowledge should be independent of whether it is materialized from a stream of changes or by polling the state of the server.
+
+Let G₁ be the initial state of the server, and G₂ a server-side change to this state. Let G₃ be the final state, given by G₃ = G₁ + C.
+
+Let Q be the query made by a client, and let R₁ and R₃ be the result of making the query when the server state is G₁ and G₃ respectively, and R₂ be the live update pushed from the server when the change C occurs.
+
+The live query property can be stated as R₃ ⊆ R₁ + R₂. This requires that:
+
+R₂ ⊇ R₃ - R₁
+R₂ ⊇ (Q ∩ (G₁ + C)) - (Q ∩ G₁)
+
+  
+
+R₁ = Q ∩ G₁
+R₃ = Q ∩ G₃
+
+
+
+
+R₂ = (Q * R₁) ∩ G₂
+
+
+TODO: Write proofs of each property.

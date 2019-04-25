@@ -1,10 +1,12 @@
 # Graffy
 
-Graffy is a live query library for the browser and Node.js, built on a sound [theory of graph queries](Theory.md).
+Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's built on a sound [set-theoretic model of queries and graphs](Theory.md).
 
-Graffy was inspired by (and borrows concepts from) GraphQL and Falcor. It uses a JSON Graph data model like Falcor's, and a query syntax that mirrors the shape of the expected response, like GraphQL.
+## Why Graffy?
 
-Compared to GraphQL, Graffy offers a simpler and more intuitive data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
+Graffy provides advanced [live queries](LiveQuery.md) capabilities, providing clients a real-time view of of server data. Graffy supports complex live queries with nested graph traversals and pagination, while exposing a simple and intuitive API for building clients and servers.
+
+Graffy was inspired by (and borrows from) Facebook's GraphQL and Netflix's Falcor. Compared to GraphQL, Graffy offers a more familiar data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
 
 Unlike GraphQL resolvers and Falcor data providers, Graffy providers can be _composed_ like Express/Koa middleware. This allows authentication, validation, custom caches and resource limiting to be implemented in a straightforward manner.
 
