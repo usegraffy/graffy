@@ -1,5 +1,6 @@
 {
   "name": "graffy",
+  "version": "1.0.0",
   "description": "Graffy Project",
   "repository": {
     "type": "git",
@@ -13,6 +14,10 @@
     "example": "(yarn client &) && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
+  "workspaces": [
+    "src/*",
+    "examples/*"
+  ],
   "private": true,
   "author": "aravindet",
   "license": "Apache-2.0",

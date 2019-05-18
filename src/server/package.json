@@ -1,0 +1,6 @@
+{
+  "name": "@graffy/server",
+  "browserslist": [
+    "maintained node versions"
+  ]
+}
