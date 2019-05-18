@@ -25,7 +25,7 @@ Graffy providers can also perform efficient bulk reads from underlying data stor
 | core   | [![npm version](http://img.shields.io/npm/v/@graffy/core.svg?style=flat)](https://npmjs.org/package/@graffy/core "@graffy/core on npm") | -                                |
 | client | [![npm version](http://img.shields.io/npm/v/@graffy/client.svg?style=flat)](https://npmjs.org/package/@graffy/client "@graffy/client on npm") | EventStream/HTTP client          |
 | server | [![npm version](http://img.shields.io/npm/v/@graffy/server.svg?style=flat)](https://npmjs.org/package/@graffy/server "@graffy/server on npm") | EventStream/HTTP server          |
-| cache  | ⌛ in dev  | In-memory cache                  |
+| cache  | [![npm version](http://img.shields.io/npm/v/@graffy/cache.svg?style=flat)](https://npmjs.org/package/@graffy/cache "@graffy/cache on npm")  | In-memory cache                  |
 | react  | [![npm version](http://img.shields.io/npm/v/@graffy/react.svg?style=flat)](https://npmjs.org/package/@graffy/react "@graffy/react on npm") | Container and hooks API          |
 | gql    | ⌛ backlog | GraphQL subset DSL for queries   |
 | schema | ⌛ backlog | Validation, introspection API    |

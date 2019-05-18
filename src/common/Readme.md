@@ -1,3 +1,3 @@
 # Graffy Common
 
-Common libraries that are used by various Graffy built-in modules. 
+Common libraries that used by various Graffy modules. 

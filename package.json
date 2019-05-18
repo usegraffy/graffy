@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "jest",
-    "build-pkg": "NODE_ENV=production rollup -c",
+    "buildall": "./scripts/build",
     "server": "NODE_ENV=test babel-node example/server.js",
     "client": "rollup -c",
     "example": "(yarn client &) && yarn server",
@@ -46,10 +46,14 @@
     "faker": "^4.1.0",
     "globby": "^9.0.0",
     "jest": "^24.3.1",
+    "lodash": "^4.17.11",
+    "merge-async-iterators": "^0.2.1",
     "nodemon": "^1.18.10",
     "prettier": "^1.16.4",
+    "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "rimraf": "^2.6.3",
     "rollup": "^1.6.0",
     "rollup-plugin-analyzer": "^3.0.0",
     "rollup-plugin-babel": "^4.3.2",
@@ -57,5 +61,9 @@
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-replace": "^2.1.0"
+  },
+  "peerDependencies": {
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4"
   }
 }

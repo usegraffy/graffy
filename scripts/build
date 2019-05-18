@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+/* eslint-disable no-console */
+
+const { mkdir, readFile, writeFile } = require('fs').promises;
+const { join } = require('path');
+
+const { sync: rimraf } = require('rimraf');
+const globby = require('globby');
+const {
+  parseAsync: parse,
+  transformFromAstAsync: transform,
+} = require('@babel/core');
+
+const {
+  devDependencies: depVersions,
+  peerDependencies: peerDepVersions,
+} = require('../package.json');
+
+const version = process.argv[2];
+
+if (!version) {
+  console.log('Usage: build <version>');
+  console.log(process.argv);
+  process.exit();
+}
+
+console.log('Building version', version);
+
+const src = join(__dirname, '..', 'src');
+const dst = join(__dirname, '..', 'dist');
+const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
+
+async function build(name) {
+  const cwd = join(src, name);
+  let description;
+
+  // Copy the Readme file first. If there is no readme, skip this directory.
+  try {
+    const readme = (await readFile(join(cwd, 'Readme.md'))).toString();
+    description = readme.match(/^[^#].*$/m)[0].trim();
+    await mkdir(join(dst, name));
+    writeFile(join(dst, name, 'Readme.md'), readme);
+  } catch (_) {
+    console.warn(`Skipping directory "${name}": No Readme.md`);
+    return;
+  }
+
+  // Make destination directories
+  for (const dir of await globby('**/*', { cwd, onlyDirectories: true })) {
+    await mkdir(join(dst, name, dir));
+  }
+
+  // Keep track of dependencies found during source transformation
+  let dependencies;
+  let peerDependencies;
+  function addDeps(ast) {
+    ast.program.body
+      .filter(({ type }) => type === 'ImportDeclaration')
+      .map(({ source }) => source.value)
+      .forEach(dep => {
+        if (dep[0] === '.') return;
+        dep = dep.match(depPattern)[0];
+        if (peerDepVersions[dep]) {
+          peerDependencies = peerDependencies || {};
+          peerDependencies[dep] = peerDepVersions[dep];
+        } else {
+          dependencies = dependencies || {};
+          if (!depVersions[dep]) console.warn('No version found', dep);
+          dependencies[dep] = depVersions[dep] || 'x';
+        }
+      });
+  }
+
+  // Transform source files
+  const paths = await globby(['**/*.js', '!**/*.test*.js'], { cwd });
+  await Promise.all(
+    paths.map(async path => {
+      try {
+        const source = (await readFile(join(cwd, path))).toString();
+        const ast = await parse(source);
+
+        await writeFile(
+          join(dst, name, path),
+          (await transform(ast, source)).code,
+        );
+
+        addDeps(ast);
+      } catch (e) {
+        console.error(`Skipping file ${path}:`, e.message);
+      }
+    }),
+  );
+
+  // Write package.json
+  await writeFile(
+    join(dst, name, 'package.json'),
+    JSON.stringify(
+      {
+        name: `@graffy/${name}`,
+        description,
+        author: 'aravind (https://github.com/aravindet)',
+        version,
+        repository: {
+          type: 'git',
+          url: 'git+https://github.com/aravindet/graffy.git',
+        },
+        license: 'Apache-2.0',
+        dependencies,
+        peerDependencies,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+(async function() {
+  await rimraf(dst);
+  await mkdir(dst);
+
+  const dirs = await globby('*', { cwd: src, onlyDirectories: true });
+  for (const dir of dirs) depVersions[`@graffy/${dir}`] = version;
+  await Promise.all(dirs.map(dir => build(dir)));
+  console.log('Done.');
+})();
