@@ -16,7 +16,7 @@
   },
   "workspaces": [
     "src/*",
-    "examples/*"
+    "example"
   ],
   "private": true,
   "author": "aravindet",
