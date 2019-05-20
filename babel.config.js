@@ -4,20 +4,16 @@ module.exports = {
       '@babel/preset-env',
       {
         loose: true,
-        modules: process.env.NODE_ENV === 'test' && 'auto',
-        useBuiltIns: 'entry',
-        corejs: 3,
       },
     ],
     ['@babel/preset-react'],
   ],
   plugins: [
-    process.env.NODE_ENV === 'test'
-      ? [
-          '@babel/plugin-transform-runtime',
-          { regenerator: true, useESModules: false },
-        ]
-      : undefined,
+    [
+      '@babel/plugin-transform-runtime',
+      { corejs: 3, regenerator: true, helpers: true, useESModules: false },
+    ],
     '@babel/plugin-proposal-class-properties',
-  ].filter(Boolean),
+    'babel-plugin-add-module-exports',
+  ],
 };

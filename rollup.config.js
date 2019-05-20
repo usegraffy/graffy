@@ -2,12 +2,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import replace from 'rollup-plugin-replace';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
-import minify from 'rollup-plugin-babel-minify';
 import analyze from 'rollup-plugin-analyzer';
-
-if (process.env.NODE_ENV === 'production') {
-  console.log('Production build');
-}
 
 const input = `example/client.js`;
 
@@ -23,8 +18,7 @@ export default {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     }),
     babel({
-      // externalHelpers: true,
-      // runtimeHelpers: true,
+      runtimeHelpers: true,
       exclude: 'node_modules/**', // only transpile our source code
     }),
     resolve(),
@@ -34,7 +28,6 @@ export default {
         'node_modules/react/index.js': ['useState'],
       },
     }),
-    // minify({ comments: false }),
     analyze({ skipFormatted: true, onAnalysis }),
   ],
 };

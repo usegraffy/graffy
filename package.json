@@ -8,10 +8,10 @@
   },
   "scripts": {
     "test": "jest",
-    "buildall": "./scripts/build",
+    "release": "./scripts/build",
     "server": "NODE_ENV=test babel-node example/server.js",
     "client": "rollup -c",
-    "example": "(yarn client &) && yarn server",
+    "example": "(yarn client -w &) && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
   "workspaces": [
@@ -25,8 +25,10 @@
     "url": "https://github.com/aravindet/graffy/issues"
   },
   "homepage": "https://github.com/aravindet/graffy#readme",
+  "dependencies": {
+    "@babel/runtime-corejs3": "^7.4.5"
+  },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
     "@babel/core": "^7.1.2",
     "@babel/node": "^7.2.2",
     "@babel/plugin-proposal-class-properties": "^7.3.0",
@@ -36,8 +38,7 @@
     "@babel/runtime": "^7.1.2",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^24.3.1",
-    "babel-plugin-async-to-promises": "^1.0.5",
-    "core-js": "3",
+    "babel-plugin-add-module-exports": "^1.0.2",
     "eslint": "^5.4.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
@@ -57,10 +58,10 @@
     "rollup": "^1.6.0",
     "rollup-plugin-analyzer": "^3.0.0",
     "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-babel-minify": "^8.0.0",
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^4.0.1",
-    "rollup-plugin-replace": "^2.1.0"
+    "rollup-plugin-replace": "^2.1.0",
+    "yargs": "^13.2.4"
   },
   "peerDependencies": {
     "react": "^16.8.4",
