@@ -33,10 +33,6 @@ export default {
 };
 
 function onAnalysis({ bundleSize, bundleOrigSize, moduleCount, modules }) {
-  console.log(
-    '\n----------------------------------------- Summary -----------------------------------------',
-  );
-
   const { own, deps, max } = modules
     .filter(({ size }) => size)
     .reduce(
@@ -51,12 +47,22 @@ function onAnalysis({ bundleSize, bundleOrigSize, moduleCount, modules }) {
       { own: {}, deps: {}, max: 0 },
     );
 
-  Object.keys(own).forEach(id => {
-    if (id[0] === '\u0000') return;
-    console.log(
-      id.padEnd(max + 1),
-      `${own[id]}`.padStart(8),
-      `${own[id] + (deps[id] || 0)}`.padStart(8),
-    );
-  });
+  console.log(
+    '\nHeaviest modules'.padEnd(max + 2) +
+      'Own'.padStart(8) +
+      '+Deps'.padStart(8) +
+      `\n${'-'.repeat(max + 16)}\n` +
+      Object.keys(own)
+        .filter(id => id[0] !== '\u0000')
+        .map(id => ({ id, size: own[id] + (deps[id] || 0) }))
+        .sort((a, b) => b.size - a.size)
+        .slice(0, 10)
+        .map(
+          ({ id, size }) =>
+            id.padEnd(max + 1) +
+            `${own[id]}`.padStart(8) +
+            `${size}`.padStart(8),
+        )
+        .join('\n'),
+  );
 }

@@ -29,9 +29,16 @@ export default function(cacheOptions = {}) {
       } else if (options.raw) {
         yield* new Cache(store).getStream(query);
       } else {
-        for await (const _ of mainCache.getStream(query)) {
-          // console.log('Change is', _, 'pushing', mainCache.getKnown(query));
-          yield mainCache.getKnown(query);
+        // TODO: We should be reusing the mainCache here when invalidation
+        // is implemented.
+        const cache = new Cache(store);
+        try {
+          for await (const _ of cache.getStream(query)) {
+            // console.log('Change is', _, 'pushing', cache.getKnown(query));
+            yield cache.getKnown(query);
+          }
+        } catch (e) {
+          console.log('Error producing stream for subscriber', e);
         }
       }
     });

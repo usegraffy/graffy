@@ -11,24 +11,35 @@ export default function server(store) {
   if (!store) throw new Error('server.store_undef');
   return async (req, res) => {
     if (req.method === 'GET') {
-      const parsed = url.parse(req.url, true);
-      const query = getQuery(parsed.query.include);
-      if (req.headers['accept'] === 'text/event-stream') {
-        res.setHeader('content-type', 'text/event-stream');
+      try {
+        const parsed = url.parse(req.url, true);
+        const query = getQuery(parsed.query.include);
 
-        // TODO: Resumable subscriptions using timestamp ID.
-        // const lastId = req.headers['last-event-id'];
+        if (req.headers['accept'] === 'text/event-stream') {
+          res.setHeader('content-type', 'text/event-stream');
 
-        const stream = store.sub(query, { raw: true });
-        // TODO: call stream.return() when aborted
-        for await (const value of stream) {
-          if (req.aborted || res.finished) break;
-          res.write(`data: ${JSON.stringify(value)}\n\n`);
+          // TODO: Resumable subscriptions using timestamp ID.
+          // const lastId = req.headers['last-event-id'];
+          try {
+            const stream = store.sub(query, { raw: true });
+            // TODO: call stream.return() when aborted
+            for await (const value of stream) {
+              if (req.aborted || res.finished) break;
+              res.write(`data: ${JSON.stringify(value)}\n\n`);
+            }
+          } catch (e) {
+            res.write(`event: graffyerror\ndata: ${e.message}\n\n`);
+          }
+          res.end();
+        } else {
+          const value = await store.get(query, { raw: true });
+          res.writeHead(200);
+          res.end(JSON.stringify(value));
         }
-        res.end();
-      } else {
-        const value = await store.get(query, { raw: true });
-        res.end(JSON.stringify(value));
+      } catch (e) {
+        res.writeHead(400);
+        res.write(`${e.message}\n\n`);
+        return;
       }
     } else {
       res.writeHead(501);

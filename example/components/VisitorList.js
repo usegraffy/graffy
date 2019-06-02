@@ -14,5 +14,5 @@ export default function VisitorList({ visitors, anchor }) {
 
 VisitorList.propTypes = {
   visitors: PropTypes.array.isRequired,
-  anchor: PropTypes.string,
+  anchor: PropTypes.number,
 };

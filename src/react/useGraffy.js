@@ -5,9 +5,13 @@ import GraffyContext from './GraffyContext';
 const { useRef, useState, useEffect, useContext } = React;
 
 const consumeSubscription = async (sub, setValue, setLoading) => {
-  for await (const val of sub) {
-    setValue(val);
-    setLoading(false);
+  try {
+    for await (const val of sub) {
+      setValue(val);
+      setLoading(false);
+    }
+  } catch (e) {
+    console.log('Error reading stream in useGraffy', e);
   }
 };
 
@@ -23,7 +27,7 @@ export default function useGraffy(query) {
 
   useEffect(() => {
     if (!loading) setLoading(true);
-    const subscription = store.sub(query, { values: true });
+    const subscription = store.sub(query);
     consumeSubscription(subscription, setValue, setLoading);
 
     return () => {

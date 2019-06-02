@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import Graffy from '@graffy/core';
 import GraffyCache from '@graffy/cache';
 import GraffyClient from '@graffy/client';
+// import mock from './mockVisitorList';
 import { GraffyProvider } from '@graffy/react';
 
 import App from './components/App';
@@ -11,6 +12,7 @@ import App from './components/App';
 
 const store = new Graffy();
 store.use(GraffyCache());
+// store.use(mock);
 store.use(GraffyClient('/api'));
 
 ReactDOM.render(

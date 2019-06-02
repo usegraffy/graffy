@@ -36,4 +36,5 @@ Visitor.propTypes = {
   name: PropTypes.string,
   ts: PropTypes.number,
   pageviews: PropTypes.object,
+  muted: PropTypes.bool,
 };

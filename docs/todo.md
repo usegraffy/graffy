@@ -1,3 +1,8 @@
+Bugs/missing
+
+- [ ] Verify that pages in cache are contracted on insert.
+- [ ] Ensure stream errors cause subscriptions to be dropped (and event stream disconnection.)
+
 # Todo
 
 - [ ] Update documentation to cover cache, sub/onSub

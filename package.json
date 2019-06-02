@@ -11,7 +11,7 @@
     "release": "./scripts/build",
     "server": "NODE_ENV=test babel-node example/server.js",
     "client": "rollup -c",
-    "example": "(yarn client -w &) && yarn server",
+    "example": "yarn client && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
   "workspaces": [

@@ -22,6 +22,7 @@ export default function makeStream(close) {
     return(val) {
       done = true;
       close(val);
+      return Promise.resolve({ value: void 0, done: true });
     },
 
     [Symbol.asyncIterator]() {

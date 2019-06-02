@@ -111,15 +111,18 @@ code {
   margin-bottom: 2em;
 }
 
-.Pagination > button {
+.Pagination > * {
   font-size: 1.25em;
   line-height: 1em;
   padding: 1em 0;
+  background: #eee;
+  color: #333;
+}
+
+.Pagination > button {
   width: 3em;
   border-radius: 0;
   border: none;
-  background: #eee;
-  color: #333;
   cursor: pointer;
 }
 

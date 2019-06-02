@@ -52,6 +52,7 @@ function wrapSubHandler(handle) {
     let stream = handle(query, options);
     try {
       const nextStream = await next(query);
+      // console.log('Merging stream');
       stream = mergeStreams([stream, nextStream]);
     } catch (_) {
       /* TODO: re-throw if not a resolve.unfulfilled */
@@ -135,10 +136,13 @@ export default class Graffy {
     const stream = await resolve(this.handlers.sub, query, options);
 
     // console.log('Stream is', await stream);
-
-    for await (const value of stream) {
-      // console.log(query, 'Yielding', value, options);
-      yield options.raw ? value : unwrap(graft(value, query), path);
+    try {
+      for await (const value of stream) {
+        // console.log(query, 'Yielding', value, options);
+        yield options.raw ? value : unwrap(graft(value, query), path);
+      }
+    } catch (e) {
+      console.log('Graffy: Sub stream error', e);
     }
   }
 

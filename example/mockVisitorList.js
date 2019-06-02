@@ -1,5 +1,5 @@
-const faker = require('faker');
-const { makeLink, makePage } = require('@graffy/common');
+import faker from 'faker';
+import { makeLink, makePage } from '@graffy/common';
 
 const visitors = {};
 const visitorsByTime = makePage({});
@@ -7,7 +7,7 @@ const freeIds = [];
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = function(g) {
+export default function(g) {
   g.onGet('/visitors', () => {
     // console.log('visitors', query);
     return { visitors };
@@ -25,7 +25,7 @@ module.exports = function(g) {
       await sleep(1 + Math.random() * 100);
     }
   });
-};
+}
 
 function simulate() {
   const change =
@@ -56,7 +56,7 @@ function simulateEnter() {
   visitors[addId] = { id: addId, ts, ...visitorInfo() };
   visitorsByTime[ts] = makeLink(['visitors', addId]);
 
-  console.log('create', addId, ts);
+  // console.log('create', addId, ts);
   return {
     visitors: { [addId]: visitors[addId] },
     visitorsByTime: { [ts]: visitorsByTime[ts] },
@@ -72,7 +72,7 @@ function simulateLeave() {
   delete visitors[delId];
   delete visitorsByTime[delTs];
   freeIds.push(delId);
-  console.log('delete', delId, delTs);
+  // console.log('delete', delId, delTs);
   return {
     visitors: { [delId]: null },
     visitorsByTime: { [delTs]: null },
@@ -86,7 +86,7 @@ function simulateUpdate() {
   } while (!visitors[upId]);
   const url = faker.internet.url();
   visitors[upId].pageviews.ts = url;
-  console.log('updated', upId);
+  // console.log('updated', upId);
   return { visitors: { [upId]: { pageviews: { [ts]: url } } } };
 }
 

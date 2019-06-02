@@ -8,7 +8,6 @@ import {
   linkKnown,
   // hasKnown,
   getKnown,
-  getMaxKnown,
   getUnknown,
 } from '@graffy/common';
 
@@ -29,10 +28,19 @@ export default class Cache {
   upstream = null;
 
   async resubscribe() {
-    const query = linkKnown(this.data, simplifyQuery(this.sumQuery));
+    const query =
+      this.sumQuery && linkKnown(this.data, simplifyQuery(this.sumQuery));
+
+    // console.log(this.id, 'Resubscribe called', query);
+
     if (isEqual(this.upstreamQuery, query)) return;
+    if (this.upstream) {
+      // console.log(this.id, 'Closing upstream sub', this.upstreamQuery);
+      this.upstream.return();
+    }
     this.upstreamQuery = query;
-    if (this.upstream) this.upstream.return();
+    if (!query) return;
+    // console.log(this.id, 'Opening upstream sub', query);
     this.upstream = this.store.sub(query, { skipCache: true, raw: true });
     this.putStream(this.upstream);
   }
@@ -42,6 +50,8 @@ export default class Cache {
     const [push, stream] = makeStream(() => {
       delete this.listeners[id];
       this.sumQuery = subtractQueries(this.sumQuery, query);
+      // console.log(this.id, 'Ended stream', id, query, this.sumQuery);
+      // console.log(this.id, 'Resubscribe due to stream close');
       return this.resubscribe();
     });
 
@@ -51,6 +61,8 @@ export default class Cache {
       push,
     };
     this.sumQuery = addQueries(this.sumQuery, query);
+    // console.log(this.id, 'Started stream', id, query, this.sumQuery);
+    // console.log(this.id, 'Resubscribe due to query start');
     this.resubscribe();
     return stream;
   }
@@ -58,7 +70,11 @@ export default class Cache {
   async putStream(stream) {
     // TODO: Add backpressure here; pause pulling if all downstream listeners
     // are saturated.
-    for await (const value of stream) this.putValue(value);
+    try {
+      for await (const value of stream) this.putValue(value);
+    } catch (e) {
+      console.log('Error sinking stream into cache', e);
+    }
   }
 
   getKnown(query) {
@@ -86,6 +102,15 @@ export default class Cache {
     if (gaps) {
       // The change added a link to some data we don't have in the cache.
       // We need to fetch it and also resubscribe.
+      // console.log(
+      //   'Change caused gaps',
+      //   value && value.visitorsByTime && value.visitorsByTime.__page__,
+      //   this.data &&
+      //     this.data.visitorsByTime &&
+      //     this.data.visitorsByTime.__page__,
+      // );
+      // console.log('SumQuery', this.sumQuery);
+      // console.log('Gaps', gaps);
       await this.resubscribe();
       try {
         fillData = await this.store.get(gaps, {
@@ -93,6 +118,7 @@ export default class Cache {
           raw: true,
         });
       } catch (e) {
+        console.error('Error getting fillData for', gaps);
         console.error(e);
       }
       if (fillData) {

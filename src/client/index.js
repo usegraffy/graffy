@@ -12,12 +12,15 @@ export default function GraffyClient(baseUrl) {
     store.onSub(query => {
       if (!EventSource) throw Error('client.sse.unavailable');
       const url = `${baseUrl}?include=${getPath(query)}`;
+      // console.log('Opening', url);
       const source = new EventSource(url);
       const [push, stream] = makeStream(() => {
+        // console.log('Closing', url);
         source.close();
       });
 
       source.onmessage = ({ data }) => {
+        // console.log('<<<', getPath(query), data);
         data = JSON.parse(data);
         push(data);
       };
