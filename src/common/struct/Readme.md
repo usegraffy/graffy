@@ -1,0 +1,290 @@
+# Questions
+
+1. For data, should there be a single tree with both clocks and values, or a separate clocks tree?
+
+  If clocks are very fragmented, it makes sense to have a single tree. If not, we might save by using separate trees. Versions for queries will likely not be very fragmented but those for data might be.
+
+  Decision: Single tree.
+
+2. For queries, should it be possible to specify different clocks for different parts?
+
+  Decision: Yes; Without this, query addition will be very limited.
+
+3. For data, should there be node objects for intermediate levels, or some flat structure of key:value pairs (perhaps stored as a prefix tree for space efficiency)?
+
+  Decision: Nodes should be objects; otherwise, evaluating counted ranges become very complicated. (It is required to count distinct keys at a level in the node hierarcy.)
+
+4. Should query subtraction be supported?
+
+  Preferably, but this is not a hard requirement.
+
+5. Should there be "clock" for branch nodes to optimize searches?
+
+  No. Because of links, this will be misleading anyway.
+
+6. Should branch nodes be flattened?
+
+
+
+# Model
+
+Graph         :=  [ GraphNode ]
+GraphNode     :=  GraphBranch | GraphLeaf | GraphLink | GraphRange
+GraphBranch   :=  { key, children: Graph }
+GraphLeaf     :=  { key, value, clock }
+GraphLink     :=  { key, path, clock }
+GraphRange    :=  { key, end, clock }
+
+
+Query         :=  [ QueryNode ]
+QueryNode     :=  QueryBranch | QueryLeaf | QueryRange
+QueryBranch   :=  { key, children: Query }
+QueryLeaf     :=  { key, sum, clock }
+QueryRange    :=  { key, end, count, (sum, clock | children) }
+
+
+Notes:
+- Ranges are specified by `key` and `end`, where `key <= end`.
+- In QueryRanges, a positive count specifies the first N items while a negative count specifies the last N items.
+- Children are sorted by `key`.
+- In Graphs, Ranges may not overlap with each other or with the keys of other nodes. In Queries they may.
+
+# APIs
+
+## Graph#put(changes)
+
+
+# Examples
+
+## Graph
+
+```js
+[
+  { key: 'posts', children: [
+    { key: '1', children: [
+      { key: 'title', value: '1984', clock: 1 },
+      { key: 'author', path: ['users', '1'], clock: 1 }
+    ] }
+  ] },
+  { key: 'postsByTime', children: [
+    { key: '', end: '1233\xff', clock: 1 },
+    { key: '1234', path: ['posts', '1'], clock: 1 },
+    { key: '1234\0', end: '2000', clock: 1 },
+  ] },
+  { key: 'users', children: [
+    { key: 1, ... }
+  ] }
+]
+```
+
+
+## Query
+
+```js
+[
+  { key: 'postsByTime', children: [
+    { key: '', end: '2000', count: 10, children: [
+      { key: 'title', sum: 1, clock: 0 },
+      { key: 'author', children: [
+        { key: 'name', sum: 1, clock: 0}
+      ] }
+    ] }
+  ] }
+]
+```
+
+
+## Decorated Query
+
+This is a subset of GraphQL syntax.
+
+```js
+gql`{
+  postsByTime(after: 123, first: 10) {
+    title
+    subtitle
+    timestamp
+    author {
+      name
+      avatar
+    }
+  }
+}`;
+```
+
+## Decorated Graph
+
+QueryRanges result in arrays, QueryBranches result in objects.
+
+```js
+{
+  __page_info__: {
+    postsByTime: ['', '2000']
+  },
+  postsByTime: [
+    { __key__: '1234', title: '1984', ... }
+  ]
+}
+```
+
+
+# Discarded options
+
+// Option 1, flat nodes
+// May be simpler to implement and more efficient if clock numbers are very fragmented.
+
+[
+  undefined,
+  undefined, // Up to key_1 is unknown
+
+  key_1,
+  clock_null,
+  null,
+
+  key_2,
+  clock_value,
+  value_2,
+
+  key_2 + \0,  // key_2
+  clock_null,
+  null,
+
+  key_3,
+  clock_null, // key_2 to key_4 is null, but clock changes at key_3
+  null,
+
+  key_4,
+  undefined,  // From key_4 to key_5 we are explicitly setting undefined.
+  undefined,
+
+  key_5,
+  clock_null,
+  null,
+
+  key_6
+  undefined,
+  undefined // From last key to end is unknown.
+]
+
+Record:
+
+{
+  __clocks__: {
+    key_1: clock_1,
+    key_2: clock_2
+  }
+  key_1: value_1,
+  key_2: null
+}
+
+Query:
+
+{
+
+}
+
+[
+  { key: 'key_1', children: [ ... ] },
+  { key: 'key_2', }
+]
+
+
+
+
+
+Query:
+
+{
+  postsByTime: [{ after: '123', first: 10, query: {
+    title: 1,
+    subtitle: 1,
+    timestamp: 1,
+    author: {
+      name: 1,
+      avatar: 1
+    }
+  }}]
+}
+
+
+Graph:
+
+{
+  values: {
+    posts: {
+      22: {
+        title: 'adsf'
+      }
+    }
+
+    postsByTime: [
+      undefined,
+      '123',
+      { __ref__: ['posts', '22'] },
+      '123\0',
+      undefined
+    ]
+  }
+
+  clock: {
+    posts: {
+      22: 2837
+    },
+    postsByTime: [
+
+    ]
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Discarded options.
+
+
+
+leaf := {}
+record := {  }
+collection := [
+  value, ( key, value )*
+]
+
+Node {
+  data: [ val, ( key, val ) ]
+  vers: [ ver, ( key, ver ) ]
+}
+
+Trie option:
+
+Graph:
+{
+  "f": { "o": { "o": 42 } },
+  "b": { "a": { "r": 1, "z": 2 } }
+}
+
+
+Query:
+[ 'postsByTime', { after: '123', first: 10 }, [
+  'title',
+  'subtitle',
+  'timestamp',
+  [ 'author', [
+    'name',
+    'avatar'
+  ] ]
+] ]
