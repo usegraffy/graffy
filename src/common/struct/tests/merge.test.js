@@ -24,7 +24,9 @@ describe('merge', () => {
     merge(original, [{ key: 'foo', value: 42, clock: 2 }]);
     expect(original).toEqual([{ key: 'foo', value: 41, clock: 3 }]);
   });
+});
 
+describe('branches', () => {
   test('updateBranchWithBranch', () => {
     const original = [
       {
@@ -126,7 +128,9 @@ describe('merge', () => {
     merge(original, [{ key: 'foo', value: 10, clock: 3 }]);
     expect(original).toEqual([{ key: 'foo', value: 10, clock: 3 }]);
   });
+});
 
+describe('addToGap', () => {
   test('addLeafToGapStart', () => {
     const original = [{ key: 'foo', value: 41, clock: 2 }];
     merge(original, [{ key: 'bar', value: 42, clock: 3 }]);
@@ -157,7 +161,9 @@ describe('merge', () => {
       { key: 'foo', value: 41, clock: 2 },
     ]);
   });
+});
 
+describe('addToRange', () => {
   test('addNewLeafToRangeStart', () => {
     const original = [{ key: 'foo', end: 'gah', clock: 2 }];
     merge(original, [{ key: 'foo', value: 42, clock: 3 }]);
@@ -225,7 +231,9 @@ describe('merge', () => {
       { key: 'fuz\0', end: 'gah', clock: 2 },
     ]);
   });
+});
 
+describe('addRange', () => {
   test('addRange', () => {
     const original = [
       { key: 'bar', end: 'fos\uffff', clock: 2 },
@@ -261,7 +269,9 @@ describe('merge', () => {
       { key: 'hey', value: 2, clock: 1 },
     ]);
   });
+});
 
+describe('errors', () => {
   test('clockCollisionError', () => {
     expect(() =>
       merge(

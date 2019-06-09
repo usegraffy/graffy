@@ -34,4 +34,24 @@ describe('getIndex', () => {
       getIndex([{ key: 'foo' }, { key: 'gah' }, { key: 'huf' }], 'gah'),
     ).toEqual(1);
   });
+  test('inRange', () => {
+    expect(
+      getIndex([{ key: 'foo', end: 'gag' }, { key: 'gah' }], 'fuz'),
+    ).toEqual(0);
+  });
+  test('atRangeStart', () => {
+    expect(
+      getIndex([{ key: 'foo', end: 'gag' }, { key: 'gah' }], 'foo'),
+    ).toEqual(0);
+  });
+  test('atRangeEnd', () => {
+    expect(
+      getIndex([{ key: 'foo', end: 'gag' }, { key: 'gah' }], 'gag'),
+    ).toEqual(0);
+  });
+  test('outOfRange', () => {
+    expect(
+      getIndex([{ key: 'foo', end: 'foz' }, { key: 'gah' }], 'fuz'),
+    ).toEqual(1);
+  });
 });

@@ -1,6 +1,6 @@
 import { isBranch, isRange } from './nodeTypes';
 import { keyAfter, keyBefore } from './keyOps';
-import getIndex from './getIndex';
+import { getIndex, getLastIndex } from './getIndex';
 
 export default function merge(current, changes) {
   let index = 0;
@@ -11,12 +11,10 @@ export default function merge(current, changes) {
   }
 }
 
-function insertRange(current, change, start = 0) {
+export function insertRange(current, change, start = 0) {
   const { key, end } = change;
-  let keyIx = getIndex(current, key, start);
-  let endIx = getIndex(current, end, keyIx);
-  if (isRange(current[keyIx - 1]) && current[keyIx - 1].end >= key) keyIx--;
-  if (current[endIx] && current[endIx].key === end) endIx++;
+  const keyIx = getIndex(current, key, start);
+  const endIx = getLastIndex(current, end, keyIx);
 
   // If current contains nodes that are newer than this range, keep them.
   // We do this by merging them back into insertions first.
@@ -44,21 +42,16 @@ function mergeRanges(base, node) {
   ].filter(Boolean);
 }
 
-function insertNode(current, change, start = 0) {
+export function insertNode(current, change, start = 0) {
   const key = change.key;
   const index = getIndex(current, key, start);
   const node = current[index];
-  const prev = current[index - 1];
 
-  if (node && node.key === key) {
-    // There is an existing node with the same key.
+  if (node && node.key <= key) {
+    // This change overlaps with something that exists.
     return isRange(node)
       ? insertNodeIntoRange(current, index, change)
       : updateNode(current, index, change);
-  } else if (isRange(prev) && prev.end >= key) {
-    // There is no existing child with the exact same key, but the change
-    // falls within an existing range.
-    return insertNodeIntoRange(current, index - 1, change);
   } else {
     // This change does not overlap with any existing knowledge. Insert it
     current.splice(index, 0, change);

@@ -1,46 +1,21 @@
-# Questions
-
-1. For data, should there be a single tree with both clocks and values, or a separate clocks tree?
-
-  If clocks are very fragmented, it makes sense to have a single tree. If not, we might save by using separate trees. Versions for queries will likely not be very fragmented but those for data might be.
-
-  Decision: Single tree.
-
-2. For queries, should it be possible to specify different clocks for different parts?
-
-  Decision: Yes; Without this, query addition will be very limited.
-
-3. For data, should there be node objects for intermediate levels, or some flat structure of key:value pairs (perhaps stored as a prefix tree for space efficiency)?
-
-  Decision: Nodes should be objects; otherwise, evaluating counted ranges become very complicated. (It is required to count distinct keys at a level in the node hierarcy.)
-
-4. Should query subtraction be supported?
-
-  Preferably, but this is not a hard requirement.
-
-5. Should there be "clock" for branch nodes to optimize searches?
-
-  No. Because of links, this will be misleading anyway.
-
-6. Should branch nodes be flattened?
-
 
 
 # Model
 
-Graph         :=  [ GraphNode ]
-GraphNode     :=  GraphBranch | GraphLeaf | GraphLink | GraphRange
+Graph         :=  [ GraphNode  | GraphRange ]
+GraphNode     :=  GraphBranch | GraphLeaf
 GraphBranch   :=  { key, children: Graph }
-GraphLeaf     :=  { key, value, clock }
+GraphLeaf     :=  GraphValue | GraphLink
+GraphValue    :=  { key, value, clock }
 GraphLink     :=  { key, path, clock }
 GraphRange    :=  { key, end, clock }
 
 
-Query         :=  [ QueryNode ]
-QueryNode     :=  QueryBranch | QueryLeaf | QueryRange
-QueryBranch   :=  { key, children: Query }
+Query         :=  [ QueryNode | QueryRange ]
+QueryNode     :=  QueryBranch | QueryLeaf
+QueryBranch   :=  { key, clock, children: Query }
 QueryLeaf     :=  { key, sum, clock }
-QueryRange    :=  { key, end, count, (sum, clock | children) }
+QueryRange    :=  { key, end, count, clock, (sum | children) }
 
 
 Notes:
@@ -128,7 +103,36 @@ QueryRanges result in arrays, QueryBranches result in objects.
 ```
 
 
-# Discarded options
+# Decisions
+
+1. For data, should there be a single tree with both clocks and values, or a separate clocks tree?
+
+  If clocks are very fragmented, it makes sense to have a single tree. If not, we might save by using separate trees. Versions for queries will likely not be very fragmented but those for data might be.
+
+  Decision: Single tree.
+
+2. For queries, should it be possible to specify different clocks for different parts?
+
+  Decision: Yes; Without this, query addition will be very limited.
+
+3. For data, should there be node objects for intermediate levels, or some flat structure of key:value pairs (perhaps stored as a prefix tree for space efficiency)?
+
+  Decision: Nodes should be objects; otherwise, evaluating counted ranges become very complicated. (It is required to count distinct keys at a level in the node hierarcy.)
+
+4. Should query subtraction be supported?
+
+  Preferably, but this is not a hard requirement.
+
+5. Should there be "clock" for branch nodes to optimize searches?
+
+  No. Because of links, this will be misleading anyway.
+  Update: Yes for Query branches, to avoid jumping through obsolete links.
+
+6. Should branch nodes be flattened?
+
+  No, for consistency.
+
+# Rejected options
 
 // Option 1, flat nodes
 // May be simpler to implement and more efficient if clock numbers are very fragmented.
