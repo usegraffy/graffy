@@ -1,4 +1,4 @@
-import getIndex from '../getIndex';
+import { getIndex } from '../getIndex';
 
 describe('getIndex', () => {
   test('empty', () => {
