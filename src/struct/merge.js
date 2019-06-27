@@ -9,6 +9,7 @@ export default function merge(current, changes) {
       ? insertRange(current, change, index)
       : insertNode(current, change, index);
   }
+  return current;
 }
 
 export function insertRange(current, change, start = 0) {
@@ -33,7 +34,7 @@ export function insertRange(current, change, start = 0) {
 }
 
 function mergeRanges(base, node) {
-  assertClock(node, base.clock);
+  // assertClock(node, base.clock);
   if (node.clock < base.clock) [node, base] = [base, node];
   return [
     base.key < node.key && { ...base, end: keyBefore(node.key) },
@@ -99,13 +100,13 @@ function getNewer(node, clock) {
     const children = node.children.filter(child => getNewer(child, clock));
     return children.length && { ...node, children };
   } else {
-    assertClock(node, clock);
-    return node.clock > clock ? node : null;
+    // assertClock(node, clock);
+    return node.clock >= clock ? node : null;
   }
 }
 
-function assertClock(node, clock) {
-  if (node.clock === clock) {
-    throw Error('merge.clock_collision ' + [node.key, clock].join(' '));
-  }
-}
+// function assertClock(node, clock) {
+//   // if (node.clock === clock) {
+//   //   throw Error('merge.clock_collision ' + [node.key, clock].join(' '));
+//   // }
+// }

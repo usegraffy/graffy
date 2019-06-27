@@ -1,6 +1,4 @@
-
-
-# Model
+# Graffy Data Structures
 
 Graph         :=  [ GraphNode  | GraphRange ]
 GraphNode     :=  GraphBranch | GraphLeaf
@@ -26,7 +24,23 @@ Notes:
 
 # APIs
 
-## Graph#put(changes)
+## graph.put(graph)
+
+Merges a change into the graph. No return value.
+
+## graph.get(query)
+
+Extracts values from a graph. Returns a tuple **(known, unknown)**, where **known** is a graph containing nodes from the original graph that match the passed query, and **unknown** is a query representing parts of the passed query that are not known in the graph.
+
+## graph.getSieve()
+
+Returns a query that matches any change that may modify known parts of the graph.
+
+## query.add(query)
+## query.subtract(query)
+
+
+
 
 
 # Examples
@@ -71,21 +85,32 @@ Notes:
 
 ## Decorated Query
 
-This is a subset of GraphQL syntax.
+The aim is to be as close to the response structure as possible.
 
 ```js
-gql`{
-  postsByTime(after: 123, first: 10) {
-    title
-    subtitle
-    timestamp
-    author {
-      name
-      avatar
+query({
+  currentUser: alias('users', userId, {
+    name: 1,
+    email: 1,
+  }),
+  postsByTime: [
+    first(10, '123'),
+    {
+      title: 1,
+      subtitle: 1,
     }
-  }
-}`;
+  ],
+  topPosts: alias('postsByTime', [
+    last(3, '343'),
+    {
+      title: 1,
+      cover: 1
+    }
+  ])
+})
 ```
+
+`first` and `last` create QueryRanges.
 
 ## Decorated Graph
 
@@ -93,11 +118,10 @@ QueryRanges result in arrays, QueryBranches result in objects.
 
 ```js
 {
-  __page_info__: {
-    postsByTime: ['', '2000']
-  },
+  currentUser: {
+    name: 'bob', ... },
   postsByTime: [
-    { __key__: '1234', title: '1984', ... }
+    { title: '1984', ... }
   ]
 }
 ```
@@ -246,6 +270,46 @@ Graph:
 
 
 
+gql`{
+
+  postsByTime(after: 123, first: 10) {
+    title
+    subtitle
+    timestamp
+    author {
+      name
+      avatar
+    }
+  }
+}`;
+
+query({
+  currentUser: alias(''),
+  firstPosts: [
+    'posts',
+    { first: 10, after: ['234'] },
+    {
+      title: 1,
+      subtitle: 1,
+      timestamp: 1,
+      author: {
+        name: 1,
+        avatar: 1
+      }
+    }
+  ]
+}, 3)
+
+
+['postsByTime', r.first(10).after('234'), [
+  'title',
+  'subtitle',
+  'timestamp',
+  ['author', [
+    'name',
+    'avatar'
+  ]]
+]]
 
 
 
