@@ -271,13 +271,13 @@ describe('addRange', () => {
   });
 });
 
-describe('errors', () => {
-  test('clockCollisionError', () => {
-    expect(() =>
-      merge(
-        [{ key: 'foo', value: 41, clock: 2 }],
-        [{ key: 'foo', value: 42, clock: 2 }],
-      ),
-    ).toThrow();
-  });
-});
+// describe('errors', () => {
+//   test('clockCollisionError', () => {
+//     expect(() =>
+//       merge(
+//         [{ key: 'foo', value: 41, clock: 2 }],
+//         [{ key: 'foo', value: 42, clock: 2 }],
+//       ),
+//     ).toThrow();
+//   });
+// });

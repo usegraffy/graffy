@@ -1,6 +1,4 @@
-export function getIndex(children, key, first, last) {
-  first = typeof first === 'undefined' ? 0 : first;
-  last = typeof last === 'undefined' ? children.length : last;
+export function getIndex(children, key, first = 0, last = children.length) {
   if (first >= last) return shiftIntoRange(children, key, first);
   const ix = ((first + last) / 2) | 0;
   if (children[ix] && key > children[ix].key) {

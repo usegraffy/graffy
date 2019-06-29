@@ -2,6 +2,7 @@ import { isBranch, isRange, isLink, isOlder } from './nodeTypes';
 import { keyAfter, keyBefore } from './keyOps';
 import merge from './merge';
 import { getIndex, getLastIndex } from './getIndex';
+import { wrap } from './path';
 
 class Result {
   constructor(root) {
@@ -82,14 +83,6 @@ function sliceNode(graph, query, result) {
     result.addKnown(graph);
   }
   return result;
-}
-
-function wrap(children, path, clock) {
-  if (!Array.isArray(path)) throw Error('slice.path_not_array ' + path);
-  for (let i = path.length - 1; i >= 0; i--) {
-    children = [{ key: path[i], clock, children }];
-  }
-  return children;
 }
 
 export function sliceRange(graph, query, result) {
