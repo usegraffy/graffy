@@ -29,7 +29,7 @@ describe.skip('stream', () => {
   });
 
   test('simple', async () => {
-    const sub = g.sub({ foo: { bar: 1 } });
+    const sub = g.sub(query({ foo: { bar: 1 } }));
     let j = 0;
     for await (const val of sub) {
       expect(val).toEqual({ foo: { bar: j++ } });
@@ -52,7 +52,7 @@ describe('changes', () => {
       await sleep(10);
       yield { foo: { a: 4 } };
     });
-    const sub = g.sub({ foo: { a: true } });
+    const sub = g.sub(query({ foo: { a: true } }));
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });

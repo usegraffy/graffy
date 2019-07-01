@@ -157,6 +157,33 @@ describe('range', () => {
       unknown: [{ key: 'ark', end: 'foo', count: 3, num: 1, clock: 0 }],
     });
   });
+
+  test.only('rangeForeComplete', () => {
+    expect(
+      slice(
+        [
+          { key: '', end: 'baq\uffff', clock: 1 },
+          { key: 'bar', value: 1, clock: 1 },
+          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
+          { key: 'bat', value: 2, clock: 1 },
+          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
+          { key: 'foo', value: 3, clock: 1 },
+          { key: 'foo\0', end: '\uffff', clock: 1 },
+        ],
+        [{ key: '', end: '\uffff', count: 5000, num: 1, clock: 0 }],
+      ),
+    ).toEqual({
+      known: [
+        { key: '', end: 'baq\uffff', clock: 1 },
+        { key: 'bar', value: 1, clock: 1 },
+        { key: 'bar\0', end: 'bas\uffff', clock: 1 },
+        { key: 'bat', value: 2, clock: 1 },
+        { key: 'bat\0', end: 'fon\uffff', clock: 1 },
+        { key: 'foo', value: 3, clock: 1 },
+        { key: 'foo\0', end: '\uffff', clock: 1 },
+      ],
+    });
+  });
 });
 
 describe('link', () => {

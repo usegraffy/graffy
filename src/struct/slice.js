@@ -97,6 +97,7 @@ export function sliceRange(graph, query, result) {
         sliceNode(node, { ...query, key }, result);
         count--;
       }
+
       key = keyAfter(node.end || node.key);
     }
     // result.addSieve({ ...query, end: key, count: Infinity });

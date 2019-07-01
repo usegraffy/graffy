@@ -1,7 +1,7 @@
 export { default as merge } from './merge';
 export { default as slice } from './slice';
 export { isRange, isBranch, isLink, isOlder, isNewer } from './nodeTypes';
-// export { wrap, unwrap } from './path';
+export { wrap, unwrap, remove } from './path';
 
 // class Graph {
 //   constructor(data) {

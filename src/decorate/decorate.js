@@ -13,6 +13,7 @@ export function unwrap(tree, path) {
 
 export default function decorate(graph, links = [] /* aliases */) {
   const result = decorateChildren(graph, links);
+
   let link;
   while ((link = links.shift())) {
     const [from, key, path] = link;
@@ -69,7 +70,7 @@ function decorateBranch(graph, links) {
       result[key] = decorateChildren(node.children, links);
       continue;
     }
-    result[key] = node.value;
+    if (node.value !== null) result[key] = node.value;
   }
   return result;
 }

@@ -26,6 +26,6 @@ function makeQuery(value, clock) {
   }
 }
 
-export function query(obj, clock) {
+export function query(obj, clock = 0) {
   return makeQuery(obj, clock).children;
 }

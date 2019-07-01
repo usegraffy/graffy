@@ -1,4 +1,6 @@
-# Graffy Data Structures
+# Graffy Struct
+
+Data structures used by Graffy
 
 Graph         :=  [ GraphNode  | GraphRange ]
 GraphNode     :=  GraphBranch | GraphLeaf

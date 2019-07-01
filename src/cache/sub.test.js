@@ -31,7 +31,7 @@ describe('changes', () => {
 
   test('simple-skipCache', async () => {
     g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
-    const sub = g.sub({ foo: { a: 1 } }, { skipCache: 1 });
+    const sub = g.sub(query({ foo: { a: 1 } }), { skipCache: 1 });
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
@@ -39,7 +39,7 @@ describe('changes', () => {
 
   test('simple', async () => {
     g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
-    const sub = g.sub({ foo: { a: 1 } });
+    const sub = g.sub(query({ foo: { a: 1 } }));
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
@@ -49,7 +49,7 @@ describe('changes', () => {
     g.onGet(() => ({ foo: { a: 2 }, bar: { b: 2 } }));
     g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
     g.onSub('/bar', mockStream([{ bar: { a: 7 } }, { bar: { b: 6 } }], 0, 10));
-    const sub = g.sub({ foo: { a: 1 }, bar: { b: 1 } }, { raw: true });
+    const sub = g.sub(query({ foo: { a: 1 }, bar: { b: 1 } }), { raw: true });
 
     expect((await sub.next()).value).toEqual({ foo: { a: 3 }, bar: { b: 2 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
@@ -71,7 +71,7 @@ describe('changes', () => {
     );
     g.onGet('/bar', () => ({ bar: { a: { x: 3 }, b: { x: 5 } } }));
 
-    const sub = g.sub({ foo: { x: 1 } }, { raw: true });
+    const sub = g.sub(query({ foo: { x: 1 } }), { raw: true });
     expect((await sub.next()).value).toEqual({
       foo: makeLink(['bar', 'a']),
       bar: { a: { x: 3 } },
@@ -91,7 +91,7 @@ describe('changes', () => {
     }));
     g.onSub('/foo', mockStream([{ foo: { b: null } }], 10, 10));
 
-    const sub = g.sub({ foo: { '3**': 1 } }, { raw: true });
+    const sub = g.sub(query({ foo: { '3**': 1 } }), { raw: true });
     expect((await sub.next()).value).toEqual({
       foo: { [PAGE_KEY]: ['', 'c'], a: 1, b: 2, c: 3 },
     });
@@ -111,7 +111,7 @@ describe('changes', () => {
     })();
     g.onSub('/foo', () => fooStream);
 
-    const sub = g.sub({ foo: { '3**': 1 } }, { raw: true });
+    const sub = g.sub(query({ foo: { '3**': 1 } }), { raw: true });
     expect((await sub.next()).value).toEqual({
       foo: { [PAGE_KEY]: ['', 'd'], a: 1, c: 3, d: 4 },
     });
@@ -133,7 +133,7 @@ describe('values', () => {
     g.onGet('/foo', () => ({ foo: { a: 3 } }));
     g.onSub('/foo', mockStream([{ foo: { a: 4 } }], 10));
 
-    const sub = g.sub({ foo: { a: 1 } });
+    const sub = g.sub(query({ foo: { a: 1 } }));
     expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
     expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
   });
@@ -160,7 +160,7 @@ describe('values', () => {
     );
     g.onGet(() => state);
 
-    const sub = g.sub({ foo: { x: 1 } });
+    const sub = g.sub(query({ foo: { x: 1 } }));
     expect((await sub.next()).value).toEqual({
       foo: { x: 5 },
     });
@@ -177,7 +177,7 @@ describe('values', () => {
     }));
     g.onSub('/foo', mockStream([{ foo: { b: null } }], 10, 10));
 
-    const sub = g.sub({ foo: { '3**': 1 } });
+    const sub = g.sub(query({ foo: { '3**': 1 } }));
     expect((await sub.next()).value).toEqual({
       foo: { a: 1, b: 2, c: 3 },
     });
@@ -200,7 +200,7 @@ describe('values', () => {
       ),
     );
 
-    const sub = g.sub({ foo: { '3**': 1 } });
+    const sub = g.sub(query({ foo: { '3**': 1 } }));
     expect((await sub.next()).value).toEqual({
       foo: { a: 1, b: 2, c: 3 },
     });
@@ -215,7 +215,7 @@ describe('values', () => {
     g.onGet('/foo', () => ({ foo: makePage({ a: 1, c: 3, d: 4, e: 5 }) }));
     g.onSub('/foo', mockStream([{ foo: { b: 2 } }], 10, 10));
 
-    const sub = g.sub({ foo: { '3**': 1 } });
+    const sub = g.sub(query({ foo: { '3**': 1 } }));
     expect((await sub.next()).value).toEqual({
       foo: { a: 1, c: 3, d: 4 },
     });
