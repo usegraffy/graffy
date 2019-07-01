@@ -1,9 +1,10 @@
 import Graffy from './Graffy';
-import { LINK_KEY, PAGE_KEY } from '@graffy/common';
+import { graph, query } from '@graffy/decorate';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 describe.skip('stream', () => {
+  // Skipped: This test needs to be updated to use async iterators
   let g;
   let timer;
   let close;
@@ -48,13 +49,13 @@ describe('changes', () => {
 
   test('object', async () => {
     g.onSub('/foo', async function*() {
-      yield { foo: { a: 3 } };
+      yield graph({ foo: { a: 3 } });
       await sleep(10);
-      yield { foo: { a: 4 } };
+      yield graph({ foo: { a: 4 } });
     });
     const sub = g.sub(query({ foo: { a: true } }));
 
-    expect((await sub.next()).value).toEqual({ foo: { a: 3 } });
-    expect((await sub.next()).value).toEqual({ foo: { a: 4 } });
+    expect((await sub.next()).value).toEqual(graph({ foo: { a: 3 } }));
+    expect((await sub.next()).value).toEqual(graph({ foo: { a: 4 } }));
   });
 });

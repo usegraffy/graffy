@@ -8,7 +8,7 @@ const mockStream = (payloads, delay, gap, state) => {
   let i = 0;
   return async function*() {
     if (delay) {
-      console.log('Stream yields undefined');
+      // console.log('Stream yields undefined');
       yield;
       sleep(delay);
       delay = 0;
@@ -43,7 +43,8 @@ describe('changes', () => {
     await expectNext(sub, { foo: { a: 4 } });
   });
 
-  test.only('simple', async () => {
+  test('simple', async () => {
+    g.onGet('/foo', () => graph({ foo: { a: 3 } }));
     g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
     const sub = g.sub(query({ foo: { a: 1 } }, 0));
 
@@ -59,9 +60,13 @@ describe('changes', () => {
       raw: true,
     });
 
+    console.log('before asserts');
     await expectNext(sub, { foo: { a: 3 }, bar: { b: 2 } });
+    console.log('assert1');
     await expectNext(sub, { foo: { a: 4 } });
+    console.log('assert2');
     await expectNext(sub, { bar: { b: 6 } });
+    console.log('assert3');
   });
 
   test('link', async () => {

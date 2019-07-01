@@ -88,11 +88,26 @@ function wrapGet(handle, path) {
     // by making all unknown values null.
 
     if (!unknown) return known;
+
+    // For the next query, we have to remove path from unknown, not  query.
+    // This is because the first handler might have returned links that require
+    // further handling.
     const nextQuery = remove(unknown, path);
     if (!nextQuery || !nextQuery.length) return known;
 
     const nextValue = await next(nextQuery);
     return merge(known, nextValue);
+  };
+}
+
+function wrapSub(handle, path) {
+  return (query, options, next) => {
+    const stream = handle(query, options);
+
+    const nextQuery = remove(query, path);
+    if (!nextQuery || !nextQuery.length) return stream;
+    const nextStream = next(nextQuery);
+    return mergeStreams([stream, nextStream]);
   };
 }
 
@@ -131,6 +146,7 @@ export default class Graffy {
     [path, handle] = ensurePath(1, this.path, path, handle);
     // handle = wrapSubHandler(handle);
     if (this.path) handle = shiftGen(handle, this.path);
+    handle = wrapSub(handle, path);
     this.on('sub', path, handle);
   }
 
@@ -153,11 +169,10 @@ export default class Graffy {
 
     const stream = resolve(this.handlers.sub, query, options);
 
-    console.log('Stream is', stream);
+    // console.log('Stream is', stream);
     try {
       for await (const value of stream) {
-        console.log(query, 'Yielding', value, options);
-        // options.raw = true;
+        // console.log(query, 'Yielding', value, options);
         yield value;
       }
     } catch (e) {

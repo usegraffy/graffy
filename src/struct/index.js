@@ -1,5 +1,6 @@
 export { default as merge } from './merge';
 export { default as slice } from './slice';
+export { default as sieve } from './sieve';
 export { isRange, isBranch, isLink, isOlder, isNewer } from './nodeTypes';
 export { wrap, unwrap, remove } from './path';
 
