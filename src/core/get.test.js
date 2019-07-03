@@ -1,5 +1,5 @@
 import Graffy from './Graffy';
-// import cache from '@graffy/cache';
+import fill from '@graffy/fill';
 import { page, link, graph, query, decorate } from '@graffy/decorate';
 // import { merge } from '@graffy/struct';
 
@@ -7,7 +7,7 @@ describe('get', () => {
   let g;
   beforeEach(() => {
     g = new Graffy();
-    // g.use(cache());
+    g.use(fill());
   });
 
   test('simple', async () => {
@@ -94,7 +94,10 @@ describe('get', () => {
         }),
       );
       g.use(graffy => {
-        graffy.onGet(resolver);
+        graffy.onGet((...args) => {
+          const res = resolver(...args);
+          return res;
+        });
       });
     });
 

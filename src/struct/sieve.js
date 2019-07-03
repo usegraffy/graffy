@@ -93,8 +93,8 @@ function updateNode(current, index, change, result) {
   if (isBranch(change) && isBranch(node)) {
     // Both are branches: Recursively merge children.
     const nextResult = [];
-    result.push({ ...change, children: nextResult });
     sieve(node.children, change.children, nextResult);
+    if (nextResult.length) result.push({ ...change, children: nextResult });
   } else if (isBranch(node)) {
     // Current node is a branch but the change is a leaf; if the branch
     // has newer children, ignore the change and keep only those children;

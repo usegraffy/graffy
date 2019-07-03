@@ -1,6 +1,6 @@
 import { makePath } from '@graffy/common';
 import mergeStreams from 'merge-async-iterators';
-import { slice, merge, wrap, unwrap, remove } from '@graffy/struct';
+import { merge, wrap, unwrap, remove } from '@graffy/struct';
 // import { decorate } from '@graffy/decorate';
 
 import resolve from './resolve';
@@ -82,21 +82,13 @@ function shiftGen(fn, path) {
 function wrapGet(handle, path) {
   return async (query, options, next) => {
     const value = await handle(query, options);
-    // console.log('Value is', value);
-    const { known, unknown } = slice(value, query);
-    // TODO: If unwrap(unknown, path) is not empty, cap this result set
-    // by making all unknown values null.
 
-    if (!unknown) return known;
+    // TODO: Perhaps cap (initialize with unknown)?
 
-    // For the next query, we have to remove path from unknown, not  query.
-    // This is because the first handler might have returned links that require
-    // further handling.
-    const nextQuery = remove(unknown, path);
-    if (!nextQuery || !nextQuery.length) return known;
-
+    const nextQuery = remove(query, path);
+    if (!nextQuery || !nextQuery.length) return value;
     const nextValue = await next(nextQuery);
-    return merge(known, nextValue);
+    return merge(value, nextValue);
   };
 }
 

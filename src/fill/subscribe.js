@@ -1,6 +1,24 @@
 import { merge, slice, sieve } from '@graffy/struct';
 import stream from '@graffy/stream';
 
+const debug = (graph = [], indent = '') =>
+  '\n' +
+  graph
+    .map(({ key, end, clock, children, ...props }) =>
+      [
+        indent,
+        key,
+        end ? `..${end}` : '',
+        ` ${clock} { `,
+        Object.keys(props)
+          .map(key => `${key}:${JSON.stringify(props[key])}`)
+          .join(' '),
+        children ? debug(children, indent + '  ') : '',
+        ' }',
+      ].join(''),
+    )
+    .join('\n');
+
 export default function subscribe(store, originalQuery, raw) {
   let push, end;
   let upstream;
@@ -11,7 +29,10 @@ export default function subscribe(store, originalQuery, raw) {
   resubscribe(originalQuery);
 
   return new stream((streamPush, streamEnd) => {
-    push = streamPush;
+    push = v => {
+      console.log('Push', debug(v));
+      streamPush(v);
+    };
     end = streamEnd;
     return unsubscribe;
   });
@@ -22,13 +43,21 @@ export default function subscribe(store, originalQuery, raw) {
     // TODO: Remove extraneous parts of the query.
     query.push(...unknown);
 
+    console.log('Resubscribing', debug(query));
+
     try {
-      upstream = store.sub(query, { skipLive: true });
+      upstream = store.sub(query, { skipFill: true });
       const { value } = await upstream.next();
+      if (value) unknown = slice(value, unknown).unknown;
       // if (done) throw Error('upstream.earlyend');
-      const initial = await store.get(unknown);
-      if (value) merge(initial, value);
-      putValue(initial);
+      console.log('Fetching unknown', debug(value), debug(unknown));
+      if (!unknown) {
+        putValue(value);
+      } else {
+        const initial = await store.get(unknown, { skipFill: true });
+        if (value) merge(initial, value);
+        putValue(initial);
+      }
     } catch (e) {
       error(e);
     }
@@ -46,12 +75,16 @@ export default function subscribe(store, originalQuery, raw) {
   }
 
   function putChange(change) {
-    console.log('PutChange', JSON.stringify(change));
+    console.log('PutChange', change && debug(change));
 
     if (typeof change !== 'undefined') merge(payload, sieve(data, change));
 
+    console.log('After sieve', debug(data));
+
     let { known, unknown, extraneous } = slice(data, originalQuery);
     data = known;
+
+    // console.log('After slice', debug(data), unknown && debug(unknown));
 
     if (unknown) {
       const changeParts = slice(change, unknown);
@@ -63,7 +96,7 @@ export default function subscribe(store, originalQuery, raw) {
     }
 
     // This is not an else; previous block might update unknown.
-    if (!unknown) {
+    if (!unknown && payload.length) {
       push(payload);
       payload = [];
     }
@@ -72,7 +105,7 @@ export default function subscribe(store, originalQuery, raw) {
   }
 
   function putValue(value) {
-    console.log('PutValue', JSON.stringify(value));
+    console.log('PutValue', debug(value));
 
     if (typeof value !== 'undefined') merge(data, value);
 

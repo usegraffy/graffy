@@ -1,5 +1,0 @@
-# Graffy Live
-
-Graffy module for turning subscriptions into live queries.
-
-See [Graffy documentation](https://aravindet.github.io/graffy/#/GraffyClient) for more.

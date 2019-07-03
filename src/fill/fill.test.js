@@ -3,6 +3,23 @@ import { page, link, graph, query, decorate } from '@graffy/decorate';
 import { merge } from '@graffy/struct';
 import live from './index.js';
 
+const debug = (graph, indent = '') =>
+  '\n' +
+  graph
+    .map(({ key, end, children, ...props }) =>
+      [
+        indent,
+        key,
+        end ? `..${end} { ` : ' { ',
+        Object.keys(props)
+          .map(key => `${key}:${JSON.stringify(props[key])}`)
+          .join(' '),
+        children ? debug(children, indent + '  ') : '',
+        ' }',
+      ].join(''),
+    )
+    .join('\n');
+
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const mockStream = (payloads, delay, gap, state) => {
   let i = 0;
@@ -14,17 +31,18 @@ const mockStream = (payloads, delay, gap, state) => {
       delay = 0;
     }
     while (i < payloads.length) {
-      console.log('Stream yields', payloads[i]);
       const payload = graph(payloads[i]);
+      // console.log('Payload', payload);
       if (gap) sleep(gap);
       if (state) merge(state, payload);
       i++;
+      // console.log('mockStream yields', debug(payload));
       yield payload;
     }
   };
 };
 const expectNext = async (sub, expected) => {
-  expect(decorate((await sub.next()).value)).toEqual(expected);
+  expect((await sub.next()).value).toEqual(graph(expected));
 };
 
 describe('changes', () => {
@@ -35,9 +53,9 @@ describe('changes', () => {
     g.use(live());
   });
 
-  test('simple-skipLive', async () => {
+  test('simple-skipFill', async () => {
     g.onSub('/foo', mockStream([{ foo: { a: 3 } }, { foo: { a: 4 } }], 0, 10));
-    const sub = g.sub(query({ foo: { a: 1 } }, 0), { skipLive: 1 });
+    const sub = g.sub(query({ foo: { a: 1 } }, 0), { skipFill: 1 });
 
     await expectNext(sub, { foo: { a: 3 } });
     await expectNext(sub, { foo: { a: 4 } });
@@ -60,16 +78,12 @@ describe('changes', () => {
       raw: true,
     });
 
-    console.log('before asserts');
     await expectNext(sub, { foo: { a: 3 }, bar: { b: 2 } });
-    console.log('assert1');
     await expectNext(sub, { foo: { a: 4 } });
-    console.log('assert2');
     await expectNext(sub, { bar: { b: 6 } });
-    console.log('assert3');
   });
 
-  test('link', async () => {
+  test.only('link', async () => {
     g.onSub(
       '/foo',
       mockStream(
@@ -86,7 +100,9 @@ describe('changes', () => {
 
     const sub = g.sub(query({ foo: { x: 1 } }, 0), { raw: true });
     await expectNext(sub, { foo: link(['bar', 'a']), bar: { a: { x: 3 } } });
+    console.log('First assert passed');
     await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 5 } } });
+    console.log('Second assert passed');
 
     // The /bar/a update should not be sent.
     await expectNext(sub, { bar: { b: { x: 3 } } });

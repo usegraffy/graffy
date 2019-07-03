@@ -26,6 +26,7 @@ export function unwrap(children, path) {
 export function remove(children, path) {
   if (!Array.isArray(path)) throw Error('del.path_not_array ' + path);
   if (!children) return null; // This path does not exist.
+  if (!path.length) return []; // Remove everything.
   const key = path[0];
   const ix = getIndex(children, key);
   const node = children[ix];
