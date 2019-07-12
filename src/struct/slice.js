@@ -20,11 +20,6 @@ class Result {
     this.unknown.push(node);
   }
 
-  // addSieve(node) {
-  //   this.sieve = this.sieve || [];
-  //   merge(this.sieve, [node]);
-  // }
-
   addLinked(children) {
     if (this.root !== this) return this.root.addLinked(children);
     this.linked = this.linked || [];
@@ -61,28 +56,22 @@ function sliceNode(graph, query, result) {
   if (!graph || graph.key > key || isOlder(graph, clock)) {
     // The node found doesn't match the query or it's too old.
     result.addUnknown(query);
-    // result.addSieve(query);
   } else if (isBranch(graph) && isBranch(query)) {
     // Both sides are branches; recurse into them.
     const { known, unknown } = slice(graph.children, query.children, root);
     if (known) result.addKnown({ ...graph, children: known });
     if (unknown) result.addUnknown({ ...query, children: unknown });
-    // if (sieve) result.addSieve({ ...query, children: sieve });
   } else if (isLink(graph) && isBranch(query)) {
     result.addKnown(graph);
-    // result.addSieve(query);
     result.addLinked(wrap(query.children, graph.path, clock));
   } else if (isBranch(graph) || isBranch(query)) {
     // One side is a branch while the other is a leaf; throw error.
     throw new Error('slice.leaf_branch_mismatch');
   } else if (isRange(graph)) {
-    // result.addSieve(query);
     result.addKnown({ key, end: key, clock: graph.clock });
   } else {
-    // result.addSieve(query);
     result.addKnown(graph);
   }
-  return result;
 }
 
 export function sliceRange(graph, query, result) {
@@ -97,10 +86,8 @@ export function sliceRange(graph, query, result) {
         sliceNode(node, { ...query, key }, result);
         count--;
       }
-
       key = keyAfter(node.end || node.key);
     }
-    // result.addSieve({ ...query, end: key, count: Infinity });
   } else {
     for (let i = getLastIndex(graph, end) - 1; end >= key && count < 0; i--) {
       const node = graph[i];
@@ -113,12 +100,10 @@ export function sliceRange(graph, query, result) {
       }
       end = keyBefore(node.key);
     }
-    // result.addSieve({ ...query, key: end, count: Infinity });
   }
   if (count && key < end) {
     const unknown = { ...query, key, end, count };
     result.addUnknown(unknown);
-    // result.addSieve(unknown);
   }
 }
 

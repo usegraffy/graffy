@@ -14,8 +14,8 @@ GraphRange    :=  { key, end, clock }
 Query         :=  [ QueryNode | QueryRange ]
 QueryNode     :=  QueryBranch | QueryLeaf
 QueryBranch   :=  { key, clock, children: Query }
-QueryLeaf     :=  { key, sum, clock }
-QueryRange    :=  { key, end, count, clock, (sum | children) }
+QueryLeaf     :=  { key, value, clock }
+QueryRange    :=  { key, end, count, clock, (value | children) }
 
 
 Notes:
@@ -75,9 +75,9 @@ Returns a query that matches any change that may modify known parts of the graph
 [
   { key: 'postsByTime', children: [
     { key: '', end: '2000', count: 10, children: [
-      { key: 'title', sum: 1, clock: 0 },
+      { key: 'title', value: 1, clock: 0 },
       { key: 'author', children: [
-        { key: 'name', sum: 1, clock: 0}
+        { key: 'name', value: 1, clock: 0}
       ] }
     ] }
   ] }

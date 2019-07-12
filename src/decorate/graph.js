@@ -7,9 +7,10 @@ function makeGraph(key, value, clock) {
   } else if (Array.isArray(value)) {
     // This has already been converted to a CRDT graph
     return { key, clock, children: value };
-    // } else if (value === null) {
-    //   // This is a single key known to be missing.
-    //   return { key, end: key, clock };
+  } else if (value === null) {
+    // This is a single key known to be missing.
+    console.log('Graph with null');
+    return { key, end: key, clock };
   } else if (typeof value === 'object' && value) {
     return {
       key,

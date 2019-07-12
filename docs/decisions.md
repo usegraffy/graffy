@@ -16,6 +16,13 @@ Consider:
 
 These could be reopened if there's new information.
 
+## How to distinguish between a live query and a change susbcription.
+
+In live queries, the first payload is the current state of the backend matching the query.
+
+In change subscriptions, the first payload must be undefined.
+
+
 ## Should there be a separate onSub() callback?
 
 No: The onGet() handler receives a cancellation signal as argument. The signal is invoked when the subscriber leaves. The handler is expected to return the initial state and subsequently call grue.put() whenever there are changes.

@@ -52,7 +52,7 @@
 const normalCompletion = Promise.resolve({ value: void 0, done: true });
 const HIGH_WATER_MARK = 255; // Number of pending payloads
 
-export default function stream(init) {
+export default function makeStream(init) {
   const payloads = [];
   const requests = [];
   let complete;

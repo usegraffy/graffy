@@ -22,7 +22,7 @@ function makeQuery(value, clock) {
         .map(key => ({ key, ...makeQuery(value[key], clock) })),
     };
   } else {
-    return { clock, sum: typeof value === 'number' ? value : 1 };
+    return { clock, value: typeof value === 'number' ? value : 1 };
   }
 }
 

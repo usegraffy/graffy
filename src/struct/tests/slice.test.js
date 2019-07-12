@@ -14,9 +14,9 @@ describe('slice', () => {
           { key: 'fuz', value: 43, clock: 3 },
         ],
         [
-          { key: 'flo', sum: 1, clock: 2 },
-          { key: 'foo', sum: 1, clock: 2 },
-          { key: 'fub', sum: 1, clock: 2 },
+          { key: 'flo', value: 1, clock: 2 },
+          { key: 'foo', value: 1, clock: 2 },
+          { key: 'fub', value: 1, clock: 2 },
         ],
       ),
     ).toEqual({
@@ -24,7 +24,7 @@ describe('slice', () => {
         { key: 'foo', value: 42, clock: 3 },
         { key: 'fub', end: 'fub', clock: 3 },
       ],
-      unknown: [{ key: 'flo', sum: 1, clock: 2 }],
+      unknown: [{ key: 'flo', value: 1, clock: 2 }],
     });
   });
 
@@ -40,7 +40,7 @@ describe('slice', () => {
             ],
           },
         ],
-        [{ key: 'bar', sum: 1, clock: 2 }],
+        [{ key: 'bar', value: 1, clock: 2 }],
       ),
     ).toThrow();
   });
@@ -219,8 +219,8 @@ describe('link', () => {
             key: 'bat',
             clock: 2,
             children: [
-              { key: 'flo', sum: 1, clock: 2 },
-              { key: 'foo', sum: 1, clock: 2 },
+              { key: 'flo', value: 1, clock: 2 },
+              { key: 'foo', value: 1, clock: 2 },
             ],
           },
         ],
@@ -231,7 +231,7 @@ describe('link', () => {
         { key: 'bat', path: ['bar'], clock: 3 },
       ],
       unknown: [
-        { key: 'bar', clock: 2, children: [{ key: 'flo', sum: 1, clock: 2 }] },
+        { key: 'bar', clock: 2, children: [{ key: 'flo', value: 1, clock: 2 }] },
       ],
     });
   });
@@ -245,8 +245,8 @@ describe('link', () => {
             key: 'bat',
             clock: 2,
             children: [
-              { key: 'flo', sum: 1, clock: 2 },
-              { key: 'foo', sum: 1, clock: 2 },
+              { key: 'flo', value: 1, clock: 2 },
+              { key: 'foo', value: 1, clock: 2 },
             ],
           },
         ],
@@ -258,8 +258,8 @@ describe('link', () => {
           key: 'bar',
           clock: 2,
           children: [
-            { key: 'flo', sum: 1, clock: 2 },
-            { key: 'foo', sum: 1, clock: 2 },
+            { key: 'flo', value: 1, clock: 2 },
+            { key: 'foo', value: 1, clock: 2 },
           ],
         },
       ],
@@ -305,8 +305,8 @@ describe('clock', () => {
             key: 'bat',
             clock: 2,
             children: [
-              { key: 'flo', sum: 1, clock: 2 },
-              { key: 'foo', sum: 1, clock: 2 },
+              { key: 'flo', value: 1, clock: 2 },
+              { key: 'foo', value: 1, clock: 2 },
             ],
           },
         ],
@@ -317,8 +317,8 @@ describe('clock', () => {
           key: 'bat',
           clock: 2,
           children: [
-            { key: 'flo', sum: 1, clock: 2 },
-            { key: 'foo', sum: 1, clock: 2 },
+            { key: 'flo', value: 1, clock: 2 },
+            { key: 'foo', value: 1, clock: 2 },
           ],
         },
       ],
