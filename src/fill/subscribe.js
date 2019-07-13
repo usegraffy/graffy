@@ -63,7 +63,7 @@ export default function subscribe(store, originalQuery, raw) {
     if (typeof value === 'undefined') return;
     // console.log('PutValue', debug(value), data && debug(data));
 
-    if (isChange && raw) {
+    if (isChange) {
       const sieved = sieve(data, value);
       // console.log('After sieve', debug(sieved), debug(data));
       if (!sieved.length) return;
@@ -81,7 +81,7 @@ export default function subscribe(store, originalQuery, raw) {
     // console.log('After slice', debug(data), unknown && debug(unknown));
     // console.log('Payload and value', debug(payload), value && debug(value));
 
-    if (isChange && raw && value && unknown) {
+    if (isChange && value && unknown) {
       // The sieve may have removed some necessary data (that we weren't aware
       // was necessary). Get it back.
 
@@ -89,7 +89,7 @@ export default function subscribe(store, originalQuery, raw) {
       const valueParts = slice(value, unknown);
       if (valueParts.known) {
         merge(data, valueParts.known);
-        merge(payload, valueParts.known);
+        if (raw) merge(payload, valueParts.known);
         unknown = valueParts.unknown;
       }
     }

@@ -5,22 +5,20 @@ export default function mockBackend(options = {}) {
   const state = [];
   const listeners = new Set();
 
-  function get() {
-    return state;
-  }
+  const get = jest.fn(() => state);
 
-  function sub() {
-    return makeStream((push, _end) => {
+  const sub = jest.fn(() =>
+    makeStream((push, _end) => {
       listeners.add(push);
       push(options.liveQuery ? state : undefined);
       return () => listeners.delete(push);
-    });
-  }
+    }),
+  );
 
-  function put(change) {
+  const put = jest.fn(change => {
     merge(state, change);
     for (const push of listeners) push(change);
-  }
+  });
 
   return {
     get,

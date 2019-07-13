@@ -9,7 +9,6 @@ function makeGraph(key, value, clock) {
     return { key, clock, children: value };
   } else if (value === null) {
     // This is a single key known to be missing.
-    console.log('Graph with null');
     return { key, end: key, clock };
   } else if (typeof value === 'object' && value) {
     return {

@@ -19,7 +19,7 @@ export function insertRange(current, change, result, start = 0) {
 
   if (
     keyIx === endIx &&
-    !(current[keyIx].key <= key && current[keyIx].end >= end)
+    !(current[keyIx] && current[keyIx].key <= key && current[keyIx].end >= end)
   ) {
     // This range does not overlap with any existing data. Ignore it.
     return keyIx;
