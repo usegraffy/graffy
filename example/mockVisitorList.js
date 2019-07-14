@@ -1,24 +1,22 @@
 import faker from 'faker';
-import { makeLink, makePage } from '@graffy/common';
+import { graph, link, page } from '@graffy/decorate';
+import { merge, unwrap } from '@graffy/struct';
 
-const visitors = {};
-const visitorsByTime = makePage({});
-const freeIds = [];
+import { debug } from '@graffy/testing';
+
+const state = graph({ visitors: {}, visitorsByTime: page({}) });
+const freeIds = new Set();
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function(g) {
-  g.onGet('/visitors', () => {
-    // console.log('visitors', query);
-    return { visitors };
-  });
-
-  g.onGet('/visitorsByTime', () => {
-    // console.log('visitorsByTime', JSON.stringify(query, null, 2));
-    return { visitorsByTime };
+  g.onGet(() => {
+    // console.log('Get: Returning', debug(state));
+    return state;
   });
 
   g.onSub(async function*() {
+    yield;
     while (true) {
       ts = Date.now();
       yield simulate();
@@ -34,6 +32,8 @@ function simulate() {
       : Math.random() < 0.5
       ? simulateEnter()
       : simulateLeave();
+
+  merge(state, change);
   return change;
 }
 
@@ -41,7 +41,7 @@ function visitorInfo() {
   return {
     name: faker.internet.userName(),
     avatar: faker.internet.avatar(),
-    pageviews: makePage({
+    pageviews: page({
       [ts]: faker.internet.url(),
     }),
   };
@@ -51,50 +51,67 @@ let ts;
 let id = 1;
 
 function simulateEnter() {
-  let addId = freeIds.length ? freeIds.pop() : id++;
-
-  visitors[addId] = { id: addId, ts, ...visitorInfo() };
-  visitorsByTime[ts] = makeLink(['visitors', addId]);
+  let addId;
+  if (freeIds.size) {
+    for (const id of freeIds) {
+      addId = id;
+      freeIds.delete(addId);
+      break;
+    }
+  } else {
+    addId = id++;
+  }
+  addId = '' + addId;
 
   // console.log('create', addId, ts);
-  return {
-    visitors: { [addId]: visitors[addId] },
-    visitorsByTime: { [ts]: visitorsByTime[ts] },
-  };
+  return graph(
+    {
+      visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
+      visitorsByTime: { [ts]: link(['visitors', addId]) },
+    },
+    ts,
+  );
 }
 
 function simulateLeave() {
   let delId;
   do {
     delId = Math.floor(Math.random() * id);
-  } while (!visitors[delId]);
-  const delTs = visitors[delId].ts;
-  delete visitors[delId];
-  delete visitorsByTime[delTs];
-  freeIds.push(delId);
+  } while (freeIds.has(delId));
+  delId = '' + delId;
+
+  const delTs = unwrap(state, ['visitors', delId, 'ts']);
+
+  freeIds.add(delId);
   // console.log('delete', delId, delTs);
-  return {
-    visitors: { [delId]: null },
-    visitorsByTime: { [delTs]: null },
-  };
+  return graph(
+    {
+      visitors: { [delId]: null },
+      visitorsByTime: { [delTs]: null },
+    },
+    ts,
+  );
 }
 
 function simulateUpdate() {
   let upId;
   do {
     upId = Math.floor(Math.random() * id);
-  } while (!visitors[upId]);
+  } while (freeIds.has(upId));
+  upId = '' + upId;
   const url = faker.internet.url();
-  visitors[upId].pageviews.ts = url;
   // console.log('updated', upId);
-  return { visitors: { [upId]: { pageviews: { [ts]: url } } } };
+  return graph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
 }
 
 ts = Date.now();
 while (id < 200) {
-  simulateEnter();
+  const change = simulateEnter();
+  merge(state, change);
   ts -= Math.floor(1 + Math.random() * 100);
 }
+
+// console.log('Done init', debug(state));
 
 // console.log(visitors);
 

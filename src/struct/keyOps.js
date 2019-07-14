@@ -1,5 +1,5 @@
 export function keyBefore(key) {
-  if (l === '') return key;
+  if (key === '') return key;
   const l = key.length - 1;
   return key.charCodeAt(l) === 0
     ? key.substr(0, l)

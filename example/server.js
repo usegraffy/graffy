@@ -1,12 +1,17 @@
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 
 import Graffy from '@graffy/core';
-import GraffyCache from '@graffy/cache';
+import GraffyFill from '@graffy/fill';
+// import GraffyCache from '@graffy/cache';
 import GraffyServer from '@graffy/server';
 import mock from './mockVisitorList';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const g = new Graffy();
-g.use(GraffyCache());
+g.use(GraffyFill());
 g.use(mock);
 
 const app = express();

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { encRange, getPage } from '@graffy/common';
+// import { encRange, getPage } from '@graffy/common';
+import { query, decorate } from '@graffy/decorate';
 import { useGraffy } from '@graffy/react';
 
 import VisitorList from './VisitorList';
@@ -7,23 +8,26 @@ import Pagination from './Pagination';
 import Spinner from './Spinner';
 
 function getQuery(range) {
-  return {
-    visitorsByTime: {
-      [encRange(range)]: {
+  return query({
+    visitorsByTime: [
+      range,
+      {
         id: true,
         ts: true,
         name: true,
         avatar: true,
-        pageviews: { [encRange({ last: 3 })]: true },
+        pageviews: [{ last: 3 }, true],
       },
-    },
-  };
+    ],
+  });
 }
 
 export default function App() {
-  const [range, setRange] = useState({ first: 30 });
+  const [range, setRange] = useState({ first: 3 });
   const query = getQuery(range);
-  const [loading, data] = useGraffy(query);
+  const [loading, result] = useGraffy(query);
+
+  const data = result && decorate(result);
 
   if (!data || !data.visitorsByTime) {
     // We are still loading
@@ -31,7 +35,8 @@ export default function App() {
   }
 
   // Extract page info, this is used in several places
-  const { start, end, hasNext, hasPrev } = getPage(data.visitorsByTime);
+  // const { start, end, hasNext, hasPrev } = getPage(data.visitorsByTime);
+  const [start, end, hasNext, hasPrev] = ['', '', true, true];
 
   const visitors = Object.keys(data.visitorsByTime)
     .sort()

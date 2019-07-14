@@ -23,7 +23,7 @@ export default function subscribe(store, originalQuery, raw) {
   async function resubscribe(unknown, _extraneous) {
     try {
       const changed = add(query, unknown);
-      // console.log('Resubscribe', debug(unknown), changed);
+      // console.log('Resubscribe');
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
@@ -39,9 +39,11 @@ export default function subscribe(store, originalQuery, raw) {
         // TODO: Get a clock corresponding to the subscription's start
         // and verify that the store.get() response is newer.
         // console.log('Making query for ', debug(unknown));
+        console.log('Made query', debug(unknown));
         value = await store.get(unknown, { skipFill: true });
-        // console.log('Got query result', debug(value));
+        // console.log('Initial result', debug(value));
         value = slice(value, unknown).known;
+        console.log('Got query result', debug(value));
       }
       putValue(value, false);
     } catch (e) {
@@ -52,6 +54,7 @@ export default function subscribe(store, originalQuery, raw) {
 
   async function putStream(stream) {
     // TODO: Backpressure: pause pulling if downstream listener is saturated.
+    console.log('Before sinking stream', debug(data));
     try {
       for await (const value of stream) putValue(value, true);
     } catch (e) {
@@ -61,11 +64,11 @@ export default function subscribe(store, originalQuery, raw) {
 
   function putValue(value, isChange) {
     if (typeof value === 'undefined') return;
-    // console.log('PutValue', debug(value), data && debug(data));
+    // console.log('PutValue', debug(value));
 
     if (isChange) {
       const sieved = sieve(data, value);
-      // console.log('After sieve', debug(sieved), debug(data));
+      // console.log('After sieve', debug(sieved));
       if (!sieved.length) return;
       merge(payload, sieved);
     } else {
@@ -97,11 +100,7 @@ export default function subscribe(store, originalQuery, raw) {
     // This is not an else; previous block might update unknown.
     if (!unknown) {
       // console.log('Pushing', payload);
-      if (raw) {
-        push(payload);
-      } else {
-        push(data);
-      }
+      push(raw ? payload : data);
       payload = [];
     }
 

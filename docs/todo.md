@@ -5,10 +5,7 @@ Bugs/missing
 
 # Todo
 
-- [ ] Update documentation to cover cache, sub/onSub
-- [ ] Update client, server, react to use sub/onSub
-- [ ] Fix packaging and publishing
-- [ ] CRDT for graphs
+- [ ] Replace getIndex with find in struct.
 - [ ] Cache eviction
 - [ ] Error propagation
 - [ ] Resumable subscriptions in client/server

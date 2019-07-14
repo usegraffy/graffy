@@ -56,6 +56,9 @@ function sliceNode(graph, query, result) {
   if (!graph || graph.key > key || isOlder(graph, clock)) {
     // The node found doesn't match the query or it's too old.
     result.addUnknown(query);
+  } else if (isRange(graph)) {
+    // The graph is indicating that this value was deleted.
+    result.addKnown(graph);
   } else if (isBranch(graph) && isBranch(query)) {
     // Both sides are branches; recurse into them.
     const { known, unknown } = slice(graph.children, query.children, root);
@@ -66,6 +69,8 @@ function sliceNode(graph, query, result) {
     result.addLinked(wrap(query.children, graph.path, clock));
   } else if (isBranch(graph) || isBranch(query)) {
     // One side is a branch while the other is a leaf; throw error.
+    console.log('Graph', graph);
+    console.log('Query', query);
     throw new Error('slice.leaf_branch_mismatch');
   } else if (isRange(graph)) {
     result.addKnown({ key, end: key, clock: graph.clock });

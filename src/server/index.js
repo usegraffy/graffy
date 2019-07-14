@@ -3,9 +3,8 @@
   and should be written using CommonJS modules.
 */
 
-import getQuery from './getQuery';
-
-const url = require('url');
+import url from 'url';
+import { decodeUrl } from '@graffy/decorate';
 
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');
@@ -13,7 +12,7 @@ export default function server(store) {
     if (req.method === 'GET') {
       try {
         const parsed = url.parse(req.url, true);
-        const query = getQuery(parsed.query.include);
+        const query = decodeUrl(parsed.query.q);
 
         if (req.headers['accept'] === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');

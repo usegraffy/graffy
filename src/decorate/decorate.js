@@ -30,7 +30,7 @@ export default function decorate(graph, links = [] /* aliases */) {
 }
 
 function decorateChildren(graph, links) {
-  const isPage = graph.some(node => isRange(node));
+  const isPage = graph.some(node => isRange(node) && node.key !== node.end);
   if (isPage) {
     return decoratePage(graph, links);
   } else {

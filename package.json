@@ -9,7 +9,7 @@
   "scripts": {
     "test": "jest",
     "release": "./scripts/build",
-    "server": "NODE_ENV=test babel-node example/server.js",
+    "server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",
     "client": "rollup -c",
     "example": "yarn client && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
