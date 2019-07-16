@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import { encRange, getPage } from '@graffy/common';
+import { keyBefore, keyAfter } from '@graffy/struct';
 import { query, decorate } from '@graffy/decorate';
 import { useGraffy } from '@graffy/react';
 
@@ -23,7 +23,7 @@ function getQuery(range) {
 }
 
 export default function App() {
-  const [range, setRange] = useState({ first: 3 });
+  const [range, setRange] = useState({ first: 5 });
   const query = getQuery(range);
   const [loading, result] = useGraffy(query);
 
@@ -35,21 +35,12 @@ export default function App() {
   }
 
   // Extract page info, this is used in several places
-  // const { start, end, hasNext, hasPrev } = getPage(data.visitorsByTime);
-  const [start, end, hasNext, hasPrev] = ['', '', true, true];
+  const { start, end, hasNext, hasPrev } = data.visitorsByTime.pageInfo;
+  // const [start, end, hasNext, hasPrev] = ['', '', true, true];
 
-  const visitors = Object.keys(data.visitorsByTime)
-    .sort()
-    .map(ts => data.visitorsByTime[ts]);
+  const visitors = data.visitorsByTime;
 
-  const anchor =
-    typeof range.after !== 'undefined'
-      ? visitors[0].id
-      : typeof range.before !== 'undefined'
-      ? visitors[visitors.length - 1].id
-      : null;
-
-  if (!loading && (!hasNext || !hasPrev) && anchor) {
+  if (!loading && (!hasNext || !hasPrev)) {
     // We have reached the beginning or end of the list while paginating in
     // the wrong direction; just flip the query to the first or last 30.
     // setRange({ [range.first ? 'last' : 'first']: 30 });
@@ -59,11 +50,13 @@ export default function App() {
   return (
     <div className="App">
       <Pagination
-        onPrev={hasPrev && (() => setRange({ last: 31, before: start }))}
+        onPrev={
+          hasPrev && (() => setRange({ last: 5, before: keyBefore(start) }))
+        }
         count={visitors.length}
-        onNext={hasNext && (() => setRange({ first: 31, after: end }))}
+        onNext={hasNext && (() => setRange({ first: 5, after: keyAfter(end) }))}
       />
-      <VisitorList visitors={visitors} anchor={anchor} />
+      <VisitorList visitors={visitors} />
       {loading && <Spinner />}
     </div>
   );

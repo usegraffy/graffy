@@ -1,4 +1,5 @@
 import { isRange, isBranch, isLink } from '@graffy/struct';
+import pageInfo from './pageInfo';
 
 const LINK_PLACEHOLDER = Symbol();
 
@@ -53,6 +54,8 @@ function decoratePage(graph, links) {
     }
     result.push(node.value);
   }
+
+  result.pageInfo = pageInfo(graph);
   return result;
 }
 

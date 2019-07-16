@@ -12,17 +12,17 @@ Let's take a look at our blog example again.
 }
 ```
 
-It's straightforward to get a post when you know its ID, but that's pretty limiting. More realistically, we might want to fetch, say, 10 posts at a time. We can specify that in the query using a `slice()`.
+It's straightforward to get a post when you know its ID, but that's pretty limiting. More realistically, we might want to fetch, say, 10 posts at a time. We can specify that in the query using an array.
 
 ### Slices
 
 ```js
 graffy.fetch({
-  posts: slice({ first: 10 }, {
+  posts: [{ first: 10 }, {
     title: true,
     author: { name: true, avatar: true },
     date: true
-  })
+  }]
 });
 ```
 

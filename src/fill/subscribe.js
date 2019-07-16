@@ -39,11 +39,11 @@ export default function subscribe(store, originalQuery, raw) {
         // TODO: Get a clock corresponding to the subscription's start
         // and verify that the store.get() response is newer.
         // console.log('Making query for ', debug(unknown));
-        console.log('Made query', debug(unknown));
+        // console.log('Made query', debug(unknown));
         value = await store.get(unknown, { skipFill: true });
         // console.log('Initial result', debug(value));
         value = slice(value, unknown).known;
-        console.log('Got query result', debug(value));
+        // console.log('Got query result', debug(value));
       }
       putValue(value, false);
     } catch (e) {
@@ -54,7 +54,7 @@ export default function subscribe(store, originalQuery, raw) {
 
   async function putStream(stream) {
     // TODO: Backpressure: pause pulling if downstream listener is saturated.
-    console.log('Before sinking stream', debug(data));
+    // console.log('Before sinking stream', debug(data));
     try {
       for await (const value of stream) putValue(value, true);
     } catch (e) {

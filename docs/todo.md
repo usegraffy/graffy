@@ -5,7 +5,8 @@ Bugs/missing
 
 # Todo
 
-- [ ] Replace getIndex with find in struct.
+- [ ] Replace getIndex() with find() in struct
+- [ ] Alias support
 - [ ] Cache eviction
 - [ ] Error propagation
 - [ ] Resumable subscriptions in client/server
