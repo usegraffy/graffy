@@ -1,7 +1,7 @@
 import Graffy from '@graffy/core';
 import { page, link, graph, query } from '@graffy/decorate';
 import { mockBackend, debug } from '@graffy/testing';
-import live from './index.js';
+import fill from './index.js';
 
 const expectNext = async (sub, expected, clock) => {
   expect((await sub.next()).value).toEqual(graph(expected, clock));
@@ -13,7 +13,7 @@ describe('changes', () => {
 
   beforeEach(() => {
     g = new Graffy();
-    g.use(live());
+    g.use(fill());
     backend = mockBackend();
     g.use(backend.middleware);
   });
@@ -111,7 +111,7 @@ describe('values', () => {
 
   beforeEach(() => {
     g = new Graffy();
-    g.use(live());
+    g.use(fill());
     backend = mockBackend();
     g.use(backend.middleware);
   });

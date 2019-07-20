@@ -3,8 +3,8 @@ import subscribe from './subscribe';
 
 const MAX_RECURSIONS = 10;
 
-export default function live(store) {
-  if (!store) return live; // This is for people who .use(live())
+export default function fill(store) {
+  if (!store) return fill; // This is for people who .use(fill())
 
   store.on('get', [], async function(query, options, next) {
     let value = await next(query);

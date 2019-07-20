@@ -20,7 +20,7 @@ export function unwrap(children, path) {
     if (!node || node.key > key) return undefined; // We lack knowledge.
     if (isRange(node)) return null; // This is known to be null.
   }
-  return node.children || true;
+  return node.children || node.value;
 }
 
 export function remove(children, path) {

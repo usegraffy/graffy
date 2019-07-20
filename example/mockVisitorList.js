@@ -1,13 +1,15 @@
 import faker from 'faker';
 import { graph, link, page } from '@graffy/decorate';
 import { merge, unwrap } from '@graffy/struct';
+import makeStream from '@graffy/stream';
 
-import { debug } from '@graffy/testing';
+// import { debug } from '@graffy/testing';
 
 const state = graph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
-
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const listeners = new Set();
 
 export default function(g) {
   g.onGet(() => {
@@ -15,15 +17,34 @@ export default function(g) {
     return state;
   });
 
-  g.onSub(async function*() {
-    yield;
-    while (true) {
-      ts = Date.now();
-      yield simulate();
-      await sleep(1 + Math.random() * 100);
-    }
-  });
+  g.onSub(() =>
+    makeStream((push, _end) => {
+      listeners.add(push);
+      push(undefined);
+      return () => listeners.delete(push);
+    }),
+  );
 }
+
+let ts = Date.now();
+let id = 0;
+
+while (id < 200) {
+  const change = simulateEnter();
+  merge(state, change);
+  ts -= Math.floor(1 + Math.random() * 100);
+}
+
+(async function() {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    ts = Date.now();
+    const change = simulate();
+    for (const push of listeners) push(change);
+    await sleep(10);
+    // await sleep(1 + Math.random() * 100);
+  }
+})();
 
 function simulate() {
   const change =
@@ -47,9 +68,6 @@ function visitorInfo() {
   };
 }
 
-let ts;
-let id = 1;
-
 function simulateEnter() {
   let addId;
   if (freeIds.size) {
@@ -63,7 +81,7 @@ function simulateEnter() {
   }
   addId = '' + addId;
 
-  // console.log('create', addId, ts);
+  console.log(ts, 'create', addId);
   return graph(
     {
       visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
@@ -78,12 +96,13 @@ function simulateLeave() {
   do {
     delId = Math.floor(Math.random() * id);
   } while (freeIds.has(delId));
+  freeIds.add(delId);
   delId = '' + delId;
 
   const delTs = unwrap(state, ['visitors', delId, 'ts']);
+  // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
-  freeIds.add(delId);
-  // console.log('delete', delId, delTs);
+  console.log(ts, 'delete', delId, delTs);
   return graph(
     {
       visitors: { [delId]: null },
@@ -103,21 +122,3 @@ function simulateUpdate() {
   // console.log('updated', upId);
   return graph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
 }
-
-ts = Date.now();
-while (id < 200) {
-  const change = simulateEnter();
-  merge(state, change);
-  ts -= Math.floor(1 + Math.random() * 100);
-}
-
-// console.log('Done init', debug(state));
-
-// console.log(visitors);
-
-// --- for testing
-
-// setInterval(() => {
-//   ts = Date.now();
-//   simulate();
-// }, 1 + Math.random() * 1000);

@@ -7,6 +7,8 @@ import VisitorList from './VisitorList';
 import Pagination from './Pagination';
 import Spinner from './Spinner';
 
+const PAGE_SIZE = 30;
+
 function getQuery(range) {
   return query({
     visitorsByTime: [
@@ -23,7 +25,7 @@ function getQuery(range) {
 }
 
 export default function App() {
-  const [range, setRange] = useState({ first: 5 });
+  const [range, setRange] = useState({ first: PAGE_SIZE });
   const query = getQuery(range);
   const [loading, result] = useGraffy(query);
 
@@ -51,10 +53,14 @@ export default function App() {
     <div className="App">
       <Pagination
         onPrev={
-          hasPrev && (() => setRange({ last: 5, before: keyBefore(start) }))
+          hasPrev &&
+          (() => setRange({ last: PAGE_SIZE, before: keyBefore(start) }))
         }
         count={visitors.length}
-        onNext={hasNext && (() => setRange({ first: 5, after: keyAfter(end) }))}
+        onNext={
+          hasNext &&
+          (() => setRange({ first: PAGE_SIZE, after: keyAfter(end) }))
+        }
       />
       <VisitorList visitors={visitors} />
       {loading && <Spinner />}
