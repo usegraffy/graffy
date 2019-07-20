@@ -1,5 +1,5 @@
 import Graffy from '@graffy/core';
-import { page, link, graph, query } from '@graffy/decorate';
+import { page, link, graph, query } from '@graffy/common';
 import { mockBackend, debug } from '@graffy/testing';
 import fill from './index.js';
 

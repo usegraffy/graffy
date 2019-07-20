@@ -4,7 +4,7 @@
 */
 
 import url from 'url';
-import { decodeUrl } from '@graffy/decorate';
+import { decodeUrl } from '@graffy/common';
 
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');

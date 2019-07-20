@@ -1,6 +1,6 @@
-import { merge, slice, sieve, add } from '@graffy/struct';
-import stream from '@graffy/stream';
-import { debug } from '@graffy/testing';
+import { merge, slice, sieve, add } from '@graffy/common';
+import { makeStream } from '@graffy/common';
+// import { debug } from '@graffy/testing';
 
 export default function subscribe(store, originalQuery, raw) {
   let push, end;
@@ -11,7 +11,7 @@ export default function subscribe(store, originalQuery, raw) {
 
   resubscribe(originalQuery);
 
-  return stream((streamPush, streamEnd) => {
+  return makeStream((streamPush, streamEnd) => {
     push = v => {
       // console.log('Push', debug(v));
       streamPush(v);

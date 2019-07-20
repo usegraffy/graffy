@@ -1,5 +1,5 @@
-import { merge } from '@graffy/struct';
-import makeStream from '@graffy/stream';
+import { merge } from '@graffy/common';
+import { makeStream } from '@graffy/common';
 
 export default function mockBackend(options = {}) {
   const state = [];

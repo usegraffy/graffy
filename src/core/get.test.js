@@ -1,7 +1,7 @@
 import Graffy from './Graffy';
 import fill from '@graffy/fill';
-import { page, link, graph, query, decorate } from '@graffy/decorate';
-// import { merge } from '@graffy/struct';
+import { page, link, graph, query, decorate } from '@graffy/common';
+// import { merge } from '@graffy/common';
 
 describe('get', () => {
   let g;

@@ -1,7 +1,7 @@
 // index.test.js
 
 import Graffy from '@graffy/core';
-import { page, link, graph, query } from '@graffy/decorate';
+import { page, link, graph, query } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import live from './index.js';
 

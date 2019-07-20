@@ -1,4 +1,4 @@
-import { unwrap } from '@graffy/struct';
+import { unwrap } from '@graffy/common';
 
 export default function resolve(handlers, firstPayload, options) {
   if (!handlers) throw Error('no handlers');

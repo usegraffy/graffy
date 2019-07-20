@@ -1,7 +1,5 @@
 import faker from 'faker';
-import { graph, link, page } from '@graffy/decorate';
-import { merge, unwrap } from '@graffy/struct';
-import makeStream from '@graffy/stream';
+import { graph, link, page, merge, unwrap, makeStream } from '@graffy/common';
 
 // import { debug } from '@graffy/testing';
 
@@ -41,8 +39,7 @@ while (id < 200) {
     ts = Date.now();
     const change = simulate();
     for (const push of listeners) push(change);
-    await sleep(10);
-    // await sleep(1 + Math.random() * 100);
+    await sleep(1 + Math.random() * 100);
   }
 })();
 

@@ -1,5 +1,5 @@
 import Graffy from './Graffy';
-import { graph, query } from '@graffy/decorate';
+import { graph, query } from '@graffy/common';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 

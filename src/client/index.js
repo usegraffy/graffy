@@ -1,5 +1,5 @@
-import makeStream from '@graffy/stream';
-import { encodeUrl } from '@graffy/decorate';
+import { makeStream } from '@graffy/common';
+import { encodeUrl } from '@graffy/common';
 
 export default function GraffyClient(baseUrl) {
   return function(store) {

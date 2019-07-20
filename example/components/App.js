@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { keyBefore, keyAfter } from '@graffy/struct';
-import { query, decorate } from '@graffy/decorate';
+import { keyBefore, keyAfter, query, decorate } from '@graffy/common';
 import { useGraffy } from '@graffy/react';
 
 import VisitorList from './VisitorList';

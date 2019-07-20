@@ -1,4 +1,4 @@
-import { merge, slice } from '@graffy/struct';
+import { merge, slice } from '@graffy/common';
 import subscribe from './subscribe';
 
 const MAX_RECURSIONS = 10;

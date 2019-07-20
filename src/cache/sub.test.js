@@ -21,7 +21,7 @@ const mockStream = (payloads, delay, gap, state) => {
   };
 };
 
-describe('changes', () => {
+describe.skip('changes', () => {
   let g;
 
   beforeEach(() => {
@@ -121,7 +121,7 @@ describe('changes', () => {
   });
 });
 
-describe('values', () => {
+describe.skip('values', () => {
   let g;
 
   beforeEach(() => {

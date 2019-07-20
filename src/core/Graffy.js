@@ -1,7 +1,6 @@
-import { makePath } from '@graffy/common';
 import mergeStreams from 'merge-async-iterators';
-import { merge, wrap, unwrap, remove } from '@graffy/struct';
-// import { decorate } from '@graffy/decorate';
+import { merge, wrap, unwrap, remove, makePath } from '@graffy/common';
+// import { decorate } from '@graffy/common';
 
 import resolve from './resolve';
 
