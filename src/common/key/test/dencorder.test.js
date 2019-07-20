@@ -7,7 +7,7 @@ import {
   // decodeTuple,
   // enc64,
   // dec64
-} from './dencorder';
+} from '../dencorder';
 // import { string, number, boolean } from './types';
 
 describe('dencorder', () => {

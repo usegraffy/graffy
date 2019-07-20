@@ -1,31 +1,47 @@
 import faker from 'faker';
-import { makeLink, makePage } from '@graffy/common';
+import { graph, link, page, merge, unwrap, makeStream } from '@graffy/common';
 
-const visitors = {};
-const visitorsByTime = makePage({});
-const freeIds = [];
+// import { debug } from '@graffy/testing';
 
+const state = graph({ visitors: {}, visitorsByTime: page({}) });
+const freeIds = new Set();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+const listeners = new Set();
+
 export default function(g) {
-  g.onGet('/visitors', () => {
-    // console.log('visitors', query);
-    return { visitors };
+  g.onGet(() => {
+    // console.log('Get: Returning', debug(state));
+    return state;
   });
 
-  g.onGet('/visitorsByTime', () => {
-    // console.log('visitorsByTime', JSON.stringify(query, null, 2));
-    return { visitorsByTime };
-  });
-
-  g.onSub(async function*() {
-    while (true) {
-      ts = Date.now();
-      yield simulate();
-      await sleep(1 + Math.random() * 100);
-    }
-  });
+  g.onSub(() =>
+    makeStream((push, _end) => {
+      listeners.add(push);
+      push(undefined);
+      return () => listeners.delete(push);
+    }),
+  );
 }
+
+let ts = Date.now();
+let id = 0;
+
+while (id < 200) {
+  const change = simulateEnter();
+  merge(state, change);
+  ts -= Math.floor(1 + Math.random() * 100);
+}
+
+(async function() {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    ts = Date.now();
+    const change = simulate();
+    for (const push of listeners) push(change);
+    await sleep(1 + Math.random() * 100);
+  }
+})();
 
 function simulate() {
   const change =
@@ -34,6 +50,8 @@ function simulate() {
       : Math.random() < 0.5
       ? simulateEnter()
       : simulateLeave();
+
+  merge(state, change);
   return change;
 }
 
@@ -41,66 +59,63 @@ function visitorInfo() {
   return {
     name: faker.internet.userName(),
     avatar: faker.internet.avatar(),
-    pageviews: makePage({
+    pageviews: page({
       [ts]: faker.internet.url(),
     }),
   };
 }
 
-let ts;
-let id = 1;
-
 function simulateEnter() {
-  let addId = freeIds.length ? freeIds.pop() : id++;
+  let addId;
+  if (freeIds.size) {
+    for (const id of freeIds) {
+      addId = id;
+      freeIds.delete(addId);
+      break;
+    }
+  } else {
+    addId = id++;
+  }
+  addId = '' + addId;
 
-  visitors[addId] = { id: addId, ts, ...visitorInfo() };
-  visitorsByTime[ts] = makeLink(['visitors', addId]);
-
-  // console.log('create', addId, ts);
-  return {
-    visitors: { [addId]: visitors[addId] },
-    visitorsByTime: { [ts]: visitorsByTime[ts] },
-  };
+  console.log(ts, 'create', addId);
+  return graph(
+    {
+      visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
+      visitorsByTime: { [ts]: link(['visitors', addId]) },
+    },
+    ts,
+  );
 }
 
 function simulateLeave() {
   let delId;
   do {
     delId = Math.floor(Math.random() * id);
-  } while (!visitors[delId]);
-  const delTs = visitors[delId].ts;
-  delete visitors[delId];
-  delete visitorsByTime[delTs];
-  freeIds.push(delId);
-  // console.log('delete', delId, delTs);
-  return {
-    visitors: { [delId]: null },
-    visitorsByTime: { [delTs]: null },
-  };
+  } while (freeIds.has(delId));
+  freeIds.add(delId);
+  delId = '' + delId;
+
+  const delTs = unwrap(state, ['visitors', delId, 'ts']);
+  // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
+
+  console.log(ts, 'delete', delId, delTs);
+  return graph(
+    {
+      visitors: { [delId]: null },
+      visitorsByTime: { [delTs]: null },
+    },
+    ts,
+  );
 }
 
 function simulateUpdate() {
   let upId;
   do {
     upId = Math.floor(Math.random() * id);
-  } while (!visitors[upId]);
+  } while (freeIds.has(upId));
+  upId = '' + upId;
   const url = faker.internet.url();
-  visitors[upId].pageviews.ts = url;
   // console.log('updated', upId);
-  return { visitors: { [upId]: { pageviews: { [ts]: url } } } };
+  return graph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
 }
-
-ts = Date.now();
-while (id < 200) {
-  simulateEnter();
-  ts -= Math.floor(1 + Math.random() * 100);
-}
-
-// console.log(visitors);
-
-// --- for testing
-
-// setInterval(() => {
-//   ts = Date.now();
-//   simulate();
-// }, 1 + Math.random() * 1000);

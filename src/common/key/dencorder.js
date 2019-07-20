@@ -1,5 +1,8 @@
 /*
   dencorder.js
+      order-preserving
+   enco de  and
+  de co de for any sortable type.
 */
 
 const alpha =

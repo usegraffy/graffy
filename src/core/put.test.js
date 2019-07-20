@@ -11,6 +11,10 @@ describe('put', () => {
     const handler = jest.fn();
     g.onPut(handler);
     g.put({ foo: 42 }, { source: 'a' });
-    expect(handler).toBeCalledWith({ foo: 42 }, { source: 'a' });
+    expect(handler).toBeCalledWith(
+      { foo: 42 },
+      { source: 'a' },
+      expect.any(Function),
+    );
   });
 });

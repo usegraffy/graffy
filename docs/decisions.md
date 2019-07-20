@@ -1,12 +1,27 @@
 # Ideas under consideration
 
-## When a subscription's page bounds expand or contract, should that be communicated in change objects?
+## When should the "live" module resubscribe?
 
-## Should all metadata be grouped under one key?
+Option 1: Based on linkKnown. Whenever links are encountered, the query is expanded. The problem is when the backend provides automatic link-traversal in subscriptions, this results in unnecessary resubscribes. The benefit is that it is well-defined and not path-dependent.
+
+Option 2: Based on unknown / extraneous. Expand the subscription when unknown values are encountered after putting data, contract it when extraneous values are discovered. The problem is that this conflates query and subscription, it is possible that a backend provides link traversal for query but not for subscription. We may end up not making a necessary subscription if the initial query returns with traversed data.
+
+Consider:
+- Perhaps combining "query link traversal" module with "live" module and adding it all into core (rather than as pluggable modules) will help?
+- Perhaps providers can be required to be consistent between query and subscription (with respect to which links they can traverse and which they can't)?
+
+## When a subscription's page bounds expand or contract, should that be communicated in change objects?
 
 # Ideas that were considered
 
 These could be reopened if there's new information.
+
+## How to distinguish between a live query and a change susbcription.
+
+In live queries, the first payload is the current state of the backend matching the query.
+
+In change subscriptions, the first payload must be undefined.
+
 
 ## Should there be a separate onSub() callback?
 

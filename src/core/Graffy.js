@@ -1,23 +1,19 @@
-import {
-  makePath,
-  unwrap,
-  wrap,
-  getKnown,
-  getUnknown,
-  diff,
-  graft,
-  merge,
-  mergeStreams,
-} from '@graffy/common';
+import mergeStreams from 'merge-async-iterators';
+import { merge, wrap, unwrap, remove, makePath } from '@graffy/common';
+// import { decorate } from '@graffy/common';
 
 import resolve from './resolve';
 
-function ensurePath(basePath, path, ...args) {
+function ensurePath(expLength, basePath, path, ...args) {
   if (!basePath) basePath = [];
-  if (Array.isArray(path)) {
-    return [basePath.concat(path), ...args];
-  } else if (typeof path === 'string') {
-    return [basePath.concat(makePath(path)), ...args];
+  // console.log('pathpad', expLength, path, args);
+  let argLength = args.length;
+  while (argLength && typeof args[argLength - 1] === 'undefined') argLength--;
+  if (argLength === expLength) {
+    return [
+      basePath.concat(Array.isArray(path) ? path : makePath(path)),
+      ...args,
+    ];
   } else {
     return [basePath, path, ...args];
   }
@@ -26,48 +22,83 @@ function ensurePath(basePath, path, ...args) {
 function shiftFn(fn, path) {
   if (!path || !path.length) return fn;
   return async (payload, options, next) => {
-    return wrap(
-      await fn(unwrap(payload, path), options, async nextPayload =>
-        unwrap(await next(wrap(nextPayload, path)), path),
-      ),
-      path,
-    );
+    const shiftedNext = async nextPayload =>
+      unwrap(await next(wrap(nextPayload, path)), path);
+    return wrap(await fn(unwrap(payload, path), options, shiftedNext), path);
   };
 }
 
-function wrapGetHandler(handle) {
-  return async function(query, options, next) {
-    const result = getKnown(await handle(query, options), query);
-    const nextQuery = result ? getUnknown(result, query) : query;
-    if (nextQuery) {
-      const nextValue = await next(nextQuery);
-      merge(result, nextValue);
+function shiftGen(fn, path) {
+  if (!path || !path.length) return fn;
+  return async function*(payload, options, next) {
+    const shiftedNext = async function*(nextPayload) {
+      for await (const value of await next(wrap(nextPayload, path))) {
+        yield unwrap(value, path);
+      }
+    };
+    for await (const value of fn(unwrap(payload, path), options, shiftedNext)) {
+      yield wrap(value, path);
     }
-    return getKnown(result, query);
   };
 }
 
-function wrapSubHandler(handle) {
-  return async function(query, options, next) {
-    let stream = handle(query, options);
-    try {
-      const nextStream = await next(query);
-      // console.log('Merging stream');
-      stream = mergeStreams([stream, nextStream]);
-    } catch (_) {
-      /* TODO: re-throw if not a resolve.unfulfilled */
-    }
+// function wrapGetHandler(handle) {
+//   return async function(query, options, next) {
+//     const result = getKnown(await handle(query, options), query);
+//     const nextQuery = result ? getUnknown(result, query) : query;
+//     if (nextQuery) {
+//       const nextValue = await next(nextQuery);
+//       merge(result, nextValue);
+//     }
+//     return getKnown(result, query);
+//   };
+// }
+//
+// function wrapSubHandler(handle) {
+//   return async function(query, options, next) {
+//     let stream = handle(query, options);
+//     try {
+//       const nextStream = await next(query);
+//       // console.log('Merging stream');
+//       stream = mergeStreams([stream, nextStream]);
+//     } catch (_) {
+//       /* TODO: re-throw if not a resolve.unfulfilled */
+//     }
+//
+//     return stream;
+//   };
+// }
+//
+// function wrapPutHandler(handle) {
+//   return async function(change, options, next) {
+//     const result = await handle(change, options);
+//     const pendingChange = diff(change, result);
+//     if (pendingChange) merge(result, await next(pendingChange));
+//     return result;
+//   };
+// }
 
-    return stream;
+function wrapGet(handle, path) {
+  return async (query, options, next) => {
+    const value = await handle(query, options);
+
+    // TODO: Perhaps cap (initialize with unknown)?
+
+    const nextQuery = remove(query, path);
+    if (!nextQuery || !nextQuery.length) return value;
+    const nextValue = await next(nextQuery);
+    return merge(value, nextValue);
   };
 }
 
-function wrapPutHandler(handle) {
-  return async function(change, options, next) {
-    const result = await handle(change, options);
-    const pendingChange = diff(change, result);
-    if (pendingChange) merge(result, await next(pendingChange));
-    return result;
+function wrapSub(handle, path) {
+  return (query, options, next) => {
+    const stream = handle(query, options);
+
+    const nextQuery = remove(query, path);
+    if (!nextQuery || !nextQuery.length) return stream;
+    const nextStream = next(nextQuery);
+    return mergeStreams([stream, nextStream]);
   };
 }
 
@@ -88,69 +119,60 @@ export default class Graffy {
   }
 
   onGet(path, handle) {
-    [path, handle] = ensurePath(this.path, path, handle);
-    handle = wrapGetHandler(handle);
+    [path, handle] = ensurePath(1, this.path, path, handle);
+    // handle = wrapGetHandler(handle);
     if (this.path) handle = shiftFn(handle, this.path);
+    handle = wrapGet(handle, path);
     this.on('get', path, handle);
   }
 
   onPut(path, handle) {
-    [path, handle] = ensurePath(this.path, path, handle);
-    handle = wrapPutHandler(handle);
+    [path, handle] = ensurePath(1, this.path, path, handle);
+    // handle = wrapPutHandler(handle);
     if (this.path) handle = shiftFn(handle, this.path);
     this.on('put', path, handle);
   }
 
   onSub(path, handle) {
-    [path, handle] = ensurePath(this.path, path, handle);
-    handle = wrapSubHandler(handle);
-    // if (this.path) handle = shiftFn(handle, this.path);
+    [path, handle] = ensurePath(1, this.path, path, handle);
+    // handle = wrapSubHandler(handle);
+    if (this.path) handle = shiftGen(handle, this.path);
+    handle = wrapSub(handle, path);
     this.on('sub', path, handle);
   }
 
   use(path, provider) {
-    [path, provider] = ensurePath(this.path, path, provider);
+    [path, provider] = ensurePath(1, this.path, path, provider);
     provider(
       new Graffy(this.path ? this.path.concat(path) : path, this.root || this),
     );
   }
 
-  get(path, query, options) {
-    [path, query, options] = ensurePath(this.path, path, query, options);
-    options = options || {};
-    query = wrap(query, path);
-
-    const result = resolve(this.handlers.get, query, options);
-    return options.raw
-      ? result
-      : result.then(tree => unwrap(graft(tree, query), path));
+  get(query, options = {}) {
+    const result = Promise.resolve(resolve(this.handlers.get, query, options));
+    // result.then(r => console.log(JSON.stringify(r, null, 2)));
+    return result;
   }
 
-  async *sub(path, query, options) {
-    [path, query, options] = ensurePath(this.path, path, query, options);
-    options = options || {};
-    query = wrap(query, path);
+  async *sub(query, options = {}) {
+    // console.log('Sub called with', query, options);
+    // console.log('Handlers', this.handlers.sub);
 
-    // console.log('Sub called with', path, query, options);
+    const stream = resolve(this.handlers.sub, query, options);
 
-    const stream = await resolve(this.handlers.sub, query, options);
-
-    // console.log('Stream is', await stream);
+    // console.log('Stream is', stream);
     try {
       for await (const value of stream) {
         // console.log(query, 'Yielding', value, options);
-        yield options.raw ? value : unwrap(graft(value, query), path);
+        yield value;
       }
     } catch (e) {
       console.log('Graffy: Sub stream error', e);
     }
   }
 
-  async put(path, change, options) {
-    [path, change, options] = ensurePath(this.path, path, change, options);
-    options = options || {};
-    change = wrap(change, path);
-    change = await resolve(this.handlers.put, change, options);
+  async put(change, options = {}) {
+    change = await Promise.resolve(resolve(this.handlers.put, change, options));
     for (const id in this.subs) this.subs[id].pub(change);
     return change;
   }
