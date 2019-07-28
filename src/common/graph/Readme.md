@@ -1,7 +1,8 @@
 # Graph Operations
 
-Data structures used by Graffy
+Specifications for data structures used by Graffy:
 
+```
 Graph         :=  [ GraphNode  | GraphRange ]
 GraphNode     :=  GraphBranch | GraphLeaf
 GraphBranch   :=  { key, children: Graph }
@@ -9,14 +10,15 @@ GraphLeaf     :=  GraphValue | GraphLink
 GraphValue    :=  { key, value, clock }
 GraphLink     :=  { key, path, clock }
 GraphRange    :=  { key, end, clock }
+```
 
-
+```
 Query         :=  [ QueryNode | QueryRange ]
 QueryNode     :=  QueryBranch | QueryLeaf
 QueryBranch   :=  { key, clock, children: Query }
 QueryLeaf     :=  { key, value, clock }
 QueryRange    :=  { key, end, count, clock, (value | children) }
-
+```
 
 Notes:
 - Ranges are specified by `key` and `end`, where `key <= end`.
