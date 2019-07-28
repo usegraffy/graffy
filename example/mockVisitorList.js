@@ -26,6 +26,9 @@ export default function(g) {
 
 let ts = Date.now();
 let id = 0;
+let enter = 0,
+  leave = 0,
+  update = 0;
 
 while (id < 200) {
   const change = simulateEnter();
@@ -39,6 +42,15 @@ while (id < 200) {
     ts = Date.now();
     const change = simulate();
     for (const push of listeners) push(change);
+    if (process.stdout.isTTY) {
+      process.stdout.cursorTo(0);
+      process.stdout.write(
+        `${id - freeIds.size} users `.padStart(16) +
+          `${enter} enters `.padStart(16) +
+          `${leave} leaves `.padStart(16) +
+          `${update} updates `.padStart(16),
+      );
+    }
     await sleep(1 + Math.random() * 100);
   }
 })();
@@ -78,7 +90,7 @@ function simulateEnter() {
   }
   addId = '' + addId;
 
-  console.log(ts, 'create', addId);
+  enter++;
   return graph(
     {
       visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
@@ -99,7 +111,7 @@ function simulateLeave() {
   const delTs = unwrap(state, ['visitors', delId, 'ts']);
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
-  console.log(ts, 'delete', delId, delTs);
+  leave++;
   return graph(
     {
       visitors: { [delId]: null },
@@ -116,6 +128,6 @@ function simulateUpdate() {
   } while (freeIds.has(upId));
   upId = '' + upId;
   const url = faker.internet.url();
-  // console.log('updated', upId);
+  update++;
   return graph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
 }
