@@ -1,5 +1,5 @@
 export function encode(query) {
-  return JSON.stringify(query);
+  return encodeURIComponent(JSON.stringify(query));
   // return Object.keys(query)
   //   .sort()
   //   .map(key =>
@@ -11,7 +11,7 @@ export function encode(query) {
 // const includeRe = /([^,()]*)([(),]|$)/g;
 
 export function decode(fields) {
-  return JSON.parse(fields);
+  return JSON.parse(decodeURIComponent(fields));
   // if (!include) return {};
   //
   // includeRe.lastIndex = 0;

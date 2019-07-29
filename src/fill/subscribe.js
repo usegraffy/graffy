@@ -79,7 +79,7 @@ export default function subscribe(store, originalQuery, raw) {
     }
 
     let { known, unknown, extraneous } = slice(data, originalQuery);
-    data = known;
+    data = known || [];
 
     // console.log('After slice', debug(data), unknown && debug(unknown));
     // console.log('Payload and value', debug(payload), value && debug(value));
