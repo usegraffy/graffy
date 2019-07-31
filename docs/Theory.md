@@ -2,7 +2,7 @@
 
 ## Data structures
 
-Graffy defines two data structures, Graph (a subset of graphs) and Query, and several operations on them.
+Graffy defines two data structures, Graph and Query, and several operations on them.
 
 ### Graphs
 
@@ -197,7 +197,7 @@ The live query property can be stated as R₃ ⊆ R₁ + R₂. This requires tha
 R₂ ⊇ R₃ - R₁
 R₂ ⊇ (Q ∩ (G₁ + C)) - (Q ∩ G₁)
 
-  
+
 
 R₁ = Q ∩ G₁
 R₃ = Q ∩ G₃

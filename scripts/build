@@ -65,7 +65,9 @@ async function build(name) {
           peerDependencies[dep] = peerDepVersions[dep];
         } else {
           dependencies = dependencies || {};
-          if (!depVersions[dep]) console.warn('No version found', dep);
+          if (!depVersions[dep]) {
+            console.warn('No version found for package', dep);
+          }
           dependencies[dep] = depVersions[dep] || 'x';
         }
       });

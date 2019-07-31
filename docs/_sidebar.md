@@ -1,7 +1,5 @@
 - [Home](/)
 - [Concepts](Concepts.md)
-- [Guide](Guide.md)
 - [API Reference](Reference.md)
 ---
 - [Theory](Theory.md)
-- [Encoding](Encoding.md)
