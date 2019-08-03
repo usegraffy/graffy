@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { keyBefore, keyAfter } from '@graffy/common';
 import getTime from './getTime';
 
 export default function Pagination({ range, count, onNext, onPrev }) {
@@ -11,8 +12,8 @@ export default function Pagination({ range, count, onNext, onPrev }) {
       <span>
         {range.first && `First ${range.first} `}
         {range.last && `Last ${range.last} `}
-        {range.after && `after ${getTime(parseInt(range.after))} `}
-        {range.before && `before ${getTime(parseInt(range.before))} `}
+        {range.after && `after ${getTime(parseInt(keyBefore(range.after)))} `}
+        {range.before && `before ${getTime(parseInt(keyAfter(range.before)))} `}
         {count !== (range.first || range.last) ? `(got ${count})` : ''}
       </span>
       <button {...getButtonProps(onNext)}>&gt;</button>

@@ -5,11 +5,12 @@ import { useGraffy } from '@graffy/react';
 import VisitorList from './VisitorList';
 import Pagination from './Pagination';
 import Spinner from './Spinner';
+import Query from './Query';
 
 const PAGE_SIZE = 30;
 
 function getQuery(range) {
-  return query({
+  return {
     visitorsByTime: [
       range,
       {
@@ -20,13 +21,13 @@ function getQuery(range) {
         pageviews: [{ last: 3 }, true],
       },
     ],
-  });
+  };
 }
 
 export default function App() {
   const [range, setRange] = useState({ last: PAGE_SIZE });
-  const query = getQuery(range);
-  const [result, loading] = useGraffy(query);
+  const q = getQuery(range);
+  const [result, loading] = useGraffy(query(q));
 
   const data = result && decorate(result);
 
@@ -40,7 +41,11 @@ export default function App() {
 
   const visitors = data.visitorsByTime;
 
-  if (!loading && ((!hasNext && range.first) || (!hasPrev && range.last))) {
+  if (
+    !loading &&
+    ((!hasNext && hasPrev && range.first) ||
+      (!hasPrev && hasNext && range.last))
+  ) {
     // We have reached the beginning or end of the list while paginating in
     // the wrong direction; just flip the query to the first or last 30.
     setRange({ [range.first ? 'last' : 'first']: 30 });
@@ -49,6 +54,12 @@ export default function App() {
 
   return (
     <div className="App">
+      <Query
+        query={q}
+        onChange={value => {
+          console.log(value);
+        }}
+      />
       <Pagination
         onPrev={
           hasPrev &&
