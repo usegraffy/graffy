@@ -8,21 +8,35 @@ function pageToRange(page) {
   return node;
 }
 
+// We freeze constructed queries to guard against bugs that might mutate them.
+// TODO: Don't freeze in production builds, as a perf optimization.
+const freeze = obj => Object.freeze(obj);
+
 function makeQuery(value, clock) {
   if (Array.isArray(value)) {
-    return {
-      children: [{ ...pageToRange(value[0]), ...makeQuery(value[1], clock) }],
+    return freeze({
+      children: freeze([
+        freeze({
+          ...pageToRange(value[0]),
+          ...makeQuery(value[1], clock),
+        }),
+      ]),
       clock,
-    };
+    });
   } else if (typeof value === 'object' && value) {
-    return {
+    return freeze({
       clock,
-      children: Object.keys(value)
-        .sort()
-        .map(key => ({ key, ...makeQuery(value[key], clock) })),
-    };
+      children: freeze(
+        Object.keys(value)
+          .sort()
+          .map(key => freeze({ key, ...makeQuery(value[key], clock) })),
+      ),
+    });
   } else {
-    return { clock, value: typeof value === 'number' ? value : 1 };
+    return freeze({
+      clock,
+      value: typeof value === 'number' ? value : 1,
+    });
   }
 }
 

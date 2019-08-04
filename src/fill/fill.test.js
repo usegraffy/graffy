@@ -191,11 +191,104 @@ describe('values', () => {
     expect(backend.get).toHaveBeenCalledTimes(1);
   });
 
+  test.only('back_range_deletion_substitute', async () => {
+    backend.put(graph({ foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') }));
+    const sub = g.sub(query({ foo: [{ last: 3 }, 1] }, 0));
+    await expectNext(sub, { foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') });
+
+    backend.put(
+      // prettier-ignore
+      [
+        { key: 'foo', clock: 1, children: [
+          { key: 'b', clock: 1, value: 2 },
+          { key: 'b\0', end: 'c', clock: 1 }
+        ] }
+      ],
+    );
+
+    await expectNext(
+      sub,
+      // prettier-ignore
+      [
+        { key: 'foo', clock: 0, children: [
+          { key: 'b', clock: 1, value: 2 },
+          { key: 'b\0', end: 'c', clock: 1 },
+          { key: 'c\0', end: 'c\uffff', clock: 0 },
+          { key: 'd', value: 4, clock: 0 },
+          { key: 'd\0', end: 'd\uffff', clock: 0 },
+          { key: 'e', value: 5, clock: 0 },
+          { key: 'e\0', end: '\uffff', clock: 0 },
+        ] }
+      ],
+    );
+    expect(backend.get).toHaveBeenCalledTimes(1);
+  });
+
   test('range_insertion', async () => {
     backend.put(graph({ foo: page({ a: 1, c: 3, d: 4, e: 5 }) }));
     const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
     backend.put(graph({ foo: { b: 2 } }));
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
+  });
+
+  test.skip('backward_range_deletion_at_start', async () => {
+    backend.put(
+      graph(
+        {
+          users: {
+            '1': { name: 'alice' },
+            '2': { name: 'bob' },
+            '3': { name: 'carol' },
+          },
+          usersByAge: page(
+            {
+              '4': link(['users', '1']),
+              '5': link(['users', '2']),
+              '7': link(['users', '3']),
+            },
+            '',
+            '\uFFFF',
+          ),
+        },
+        0,
+      ),
+    );
+
+    const sub = g.sub(query({ usersByAge: [{ last: 2 }, { name: 1 }] }, 0));
+    await expectNext(sub, {
+      users: {
+        '2': { name: 'bob' },
+        '3': { name: 'carol' },
+      },
+      usersByAge: page(
+        { '5': link(['users', '2']), '7': link(['users', '3']) },
+        '5',
+        '\uffff',
+      ),
+    });
+    backend.put(
+      graph(
+        {
+          users: { '2': null },
+          usersByAge: { '5': null },
+        },
+        1,
+      ),
+    );
+    await expectNext(sub, {
+      users: {
+        '1': { name: 'alice' },
+        '3': { name: 'carol' },
+      },
+      usersByAge: [
+        { key: '4', path: ['users', '1'], clock: 0 },
+        { key: '4\0', end: '4\uffff', clock: 0 },
+        { key: '5', end: '5', clock: 1 },
+        { key: '5\0', end: '6\uffff', clock: 0 },
+        { key: '7', path: ['users', '3'], clock: 0 },
+        { key: '7\0', end: '\uffff', clock: 0 },
+      ],
+    });
   });
 });

@@ -67,8 +67,9 @@ export default function subscribe(store, originalQuery, raw) {
     // console.log('PutValue', debug(value));
 
     if (isChange) {
+      // console.log('Data before sieve', debug(data));
       const sieved = sieve(data, value);
-      // console.log('After sieve', debug(sieved));
+      // console.log('Data after sieve', debug(data));
       if (!sieved.length) return;
       merge(payload, sieved);
     } else {

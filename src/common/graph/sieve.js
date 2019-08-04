@@ -66,7 +66,7 @@ export function insertNode(current, change, result, start = 0) {
   } else {
     // This change does not overlap with any existing knowledge. Skip it
     // current.splice(index, 0, change);
-    return index + 1;
+    return index;
   }
 }
 

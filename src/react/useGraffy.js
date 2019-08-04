@@ -1,6 +1,7 @@
 import React from 'react';
 import isEqual from 'lodash/isEqual';
 import GraffyContext from './GraffyContext';
+// import { debug } from '@graffy/testing';
 
 const { useRef, useState, useEffect, useContext } = React;
 
@@ -29,8 +30,15 @@ export default function useGraffy(query) {
   const store = useContext(GraffyContext);
 
   const queryHasChanged = !isEqual(queryRef.current, query);
-  console.log('Query has changed?', queryHasChanged);
-  if (queryHasChanged) queryRef.current = query;
+  if (queryHasChanged) {
+    // console.log(
+    //   'Query changed from',
+    //   debug(queryRef.current),
+    //   'to',
+    //   debug(query),
+    // );
+    queryRef.current = query;
+  }
 
   useEffect(() => {
     if (state[1] !== true) setState([state[0], true]);

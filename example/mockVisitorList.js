@@ -1,5 +1,13 @@
 import faker from 'faker';
-import { graph, link, page, merge, unwrap, makeStream } from '@graffy/common';
+import {
+  graph,
+  link,
+  page,
+  merge,
+  unwrap,
+  makeStream,
+  setClock,
+} from '@graffy/common';
 
 // import { debug } from '@graffy/testing';
 
@@ -12,6 +20,8 @@ const listeners = new Set();
 export default function(g) {
   g.onGet(() => {
     // console.log('Get: Returning', debug(state));
+    ts = Date.now();
+    setClock(state, ts);
     return state;
   });
 
@@ -57,7 +67,7 @@ while (id < 200) {
 
 function simulate() {
   const change =
-    Math.random() < 0.9
+    Math.random() < 0.5
       ? simulateUpdate()
       : Math.random() < 0.5
       ? simulateEnter()

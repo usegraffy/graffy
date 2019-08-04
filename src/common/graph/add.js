@@ -14,7 +14,7 @@ export default function add(base, diff) {
 
     if (!item || cmp(item)) {
       // This node doesn't exist in the base, insert it.
-      base.splice(index, 0, node);
+      base.splice(index, 0, clone(node));
       changed = true;
       continue;
     }
@@ -51,4 +51,14 @@ function compare(node) {
 function compareValue(a, b) {
   if (a === b) return 0;
   return a < b ? -1 : 1;
+}
+
+/*
+  We clone to ensure that the original query (passed as diff) never gets modified, even after successive adds.
+*/
+
+function clone(node) {
+  const copy = { ...node };
+  if (node.children) copy.children = node.children.map(child => clone(child));
+  return copy;
 }

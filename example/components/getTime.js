@@ -1,12 +1,8 @@
-const rtf = new Intl.RelativeTimeFormat('en', { style: 'narrow' });
-const scales = [
-  [120000, 'second', 1000],
-  [7200000, 'minute', 60000],
-  [Infinity, 'hour', 3600000],
-];
-
 export default function getTime(ts) {
-  const timeDiff = ts - Date.now();
-  const [_, unit, divisor] = scales.find(([max]) => -timeDiff < max);
-  return rtf.format(Math.floor(timeDiff / divisor), unit);
+  return new Date(ts).toLocaleString('en', {
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }

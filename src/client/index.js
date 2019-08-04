@@ -1,5 +1,5 @@
-import { makeStream } from '@graffy/common';
-import { encodeUrl } from '@graffy/common';
+import { makeStream, encodeUrl } from '@graffy/common';
+// import { debug } from '@graffy/testing';
 
 export default function GraffyClient(baseUrl) {
   return function(store) {
@@ -16,8 +16,8 @@ export default function GraffyClient(baseUrl) {
 
       return makeStream((push, end) => {
         source.onmessage = ({ data }) => {
-          // console.log('<<<', data);
           data = JSON.parse(data);
+          // console.log('<<<', debug(data));
           push(data);
         };
 
