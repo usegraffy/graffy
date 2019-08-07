@@ -18,12 +18,11 @@ function mergeRanges(graph) {
     } while (isRange(graph[j]) && graph[j].key === keyAfter(graph[j - 1].end));
     j = j - 1;
     if (j === i) continue;
-    console.log('\nMerging', j - i, '\n');
-    graph.splice(i, j - i, {
+    graph.splice(i, j - i + 1, {
       key: graph[i].key,
       end: graph[j].end,
       clock: graph[i].clock,
     });
-    i = j;
+    // i = j;
   }
 }

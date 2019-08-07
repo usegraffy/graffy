@@ -11,6 +11,8 @@ import {
 
 // import { debug } from '@graffy/testing';
 
+const TARGET = 200;
+
 const state = graph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -40,7 +42,7 @@ let enter = 0,
   leave = 0,
   update = 0;
 
-while (id < 200) {
+while (id < TARGET) {
   const change = simulateEnter();
   merge(state, change);
   ts -= Math.floor(1 + Math.random() * 100);
@@ -69,9 +71,9 @@ function simulate() {
   const change =
     Math.random() < 0.5
       ? simulateUpdate()
-      : Math.random() < 0.5
-      ? simulateEnter()
-      : simulateLeave();
+      : Math.random() < (id - freeIds.size) / 2 / TARGET
+      ? simulateLeave()
+      : simulateEnter();
 
   merge(state, change);
   return change;
