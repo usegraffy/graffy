@@ -11,7 +11,7 @@ import {
 
 // import { debug } from '@graffy/testing';
 
-const TARGET = 200;
+const TARGET = 2000;
 
 const state = graph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
@@ -54,7 +54,14 @@ while (id < TARGET) {
     ts = Date.now();
     const change = simulate();
     for (const push of listeners) push(change);
-    if (process.stdout.isTTY) {
+    await sleep(1);
+  }
+})();
+
+if (process.stdout.isTTY) {
+  (async function() {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
       process.stdout.cursorTo(0);
       process.stdout.write(
         `${id - freeIds.size} users `.padStart(16) +
@@ -62,14 +69,14 @@ while (id < TARGET) {
           `${leave} leaves `.padStart(16) +
           `${update} updates `.padStart(16),
       );
+      await sleep(200);
     }
-    await sleep(1 + Math.random() * 100);
-  }
-})();
+  })();
+}
 
 function simulate() {
   const change =
-    Math.random() < 0.5
+    Math.random() < 0.9
       ? simulateUpdate()
       : Math.random() < (id - freeIds.size) / 2 / TARGET
       ? simulateLeave()

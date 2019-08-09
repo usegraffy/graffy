@@ -2,7 +2,7 @@ import { isRange } from '../node';
 import { keyAfter } from '../key';
 
 export default function setClock(graph, clock) {
-  mergeRanges(graph);
+  // mergeRanges(graph);
   for (const node of graph) {
     node.clock = clock;
     if (node.children) setClock(node.children, clock);

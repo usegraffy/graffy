@@ -25,7 +25,7 @@ function getQuery(range) {
 }
 
 export default function App() {
-  const [range, setRange] = useState({ last: PAGE_SIZE });
+  const [range, setRange] = useState({ first: PAGE_SIZE });
   const q = getQuery(range);
   const [result, loading] = useGraffy(query(q));
 
@@ -41,14 +41,10 @@ export default function App() {
 
   const visitors = data.visitorsByTime;
 
-  if (
-    !loading &&
-    ((!hasNext && hasPrev && range.first) ||
-      (!hasPrev && hasNext && range.last))
-  ) {
-    // We have reached the beginning or end of the list while paginating in
-    // the wrong direction; just flip the query to the first or last 30.
-    setRange({ [range.first ? 'last' : 'first']: 30 });
+  if (!loading && !hasPrev && hasNext && range.last) {
+    // We have reached the beginning of the list while paginating backwards.
+    // Flip the query to the first 30.
+    setRange({ first: PAGE_SIZE });
     return <Spinner />;
   }
 
