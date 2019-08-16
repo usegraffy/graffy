@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/aravindet/graffy/issues"
   },
-  "homepage": "https://github.com/aravindet/graffy#readme",
+  "homepage": "https://graffy.js.org",
   "dependencies": {
     "@babel/runtime-corejs3": "^7.5.4"
   },
