@@ -1,11 +1,11 @@
 import { isRange } from '../node';
 import { keyAfter } from '../key';
 
-export default function setClock(graph, clock) {
+export default function setVersion(graph, version) {
   // mergeRanges(graph);
   for (const node of graph) {
-    node.clock = clock;
-    if (node.children) setClock(node.children, clock);
+    node.version = version;
+    if (node.children) setVersion(node.children, version);
   }
 }
 
@@ -21,7 +21,7 @@ function mergeRanges(graph) {
     graph.splice(i, j - i + 1, {
       key: graph[i].key,
       end: graph[j].end,
-      clock: graph[i].clock,
+      version: graph[i].version,
     });
     // i = j;
   }

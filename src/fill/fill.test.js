@@ -3,8 +3,8 @@ import { page, link, graph, query } from '@graffy/common';
 import { mockBackend, debug } from '@graffy/testing';
 import fill from './index.js';
 
-const expectNext = async (sub, expected, clock) => {
-  expect((await sub.next()).value).toEqual(graph(expected, clock));
+const expectNext = async (sub, expected, version) => {
+  expect((await sub.next()).value).toEqual(graph(expected, version));
 };
 
 describe('changes', () => {
@@ -82,10 +82,10 @@ describe('changes', () => {
       sub,
       // prettier-ignore
       [
-        { key: 'foo', clock: 1, children: [
-          { key: 'b', end: 'b', clock: 1 },
-          { key: 'c\0', end: 'c\uffff', clock: 0 },
-          { key: 'd', value: 4, clock: 0 }
+        { key: 'foo', version: 1, children: [
+          { key: 'b', end: 'b', version: 1 },
+          { key: 'c\0', end: 'c\uffff', version: 0 },
+          { key: 'd', value: 4, version: 0 }
         ] }
       ],
     );
@@ -145,21 +145,21 @@ describe('values', () => {
     const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
     backend.put(graph({ foo: { b: null } }, 1));
-    // TODO: In a future version, update clocks throughout the tree in
+    // TODO: In a future version, update versions throughout the tree in
     // live queries
     await expectNext(
       sub,
       // prettier-ignore
       [
-        { key: 'foo', clock: 0, children: [
-          { key: '', end: '`\uffff', clock: 0 },
-          { key: 'a', value: 1, clock: 0 },
-          { key: 'a\0', end: 'a\uffff', clock: 0},
-          { key: 'b', end: 'b', clock: 1 },
-          { key: 'b\0', end: 'b\uffff', clock: 0 },
-          { key: 'c', value: 3, clock: 0 },
-          { key: 'c\0', end: 'c\uffff', clock: 0 },
-          { key: 'd', value: 4, clock: 0 }
+        { key: 'foo', version: 0, children: [
+          { key: '', end: '`\uffff', version: 0 },
+          { key: 'a', value: 1, version: 0 },
+          { key: 'a\0', end: 'a\uffff', version: 0},
+          { key: 'b', end: 'b', version: 1 },
+          { key: 'b\0', end: 'b\uffff', version: 0 },
+          { key: 'c', value: 3, version: 0 },
+          { key: 'c\0', end: 'c\uffff', version: 0 },
+          { key: 'd', value: 4, version: 0 }
         ] }
       ],
     );
@@ -176,15 +176,15 @@ describe('values', () => {
       sub,
       // prettier-ignore
       [
-        { key: 'foo', clock: 0, children: [
-          { key: '', end: '`\uffff', clock: 0 },
-          { key: 'a', value: 1, clock: 0 },
-          { key: 'a\0', end: 'a\uffff', clock: 0},
-          { key: 'b', end: 'b', clock: 1 },
-          { key: 'b\0', end: 'b\uffff', clock: 0 },
-          { key: 'c', value: 3, clock: 0 },
-          { key: 'c\0', end: 'c\uffff', clock: 1 },
-          { key: 'd', value: 4, clock: 1 }
+        { key: 'foo', version: 0, children: [
+          { key: '', end: '`\uffff', version: 0 },
+          { key: 'a', value: 1, version: 0 },
+          { key: 'a\0', end: 'a\uffff', version: 0},
+          { key: 'b', end: 'b', version: 1 },
+          { key: 'b\0', end: 'b\uffff', version: 0 },
+          { key: 'c', value: 3, version: 0 },
+          { key: 'c\0', end: 'c\uffff', version: 1 },
+          { key: 'd', value: 4, version: 1 }
         ] }
       ],
     );
@@ -199,9 +199,9 @@ describe('values', () => {
     backend.put(
       // prettier-ignore
       [
-        { key: 'foo', clock: 1, children: [
-          { key: 'b', clock: 1, value: 2 },
-          { key: 'b\0', end: 'c', clock: 1 }
+        { key: 'foo', version: 1, children: [
+          { key: 'b', version: 1, value: 2 },
+          { key: 'b\0', end: 'c', version: 1 }
         ] }
       ],
     );
@@ -210,14 +210,14 @@ describe('values', () => {
       sub,
       // prettier-ignore
       [
-        { key: 'foo', clock: 0, children: [
-          { key: 'b', clock: 1, value: 2 },
-          { key: 'b\0', end: 'c', clock: 1 },
-          { key: 'c\0', end: 'c\uffff', clock: 0 },
-          { key: 'd', value: 4, clock: 0 },
-          { key: 'd\0', end: 'd\uffff', clock: 0 },
-          { key: 'e', value: 5, clock: 0 },
-          { key: 'e\0', end: '\uffff', clock: 0 },
+        { key: 'foo', version: 0, children: [
+          { key: 'b', version: 1, value: 2 },
+          { key: 'b\0', end: 'c', version: 1 },
+          { key: 'c\0', end: 'c\uffff', version: 0 },
+          { key: 'd', value: 4, version: 0 },
+          { key: 'd\0', end: 'd\uffff', version: 0 },
+          { key: 'e', value: 5, version: 0 },
+          { key: 'e\0', end: '\uffff', version: 0 },
         ] }
       ],
     );
@@ -282,12 +282,12 @@ describe('values', () => {
         '3': { name: 'carol' },
       },
       usersByAge: [
-        { key: '4', path: ['users', '1'], clock: 0 },
-        { key: '4\0', end: '4\uffff', clock: 0 },
-        { key: '5', end: '5', clock: 1 },
-        { key: '5\0', end: '6\uffff', clock: 0 },
-        { key: '7', path: ['users', '3'], clock: 0 },
-        { key: '7\0', end: '\uffff', clock: 0 },
+        { key: '4', path: ['users', '1'], version: 0 },
+        { key: '4\0', end: '4\uffff', version: 0 },
+        { key: '5', end: '5', version: 1 },
+        { key: '5\0', end: '6\uffff', version: 0 },
+        { key: '7', path: ['users', '3'], version: 0 },
+        { key: '7\0', end: '\uffff', version: 0 },
       ],
     });
   });

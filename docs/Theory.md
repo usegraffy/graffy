@@ -26,7 +26,7 @@ Queries may contain an infinite number of paths, when intervals of keys are requ
 
 ```
 Graph         ::= {* Leaf *}
-Leaf          ::= LeafPaths, Value, Clock
+Leaf          ::= LeafPaths, Value, Version
 LeafPaths     ::= CanonicalPath, LinkedPaths
 CanonicalPath ::= { Key }
 LinkedPaths   ::= {* LinkedPath *}
@@ -42,7 +42,7 @@ KeyRange      ::= MinKey, MaxKey
 KeyRangeFirst ::= MinKey, MaxKey, First
 KeyRangeLast  ::= MinKey, MaxKey, Last
 Value         ::= Scalar | Null
-Clock         ::= Non-negative Real
+Version         ::= Non-negative Real
 First         ::= Non-negative Integer
 Last          ::= Non-negative Integer
 
@@ -71,10 +71,10 @@ those elements is used instead.
 
 ```
 Leaf₁ + Leaf₂ ::=
-  CanonicalPath, LinkedPaths₁ + LinkedPaths₂, Value₁, Clock₁ if Clock₁ > Clock₂
-  CanonicalPath, LinkedPaths₁ + LinkedPaths₂, Value₂, Clock₂ if Clock₂ > Clock₁
+  CanonicalPath, LinkedPaths₁ + LinkedPaths₂, Value₁, Version₁ if Version₁ > Version₂
+  CanonicalPath, LinkedPaths₁ + LinkedPaths₂, Value₂, Version₂ if Version₂ > Version₁
 
-# Leaf union is not defined if the clocks are identical and the values differ.
+# Leaf union is not defined if the versions are identical and the values differ.
 
 # Path unions are calculated by the union of their segments taken in order.
 

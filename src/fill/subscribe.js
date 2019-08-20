@@ -36,7 +36,7 @@ export default function subscribe(store, originalQuery, raw) {
         // The upstream is a change subscription, not a live query,
         // so we need to fetch the initial value.
 
-        // TODO: Get a clock corresponding to the subscription's start
+        // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.get() response is newer.
         // console.log('Making query for ', debug(unknown));
         // console.log('Made query', debug(unknown));

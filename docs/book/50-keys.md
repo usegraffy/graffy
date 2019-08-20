@@ -2,7 +2,7 @@
 
 ## Graphs
 
-Graphs are modeled as trees with symbolic links. Interior nodes are _functions_ mapping string keys to children, while leaf nodes are either values or links to other nodes in the tree. Every node also has a clock (timestamp).
+Graphs are modeled as trees with symbolic links. Interior nodes are _functions_ mapping string keys to children, while leaf nodes are either values or links to other nodes in the tree. Every node also has a version (timestamp).
 
 An interior node must return one of three values for every possible string: a child node, if one exists at that key; `null`, if it is known that there is no such key, and `undefined` if the existence of the key is not known. The last case occurs in graphs that represent cached data, query results, change sets etc.
 

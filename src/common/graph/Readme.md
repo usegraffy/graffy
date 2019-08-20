@@ -7,17 +7,17 @@ Graph         :=  [ GraphNode  | GraphRange ]
 GraphNode     :=  GraphBranch | GraphLeaf
 GraphBranch   :=  { key, children: Graph }
 GraphLeaf     :=  GraphValue | GraphLink
-GraphValue    :=  { key, value, clock }
-GraphLink     :=  { key, path, clock }
-GraphRange    :=  { key, end, clock }
+GraphValue    :=  { key, value, version }
+GraphLink     :=  { key, path, version }
+GraphRange    :=  { key, end, version }
 ```
 
 ```
 Query         :=  [ QueryNode | QueryRange ]
 QueryNode     :=  QueryBranch | QueryLeaf
-QueryBranch   :=  { key, clock, children: Query }
-QueryLeaf     :=  { key, value, clock }
-QueryRange    :=  { key, end, count, clock, (value | children) }
+QueryBranch   :=  { key, version, children: Query }
+QueryLeaf     :=  { key, value, version }
+QueryRange    :=  { key, end, count, version, (value | children) }
 ```
 
 Notes:
@@ -55,14 +55,14 @@ Returns a query that matches any change that may modify known parts of the graph
 [
   { key: 'posts', children: [
     { key: '1', children: [
-      { key: 'title', value: '1984', clock: 1 },
-      { key: 'author', path: ['users', '1'], clock: 1 }
+      { key: 'title', value: '1984', version: 1 },
+      { key: 'author', path: ['users', '1'], version: 1 }
     ] }
   ] },
   { key: 'postsByTime', children: [
-    { key: '', end: '1233\xff', clock: 1 },
-    { key: '1234', path: ['posts', '1'], clock: 1 },
-    { key: '1234\0', end: '2000', clock: 1 },
+    { key: '', end: '1233\xff', version: 1 },
+    { key: '1234', path: ['posts', '1'], version: 1 },
+    { key: '1234\0', end: '2000', version: 1 },
   ] },
   { key: 'users', children: [
     { key: 1, ... }
@@ -77,9 +77,9 @@ Returns a query that matches any change that may modify known parts of the graph
 [
   { key: 'postsByTime', children: [
     { key: '', end: '2000', count: 10, children: [
-      { key: 'title', value: 1, clock: 0 },
+      { key: 'title', value: 1, version: 0 },
       { key: 'author', children: [
-        { key: 'name', value: 1, clock: 0}
+        { key: 'name', value: 1, version: 0}
       ] }
     ] }
   ] }
@@ -133,13 +133,13 @@ QueryRanges result in arrays, QueryBranches result in objects.
 
 # Decisions
 
-1. For data, should there be a single tree with both clocks and values, or a separate clocks tree?
+1. For data, should there be a single tree with both versions and values, or a separate versions tree?
 
-  If clocks are very fragmented, it makes sense to have a single tree. If not, we might save by using separate trees. Versions for queries will likely not be very fragmented but those for data might be.
+  If versions are very fragmented, it makes sense to have a single tree. If not, we might save by using separate trees. Versions for queries will likely not be very fragmented but those for data might be.
 
   Decision: Single tree.
 
-2. For queries, should it be possible to specify different clocks for different parts?
+2. For queries, should it be possible to specify different versions for different parts?
 
   Decision: Yes; Without this, query addition will be very limited.
 
@@ -151,7 +151,7 @@ QueryRanges result in arrays, QueryBranches result in objects.
 
   Preferably, but this is not a hard requirement.
 
-5. Should there be "clock" for branch nodes to optimize searches?
+5. Should there be "version" for branch nodes to optimize searches?
 
   No. Because of links, this will be misleading anyway.
   Update: Yes for Query branches, to avoid jumping through obsolete links.
@@ -163,26 +163,26 @@ QueryRanges result in arrays, QueryBranches result in objects.
 # Rejected options
 
 // Option 1, flat nodes
-// May be simpler to implement and more efficient if clock numbers are very fragmented.
+// May be simpler to implement and more efficient if version numbers are very fragmented.
 
 [
   undefined,
   undefined, // Up to key_1 is unknown
 
   key_1,
-  clock_null,
+  version_null,
   null,
 
   key_2,
-  clock_value,
+  version_value,
   value_2,
 
   key_2 + \0,  // key_2
-  clock_null,
+  version_null,
   null,
 
   key_3,
-  clock_null, // key_2 to key_4 is null, but clock changes at key_3
+  version_null, // key_2 to key_4 is null, but version changes at key_3
   null,
 
   key_4,
@@ -190,7 +190,7 @@ QueryRanges result in arrays, QueryBranches result in objects.
   undefined,
 
   key_5,
-  clock_null,
+  version_null,
   null,
 
   key_6
@@ -201,9 +201,9 @@ QueryRanges result in arrays, QueryBranches result in objects.
 Record:
 
 {
-  __clocks__: {
-    key_1: clock_1,
-    key_2: clock_2
+  __versions__: {
+    key_1: version_1,
+    key_2: version_2
   }
   key_1: value_1,
   key_2: null
@@ -258,7 +258,7 @@ Graph:
     ]
   }
 
-  clock: {
+  version: {
     posts: {
       22: 2837
     },

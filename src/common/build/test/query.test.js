@@ -16,18 +16,18 @@ it('should encode queries', () => {
   ).toEqual(
     /* prettier-ignore */
     [
-      { key: 'postCount', value: 1, clock: 2 },
-      { key: 'posts', clock: 2, children: [
-        { key: '1984', end: '\uffff', count: 10, clock: 2, children: [
-          { key: 'author', clock: 2, children: [
-            { key: 'name', value: 1, clock: 2 }
+      { key: 'postCount', value: 1, version: 2 },
+      { key: 'posts', version: 2, children: [
+        { key: '1984', end: '\uffff', count: 10, version: 2, children: [
+          { key: 'author', version: 2, children: [
+            { key: 'name', value: 1, version: 2 }
           ] },
-          { key: 'body', value: 1, clock: 2 },
-          { key: 'title', value: 1, clock: 2 },
+          { key: 'body', value: 1, version: 2 },
+          { key: 'title', value: 1, version: 2 },
         ] },
       ] },
-      { key: 'tags', clock: 2, children: [
-        { key: '', end: '\uffff', count: 10, clock: 2, value: 1 }
+      { key: 'tags', version: 2, children: [
+        { key: '', end: '\uffff', count: 10, version: 2, value: 1 }
       ] }
     ],
   );

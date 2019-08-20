@@ -12,34 +12,34 @@ function pageToRange(page) {
 // TODO: Don't freeze in production builds, as a perf optimization.
 const freeze = obj => Object.freeze(obj);
 
-function makeQuery(value, clock) {
+function makeQuery(value, version) {
   if (Array.isArray(value)) {
     return freeze({
       children: freeze([
         freeze({
           ...pageToRange(value[0]),
-          ...makeQuery(value[1], clock),
+          ...makeQuery(value[1], version),
         }),
       ]),
-      clock,
+      version,
     });
   } else if (typeof value === 'object' && value) {
     return freeze({
-      clock,
+      version,
       children: freeze(
         Object.keys(value)
           .sort()
-          .map(key => freeze({ key, ...makeQuery(value[key], clock) })),
+          .map(key => freeze({ key, ...makeQuery(value[key], version) })),
       ),
     });
   } else {
     return freeze({
-      clock,
+      version,
       value: typeof value === 'number' ? value : 1,
     });
   }
 }
 
-export function query(obj, clock = 0) {
-  return makeQuery(obj, clock).children;
+export function query(obj, version = 0) {
+  return makeQuery(obj, version).children;
 }

@@ -27,16 +27,16 @@ test.skip('toQuery', () => {
     ),
   ).toEqual([
     // prettier-ignore
-    { key: 'user', clock: 3, children: [
-      { key: '{"id":123}', alias: 'foo', clock: 3, children: [
-        { key: 'id', clock: 3, num: 1 },
-        { key: 'name', clock: 3, num: 1 },
-        { key: 'isViewerFriend', clock: 3, num: 1 },
-        { key: 'profilePicture', clock: 3, children: [
-          { key: '{"size":"50"}', clock: 3, children: [
-            { key: 'uri', clock: 3, num: 1 },
-            { key: 'width', clock: 3, num: 1 },
-            { key: 'height', clock: 3, num: 1 },
+    { key: 'user', version: 3, children: [
+      { key: '{"id":123}', alias: 'foo', version: 3, children: [
+        { key: 'id', version: 3, num: 1 },
+        { key: 'name', version: 3, num: 1 },
+        { key: 'isViewerFriend', version: 3, num: 1 },
+        { key: 'profilePicture', version: 3, children: [
+          { key: '{"size":"50"}', version: 3, children: [
+            { key: 'uri', version: 3, num: 1 },
+            { key: 'width', version: 3, num: 1 },
+            { key: 'height', version: 3, num: 1 },
           ] },
         ] },
       ] },

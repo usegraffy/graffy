@@ -10,10 +10,10 @@ export function makePath(path) {
   return path.split(PATH_SEPARATOR).slice(1);
 }
 
-export function wrap(children, path, clock) {
+export function wrap(children, path, version) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
   for (let i = path.length - 1; i >= 0; i--) {
-    children = [{ key: path[i], clock, children }];
+    children = [{ key: path[i], version, children }];
   }
   return children;
 }

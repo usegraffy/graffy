@@ -10,10 +10,10 @@ export function isLink(node) {
   return node && typeof node.path !== 'undefined';
 }
 
-export function isOlder(node, clock) {
-  return typeof node.clock !== 'undefined' && node.clock < clock;
+export function isOlder(node, version) {
+  return typeof node.version !== 'undefined' && node.version < version;
 }
 
-export function isNewer(node, clock) {
-  return typeof node.clock !== 'undefined' && node.clock > clock;
+export function isNewer(node, version) {
+  return typeof node.version !== 'undefined' && node.version > version;
 }

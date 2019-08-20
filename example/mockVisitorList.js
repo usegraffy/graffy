@@ -6,7 +6,7 @@ import {
   merge,
   unwrap,
   makeStream,
-  setClock,
+  setVersion,
 } from '@graffy/common';
 
 // import { debug } from '@graffy/testing';
@@ -23,7 +23,7 @@ export default function(g) {
   g.onGet(() => {
     // console.log('Get: Returning', debug(state));
     ts = Date.now();
-    setClock(state, ts);
+    setVersion(state, ts);
     return state;
   });
 

@@ -1,6 +1,6 @@
 const MAX_PAGE_SIZE = 1024;
 
-export default function toQuery(ast, vars = {}, clock = 0) {
+export default function toQuery(ast, vars = {}, version = 0) {
   if (!ast || ast.kind !== 'Document') {
     throw Error('graphql.invalid ' + JSON.stringify(ast));
   }
@@ -30,7 +30,7 @@ export default function toQuery(ast, vars = {}, clock = 0) {
   return fieldToNode(query).children;
 
   function fieldToNode({ alias, name, arguments: args, selectionSet }) {
-    let node = { clock };
+    let node = { version };
     if (alias) node.alias = alias.value;
     if (selectionSet) {
       node.children = [];
@@ -56,7 +56,7 @@ export default function toQuery(ast, vars = {}, clock = 0) {
     }
     if (args && args.length) {
       addArgsToNode(node, args);
-      node = { key: name.value, clock, children: [node] };
+      node = { key: name.value, version, children: [node] };
     } else {
       if (name) node.key = name.value;
     }

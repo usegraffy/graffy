@@ -82,7 +82,7 @@ Called when processing a `put()` that overlaps the path.
 #### options
 
 - **source**: A string identifying the source of the change.
-- **clock**: A numeric timestamp for the change.
+- **version**: A numeric timestamp for the change.
 
 #### next(nextChange)
 
@@ -127,8 +127,8 @@ Converts a graph data structure into easier-to-use JS objects and arrays.
 - **isRange(node)**: Check if graph or query node is a range.
 - **isBranch(node)**: Check if graph or query node is a branch.
 - **isLink(node)**: Check if graph or query node is a link.
-- **isOlder(node, clock)**: Check if graph or query node is older than the clock.
-- **isNewer(node, clock)**: Check if graph or query node is newer than the clock.
+- **isOlder(node, version)**: Check if graph or query node is older than the version.
+- **isNewer(node, version)**: Check if graph or query node is newer than the version.
 
 ### makeStream(initializer)
 

@@ -10,22 +10,22 @@ describe('slice', () => {
     expect(
       slice(
         [
-          { key: 'foo', value: 42, clock: 3 },
-          { key: 'foo\0', end: 'fuy\uffff', clock: 3 },
-          { key: 'fuz', value: 43, clock: 3 },
+          { key: 'foo', value: 42, version: 3 },
+          { key: 'foo\0', end: 'fuy\uffff', version: 3 },
+          { key: 'fuz', value: 43, version: 3 },
         ],
         [
-          { key: 'flo', value: 1, clock: 2 },
-          { key: 'foo', value: 1, clock: 2 },
-          { key: 'fub', value: 1, clock: 2 },
+          { key: 'flo', value: 1, version: 2 },
+          { key: 'foo', value: 1, version: 2 },
+          { key: 'fub', value: 1, version: 2 },
         ],
       ),
     ).toEqual({
       known: [
-        { key: 'foo', value: 42, clock: 3 },
-        { key: 'fub', end: 'fub', clock: 3 },
+        { key: 'foo', value: 42, version: 3 },
+        { key: 'fub', end: 'fub', version: 3 },
       ],
-      unknown: [{ key: 'flo', value: 1, clock: 2 }],
+      unknown: [{ key: 'flo', value: 1, version: 2 }],
     });
   });
 
@@ -36,12 +36,12 @@ describe('slice', () => {
           {
             key: 'bar',
             children: [
-              { key: 'foo', value: 42, clock: 3 },
-              { key: 'fuz', value: 43, clock: 3 },
+              { key: 'foo', value: 42, version: 3 },
+              { key: 'fuz', value: 43, version: 3 },
             ],
           },
         ],
-        [{ key: 'bar', value: 1, clock: 2 }],
+        [{ key: 'bar', value: 1, version: 2 }],
       ),
     ).toThrow();
   });
@@ -52,20 +52,20 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 1 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: 'gag', clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 1 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bar', end: 'egg', count: 2, num: 1, clock: 0 }],
+        [{ key: 'bar', end: 'egg', count: 2, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', value: 1, clock: 1 },
-        { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-        { key: 'bat', value: 2, clock: 1 },
+        { key: 'bar', value: 1, version: 1 },
+        { key: 'bar\0', end: 'bas\uffff', version: 1 },
+        { key: 'bat', value: 2, version: 1 },
       ],
     });
   });
@@ -74,21 +74,21 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 1 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: 'gag', clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 1 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bar', end: 'egg', count: -2, num: 1, clock: 0 }],
+        [{ key: 'bar', end: 'egg', count: -2, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', value: 1, clock: 1 },
-        { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-        { key: 'bat', value: 2, clock: 1 },
-        { key: 'bat\0', end: 'egg', clock: 1 },
+        { key: 'bar', value: 1, version: 1 },
+        { key: 'bar\0', end: 'bas\uffff', version: 1 },
+        { key: 'bat', value: 2, version: 1 },
+        { key: 'bat\0', end: 'egg', version: 1 },
       ],
     });
   });
@@ -97,23 +97,23 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 1 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: 'gag', clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 1 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: '', end: 'egg', count: -3, num: 1, clock: 0 }],
+        [{ key: '', end: 'egg', count: -3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', value: 1, clock: 1 },
-        { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-        { key: 'bat', value: 2, clock: 1 },
-        { key: 'bat\0', end: 'egg', clock: 1 },
+        { key: 'bar', value: 1, version: 1 },
+        { key: 'bar\0', end: 'bas\uffff', version: 1 },
+        { key: 'bat', value: 2, version: 1 },
+        { key: 'bat\0', end: 'egg', version: 1 },
       ],
-      unknown: [{ key: '', end: 'baq\uffff', count: -1, num: 1, clock: 0 }],
+      unknown: [{ key: '', end: 'baq\uffff', count: -1, num: 1, version: 0 }],
     });
   });
 
@@ -121,22 +121,22 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 1 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: 'gag', clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 1 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bark', end: 'fuz', count: 3, num: 1, clock: 0 }],
+        [{ key: 'bark', end: 'fuz', count: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bark', end: 'bas\uffff', clock: 1 },
-        { key: 'bat', value: 2, clock: 1 },
-        { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-        { key: 'foo', value: 3, clock: 1 },
-        { key: 'foo\0', end: 'fuz', clock: 1 },
+        { key: 'bark', end: 'bas\uffff', version: 1 },
+        { key: 'bat', value: 2, version: 1 },
+        { key: 'bat\0', end: 'fon\uffff', version: 1 },
+        { key: 'foo', value: 3, version: 1 },
+        { key: 'foo\0', end: 'fuz', version: 1 },
       ],
     });
   });
@@ -145,17 +145,17 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 1 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: 'gag', clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 1 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'ark', end: 'foo', count: 3, num: 1, clock: 0 }],
+        [{ key: 'ark', end: 'foo', count: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
-      unknown: [{ key: 'ark', end: 'foo', count: 3, num: 1, clock: 0 }],
+      unknown: [{ key: 'ark', end: 'foo', count: 3, num: 1, version: 0 }],
     });
   });
 
@@ -163,25 +163,25 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: '', end: 'baq\uffff', clock: 1 },
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 1 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: '\uffff', clock: 1 },
+          { key: '', end: 'baq\uffff', version: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 1 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: '\uffff', version: 1 },
         ],
-        [{ key: '', end: '\uffff', count: 5000, num: 1, clock: 0 }],
+        [{ key: '', end: '\uffff', count: 5000, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: '', end: 'baq\uffff', clock: 1 },
-        { key: 'bar', value: 1, clock: 1 },
-        { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-        { key: 'bat', value: 2, clock: 1 },
-        { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-        { key: 'foo', value: 3, clock: 1 },
-        { key: 'foo\0', end: '\uffff', clock: 1 },
+        { key: '', end: 'baq\uffff', version: 1 },
+        { key: 'bar', value: 1, version: 1 },
+        { key: 'bar\0', end: 'bas\uffff', version: 1 },
+        { key: 'bat', value: 2, version: 1 },
+        { key: 'bat\0', end: 'fon\uffff', version: 1 },
+        { key: 'foo', value: 3, version: 1 },
+        { key: 'foo\0', end: '\uffff', version: 1 },
       ],
     });
   });
@@ -192,13 +192,13 @@ describe('link', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bat', path: ['bar'], clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bat', path: ['bar'], version: 1 },
         ],
-        [{ key: 'bat', num: 1, clock: 0 }],
+        [{ key: 'bat', num: 1, version: 0 }],
       ),
     ).toEqual({
-      known: [{ key: 'bat', path: ['bar'], clock: 1 }],
+      known: [{ key: 'bat', path: ['bar'], version: 1 }],
     });
   });
 
@@ -209,33 +209,33 @@ describe('link', () => {
           {
             key: 'bar',
             children: [
-              { key: 'foo', value: 42, clock: 3 },
-              { key: 'fuz', value: 43, clock: 3 },
+              { key: 'foo', value: 42, version: 3 },
+              { key: 'fuz', value: 43, version: 3 },
             ],
           },
-          { key: 'bat', path: ['bar'], clock: 3 },
+          { key: 'bat', path: ['bar'], version: 3 },
         ],
         [
           {
             key: 'bat',
-            clock: 2,
+            version: 2,
             children: [
-              { key: 'flo', value: 1, clock: 2 },
-              { key: 'foo', value: 1, clock: 2 },
+              { key: 'flo', value: 1, version: 2 },
+              { key: 'foo', value: 1, version: 2 },
             ],
           },
         ],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', children: [{ key: 'foo', value: 42, clock: 3 }] },
-        { key: 'bat', path: ['bar'], clock: 3 },
+        { key: 'bar', children: [{ key: 'foo', value: 42, version: 3 }] },
+        { key: 'bat', path: ['bar'], version: 3 },
       ],
       unknown: [
         {
           key: 'bar',
-          clock: 2,
-          children: [{ key: 'flo', value: 1, clock: 2 }],
+          version: 2,
+          children: [{ key: 'flo', value: 1, version: 2 }],
         },
       ],
     });
@@ -244,27 +244,27 @@ describe('link', () => {
   test('linkBroken', () => {
     expect(
       slice(
-        [{ key: 'bat', path: ['bar'], clock: 3 }],
+        [{ key: 'bat', path: ['bar'], version: 3 }],
         [
           {
             key: 'bat',
-            clock: 2,
+            version: 2,
             children: [
-              { key: 'flo', value: 1, clock: 2 },
-              { key: 'foo', value: 1, clock: 2 },
+              { key: 'flo', value: 1, version: 2 },
+              { key: 'foo', value: 1, version: 2 },
             ],
           },
         ],
       ),
     ).toEqual({
-      known: [{ key: 'bat', path: ['bar'], clock: 3 }],
+      known: [{ key: 'bat', path: ['bar'], version: 3 }],
       unknown: [
         {
           key: 'bar',
-          clock: 2,
+          version: 2,
           children: [
-            { key: 'flo', value: 1, clock: 2 },
-            { key: 'foo', value: 1, clock: 2 },
+            { key: 'flo', value: 1, version: 2 },
+            { key: 'foo', value: 1, version: 2 },
           ],
         },
       ],
@@ -272,23 +272,23 @@ describe('link', () => {
   });
 });
 
-describe('clock', () => {
+describe('version', () => {
   test('ignoreOldInRanges', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, clock: 1 },
-          { key: 'bar\0', end: 'bas\uffff', clock: 1 },
-          { key: 'bat', value: 2, clock: 0 },
-          { key: 'bat\0', end: 'fon\uffff', clock: 1 },
-          { key: 'foo', value: 3, clock: 1 },
-          { key: 'foo\0', end: 'gag', clock: 1 },
+          { key: 'bar', value: 1, version: 1 },
+          { key: 'bar\0', end: 'bas\uffff', version: 1 },
+          { key: 'bat', value: 2, version: 0 },
+          { key: 'bat\0', end: 'fon\uffff', version: 1 },
+          { key: 'foo', value: 3, version: 1 },
+          { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bark', end: 'fuz', count: 3, num: 1, clock: 1 }],
+        [{ key: 'bark', end: 'fuz', count: 3, num: 1, version: 1 }],
       ),
     ).toEqual({
-      known: [{ key: 'bark', end: 'bas\uffff', clock: 1 }],
-      unknown: [{ key: 'bat', end: 'fuz', count: 3, clock: 1, num: 1 }],
+      known: [{ key: 'bark', end: 'bas\uffff', version: 1 }],
+      unknown: [{ key: 'bat', end: 'fuz', count: 3, version: 1, num: 1 }],
     });
   });
 
@@ -299,19 +299,19 @@ describe('clock', () => {
           {
             key: 'bar',
             children: [
-              { key: 'foo', value: 42, clock: 3 },
-              { key: 'fuz', value: 43, clock: 3 },
+              { key: 'foo', value: 42, version: 3 },
+              { key: 'fuz', value: 43, version: 3 },
             ],
           },
-          { key: 'bat', path: ['bar'], clock: 1 },
+          { key: 'bat', path: ['bar'], version: 1 },
         ],
         [
           {
             key: 'bat',
-            clock: 2,
+            version: 2,
             children: [
-              { key: 'flo', value: 1, clock: 2 },
-              { key: 'foo', value: 1, clock: 2 },
+              { key: 'flo', value: 1, version: 2 },
+              { key: 'foo', value: 1, version: 2 },
             ],
           },
         ],
@@ -320,10 +320,10 @@ describe('clock', () => {
       unknown: [
         {
           key: 'bat',
-          clock: 2,
+          version: 2,
           children: [
-            { key: 'flo', value: 1, clock: 2 },
-            { key: 'foo', value: 1, clock: 2 },
+            { key: 'flo', value: 1, version: 2 },
+            { key: 'foo', value: 1, version: 2 },
           ],
         },
       ],

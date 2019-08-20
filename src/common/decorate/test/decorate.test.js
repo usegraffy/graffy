@@ -4,27 +4,27 @@ test('decorate', () => {
   const decorated = decorate(
     /* prettier-ignore */
     [
-      { key: 'users', clock: 2, children: [
-        { key: '1', clock: 2, children: [
-          { key: 'name', value: 'George Orwell', clock: 2 },
+      { key: 'users', version: 2, children: [
+        { key: '1', version: 2, children: [
+          { key: 'name', value: 'George Orwell', version: 2 },
         ] },
-        { key: '2', clock: 2, children: [
-          { key: 'name', value: 'Arthur C Clarke', clock: 2 },
+        { key: '2', version: 2, children: [
+          { key: 'name', value: 'Arthur C Clarke', version: 2 },
         ]}
       ] },
-      { key: 'posts', clock: 2, children: [
-        { key: '1984', clock: 2, children: [
-          { key: 'author', clock: 2, path: ['users', '1'] },
-          { key: 'body', value: 'Lorem ipsum', clock: 2 },
-          { key: 'title', value: '1984', clock: 2 },
+      { key: 'posts', version: 2, children: [
+        { key: '1984', version: 2, children: [
+          { key: 'author', version: 2, path: ['users', '1'] },
+          { key: 'body', value: 'Lorem ipsum', version: 2 },
+          { key: 'title', value: '1984', version: 2 },
         ] },
-        { key: '1984\0', end: '2000\uffff', clock: 2},
-        { key: '2001', clock: 2, children: [
-          { key: 'author', clock: 2, path: ['users', '2'] },
-          { key: 'body', value: 'Hello world', clock: 2 },
-          { key: 'title', value: '2001', clock: 2 },
+        { key: '1984\0', end: '2000\uffff', version: 2},
+        { key: '2001', version: 2, children: [
+          { key: 'author', version: 2, path: ['users', '2'] },
+          { key: 'body', value: 'Hello world', version: 2 },
+          { key: 'title', value: '2001', version: 2 },
         ] },
-        { key: '2001\0', end: '\uffff', clock: 2 }
+        { key: '2001\0', end: '\uffff', version: 2 }
       ] },
     ],
   );
