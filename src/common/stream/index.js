@@ -34,14 +34,14 @@
     }
   });
 
-  Backpressure: TODO
+  Backpressure:
 
   const stream = makeStream(push => {
     eventSource.on('event', event => {
       const wait = push(event);
       if (wait) {
-        eventSource.cork();
-        wait.then(() => eventSource.uncork());
+        eventSource.pause();
+        wait.then(() => eventSource.resume());
       }
     });
 

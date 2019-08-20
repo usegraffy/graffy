@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { pretty } from '@graffy/testing';
 
 export default function Query({ query, onChange }) {
   const [error, setError] = useState(false);
@@ -15,8 +16,8 @@ export default function Query({ query, onChange }) {
   return (
     <textarea
       className={`Query ${error.current ? 'Query--error' : ''}`}
-      onChange={onChangElement}
-      value={JSON.stringify(query, null, 2)}
+      onBlur={onChangElement}
+      defaultValue={pretty(query)}
     />
   );
 }
