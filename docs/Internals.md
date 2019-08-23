@@ -83,25 +83,28 @@ In Graffy, the plan is to separate these different segments with '\0', so that i
 
 The internal representation of queries and graphs is based on arrays. These are constructed from the friendlier representations used in the docs using the query and graph builder functions.
 
-Graphs
+## Graphs
 
 For example,
 
+```js
 graph({
     foo: 10,
     bar: {
         baz: 'a',
     },
 }, 1)
-
+```
 will return the internal representation, which is:
 
+```js
 [
   { key: 'bar', clock: 1, children: [
     { key: 'baz', clock: 1, value: 'a' },
   ] },
   { key: 'foo', clock: 1, value: 10 },
 ]
+```
 
 Note that the order of foo and bar have been reversed, because a node's children must always be sorted by key. Maintaining order greatly speeds up most operations as we can now use binary search. (Before the CRDT refactor I used a more straightforward approach of just storing JSON objects. This had really bad performance as many operations required iteration in key order.)
 
@@ -109,19 +112,22 @@ The "clock" attribute on each node stores a timestamp which serves as a version 
 
 I'll skip the clock property from now to reduce noise.
 
-Queries
+## Queries
 
 Queries are very similar. Let's switch the example a bit, here's a query to get the first 3 posts for a blog:
 
+```js
 query({
   posts: [ { first: 3 }, {
     title: true,
     author: true,
   } ],
 }, 1)
+```
 
 which returns the internal representation:
 
+```js
 [
   { key: 'posts', children: [
     { key: '', end: '\uFFFF', count: 3, children: [
@@ -130,8 +136,9 @@ which returns the internal representation:
     ] }
   ] }
 ]
+```
 
-The part in red is the internal representation of { first: 3 }. It identifies a range with start and end keys and a count. To simplify in-order graph traversal, the start key is just called "key".
+`key: '', end: '\uFFFF', count: 3` is the internal representation of `{ first: 3 }`. It identifies a range with start and end keys and a count. To simplify in-order graph traversal, the start key is just called "key".
 
 Here, as "before" and "after" where not specified, the start key is MIN_KEY ('') and the end key is MAX_KEY ('\uFFFF'). "first" is represented by a positive count, and "last" by a negative count.
 
@@ -143,6 +150,7 @@ Ranges in Graphs
 
 If we send the query above to a backend, it might return a graph like this:
 
+```js
 [
   { key: 'posts', children: [
     { key: '', end: 'post0\uFFFF' },
@@ -156,12 +164,13 @@ If we send the query above to a backend, it might return a graph like this:
     { key: 'post3', children: [ ... ] },
   ] }
 ]
+```
 
 Here, the actual results (keys post1, post2 and post3) are interleaved with "ranges", highlighted in blue. These represent the fact that there are no keys before 'post1', between 'post1' and 'post2', or between 'post2' and 'post3'.
 
 Also, the red highlight shows how symbolic links (to other parts of the tree) are represented.
 
-Differences between Graph and Query Representations
+## Differences between Graph and Query Representations
 
 In both graphs and queries, children are sorted by key.
 
@@ -169,18 +178,20 @@ In graphs, there is the additional restriction that ranges and keys must not ove
 
 There is no such restriction in queries. We could construct a single query requesting both the first 3 children and the last 3 children: it would look like:
 
+```js
 [
   { key: '', end: '\uFFFF', count: -3, children: [ ... ] },
   { key: '', end: '\uFFFF', count: 3, children: [ ... ] },
 ]
+```
 
 So children in queries are sorted by key first, then by end, and finally by count.
 
 A few other differences might also be apparent:
 
-    Ranges in graph nodes have no value or children. Ranges in query nodes must have a value or children and a count attribute.
-    Ranges can't have paths.
-    Values in query nodes must be integers, while those in graphs can be any value.
+- Ranges in graph nodes have no value or children. Ranges in query nodes must have a value or children and a count attribute.
+- Ranges can't have paths.
+- Values in query nodes must be integers, while those in graphs can be any value.
 
 Despite these differences, they are close enough that the implementations of most operations can be shared.
 
