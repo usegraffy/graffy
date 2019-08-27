@@ -4,4 +4,5 @@ module.exports = {
   rootDir: 'src',
   modulePaths: ['<rootDir>/src'],
   collectCoverage: false,
+  testEnvironment: 'node',
 };

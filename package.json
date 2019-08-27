@@ -14,6 +14,7 @@
     "example": "yarn client && yarn server",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
+  "private": true,
   "workspaces": [
     "src/*",
     "example"
@@ -35,6 +36,7 @@
     "@babel/preset-env": "^7.5.4",
     "@babel/preset-react": "^7.0.0",
     "@babel/runtime": "^7.5.4",
+    "@sinonjs/text-encoding": "^0.7.1",
     "babel-eslint": "^10.0.2",
     "babel-jest": "^24.8.0",
     "babel-plugin-add-module-exports": "^1.0.2",

@@ -30,7 +30,7 @@ export default function(g) {
   g.onSub(() =>
     makeStream((push, _end) => {
       listeners.add(push);
-      push(undefined);
+      push(state);
       return () => listeners.delete(push);
     }),
   );
