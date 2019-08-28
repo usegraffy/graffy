@@ -2,6 +2,7 @@
   "name": "graffy",
   "version": "0.0.1",
   "description": "Graffy Project",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aravindet/graffy.git"
