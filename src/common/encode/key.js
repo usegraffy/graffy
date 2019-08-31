@@ -1,5 +1,3 @@
-export * from './step.js';
-
 import { encode as encodeString, decode as decodeString } from './string.js';
 import { encode as encodeNumber, decode as decodeNumber } from './number.js';
 import { encode as encodeB64, decode as decodeB64 } from './base64.js';
@@ -167,12 +165,4 @@ export function decode(key) {
   }
 
   return stack[0][0];
-}
-
-export function encodeUrl(value) {
-  return encode(value);
-}
-
-export function decodeUrl(string) {
-  return decode(string);
 }

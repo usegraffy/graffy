@@ -6,7 +6,7 @@ import {
   getIndex,
   getLastIndex,
 } from '../node';
-import { keyAfter, keyBefore } from '../key';
+import { keyAfter, keyBefore } from './step';
 import { wrap } from '../path';
 import merge from './merge';
 
