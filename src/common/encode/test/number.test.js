@@ -1,39 +1,30 @@
-import {
-  encodeNumber,
-  decodeNumber,
-  // encodeString,
-  // decodeString,
-  // encodeTuple,
-  // decodeTuple,
-  // enc64,
-  // dec64
-} from '../dencorder';
+import { encode, decode } from '../number';
 // import { string, number, boolean } from './types';
 
 describe('dencorder', () => {
   test('average number', () => {
     let v = -1746.5567;
-    expect(v).toEqual(decodeNumber(encodeNumber(v)));
+    expect(v).toEqual(decode(encode(v)));
   });
 
   test('tiny number', () => {
     let v = 0.0000000001;
-    expect(v).toEqual(decodeNumber(encodeNumber(v)));
+    expect(v).toEqual(decode(encode(v)));
   });
 
   test('huge number', () => {
     let v = -1.74e123;
-    expect(v).toEqual(decodeNumber(encodeNumber(v)));
+    expect(v).toEqual(decode(encode(v)));
   });
 
   test('infinity', () => {
     let v = -Infinity;
-    expect(v).toEqual(decodeNumber(encodeNumber(v)));
+    expect(v).toEqual(decode(encode(v)));
   });
 
   test('nan', () => {
     let v = 0.2 * 'potato';
-    expect(isNaN(decodeNumber(encodeNumber(v)))).toBe(true);
+    expect(isNaN(decode(encode(v)))).toBe(true);
   });
 
   // test('string', () => {
@@ -42,11 +33,11 @@ describe('dencorder', () => {
   // });
   //
   // test('enc64', () => {
-  //   expect(enc64(encodeNumber(1746.5567))).toEqual('k8h9DVyF_fk');
+  //   expect(enc64(encode(1746.5567))).toEqual('k8h9DVyF_fk');
   // });
   //
   // test('dec64', () => {
-  //   expect(decodeNumber(dec64('k8h9DVyF_fk'))).toEqual(1746.5567);
+  //   expect(decode(dec64('k8h9DVyF_fk'))).toEqual(1746.5567);
   // });
   //
   // test.skip('tuple', () => {

@@ -4,3 +4,4 @@ export { default as slice } from './slice';
 export { default as sieve } from './sieve';
 
 export { default as setVersion } from './setVersion';
+export * from './step';

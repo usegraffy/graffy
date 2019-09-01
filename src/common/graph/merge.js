@@ -1,5 +1,5 @@
 import { isBranch, isRange, getIndex, getLastIndex } from '../node';
-import { keyAfter, keyBefore } from '../key';
+import { keyAfter, keyBefore } from './step';
 
 export default function merge(current, changes) {
   let index = 0;
