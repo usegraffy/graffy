@@ -10,9 +10,10 @@
   "scripts": {
     "test": "jest",
     "release": "./scripts/build",
-    "server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",
-    "client": "rollup -c",
-    "example": "yarn client && yarn server",
+    "example:server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",
+    "example:client": "rollup -c example/rollup.config.js",
+    "example": "yarn example:client && yarn example:server",
+    "site": "rollup -w -c site/rollup.config.js",
     "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src"
   },
   "private": true,
