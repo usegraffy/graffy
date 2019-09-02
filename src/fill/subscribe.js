@@ -38,13 +38,10 @@ export default function subscribe(store, originalQuery, raw) {
 
         // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.get() response is newer.
-        // console.log('Making query for ', debug(unknown));
-        // console.log('Made query', debug(unknown));
+
         value = await store.get(unknown, { skipFill: true });
-        // console.log('Initial result', debug(value));
-        value = slice(value, unknown).known;
-        // console.log('Got query result', debug(value));
       }
+      value = slice(value, unknown).known;
       putValue(value, false);
     } catch (e) {
       error(e);
