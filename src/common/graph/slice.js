@@ -75,8 +75,6 @@ function sliceNode(graph, query, result) {
     result.addLinked(wrap(query.children, graph.path, version));
   } else if (isBranch(graph) || isBranch(query)) {
     // One side is a branch while the other is a leaf; throw error.
-    console.log('Graph', graph);
-    console.log('Query', query);
     throw new Error('slice.leaf_branch_mismatch');
   } else if (isRange(graph)) {
     result.addKnown({ key, end: key, version: graph.version });
@@ -102,7 +100,8 @@ export function sliceRange(graph, query, result) {
   } else {
     for (let i = getLastIndex(graph, end) - 1; end >= key && count < 0; i--) {
       const node = graph[i];
-      if (!node || end > (node.end || node.key) || isOlder(node, version)) break;
+      if (!node || end > (node.end || node.key) || isOlder(node, version))
+        break;
       if (isRange(node)) {
         result.addKnown(getOverlap(node, key, end));
       } else {

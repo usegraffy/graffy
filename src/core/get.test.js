@@ -29,7 +29,7 @@ describe('get', () => {
     });
   });
 
-  test.skip('missing_to_null', async () => {
+  test('missing_to_null', async () => {
     // TODO: Capping results is not yet implemented
     g.onGet('/foo', () => graph({ foo: { bar: 45, baz: null } }));
     expect(decorate(await g.get(query({ foo: { bar: 1, baz: 1 } })))).toEqual({
@@ -44,6 +44,7 @@ describe('get', () => {
 
   test.skip('empty_obj_to_null', async () => {
     // Skipping: Leaf branch mismatch now throws.
+    // Should this change?
     g.onGet('/foo', () => graph({ foo: { bar: 45, baz: { bad: 3 }, f: 3 } }));
     expect(decorate(await g.get(query({ foo: { bar: 1, baz: 1 } })))).toEqual({
       foo: { bar: 45 },

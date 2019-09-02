@@ -191,7 +191,7 @@ describe('values', () => {
     expect(backend.get).toHaveBeenCalledTimes(1);
   });
 
-  test.only('back_range_deletion_substitute', async () => {
+  test('back_range_deletion_substitute', async () => {
     backend.put(graph({ foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') }));
     const sub = g.sub(query({ foo: [{ last: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') });
@@ -232,7 +232,7 @@ describe('values', () => {
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
   });
 
-  test.skip('backward_range_deletion_at_start', async () => {
+  test('backward_range_deletion_at_start', async () => {
     backend.put(
       graph(
         {
