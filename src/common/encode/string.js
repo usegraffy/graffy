@@ -1,6 +1,7 @@
+import { TextEncoderLite, TextDecoderLite } from 'text-encoder-lite';
+
 (function(g) {
   if (!g.TextEncoder || !g.TextDecoder) {
-    const { TextEncoderLite, TextDecoderLite } = require('text-encoder-lite');
     g.TextEncoder = TextEncoderLite;
     g.TextDecoder = TextDecoderLite;
   }

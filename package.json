@@ -26,8 +26,7 @@
   },
   "homepage": "https://graffy.js.org",
   "dependencies": {
-    "@babel/runtime-corejs3": "^7.5.5",
-    "text-encoder-lite": "^2.0.0"
+    "@babel/runtime-corejs3": "^7.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -64,6 +63,7 @@
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-replace": "^2.1.0",
+    "text-encoder-lite": "^2.0.0",
     "yargs": "^14.0.0"
   },
   "peerDependencies": {
