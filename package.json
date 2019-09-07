@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "jest",
-    "release": "./scripts/build",
+    "package": "./scripts/package",
     "server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",
     "client": "rollup -c",
     "example": "yarn client && yarn server",
@@ -26,7 +26,8 @@
   },
   "homepage": "https://graffy.js.org",
   "dependencies": {
-    "@babel/runtime-corejs3": "^7.5.5"
+    "@babel/runtime-corejs3": "^7.5.5",
+    "text-encoder-lite": "^2.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -36,7 +37,6 @@
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
     "@babel/runtime": "^7.5.5",
-    "@sinonjs/text-encoding": "^0.7.1",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
     "babel-plugin-add-module-exports": "^1.0.2",

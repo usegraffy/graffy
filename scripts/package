@@ -32,22 +32,26 @@ const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 
 async function build(name) {
   const cwd = join(src, name);
-  let description;
+  let packageName, description;
 
   // Copy the Readme file first. If there is no readme, skip this directory.
   try {
+    ({ name: packageName } = require(join(cwd, 'package.json')));
     const readme = (await readFile(join(cwd, 'Readme.md'))).toString();
     description = readme.match(/^[^#].*$/m)[0].trim();
     await mkdir(join(dst, name));
     writeFile(join(dst, name, 'Readme.md'), readme);
   } catch (_) {
-    console.warn(`Skipping directory "${name}": No Readme.md`);
+    console.warn(`Skipping "${name}": package.json or Readme.md missing`);
     return;
   }
 
   // Make destination directories
+  await mkdir(join(dst, name, 'src'));
+  await mkdir(join(dst, name, 'dst'));
   for (const dir of await globby('**/*', { cwd, onlyDirectories: true })) {
-    await mkdir(join(dst, name, dir));
+    await mkdir(join(dst, name, 'src', dir));
+    await mkdir(join(dst, name, 'dst', dir));
   }
 
   // Keep track of dependencies found during source transformation
@@ -66,7 +70,7 @@ async function build(name) {
         } else {
           dependencies = dependencies || {};
           if (!depVersions[dep]) {
-            console.warn('No version found for package', dep);
+            console.warn('No version found for package:', dep);
           }
           dependencies[dep] = depVersions[dep] || 'x';
         }
@@ -79,10 +83,11 @@ async function build(name) {
     paths.map(async path => {
       try {
         const source = (await readFile(join(cwd, path))).toString();
+        writeFile(join(dst, name, 'src', path), source);
         const ast = await parse(source);
 
         await writeFile(
-          join(dst, name, path),
+          join(dst, name, 'dst', path),
           (await transform(ast, source)).code,
         );
 
@@ -98,10 +103,13 @@ async function build(name) {
     join(dst, name, 'package.json'),
     JSON.stringify(
       {
-        name: `@graffy/${name}`,
+        name: packageName,
         description,
         author: 'aravind (https://github.com/aravindet)',
         version,
+        main: 'dst/index.js',
+        source: 'src/index.js',
+        esnext: 'src/index.js',
         repository: {
           type: 'git',
           url: 'git+https://github.com/aravindet/graffy.git',
@@ -131,9 +139,9 @@ async function build(name) {
       ],
       { cwd: join(dst, name) },
     );
-    console.log(`Published @graffy/${name}@${version}`);
+    console.log(`Published ${packageName}@${version}`);
   } catch (e) {
-    console.error(`Error publishing @graffy/${name}@${version}`);
+    console.error(`Error publishing ${packageName}@${version}`);
     console.error(e.message);
   }
 }
