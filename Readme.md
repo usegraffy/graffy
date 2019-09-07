@@ -1,6 +1,6 @@
 ![Graffy logo](docs/graffy-logo.svg)
 
-# Graffy [![Build Status](https://travis-ci.org/aravindet/graffy.svg?branch=master)](https://travis-ci.org/aravindet/graffy)
+# Graffy [![Build Status](https://travis-ci.org/usegraffy/graffy.svg?branch=master)](https://travis-ci.org/usegraffy/graffy) [![NPM version](https://img.shields.io/npm/v/graffy)](https://www.npmjs.com/org/graffy)
 
 Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's built on a sound [set-theoretic model of queries and graphs](docs/Theory.md).
 
@@ -14,7 +14,7 @@ Unlike GraphQL resolvers and Falcor data providers, Graffy providers can be _com
 
 Graffy providers can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries). This is particularly hard to do with GraphQL (see dataloader) and Falcor.
 
-## [Documentation](https://aravindet.github.io/graffy)
+## [Documentation](https://graffy.js.org)
 
 ## Development status
 
@@ -24,12 +24,16 @@ All the Graffy packages are published under the [@graffy scope](https://www.npmj
 
 | Module   | Description                         |
 | -------- | ----------------------------------- |
-| core     | -                                   |
+| core     | Module management                   |
+| fill     | Fulfil queries from many backends   |
 | client   | EventStream/HTTP client             |
 | server   | EventStream/HTTP server             |
 | cache    | In-memory cache                     |
+| common   | Shared utilities                    |
 | react    | React container and hooks API       |
-| graphql  | GraphQL subset DSL for queries      |
+| stream   | Utility for making AsyncIterables   |
+| testing  | Testing and debugging utilities     |
+| graphql  | ⌛ Translate GraphQL to Graffy      |
 | schema   | ⌛ Validation, introspection API    |
 | viewer   | ⌛ Schema introspection client      |
 | auth     | ⌛ Authentication and authorization |
