@@ -1,4 +1,5 @@
-import { makeStream, encodeUrl } from '@graffy/common';
+import { encodeUrl } from '@graffy/common';
+import makeStream from '@graffy/stream';
 // import { debug } from '@graffy/testing';
 
 export default function GraffyClient(baseUrl) {
