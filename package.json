@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "jest",
-    "release": "./scripts/build",
+    "package": "./scripts/package",
     "server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",
     "client": "rollup -c",
     "example": "yarn client && yarn server",

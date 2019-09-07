@@ -108,6 +108,7 @@ async function build(name) {
         author: 'aravind (https://github.com/aravindet)',
         version,
         main: 'dst/index.js',
+        source: 'src/index.js',
         esnext: 'src/index.js',
         repository: {
           type: 'git',
