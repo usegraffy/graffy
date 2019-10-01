@@ -1,10 +1,12 @@
 import { merge } from '../graph';
+import { makePath } from '../path';
 
 function makeGraph(key, value, version) {
   if (typeof value === 'function') {
     // This is a page or a link waiting for a version.
     return value(key, version);
   } else if (Array.isArray(value)) {
+    console.warn('makeGraph: Found an array where an object was expected.');
     // This has already been converted to a CRDT graph
     return { key, version, children: value };
   } else if (value === null) {
@@ -36,5 +38,6 @@ export function page(obj, key = '', end = '\uffff') {
 }
 
 export function link(path) {
+  path = makePath(path);
   return (key, version) => ({ key, version, path });
 }

@@ -1,1 +1,1 @@
-export { default as decorate } from './decorate';
+export { default as decorate, descend } from './decorate';

@@ -1,6 +1,10 @@
+// import mergeStreams from 'merge-async-iterators';
+// import { merge, wrap, unwrap, remove, makePath } from '@graffy/common';
+// import { decorate } from '@graffy/common';
+
 import { unwrap } from '@graffy/common';
 
-export default function resolve(handlers, firstPayload, options) {
+function resolve(handlers, firstPayload, options) {
   if (!handlers) throw Error('no handlers');
 
   function run(i, payload) {
@@ -9,6 +13,7 @@ export default function resolve(handlers, firstPayload, options) {
     }
 
     const { path, handle } = handlers[i];
+
     if (!unwrap(payload, path)) return run(i + 1, payload);
 
     let nextCalled = false;
@@ -20,4 +25,19 @@ export default function resolve(handlers, firstPayload, options) {
   }
 
   return run(0, firstPayload);
+}
+
+export default class Core {
+  constructor() {
+    this.handlers = {};
+  }
+
+  on(type, path, handle) {
+    this.handlers[type] = this.handlers[type] || [];
+    this.handlers[type].push({ path, handle });
+  }
+
+  call(type, payload, options) {
+    return resolve(this.handlers[type], payload, options);
+  }
 }

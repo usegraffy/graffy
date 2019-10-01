@@ -1,4 +1,18 @@
-module.exports = {
+const testConf = {
+  presets: [
+    [
+      '@babel/preset-env',
+      {
+        targets: {
+          node: 10,
+        },
+      },
+    ],
+    ['@babel/preset-react'],
+  ],
+};
+
+const devConf = {
   presets: [
     [
       '@babel/preset-env',
@@ -17,3 +31,9 @@ module.exports = {
     'babel-plugin-add-module-exports',
   ],
 };
+
+if (process.env.NODE_ENV === 'test') {
+  module.exports = testConf;
+} else {
+  module.exports = devConf;
+}
