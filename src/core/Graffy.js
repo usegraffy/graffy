@@ -1,18 +1,14 @@
 import {
   makeGraph,
   makeQuery,
-  // merge,
+  makeFinalGraph,
   wrap,
   unwrap,
   descend,
-  // remove,
   makePath,
   decorate,
 } from '@graffy/common';
 
-import { debug } from '@graffy/testing';
-
-import { porcelainGet, porcelainSub, porcelainPut } from './porcelain';
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
 
@@ -32,27 +28,36 @@ export default class Graffy {
   }
 
   on(type, path, handle) {
-    const shift = type === 'sub' ? shiftGen : shiftFn;
     [path, handle] = ensurePath(path, handle);
     path = this.path.concat(path);
-    if (path.length) handle = shift(handle, path);
+    if (path.length) {
+      const shift = type === 'sub' ? shiftGen : shiftFn;
+      handle = shift(handle, path);
+    }
     this.core.on(type, path, handle);
   }
 
   onGet(path, handle) {
     [path, handle] = ensurePath(path, handle);
-    this.on('get', path, porcelainGet(handle));
+    this.on('get', path, async function porcelainGet(query, options) {
+      return makeFinalGraph(await handle(query, options), query);
+    });
   }
 
   onSub(path, handle) {
     [path, handle] = ensurePath(path, handle);
-    handle = porcelainSub(handle);
-    this.on('sub', path, handle);
+    this.on('sub', path, async function* porcelainSub(query, options) {
+      for await (const value of handle(query, options)) {
+        yield makeFinalGraph(value, query);
+      }
+    });
   }
 
   onPut(path, handle) {
     [path, handle] = ensurePath(path, handle);
-    this.on('put', path, handle);
+    this.on('put', path, async function porcelainPut(change, options) {
+      return makeGraph(await handle(change, options));
+    });
   }
 
   use(path, provider) {

@@ -13,6 +13,7 @@ module.exports = {
   },
   "plugins": ["react", "prettier"],
   "rules": {
+    "no-console": "error",
     "prettier/prettier": "error",
     "no-unused-vars": ["error", {
       "ignoreRestSiblings": true,

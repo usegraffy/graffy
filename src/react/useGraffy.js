@@ -1,7 +1,6 @@
 import React from 'react';
 import isEqual from 'lodash/isEqual';
 import GraffyContext from './GraffyContext';
-// import { debug } from '@graffy/testing';
 
 const { useRef, useState, useEffect, useContext } = React;
 

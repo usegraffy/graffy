@@ -1,10 +1,8 @@
-import mergeStreams from 'merge-async-iterators';
-import { wrap, unwrap, remove, merge } from '@graffy/common';
+import { wrap, unwrap, remove, merge, mergeStreams } from '@graffy/common';
 import makeStream from '@graffy/stream';
-import { debug } from '@graffy/testing';
 
 export function shiftFn(fn, path) {
-  return async function shiftedFunction(payload, options, next) {
+  return async function shiftedFn(payload, options, next) {
     let nextCalled = false;
     let remainingNextResult;
     const unwrappedPayload = unwrap(payload, path);
@@ -12,7 +10,6 @@ export function shiftFn(fn, path) {
 
     // This next function is offered to the provider function.
     async function shiftedNext(nextPayload) {
-      console.log('shiftedNext', debug(nextPayload));
       nextCalled = true;
       nextPayload = wrap(nextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
@@ -38,36 +35,47 @@ export function shiftFn(fn, path) {
   };
 }
 
-// TODO: shiftGen is incomplete.
+// TODO: Provider calling next in a subscription function is not tested.
 
 export function shiftGen(fn, path) {
-  return async function(payload, options, next) {
+  return async function* shiftedGen(payload, options, next) {
     let nextCalled = false;
-    let remainingNextStream = makeStream;
+    let remainingNextStream;
     const unwrappedPayload = unwrap(payload, path);
     const remainingPayload = remove(payload, path) || [];
 
     const shiftedNext = async function*(nextPayload) {
       nextCalled = true;
+      nextPayload = wrap(nextPayload, path);
+      if (remainingPayload.length) merge(nextPayload, remainingPayload);
 
-      for await (const value of await next(wrap(nextPayload, path))) {
-        yield unwrap(value, path);
+      let pushRemaining;
+      remainingNextStream = makeStream(push => {
+        pushRemaining = push;
+      });
+
+      for await (const value of next(nextPayload)) {
+        const unwrappedValue = unwrap(value, path);
+        const remainingValue = remove(value, path);
+        if (remainingValue) pushRemaining(remainingValue);
+        if (unwrappedValue) yield unwrappedValue;
       }
     };
 
-    const result = fn(unwrappedPayload, options, shiftedNext);
+    const unwrappedStream = fn(unwrappedPayload, options, shiftedNext);
 
     // We expect next() to be called before the first value is yielded.
-    const firstValue = await result.next();
+    const firstValue = await (await unwrappedStream.next()).value;
     const resultStream = (async function*() {
       yield wrap(firstValue, path);
-      for await (const value of result) yield wrap(value, path);
+      for await (const value of unwrappedStream) yield wrap(value, path);
     })();
 
     if (!nextCalled && remainingPayload.length) {
       remainingNextStream = next(remainingPayload);
     }
 
-    return mergeStreams([resultStream, remainingNextStream]);
+    if (!remainingNextStream) yield* resultStream;
+    yield* mergeStreams(resultStream, remainingNextStream);
   };
 }

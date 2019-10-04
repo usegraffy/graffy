@@ -1,6 +1,5 @@
 import { merge, slice } from '@graffy/common';
 import subscribe from './subscribe';
-import { debug } from '@graffy/testing';
 
 const MAX_RECURSIONS = 10;
 

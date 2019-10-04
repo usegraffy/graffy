@@ -5,8 +5,6 @@ import { graph, page } from './graph';
 import { isRange, isBranch } from '../node';
 import { slice } from '../graph';
 
-import { debug } from '@graffy/testing';
-
 function prepareObject(object, query) {
   for (const node of query) {
     // TODO: Handle multiple queries at a level.
