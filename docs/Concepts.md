@@ -93,7 +93,7 @@ A few things to note about indexes.
 
 ### Handlers
 
-Graffy uses a middleware framework similar to Express or Koa to build up complex behaviours from simple parts. Different handlers (`onGet`, `onSub` and `onPut`) can be attached to different paths in the tree.
+Graffy uses a middleware framework similar to Express or Koa to build up complex behaviours from simple parts. Different handlers (`onRead`, `onWatch` and `onWrite`) can be attached to different paths in the tree.
 
 Read handlers are typically used to load the parts of the tree that match queries. For example:
 
@@ -103,7 +103,7 @@ import Graffy from '@graffy/core';
 import { unwrap } from '@graffy/common';
 const store = new Graffy();
 
-store.onGet('/users', q => db.query(
+store.onRead('/users', q => db.query(
   `SELECT * FROM users WHERE id in ($ids)`,
   { ids: q.map(({ key }) => key) }
 ))

@@ -23,21 +23,21 @@ In live queries, the first payload is the current state of the backend matching 
 In change subscriptions, the first payload must be undefined.
 
 
-## Should there be a separate onSub() callback?
+## Should there be a separate onWatch() callback?
 
-No: The onGet() handler receives a cancellation signal as argument. The signal is invoked when the subscriber leaves. The handler is expected to return the initial state and subsequently call grue.put() whenever there are changes.
+No: The onRead() handler receives a cancellation signal as argument. The signal is invoked when the subscriber leaves. The handler is expected to return the initial state and subsequently call graffy.write() whenever there are changes.
 
-Yes: The onGet() handler is called for the initial state, AND the onSub() handler is called for subscribing to future changes. The onSub() handler returns a function that is invoked to request an unsubscribe.
+Yes: The onRead() handler is called for the initial state, AND the onWatch() handler is called for subscribing to future changes. The onWatch() handler returns a function that is invoked to request an unsubscribe.
 
-Decision: No. We use onGet() with a cancellation signal.
+Decision: No. We use onRead() with a cancellation signal.
 
 ## Should there be separate APIs for get, getRaw, sub, subRaw?
 
-Alternately, only a single .get() with an options hash for `once` and `raw`.
+Alternately, only a single .read() with an options hash for `once` and `raw`.
 
-Decision: Single .get().
+Decision: Single .read().
 
-## Should onGet handlers call next() or just return the payload and have the resolver call sprout() to decide whether to go to the next handler?
+## Should onRead handlers call next() or just return the payload and have the resolver call sprout() to decide whether to go to the next handler?
 
 Decision: Handlers should explicitly call next(). This is because handlers may need to use the results of downstream handlers (e.g. to update cache).
 
@@ -47,7 +47,7 @@ We may provide helpers for common operations we're expecting handlers to perform
 
 Decision: The handler closest to the root will be called first; if it calls next(), then child handlers are called.
 
-## Should handlers (onGet, onPut) modify the query object before calling next(), should call next with new object?
+## Should handlers (onRead, onWrite) modify the query object before calling next(), should call next with new object?
 
 Decision: New object. In most cases where it needs to modify, it will need the old object after downstream handlers have returned.
 
