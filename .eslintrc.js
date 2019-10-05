@@ -23,4 +23,9 @@ module.exports = {
       "caughtErrorsIgnorePattern": "_"
     }]
   },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
 };

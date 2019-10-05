@@ -24,9 +24,9 @@ export default function decorate(graph, links = [] /* aliases */) {
       // TODO: Cycle detection.
       links.push(link);
     } else {
-      if (typeof node === 'undefined' || node === null) {
-        console.warn('Decorate: Link', path, 'is', node);
-      }
+      // if (typeof node === 'undefined' || node === null) {
+      //   console.warn('Decorate: Link', path, 'is', node);
+      // }
       from[key] = node;
     }
   }

@@ -5,11 +5,11 @@
 import { unwrap } from '@graffy/common';
 
 function resolve(handlers, firstPayload, options) {
-  if (!handlers) throw Error('no handlers');
+  if (!handlers || !handlers.length) throw Error('resolve.no_provider');
 
   function run(i, payload) {
     if (i >= handlers.length) {
-      throw Error('resolve.unfulfilled ' + JSON.stringify(payload));
+      throw Error('resolve.no_providers_for ' + JSON.stringify(payload));
     }
 
     const { path, handle } = handlers[i];
@@ -37,7 +37,7 @@ export default class Core {
     this.handlers[type].push({ path, handle });
   }
 
-  call(type, payload, options) {
+  call(type, payload, options = {}) {
     return resolve(this.handlers[type], payload, options);
   }
 }

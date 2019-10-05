@@ -25,9 +25,9 @@ export default function mockBackend(options = {}) {
     sub,
     put,
     middleware: store => {
-      store.onGet(get);
-      store.onSub(sub);
-      store.onPut(put);
+      store.on('get', get);
+      store.on('sub', sub);
+      store.on('put', put);
     },
   };
 }

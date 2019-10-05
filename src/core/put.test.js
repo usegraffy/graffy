@@ -7,14 +7,10 @@ describe('put', () => {
     g = new Graffy();
   });
 
-  test('should call the put handler with args', () => {
-    const handler = jest.fn();
+  test('should call the put handler with args', async () => {
+    const handler = jest.fn(change => change);
     g.onPut(handler);
-    g.put({ foo: 42 }, { source: 'a' });
-    expect(handler).toBeCalledWith(
-      { foo: 42 },
-      { source: 'a' },
-      expect.any(Function),
-    );
+    await g.put({ foo: 42 });
+    expect(handler).toBeCalledWith({ foo: 42 }, {});
   });
 });

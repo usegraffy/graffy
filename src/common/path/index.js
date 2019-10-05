@@ -8,8 +8,9 @@ export function makePath(path) {
   }
   if (typeof path !== 'string') throw Error('makePath.path_not_string');
   if (!path.length || path === PATH_SEPARATOR) return [];
-  if (path[0] !== PATH_SEPARATOR) throw Error('resolve.path');
-  return path.split(PATH_SEPARATOR).slice(1);
+  path = path.split(PATH_SEPARATOR);
+  if (path[0] === '') path = path.slice(1);
+  return path;
 }
 
 export function wrap(children, path, version = 0) {

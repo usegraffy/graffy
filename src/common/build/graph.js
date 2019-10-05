@@ -6,7 +6,7 @@ function makeGraph(key, value, version) {
     // This is a page or a link waiting for a version.
     return value(key, version);
   } else if (Array.isArray(value)) {
-    console.warn('makeGraph: Found an array where an object was expected.');
+    // console.warn('makeGraph: Unnecessary call with', value);
     // This has already been converted to a CRDT graph
     return { key, version, children: value };
   } else if (value === null) {
@@ -25,7 +25,7 @@ function makeGraph(key, value, version) {
   }
 }
 
-export function graph(obj, version = 0) {
+export function graph(obj, version = Date.now()) {
   return makeGraph('', obj, version).children;
 }
 
