@@ -9,7 +9,7 @@ export default function GraffyClient(baseUrl) {
       return fetch(url).then(res => res.json());
     });
 
-    store.onSub(query => {
+    store.on('sub', query => {
       if (!EventSource) throw Error('client.sse.unavailable');
       const url = `${baseUrl}?q=${encodeUrl(query)}`;
       const source = new EventSource(url);
