@@ -9,7 +9,7 @@ it('should encode queries', () => {
           { first: 10, after: '1984' },
           { title: 1, body: 1, author: { name: 1 } },
         ],
-        tags: [{ first: 10 }],
+        tags: [{ first: 10 }, true],
       },
       2,
     ),

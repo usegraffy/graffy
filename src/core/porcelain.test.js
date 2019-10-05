@@ -6,23 +6,18 @@ test('Porcelain get', async () => {
   const store = new Graffy();
   store.use(GraffyFill());
 
-  const expectedBooksQuery = /* prettier-ignore */ [
-    { key: '', end: '\uffff', count: 2, version: 0, children: [
-      { key: 'author', version: 0, children: [
-        { key: 'name', version: 0, value: 1 }
-      ] },
-      { key: 'title', version: 0, value: 1 },
-    ] }
+  const expectedBooksQuery = [
+    { first: 2 },
+    {
+      title: true,
+      author: { name: true },
+    },
   ];
 
-  const expectedUsersQuery = /* prettier-ignore */ [
-    { key: 'clarke', children: [
-      { key: 'name', version: 0, value: 1 }
-    ], version: 0 },
-    { key: 'orwell', children: [
-      { key: 'name', version: 0, value: 1 }
-    ], version: 0 },
-  ];
+  const expectedUsersQuery = {
+    clarke: { name: true },
+    orwell: { name: true },
+  };
 
   const onGetBooks = jest.fn(() => ({
     '1984': { title: '1984', author: link('/users/orwell') },

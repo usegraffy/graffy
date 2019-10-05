@@ -1,5 +1,6 @@
 import {
   decorate,
+  decorateQuery,
   descend,
   makeGraph,
   makePath,
@@ -52,14 +53,14 @@ export default class Graffy {
   onGet(path, handle) {
     [path, handle] = validateArgs(path, handle);
     this.on('get', path, async function porcelainGet(query, options) {
-      return makeFinalGraph(await handle(query, options), query);
+      return makeFinalGraph(await handle(decorateQuery(query), options), query);
     });
   }
 
   onSub(path, handle) {
     [path, handle] = validateArgs(path, handle);
     this.on('sub', path, async function* porcelainSub(query, options) {
-      const sub = handle(query, options);
+      const sub = handle(decorateQuery(query), options);
       let firstValue = (await sub.next()).value;
       yield firstValue && makeFinalGraph(firstValue, query);
       for await (const value of sub) {

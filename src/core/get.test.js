@@ -1,6 +1,6 @@
 import Graffy from './Graffy';
 import fill from '@graffy/fill';
-import { page, link, makeQuery } from '@graffy/common';
+import { page, link } from '@graffy/common';
 // import { merge } from '@graffy/common';
 
 describe('get', () => {
@@ -83,7 +83,7 @@ describe('get', () => {
         foo: [{ after: '', before: '\uffff' }, { bar: 1 }],
       });
       expect(resolver).toBeCalledWith(
-        makeQuery({ foo: [{ after: '', before: '\uffff' }, { bar: 1 }] }),
+        { foo: [{ first: 4096 }, { bar: true }] },
         {},
       );
       expect(result).toEqual({
@@ -153,7 +153,7 @@ describe('get', () => {
     test('multi', async () => {
       const result = await g.get({ foo: { a: { bar: 1 }, b: { baz: 1 } } });
       expect(resolver).toBeCalledWith(
-        makeQuery({ foo: { a: { bar: 1 }, b: { baz: 1 } } }),
+        { foo: { a: { bar: true }, b: { baz: true } } },
         {},
       );
       expect(result).toEqual({

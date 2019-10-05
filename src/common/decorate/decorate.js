@@ -12,7 +12,7 @@ export function descend(tree, path) {
   return tree;
 }
 
-export default function decorate(graph, links = [] /* aliases */) {
+export default function decorate(graph, links = []) {
   const result = decorateChildren(graph, links);
 
   let link;
