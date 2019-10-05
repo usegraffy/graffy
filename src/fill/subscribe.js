@@ -1,6 +1,5 @@
 import { merge, slice, sieve, add } from '@graffy/common';
-import { makeStream } from '@graffy/common';
-// import { debug } from '@graffy/testing';
+import makeStream from '@graffy/stream';
 
 export default function subscribe(store, originalQuery, raw) {
   let push, end;
@@ -27,24 +26,21 @@ export default function subscribe(store, originalQuery, raw) {
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
-      upstream = store.sub(query, { skipFill: true });
+      upstream = store.call('sub', query, { skipFill: true });
 
       let { value } = await upstream.next();
-      // console.log('Got first subscription value', value);
+      // console.log('Got first subscription value', value && debug(value));
 
       if (typeof value === 'undefined') {
         // The upstream is a change subscription, not a live query,
         // so we need to fetch the initial value.
 
         // TODO: Get a version corresponding to the subscription's start
-        // and verify that the store.get() response is newer.
-        // console.log('Making query for ', debug(unknown));
-        // console.log('Made query', debug(unknown));
-        value = await store.get(unknown, { skipFill: true });
-        // console.log('Initial result', debug(value));
-        value = slice(value, unknown).known;
-        // console.log('Got query result', debug(value));
+        // and verify that the store.get response is newer.
+
+        value = await store.call('get', unknown, { skipFill: true });
       }
+      value = slice(value, unknown).known;
       putValue(value, false);
     } catch (e) {
       error(e);

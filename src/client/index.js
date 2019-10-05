@@ -1,9 +1,9 @@
-import { makeStream, encodeUrl } from '@graffy/common';
-// import { debug } from '@graffy/testing';
+import { encodeUrl } from '@graffy/common';
+import makeStream from '@graffy/stream';
 
 export default function GraffyClient(baseUrl) {
   return function(store) {
-    store.onGet(query => {
+    store.on('get', query => {
       if (!fetch) throw Error('client.fetch.unavailable');
       const url = `${baseUrl}?q=${encodeUrl(query)}`;
       return fetch(url).then(res => res.json());

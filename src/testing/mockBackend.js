@@ -1,5 +1,5 @@
 import { merge } from '@graffy/common';
-import { makeStream } from '@graffy/common';
+import makeStream from '@graffy/stream';
 
 export default function mockBackend(options = {}) {
   const state = [];
@@ -25,9 +25,9 @@ export default function mockBackend(options = {}) {
     sub,
     put,
     middleware: store => {
-      store.onGet(get);
-      store.onSub(sub);
-      store.onPut(put);
+      store.on('get', get);
+      store.on('sub', sub);
+      store.on('put', put);
     },
   };
 }

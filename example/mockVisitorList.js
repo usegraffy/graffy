@@ -1,19 +1,18 @@
 import faker from 'faker';
 import {
-  graph,
+  makeGraph,
   link,
   page,
   merge,
   unwrap,
-  makeStream,
   setVersion,
 } from '@graffy/common';
 
-// import { debug } from '@graffy/testing';
+import makeStream from '@graffy/stream';
 
 const TARGET = 2000;
 
-const state = graph({ visitors: {}, visitorsByTime: page({}) });
+const state = makeGraph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -30,7 +29,7 @@ export default function(g) {
   g.onSub(() =>
     makeStream((push, _end) => {
       listeners.add(push);
-      push(undefined);
+      push(state);
       return () => listeners.delete(push);
     }),
   );
@@ -110,7 +109,7 @@ function simulateEnter() {
   addId = '' + addId;
 
   enter++;
-  return graph(
+  return makeGraph(
     {
       visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
       visitorsByTime: { [ts]: link(['visitors', addId]) },
@@ -131,7 +130,7 @@ function simulateLeave() {
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
   leave++;
-  return graph(
+  return makeGraph(
     {
       visitors: { [delId]: null },
       visitorsByTime: { [delTs]: null },
@@ -148,5 +147,5 @@ function simulateUpdate() {
   upId = '' + upId;
   const url = faker.internet.url();
   update++;
-  return graph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
+  return makeGraph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
 }

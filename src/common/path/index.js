@@ -3,14 +3,17 @@ import { getIndex, isRange, isBranch } from '../node';
 export const PATH_SEPARATOR = '/';
 
 export function makePath(path) {
-  if (Array.isArray(path)) return path;
-  if (typeof path !== 'string') throw Error('resolve.path');
+  if (Array.isArray(path) && path.every(key => typeof key === 'string')) {
+    return path;
+  }
+  if (typeof path !== 'string') throw Error('makePath.path_not_string');
   if (!path.length || path === PATH_SEPARATOR) return [];
-  if (path[0] !== PATH_SEPARATOR) throw Error('resolve.path');
-  return path.split(PATH_SEPARATOR).slice(1);
+  path = path.split(PATH_SEPARATOR);
+  if (path[0] === '') path = path.slice(1);
+  return path;
 }
 
-export function wrap(children, path, version) {
+export function wrap(children, path, version = 0) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
   for (let i = path.length - 1; i >= 0; i--) {
     children = [{ key: path[i], version, children }];
@@ -36,6 +39,7 @@ export function remove(children, path) {
   if (!Array.isArray(path)) throw Error('del.path_not_array ' + path);
   if (!children) return null; // This path does not exist.
   if (!path.length) return []; // Remove everything.
+
   const key = path[0];
   const ix = getIndex(children, key);
   const node = children[ix];

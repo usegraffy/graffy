@@ -1,10 +1,10 @@
 import Graffy from '@graffy/core';
-import { page, link, graph, query } from '@graffy/common';
-import { mockBackend, debug } from '@graffy/testing';
+import { page, link, makeGraph, makeQuery } from '@graffy/common';
+import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
 
-const expectNext = async (sub, expected, version) => {
-  expect((await sub.next()).value).toEqual(graph(expected, version));
+const expectNext = async (sub, expected, version = 0) => {
+  expect((await sub.next()).value).toEqual(makeGraph(expected, version));
 };
 
 describe('changes', () => {
@@ -19,65 +19,74 @@ describe('changes', () => {
   });
 
   test('simple-skipFill', async () => {
-    const sub = g.sub(query({ foo: { a: 1 } }, 0), { raw: true, skipFill: 1 });
+    const sub = g.call('sub', makeQuery({ foo: { a: 1 } }, 0), {
+      raw: true,
+      skipFill: 1,
+    });
 
     await expectNext(sub, undefined);
-    backend.put(graph({ foo: { a: 3 } }));
+    backend.put(makeGraph({ foo: { a: 3 } }, 0));
     await expectNext(sub, { foo: { a: 3 } });
-    backend.put(graph({ foo: { a: 4 } }));
-    await expectNext(sub, { foo: { a: 4 } });
+    backend.put(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(sub, { foo: { a: 4 } }, 1);
   });
 
   test('simple', async () => {
-    const sub = g.sub(query({ foo: { a: 1 } }, 0), { raw: true });
-
-    // await expectNext(sub, undefined);
-    backend.put(graph({ foo: { a: 3 } }));
+    backend.put(makeGraph({ foo: { a: 3 } }, 0));
+    const sub = g.call('sub', makeQuery({ foo: { a: 1 } }, 0), { raw: true });
     await expectNext(sub, { foo: { a: 3 } });
-    backend.put(graph({ foo: { a: 4 } }));
-    await expectNext(sub, { foo: { a: 4 } });
+    backend.put(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(sub, { foo: { a: 4 } }, 1);
   });
 
   test('overlap', async () => {
-    backend.put(graph({ foo: { a: 2 }, bar: { b: 2 } }));
-    const sub = g.sub(query({ foo: { a: 1 }, bar: { b: 1 } }, 0), {
+    backend.put(makeGraph({ foo: { a: 2 }, bar: { b: 2 } }, 0));
+    const sub = g.call('sub', makeQuery({ foo: { a: 1 }, bar: { b: 1 } }, 0), {
       raw: true,
     });
 
     await expectNext(sub, { foo: { a: 2 }, bar: { b: 2 } });
-    backend.put(graph({ foo: { a: 3 } }));
+    backend.put(makeGraph({ foo: { a: 3 } }, 0));
     await expectNext(sub, { foo: { a: 3 } });
-    backend.put(graph({ foo: { a: 4 } }));
+    backend.put(makeGraph({ foo: { a: 4 } }, 0));
     await expectNext(sub, { foo: { a: 4 } });
-    backend.put(graph({ bar: { a: 7 } }));
-    backend.put(graph({ bar: { b: 6 } }));
+    backend.put(makeGraph({ bar: { a: 7 } }, 0));
+    backend.put(makeGraph({ bar: { b: 6 } }, 0));
     await expectNext(sub, { bar: { b: 6 } });
   });
 
   test('link', async () => {
     backend.put(
-      graph({ foo: link(['bar', 'a']), bar: { a: { x: 3 }, b: { x: 5 } } }),
+      makeGraph(
+        { foo: link(['bar', 'a']), bar: { a: { x: 3 }, b: { x: 5 } } },
+        0,
+      ),
     );
-    const sub = g.sub(query({ foo: { x: 1 } }, 0), { raw: true });
+    const sub = g.call('sub', makeQuery({ foo: { x: 1 } }, 0), { raw: true });
 
     await expectNext(sub, { foo: link(['bar', 'a']), bar: { a: { x: 3 } } });
-    backend.put(graph({ foo: link(['bar', 'b']) }));
+    backend.put(makeGraph({ foo: link(['bar', 'b']) }, 0));
     await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 5 } } });
-    backend.put(graph({ bar: { a: { x: 7 } } })); // Should not be sent!
-    backend.put(graph({ bar: { b: { x: 3 } } }));
+    backend.put(makeGraph({ bar: { a: { x: 7 } } })); // Should not be se, 0nt!
+    backend.put(makeGraph({ bar: { b: { x: 3 } } }, 0));
     await expectNext(sub, { bar: { b: { x: 3 } } });
   });
 
   test('range_deletion', async () => {
     backend.put(
-      graph({
-        foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
-      }),
+      makeGraph(
+        {
+          foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
+        },
+        0,
+      ),
     );
 
-    const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0), { raw: true });
+    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0), {
+      raw: true,
+    });
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
-    backend.put(graph({ foo: { b: null } }, 1));
+    backend.put(makeGraph({ foo: { b: null } }, 1, 0));
     await expectNext(
       sub,
       // prettier-ignore
@@ -93,14 +102,19 @@ describe('changes', () => {
 
   test('range_insertion', async () => {
     backend.put(
-      graph({
-        foo: page({ a: 1, c: 3, d: 4, e: 5 }),
-      }),
+      makeGraph(
+        {
+          foo: page({ a: 1, c: 3, d: 4, e: 5 }),
+        },
+        0,
+      ),
     );
 
-    const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0), { raw: true });
+    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0), {
+      raw: true,
+    });
     await expectNext(sub, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
-    backend.put(graph({ foo: { b: 2 } }));
+    backend.put(makeGraph({ foo: { b: 2 } }, 0));
     await expectNext(sub, { foo: { b: 2 } });
   });
 });
@@ -117,34 +131,34 @@ describe('values', () => {
   });
 
   test('object', async () => {
-    backend.put(graph({ foo: { a: 3 } }));
-    const sub = g.sub(query({ foo: { a: 1 } }, 0));
+    backend.put(makeGraph({ foo: { a: 3 } }, 0));
+    const sub = g.call('sub', makeQuery({ foo: { a: 1 } }, 0));
     await expectNext(sub, { foo: { a: 3 } });
-    backend.put(graph({ foo: { a: 4 } }));
+    backend.put(makeGraph({ foo: { a: 4 } }, 0));
     await expectNext(sub, { foo: { a: 4 } });
   });
 
   test('link', async () => {
-    backend.put(graph({ bar: { a: { x: 5 }, b: { x: 6 } } }));
-    backend.put(graph({ foo: link(['bar', 'a']) }));
+    backend.put(makeGraph({ bar: { a: { x: 5 }, b: { x: 6 } } }, 0));
+    backend.put(makeGraph({ foo: link(['bar', 'a']) }, 0));
 
-    const sub = g.sub(query({ foo: { x: 1 } }, 0));
+    const sub = g.call('sub', makeQuery({ foo: { x: 1 } }, 0));
     await expectNext(sub, { foo: link(['bar', 'a']), bar: { a: { x: 5 } } });
-    backend.put(graph({ foo: link(['bar', 'b']) }));
+    backend.put(makeGraph({ foo: link(['bar', 'b']) }, 0));
     await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 6 } } });
-    backend.put(graph({ bar: { a: { x: 7 } } }));
+    backend.put(makeGraph({ bar: { a: { x: 7 } } }, 0));
     // The /bar/a update should not be sent.
     // await sub.next(); // TODO: Remove this!
-    backend.put(graph({ bar: { b: { x: 3 } } }));
+    backend.put(makeGraph({ bar: { b: { x: 3 } } }, 0));
     await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 3 } } });
   });
 
   test('range_deletion', async () => {
-    backend.put(graph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }));
+    backend.put(makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0));
 
-    const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0));
+    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
-    backend.put(graph({ foo: { b: null } }, 1));
+    backend.put(makeGraph({ foo: { b: null } }, 1));
     // TODO: In a future version, update versions throughout the tree in
     // live queries
     await expectNext(
@@ -166,12 +180,12 @@ describe('values', () => {
   });
 
   test('accept_range_deletion_substitute', async () => {
-    backend.put(graph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }));
-    const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0));
+    backend.put(makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0));
+    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
     expect(backend.get).toHaveBeenCalledTimes(1);
 
-    backend.put(graph({ foo: page({ b: null, d: 4 }, 'c\0', 'd') }, 1));
+    backend.put(makeGraph({ foo: page({ b: null, d: 4 }, 'c\0', 'd') }, 1));
     await expectNext(
       sub,
       // prettier-ignore
@@ -191,9 +205,11 @@ describe('values', () => {
     expect(backend.get).toHaveBeenCalledTimes(1);
   });
 
-  test.only('back_range_deletion_substitute', async () => {
-    backend.put(graph({ foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') }));
-    const sub = g.sub(query({ foo: [{ last: 3 }, 1] }, 0));
+  test('back_range_deletion_substitute', async () => {
+    backend.put(
+      makeGraph({ foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') }, 0),
+    );
+    const sub = g.call('sub', makeQuery({ foo: [{ last: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') });
 
     backend.put(
@@ -225,16 +241,16 @@ describe('values', () => {
   });
 
   test('range_insertion', async () => {
-    backend.put(graph({ foo: page({ a: 1, c: 3, d: 4, e: 5 }) }));
-    const sub = g.sub(query({ foo: [{ first: 3 }, 1] }, 0));
+    backend.put(makeGraph({ foo: page({ a: 1, c: 3, d: 4, e: 5 }) }, 0));
+    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
     await expectNext(sub, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
-    backend.put(graph({ foo: { b: 2 } }));
+    backend.put(makeGraph({ foo: { b: 2 } }, 0));
     await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
   });
 
-  test.skip('backward_range_deletion_at_start', async () => {
+  test('backward_range_deletion_at_start', async () => {
     backend.put(
-      graph(
+      makeGraph(
         {
           users: {
             '1': { name: 'alice' },
@@ -255,7 +271,10 @@ describe('values', () => {
       ),
     );
 
-    const sub = g.sub(query({ usersByAge: [{ last: 2 }, { name: 1 }] }, 0));
+    const sub = g.call(
+      'sub',
+      makeQuery({ usersByAge: [{ last: 2 }, { name: 1 }] }, 0),
+    );
     await expectNext(sub, {
       users: {
         '2': { name: 'bob' },
@@ -268,7 +287,7 @@ describe('values', () => {
       ),
     });
     backend.put(
-      graph(
+      makeGraph(
         {
           users: { '2': null },
           usersByAge: { '5': null },

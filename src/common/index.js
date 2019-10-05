@@ -4,4 +4,3 @@ export * from './encode';
 export * from './graph';
 export * from './node';
 export * from './path';
-export { default as makeStream } from './stream';
