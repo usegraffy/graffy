@@ -8,14 +8,14 @@ Constructs a store. Does not accept any arguments.
 
 ### store.**get**(query, options)
 
-- Arguments: [query](Encoding#Queries), *options*
+- Arguments: [query](Encoding#Queries), _options_
 - Returns: Promise<Graph>
 
 Retrieve data from the store.
 
 ### store.**sub**(query, options)
 
-- Arguments: [query](Encoding#Queries), *options*
+- Arguments: [query](Encoding#Queries), _options_
 - Returns: AsyncIterable<Graph>
 
 #### options
@@ -24,14 +24,14 @@ Retrieve data from the store.
 
 ### store.**put**(change, options)
 
-- Arguments: [change](Encoding#Changes), *options*
+- Arguments: [change](Encoding#Changes), _options_
 - Returns: Promise of all changes applied
 
 Writes changes into the store.
 
 ### store.**onGet**(path, handler)
 
-- Arguments: *[path](Encoding#Paths)*, handler
+- Arguments: _[path](Encoding#Paths)_, handler
 
 #### handler(query, options, next)
 
@@ -49,7 +49,7 @@ The handler may call `next` to delegate fulfillment of all or part of its query 
 
 ### store.**onSub**(path, handler)
 
-- Arguments: *[path](Encoding#Paths)*, handler
+- Arguments: _[path](Encoding#Paths)_, handler
 
 #### handler(query, options, next)
 
@@ -67,10 +67,9 @@ If this handler provides _live query_ semantics, the first value yielded by the 
 
 The handler may call `next` to delegate fulfillment of all or part of its query to downstream handlers. It should then incorporate the stream returned by `next` into its own return value.
 
-
 ### store.**onPut**(path, handler)
 
-- Arguments: *[path](Encoding#Paths)*, handler
+- Arguments: _[path](Encoding#Paths)_, handler
 
 #### handler(change, options, next)
 
@@ -93,7 +92,7 @@ The handler may call `next` to delegate the application of all or part of its ch
 
 ### store.**use**(path, provider)
 
-- Arguments: *[path](Encoding#Paths)*, provider
+- Arguments: _[path](Encoding#Paths)_, provider
 
 Mounts a provider to the store at the given path.
 

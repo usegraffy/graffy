@@ -7,11 +7,11 @@ import { Poke, PokeFilter } from './poke';
 
 const { number, string, map } = types;
 
-export default (Schema = {
+export default Schema = {
   users: map(string, User),
   pokes: map(string, Poke),
   pokeByTime: map(PokeFilter, map(tuple(number, string), Poke)),
-});
+};
 ```
 
 DSL Option 1:

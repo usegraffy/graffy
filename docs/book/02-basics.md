@@ -58,6 +58,7 @@ store.use(GraffyClient('https://example.com/api'));
 ```
 
 #### "Outer" APIs
+
 - `store.fetch(query)` for one-time queries
 - `store.watch(query)` for live queries
 - `store.patch(graph)` for writes
@@ -75,6 +76,7 @@ for await (const result of store.watch(query)) {
 ```
 
 #### "Inner" APIs
+
 - `store.onFetch(path, handler)`
 - `store.onWatch(path, handler)`
 - `store.onPatch(path, handler)`

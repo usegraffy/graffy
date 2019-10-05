@@ -29,14 +29,14 @@ Queries cross links transparently.
 
 ```js
 // Query
-query({ users: { 1: { avatar: true } } })
+query({ users: { 1: { avatar: true } } });
 // Result
-graph({ users: { 1: { avatar: '👧' } } })
+graph({ users: { 1: { avatar: '👧' } } });
 
 // Query
-query({ posts: { 1: { author: { avatar: true } } } })
+query({ posts: { 1: { author: { avatar: true } } } });
 // Result
-graph({ posts: { 1: { author: { avatar: '👨' } } } })
+graph({ posts: { 1: { author: { avatar: '👨' } } } });
 ```
 
 ### Ranges
@@ -46,11 +46,8 @@ To paginate, queries may specify a range of the keys like `{ first: 10 }` or `{ 
 ```js
 // Query
 query({
-  posts: [
-    { first: 2 },
-    { title: true, author: { name: true } }
-  ]
-})
+  posts: [{ first: 2 }, { title: true, author: { name: true } }],
+});
 ```
 
 Graffy pagination operates on keys and not on values; For example you cannot slice the `posts` node to, say, get all the posts in January. To do that, you need an index.
@@ -103,10 +100,11 @@ import Graffy from '@graffy/core';
 import { unwrap } from '@graffy/common';
 const store = new Graffy();
 
-store.onRead('/users', q => db.query(
-  `SELECT * FROM users WHERE id in ($ids)`,
-  { ids: q.map(({ key }) => key) }
-))
+store.onRead('/users', q =>
+  db.query(`SELECT * FROM users WHERE id in ($ids)`, {
+    ids: q.map(({ key }) => key),
+  }),
+);
 ```
 
 Write handlers are used to persist changes.

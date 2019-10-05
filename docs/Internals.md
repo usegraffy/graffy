@@ -88,22 +88,24 @@ The internal representation of queries and graphs is based on arrays. These are 
 For example,
 
 ```js
-graph({
+graph(
+  {
     foo: 10,
     bar: {
-        baz: 'a',
+      baz: 'a',
     },
-}, 1)
+  },
+  1,
+);
 ```
+
 will return the internal representation, which is:
 
 ```js
 [
-  { key: 'bar', clock: 1, children: [
-    { key: 'baz', clock: 1, value: 'a' },
-  ] },
+  { key: 'bar', clock: 1, children: [{ key: 'baz', clock: 1, value: 'a' }] },
   { key: 'foo', clock: 1, value: 10 },
-]
+];
 ```
 
 Note that the order of foo and bar have been reversed, because a node's children must always be sorted by key. Maintaining order greatly speeds up most operations as we can now use binary search. (Before the CRDT refactor I used a more straightforward approach of just storing JSON objects. This had really bad performance as many operations required iteration in key order.)
@@ -117,25 +119,36 @@ I'll skip the clock property from now to reduce noise.
 Queries are very similar. Let's switch the example a bit, here's a query to get the first 3 posts for a blog:
 
 ```js
-query({
-  posts: [ { first: 3 }, {
-    title: true,
-    author: true,
-  } ],
-}, 1)
+query(
+  {
+    posts: [
+      { first: 3 },
+      {
+        title: true,
+        author: true,
+      },
+    ],
+  },
+  1,
+);
 ```
 
 which returns the internal representation:
 
 ```js
 [
-  { key: 'posts', children: [
-    { key: '', end: '\uFFFF', count: 3, children: [
-      { key: 'title', value: 1 },
-      { key: 'author', value: 1 }
-    ] }
-  ] }
-]
+  {
+    key: 'posts',
+    children: [
+      {
+        key: '',
+        end: '\uFFFF',
+        count: 3,
+        children: [{ key: 'title', value: 1 }, { key: 'author', value: 1 }],
+      },
+    ],
+  },
+];
 ```
 
 `key: '', end: '\uFFFF', count: 3` is the internal representation of `{ first: 3 }`. It identifies a range with start and end keys and a count. To simplify in-order graph traversal, the start key is just called "key".

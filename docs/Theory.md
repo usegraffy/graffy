@@ -155,7 +155,7 @@ Query − Graph = {
 
 ### Query multiplication
 
-- **Q₁ * G = Q₂**
+- **Q₁ \* G = Q₂**
 
 For each path in Q that matches a non-canonical path in G, add the corresponding canonical paths to the query. This prepares live queries for filtering change graphs, which will always include canonical paths but may not include the non-canonical paths used in the original query.
 
@@ -197,15 +197,9 @@ The live query property can be stated as R₃ ⊆ R₁ + R₂. This requires tha
 R₂ ⊇ R₃ - R₁
 R₂ ⊇ (Q ∩ (G₁ + C)) - (Q ∩ G₁)
 
-
-
 R₁ = Q ∩ G₁
 R₃ = Q ∩ G₃
 
-
-
-
-R₂ = (Q * R₁) ∩ G₂
-
+R₂ = (Q \* R₁) ∩ G₂
 
 TODO: Write proofs of each property.

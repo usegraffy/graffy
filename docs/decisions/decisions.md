@@ -7,6 +7,7 @@ Option 1: Based on linkKnown. Whenever links are encountered, the query is expan
 Option 2: Based on unknown / extraneous. Expand the subscription when unknown values are encountered after putting data, contract it when extraneous values are discovered. The problem is that this conflates query and subscription, it is possible that a backend provides link traversal for query but not for subscription. We may end up not making a necessary subscription if the initial query returns with traversed data.
 
 Consider:
+
 - Perhaps combining "query link traversal" module with "live" module and adding it all into core (rather than as pluggable modules) will help?
 - Perhaps providers can be required to be consistent between query and subscription (with respect to which links they can traverse and which they can't)?
 
@@ -21,7 +22,6 @@ These could be reopened if there's new information.
 In live queries, the first payload is the current state of the backend matching the query.
 
 In change subscriptions, the first payload must be undefined.
-
 
 ## Should there be a separate onWatch() callback?
 
@@ -51,27 +51,29 @@ Decision: The handler closest to the root will be called first; if it calls next
 
 Decision: New object. In most cases where it needs to modify, it will need the old object after downstream handlers have returned.
 
-
-
 ## Should cached data be stored as a graph (with path metadata) or a tree with symlinks?
 
 Pros:
-  - Prune, Sprout become much simpler as they don't need to follow links
-  - As an optimization in production, don't prune
+
+- Prune, Sprout become much simpler as they don't need to follow links
+- As an optimization in production, don't prune
 
 Cons:
-  - When a section of the graph is created or deleted, incoming links to that section may need updating. This is very complex, and was the blocker.
-  - Not pruning in production is not feasible; users might iterate over children.
+
+- When a section of the graph is created or deleted, incoming links to that section may need updating. This is very complex, and was the blocker.
+- Not pruning in production is not feasible; users might iterate over children.
 
 Decision: Keep cached data in a tree with symlinks
 
 ## Should Graffy Server have full REST compatibility?
 
 This would require:
+
 - returning just the branch at path, rather than sparse trees from the root
 - converting range results into arrays
 
 Cons:
+
 - Returning the branch at path will require links to be grafted / resolved; this causes duplication if multiple links point to the same path.
 
 Decision: Keep a GraphQL/Falcor-like single URL for all requests.

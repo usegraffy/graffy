@@ -18,17 +18,21 @@ It's straightforward to get a post when you know its ID, but that's pretty limit
 
 ```js
 graffy.fetch({
-  posts: [{ first: 10 }, {
-    title: true,
-    author: { name: true, avatar: true },
-    date: true
-  }]
+  posts: [
+    { first: 10 },
+    {
+      title: true,
+      author: { name: true, avatar: true },
+      date: true,
+    },
+  ],
 });
 ```
 
 See the `{ first: 10 }`? That tells Graffy which children of `posts` to include in the response. The second argument (`{ title, ... }`) is the sub-query to apply to each post (i.e. each grandchild of the `posts` node).
 
 If you're used the GraphQL, you can probably guess how slice works. The first argument to `slice()` can be:
+
 - `{ first: N }` or `{ last: N }` for the very first or last N children
 - `{ first: N, after: key }`, `{ last: N, before: key }` for N children starting at the given key (post ID in this example)
 - `{ after: firstKey, before: lastKey }` for all the children between the two keys; this could also have a `first` or `last` property to limit the result.
@@ -70,9 +74,9 @@ Index keys must be unique; as two posts may have the same date, we append the ID
     {
       title: true,
       author: { name: true, avatar: true },
-      date: true
-    }
-  )
+      date: true,
+    },
+  );
 }
 ```
 
