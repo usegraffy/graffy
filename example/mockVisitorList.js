@@ -19,14 +19,14 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const listeners = new Set();
 
 export default function(g) {
-  g.onGet(() => {
+  g.onRead(() => {
     // console.log('Get: Returning', debug(state));
     ts = Date.now();
     setVersion(state, ts);
     return state;
   });
 
-  g.onSub(() =>
+  g.onWatch(() =>
     makeStream((push, _end) => {
       listeners.add(push);
       push(state);

@@ -6,7 +6,7 @@ const MAX_RECURSIONS = 10;
 export default function fill(store) {
   if (!store) return fill; // This is for people who .use(fill())
 
-  store.on('get', [], async function fillOnGet(query, options, next) {
+  store.on('read', [], async function fillOnRead(query, options, next) {
     let value = await next(query);
     if (options.skipFill) return value;
 
@@ -16,7 +16,7 @@ export default function fill(store) {
       const { known, unknown } = slice(value, query);
       value = known;
       if (!unknown) break;
-      const res = await store.call('get', unknown, { skipFill: true });
+      const res = await store.call('read', unknown, { skipFill: true });
       merge(value, res);
     }
 
@@ -24,7 +24,7 @@ export default function fill(store) {
     return value;
   });
 
-  store.on('sub', [], function fillOnSub(query, options, next) {
+  store.on('watch', [], function fillOnWatch(query, options, next) {
     if (options.skipFill) return next(query);
     return subscribe(store, query, options.raw);
   });

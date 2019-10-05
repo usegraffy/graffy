@@ -44,34 +44,34 @@ export default class Graffy {
     [path, handle] = validateArgs(path, handle);
     path = this.path.concat(path);
     if (path.length) {
-      const shift = type === 'sub' ? shiftGen : shiftFn;
+      const shift = type === 'watch' ? shiftGen : shiftFn;
       handle = shift(handle, path);
     }
     this.core.on(type, path, handle);
   }
 
-  onGet(path, handle) {
+  onRead(path, handle) {
     [path, handle] = validateArgs(path, handle);
-    this.on('get', path, async function porcelainGet(query, options) {
+    this.on('read', path, async function porcelainRead(query, options) {
       return makeFinalGraph(await handle(decorateQuery(query), options), query);
     });
   }
 
-  onSub(path, handle) {
+  onWatch(path, handle) {
     [path, handle] = validateArgs(path, handle);
-    this.on('sub', path, async function* porcelainSub(query, options) {
-      const sub = handle(decorateQuery(query), options);
-      let firstValue = (await sub.next()).value;
+    this.on('watch', path, async function* porcelainWatch(query, options) {
+      const subscription = handle(decorateQuery(query), options);
+      let firstValue = (await subscription.next()).value;
       yield firstValue && makeFinalGraph(firstValue, query);
-      for await (const value of sub) {
+      for await (const value of subscription) {
         yield value && makeGraph(value, query);
       }
     });
   }
 
-  onPut(path, handle) {
+  onWrite(path, handle) {
     [path, handle] = validateArgs(path, handle);
-    this.on('put', path, async function porcelainPut(change, options) {
+    this.on('write', path, async function porcelainWrite(change, options) {
       return makeGraph(await handle(decorate(change), options));
     });
   }
@@ -87,27 +87,27 @@ export default class Graffy {
     return unwrap(result, this.path);
   }
 
-  async get(path, query, options) {
+  async read(path, query, options) {
     [path, query, options] = validateArgs(path, query, options);
     query = wrap(makeQuery(query), path);
 
-    const result = await this.call('get', query, options || {});
+    const result = await this.call('read', query, options || {});
     return descend(decorate(result), path);
   }
 
-  async *sub(path, query, options) {
+  async *watch(path, query, options) {
     [path, query, options] = validateArgs(path, query, options);
     query = wrap(makeQuery(query), path);
 
-    const stream = this.call('sub', query, options || {});
+    const stream = this.call('watch', query, options || {});
     for await (const value of stream) yield descend(decorate(value), path);
   }
 
-  async put(path, change, options) {
+  async write(path, change, options) {
     [path, change, options] = validateArgs(path, change, options);
     change = wrap(makeGraph(change), path);
 
-    change = await this.call('put', change, options || {});
+    change = await this.call('write', change, options || {});
     return descend(decorate(change), path);
   }
 }

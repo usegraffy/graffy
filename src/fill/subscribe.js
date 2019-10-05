@@ -26,7 +26,7 @@ export default function subscribe(store, originalQuery, raw) {
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
-      upstream = store.call('sub', query, { skipFill: true });
+      upstream = store.call('watch', query, { skipFill: true });
 
       let { value } = await upstream.next();
       // console.log('Got first subscription value', value && debug(value));
@@ -36,9 +36,9 @@ export default function subscribe(store, originalQuery, raw) {
         // so we need to fetch the initial value.
 
         // TODO: Get a version corresponding to the subscription's start
-        // and verify that the store.get response is newer.
+        // and verify that the store.read response is newer.
 
-        value = await store.call('get', unknown, { skipFill: true });
+        value = await store.call('read', unknown, { skipFill: true });
       }
       value = slice(value, unknown).known;
       putValue(value, false);

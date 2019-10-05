@@ -3,8 +3,8 @@ import { page, link, makeGraph, makeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
 
-const expectNext = async (sub, expected, version = 0) => {
-  expect((await sub.next()).value).toEqual(makeGraph(expected, version));
+const expectNext = async (subscription, expected, version = 0) => {
+  expect((await subscription.next()).value).toEqual(makeGraph(expected, version));
 };
 
 describe('changes', () => {
@@ -19,61 +19,61 @@ describe('changes', () => {
   });
 
   test('simple-skipFill', async () => {
-    const sub = g.call('sub', makeQuery({ foo: { a: 1 } }, 0), {
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0), {
       raw: true,
       skipFill: 1,
     });
 
-    await expectNext(sub, undefined);
-    backend.put(makeGraph({ foo: { a: 3 } }, 0));
-    await expectNext(sub, { foo: { a: 3 } });
-    backend.put(makeGraph({ foo: { a: 4 } }, 1));
-    await expectNext(sub, { foo: { a: 4 } }, 1);
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(subscription, { foo: { a: 4 } }, 1);
   });
 
   test('simple', async () => {
-    backend.put(makeGraph({ foo: { a: 3 } }, 0));
-    const sub = g.call('sub', makeQuery({ foo: { a: 1 } }, 0), { raw: true });
-    await expectNext(sub, { foo: { a: 3 } });
-    backend.put(makeGraph({ foo: { a: 4 } }, 1));
-    await expectNext(sub, { foo: { a: 4 } }, 1);
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0), { raw: true });
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(subscription, { foo: { a: 4 } }, 1);
   });
 
   test('overlap', async () => {
-    backend.put(makeGraph({ foo: { a: 2 }, bar: { b: 2 } }, 0));
-    const sub = g.call('sub', makeQuery({ foo: { a: 1 }, bar: { b: 1 } }, 0), {
+    backend.write(makeGraph({ foo: { a: 2 }, bar: { b: 2 } }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 }, bar: { b: 1 } }, 0), {
       raw: true,
     });
 
-    await expectNext(sub, { foo: { a: 2 }, bar: { b: 2 } });
-    backend.put(makeGraph({ foo: { a: 3 } }, 0));
-    await expectNext(sub, { foo: { a: 3 } });
-    backend.put(makeGraph({ foo: { a: 4 } }, 0));
-    await expectNext(sub, { foo: { a: 4 } });
-    backend.put(makeGraph({ bar: { a: 7 } }, 0));
-    backend.put(makeGraph({ bar: { b: 6 } }, 0));
-    await expectNext(sub, { bar: { b: 6 } });
+    await expectNext(subscription, { foo: { a: 2 }, bar: { b: 2 } });
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 0));
+    await expectNext(subscription, { foo: { a: 4 } });
+    backend.write(makeGraph({ bar: { a: 7 } }, 0));
+    backend.write(makeGraph({ bar: { b: 6 } }, 0));
+    await expectNext(subscription, { bar: { b: 6 } });
   });
 
   test('link', async () => {
-    backend.put(
+    backend.write(
       makeGraph(
         { foo: link(['bar', 'a']), bar: { a: { x: 3 }, b: { x: 5 } } },
         0,
       ),
     );
-    const sub = g.call('sub', makeQuery({ foo: { x: 1 } }, 0), { raw: true });
+    const subscription = g.call('watch', makeQuery({ foo: { x: 1 } }, 0), { raw: true });
 
-    await expectNext(sub, { foo: link(['bar', 'a']), bar: { a: { x: 3 } } });
-    backend.put(makeGraph({ foo: link(['bar', 'b']) }, 0));
-    await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 5 } } });
-    backend.put(makeGraph({ bar: { a: { x: 7 } } })); // Should not be se, 0nt!
-    backend.put(makeGraph({ bar: { b: { x: 3 } } }, 0));
-    await expectNext(sub, { bar: { b: { x: 3 } } });
+    await expectNext(subscription, { foo: link(['bar', 'a']), bar: { a: { x: 3 } } });
+    backend.write(makeGraph({ foo: link(['bar', 'b']) }, 0));
+    await expectNext(subscription, { foo: link(['bar', 'b']), bar: { b: { x: 5 } } });
+    backend.write(makeGraph({ bar: { a: { x: 7 } } })); // Should not be se, 0nt!
+    backend.write(makeGraph({ bar: { b: { x: 3 } } }, 0));
+    await expectNext(subscription, { bar: { b: { x: 3 } } });
   });
 
   test('range_deletion', async () => {
-    backend.put(
+    backend.write(
       makeGraph(
         {
           foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
@@ -82,13 +82,13 @@ describe('changes', () => {
       ),
     );
 
-    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0), {
+    const subscription = g.call('watch', makeQuery({ foo: [{ first: 3 }, 1] }, 0), {
       raw: true,
     });
-    await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
-    backend.put(makeGraph({ foo: { b: null } }, 1, 0));
+    await expectNext(subscription, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
+    backend.write(makeGraph({ foo: { b: null } }, 1, 0));
     await expectNext(
-      sub,
+      subscription,
       // prettier-ignore
       [
         { key: 'foo', version: 1, children: [
@@ -101,7 +101,7 @@ describe('changes', () => {
   });
 
   test('range_insertion', async () => {
-    backend.put(
+    backend.write(
       makeGraph(
         {
           foo: page({ a: 1, c: 3, d: 4, e: 5 }),
@@ -110,12 +110,12 @@ describe('changes', () => {
       ),
     );
 
-    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0), {
+    const subscription = g.call('watch', makeQuery({ foo: [{ first: 3 }, 1] }, 0), {
       raw: true,
     });
-    await expectNext(sub, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
-    backend.put(makeGraph({ foo: { b: 2 } }, 0));
-    await expectNext(sub, { foo: { b: 2 } });
+    await expectNext(subscription, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
+    backend.write(makeGraph({ foo: { b: 2 } }, 0));
+    await expectNext(subscription, { foo: { b: 2 } });
   });
 });
 
@@ -131,38 +131,38 @@ describe('values', () => {
   });
 
   test('object', async () => {
-    backend.put(makeGraph({ foo: { a: 3 } }, 0));
-    const sub = g.call('sub', makeQuery({ foo: { a: 1 } }, 0));
-    await expectNext(sub, { foo: { a: 3 } });
-    backend.put(makeGraph({ foo: { a: 4 } }, 0));
-    await expectNext(sub, { foo: { a: 4 } });
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 0));
+    await expectNext(subscription, { foo: { a: 4 } });
   });
 
   test('link', async () => {
-    backend.put(makeGraph({ bar: { a: { x: 5 }, b: { x: 6 } } }, 0));
-    backend.put(makeGraph({ foo: link(['bar', 'a']) }, 0));
+    backend.write(makeGraph({ bar: { a: { x: 5 }, b: { x: 6 } } }, 0));
+    backend.write(makeGraph({ foo: link(['bar', 'a']) }, 0));
 
-    const sub = g.call('sub', makeQuery({ foo: { x: 1 } }, 0));
-    await expectNext(sub, { foo: link(['bar', 'a']), bar: { a: { x: 5 } } });
-    backend.put(makeGraph({ foo: link(['bar', 'b']) }, 0));
-    await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 6 } } });
-    backend.put(makeGraph({ bar: { a: { x: 7 } } }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: { x: 1 } }, 0));
+    await expectNext(subscription, { foo: link(['bar', 'a']), bar: { a: { x: 5 } } });
+    backend.write(makeGraph({ foo: link(['bar', 'b']) }, 0));
+    await expectNext(subscription, { foo: link(['bar', 'b']), bar: { b: { x: 6 } } });
+    backend.write(makeGraph({ bar: { a: { x: 7 } } }, 0));
     // The /bar/a update should not be sent.
-    // await sub.next(); // TODO: Remove this!
-    backend.put(makeGraph({ bar: { b: { x: 3 } } }, 0));
-    await expectNext(sub, { foo: link(['bar', 'b']), bar: { b: { x: 3 } } });
+    // await subscription.next(); // TODO: Remove this!
+    backend.write(makeGraph({ bar: { b: { x: 3 } } }, 0));
+    await expectNext(subscription, { foo: link(['bar', 'b']), bar: { b: { x: 3 } } });
   });
 
   test('range_deletion', async () => {
-    backend.put(makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0));
+    backend.write(makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0));
 
-    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
-    await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
-    backend.put(makeGraph({ foo: { b: null } }, 1));
+    const subscription = g.call('watch', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
+    await expectNext(subscription, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
+    backend.write(makeGraph({ foo: { b: null } }, 1));
     // TODO: In a future version, update versions throughout the tree in
     // live queries
     await expectNext(
-      sub,
+      subscription,
       // prettier-ignore
       [
         { key: 'foo', version: 0, children: [
@@ -180,14 +180,14 @@ describe('values', () => {
   });
 
   test('accept_range_deletion_substitute', async () => {
-    backend.put(makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0));
-    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
-    await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
-    expect(backend.get).toHaveBeenCalledTimes(1);
+    backend.write(makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
+    await expectNext(subscription, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
+    expect(backend.read).toHaveBeenCalledTimes(1);
 
-    backend.put(makeGraph({ foo: page({ b: null, d: 4 }, 'c\0', 'd') }, 1));
+    backend.write(makeGraph({ foo: page({ b: null, d: 4 }, 'c\0', 'd') }, 1));
     await expectNext(
-      sub,
+      subscription,
       // prettier-ignore
       [
         { key: 'foo', version: 0, children: [
@@ -202,17 +202,17 @@ describe('values', () => {
         ] }
       ],
     );
-    expect(backend.get).toHaveBeenCalledTimes(1);
+    expect(backend.read).toHaveBeenCalledTimes(1);
   });
 
   test('back_range_deletion_substitute', async () => {
-    backend.put(
+    backend.write(
       makeGraph({ foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') }, 0),
     );
-    const sub = g.call('sub', makeQuery({ foo: [{ last: 3 }, 1] }, 0));
-    await expectNext(sub, { foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') });
+    const subscription = g.call('watch', makeQuery({ foo: [{ last: 3 }, 1] }, 0));
+    await expectNext(subscription, { foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') });
 
-    backend.put(
+    backend.write(
       // prettier-ignore
       [
         { key: 'foo', version: 1, children: [
@@ -223,7 +223,7 @@ describe('values', () => {
     );
 
     await expectNext(
-      sub,
+      subscription,
       // prettier-ignore
       [
         { key: 'foo', version: 0, children: [
@@ -237,19 +237,19 @@ describe('values', () => {
         ] }
       ],
     );
-    expect(backend.get).toHaveBeenCalledTimes(1);
+    expect(backend.read).toHaveBeenCalledTimes(1);
   });
 
   test('range_insertion', async () => {
-    backend.put(makeGraph({ foo: page({ a: 1, c: 3, d: 4, e: 5 }) }, 0));
-    const sub = g.call('sub', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
-    await expectNext(sub, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
-    backend.put(makeGraph({ foo: { b: 2 } }, 0));
-    await expectNext(sub, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
+    backend.write(makeGraph({ foo: page({ a: 1, c: 3, d: 4, e: 5 }) }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: [{ first: 3 }, 1] }, 0));
+    await expectNext(subscription, { foo: page({ a: 1, c: 3, d: 4 }, '', 'd') });
+    backend.write(makeGraph({ foo: { b: 2 } }, 0));
+    await expectNext(subscription, { foo: page({ a: 1, b: 2, c: 3 }, '', 'c') });
   });
 
   test('backward_range_deletion_at_start', async () => {
-    backend.put(
+    backend.write(
       makeGraph(
         {
           users: {
@@ -271,11 +271,11 @@ describe('values', () => {
       ),
     );
 
-    const sub = g.call(
-      'sub',
+    const subscription = g.call(
+      'watch',
       makeQuery({ usersByAge: [{ last: 2 }, { name: 1 }] }, 0),
     );
-    await expectNext(sub, {
+    await expectNext(subscription, {
       users: {
         '2': { name: 'bob' },
         '3': { name: 'carol' },
@@ -286,7 +286,7 @@ describe('values', () => {
         '\uffff',
       ),
     });
-    backend.put(
+    backend.write(
       makeGraph(
         {
           users: { '2': null },
@@ -295,7 +295,7 @@ describe('values', () => {
         1,
       ),
     );
-    await expectNext(sub, {
+    await expectNext(subscription, {
       users: {
         '1': { name: 'alice' },
         '3': { name: 'carol' },

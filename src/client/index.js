@@ -3,13 +3,13 @@ import makeStream from '@graffy/stream';
 
 export default function GraffyClient(baseUrl) {
   return function(store) {
-    store.on('get', query => {
+    store.on('read', query => {
       if (!fetch) throw Error('client.fetch.unavailable');
       const url = `${baseUrl}?q=${encodeUrl(query)}`;
       return fetch(url).then(res => res.json());
     });
 
-    store.on('sub', query => {
+    store.on('watch', query => {
       if (!EventSource) throw Error('client.sse.unavailable');
       const url = `${baseUrl}?q=${encodeUrl(query)}`;
       const source = new EventSource(url);

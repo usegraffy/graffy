@@ -48,7 +48,7 @@ function decoratePage(graph, links) {
     if (isRange(node)) continue;
     if (isLink(node)) {
       links.push([result, result.length, node.path]);
-      result.push(LINK_PLACEHOLDER); // Placeholder that will get replaced.
+      result.push(LINK_PLACEHOLDER); // Placeholder that will read replaced.
       continue;
     }
     if (isBranch(node)) {

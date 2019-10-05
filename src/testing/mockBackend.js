@@ -5,9 +5,9 @@ export default function mockBackend(options = {}) {
   const state = [];
   const listeners = new Set();
 
-  const get = jest.fn(() => state);
+  const read = jest.fn(() => state);
 
-  const sub = jest.fn(() =>
+  const watch = jest.fn(() =>
     makeStream((push, _end) => {
       listeners.add(push);
       push(options.liveQuery ? state : undefined);
@@ -15,19 +15,19 @@ export default function mockBackend(options = {}) {
     }),
   );
 
-  const put = jest.fn(change => {
+  const write = jest.fn(change => {
     merge(state, change);
     for (const push of listeners) push(change);
   });
 
   return {
-    get,
-    sub,
-    put,
+    read,
+    watch,
+    write,
     middleware: store => {
-      store.on('get', get);
-      store.on('sub', sub);
-      store.on('put', put);
+      store.on('read', read);
+      store.on('watch', watch);
+      store.on('write', write);
     },
   };
 }

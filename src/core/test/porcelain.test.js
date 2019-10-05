@@ -1,8 +1,8 @@
-import Graffy from './Graffy';
+import Graffy from '../Graffy';
 import GraffyFill from '@graffy/fill';
 import { link } from '@graffy/common';
 
-test('Porcelain get', async () => {
+test('Porcelain read', async () => {
   const store = new Graffy();
   store.use(GraffyFill());
 
@@ -19,20 +19,20 @@ test('Porcelain get', async () => {
     orwell: { name: true },
   };
 
-  const onGetBooks = jest.fn(() => ({
+  const onReadBooks = jest.fn(() => ({
     '1984': { title: '1984', author: link('/users/orwell') },
     '2001': { title: '2001', author: link('/users/clarke') },
   }));
 
-  const onGetUsers = jest.fn(() => ({
+  const onReadUsers = jest.fn(() => ({
     orwell: { name: 'George Orwell' },
     clarke: { name: 'Arthur C Clarke' },
   }));
 
-  store.onGet('/books', onGetBooks);
-  store.onGet('/users', onGetUsers);
+  store.onRead('/books', onReadBooks);
+  store.onRead('/users', onReadUsers);
 
-  const result = await store.get('/books', [
+  const result = await store.read('/books', [
     { first: 2 },
     {
       title: true,
@@ -58,11 +58,11 @@ test('Porcelain get', async () => {
     },
   });
 
-  expect(onGetBooks).toHaveBeenCalledWith(
+  expect(onReadBooks).toHaveBeenCalledWith(
     expectedBooksQuery,
     expect.any(Object),
   );
-  expect(onGetUsers).toHaveBeenCalledWith(
+  expect(onReadUsers).toHaveBeenCalledWith(
     expectedUsersQuery,
     expect.any(Object),
   );
@@ -72,11 +72,11 @@ test('Porcelain get', async () => {
 
 const forever = new Promise(() => {});
 
-test('Porcelain sub', async () => {
+test('Porcelain subscription', async () => {
   const store = new Graffy();
   store.use(GraffyFill());
 
-  const onSubBooks = async function* onSubBooks() {
+  const onWatchBooks = async function* onWatchBooks() {
     yield {
       '1984': { title: '1984', author: link('/users/orwell') },
       '2001': { title: '2001', author: link('/users/clarke') },
@@ -84,7 +84,7 @@ test('Porcelain sub', async () => {
     await forever;
   };
 
-  const onSubUsers = async function* onSubUsers() {
+  const onWatchUsers = async function* onWatchUsers() {
     yield {
       orwell: { name: 'George Orwell' },
       clarke: { name: 'Arthur C Clarke' },
@@ -92,10 +92,10 @@ test('Porcelain sub', async () => {
     await forever;
   };
 
-  store.onSub('/books', onSubBooks);
-  store.onSub('/users', onSubUsers);
+  store.onWatch('/books', onWatchBooks);
+  store.onWatch('/users', onWatchUsers);
 
-  const result = store.sub('/books', [
+  const result = store.watch('/books', [
     { first: 2 },
     {
       title: true,
