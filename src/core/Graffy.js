@@ -13,11 +13,12 @@ import {
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
 
-function validateArgs(path, ...args) {
+function validateArgs(first, ...args) {
+  let path;
   try {
-    path = makePath(path);
+    path = makePath(first);
   } catch {
-    args.unshift(path);
+    args.unshift(first);
     path = [];
   }
 
@@ -40,74 +41,71 @@ export default class Graffy {
     this.path = path;
   }
 
-  on(type, path, handle) {
-    [path, handle] = validateArgs(path, handle);
-    path = this.path.concat(path);
-    if (path.length) {
-      const shift = type === 'sub' ? shiftGen : shiftFn;
-      handle = shift(handle, path);
-    }
-    this.core.on(type, path, handle);
+  on(type, ...args) {
+    const [rawPath, rawHandler] = validateArgs(...args);
+    const path = this.path.concat(rawPath);
+    const handler = path.length
+      ? (type === 'watch' ? shiftGen : shiftFn)(rawHandler, path)
+      : rawHandler;
+
+    this.core.on(type, path, handler);
   }
 
-  onGet(path, handle) {
-    [path, handle] = validateArgs(path, handle);
-    this.on('get', path, async function porcelainGet(query, options) {
+  onRead(...args) {
+    const [path, handle] = validateArgs(...args);
+    this.on('read', path, async function porcelainRead(query, options) {
       return makeFinalGraph(await handle(decorateQuery(query), options), query);
     });
   }
 
-  onSub(path, handle) {
-    [path, handle] = validateArgs(path, handle);
-    this.on('sub', path, async function* porcelainSub(query, options) {
-      const sub = handle(decorateQuery(query), options);
-      let firstValue = (await sub.next()).value;
+  onWatch(...args) {
+    const [path, handle] = validateArgs(...args);
+    this.on('watch', path, async function* porcelainWatch(query, options) {
+      const subscription = handle(decorateQuery(query), options);
+      let firstValue = (await subscription.next()).value;
       yield firstValue && makeFinalGraph(firstValue, query);
-      for await (const value of sub) {
+      for await (const value of subscription) {
         yield value && makeGraph(value, query);
       }
     });
   }
 
-  onPut(path, handle) {
-    [path, handle] = validateArgs(path, handle);
-    this.on('put', path, async function porcelainPut(change, options) {
+  onWrite(...args) {
+    const [path, handle] = validateArgs(...args);
+    this.on('write', path, async function porcelainWrite(change, options) {
       return makeGraph(await handle(decorate(change), options));
     });
   }
 
-  use(path, provider) {
-    [path, provider] = validateArgs(path, provider);
+  use(...args) {
+    const [path, provider] = validateArgs(...args);
     provider(new Graffy(path, this.core));
   }
 
-  call(type, payload, options) {
-    payload = wrap(payload, this.path);
+  call(type, unwrappedPayload, options) {
+    const payload = wrap(unwrappedPayload, this.path);
     const result = this.core.call(type, payload, options);
     return unwrap(result, this.path);
   }
 
-  async get(path, query, options) {
-    [path, query, options] = validateArgs(path, query, options);
-    query = wrap(makeQuery(query), path);
-
-    const result = await this.call('get', query, options || {});
+  async read(...args) {
+    const [path, porcelainQuery, options] = validateArgs(...args);
+    const query = wrap(makeQuery(porcelainQuery), path);
+    const result = await this.call('read', query, options || {});
     return descend(decorate(result), path);
   }
 
-  async *sub(path, query, options) {
-    [path, query, options] = validateArgs(path, query, options);
-    query = wrap(makeQuery(query), path);
-
-    const stream = this.call('sub', query, options || {});
+  async *watch(...args) {
+    const [path, porcelainQuery, options] = validateArgs(...args);
+    const query = wrap(makeQuery(porcelainQuery), path);
+    const stream = this.call('watch', query, options || {});
     for await (const value of stream) yield descend(decorate(value), path);
   }
 
-  async put(path, change, options) {
-    [path, change, options] = validateArgs(path, change, options);
-    change = wrap(makeGraph(change), path);
-
-    change = await this.call('put', change, options || {});
-    return descend(decorate(change), path);
+  async write(...args) {
+    const [path, porcelainChange, options] = validateArgs(...args);
+    const change = wrap(makeGraph(porcelainChange), path);
+    const writtenChange = await this.call('write', change, options || {});
+    return descend(decorate(writtenChange), path);
   }
 }

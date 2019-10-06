@@ -20,7 +20,7 @@ export default function server(store) {
           // TODO: Resumable subscriptions using timestamp ID.
           // const lastId = req.headers['last-event-id'];
           try {
-            const stream = store.call('sub', query, { raw: true });
+            const stream = store.call('watch', query, { raw: true });
             // TODO: call stream.return() when aborted
             for await (const value of stream) {
               if (req.aborted || res.finished) break;
@@ -31,7 +31,7 @@ export default function server(store) {
           }
           res.end();
         } else {
-          const value = await store.call('get', query, { raw: true });
+          const value = await store.call('read', query, { raw: true });
           res.writeHead(200);
           res.end(JSON.stringify(value));
         }

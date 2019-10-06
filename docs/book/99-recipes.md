@@ -18,13 +18,16 @@ store.onFetch('/postsByDate', async query => {
         title && 'title',
         body && 'body',
         author && 'author_id',
-      ].filter(Boolean).join(', ')} FROM posts WHERE ${[
+      ]
+        .filter(Boolean)
+        .join(', ')} FROM posts WHERE ${[
         slice.before && 'date <= $before',
         slice.after && 'date >= $after',
-      ].filter(Boolean).join(' AND ')} ORDER BY date ${
-        last ? 'DESC' : 'ASC'
-      } LIMIT ${ last || first }`,
-      { before, after, count: last || first }
+      ]
+        .filter(Boolean)
+        .join(' AND ')} ORDER BY date ${last ? 'DESC' : 'ASC'} LIMIT ${last ||
+        first}`,
+      { before, after, count: last || first },
     );
 
     rows.forEach(row => {
@@ -35,11 +38,12 @@ store.onFetch('/postsByDate', async query => {
       if (author) post.author = link(`/users/${row.author_id}`);
       if (date) post.date = row.created_at;
       result.posts[row.id] = post;
-      result.postsByDate[key(row.created_at, row.id)] =
-        link(`/posts/${row.id}`);
+      result.postsByDate[key(row.created_at, row.id)] = link(
+        `/posts/${row.id}`,
+      );
     });
 
     return result;
   }
-})
+});
 ```

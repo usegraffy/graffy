@@ -13,7 +13,7 @@ beforeEach(() => {
   backend = mockBackend();
   g.use(backend.middleware);
 
-  backend.put(
+  backend.write(
     makeGraph(
       {
         bar: {
@@ -42,14 +42,14 @@ beforeEach(() => {
 // 4. no broken link (linked data and link removed together)
 
 test('indexes', async () => {
-  const sub = g.call(
-    'sub',
+  const subscription = g.call(
+    'watch',
     makeQuery({
       foo: [{ first: 3 }, { x: true }],
     }),
   );
 
-  expect((await sub.next()).value).toEqual(
+  expect((await subscription.next()).value).toEqual(
     makeGraph(
       {
         bar: {
@@ -71,7 +71,7 @@ test('indexes', async () => {
     ),
   );
 
-  backend.put(
+  backend.write(
     makeGraph(
       {
         bar: {
@@ -85,7 +85,7 @@ test('indexes', async () => {
     ),
   );
 
-  expect((await sub.next()).value).toEqual(
+  expect((await subscription.next()).value).toEqual(
     makeGraph(
       {
         bar: {

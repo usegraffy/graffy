@@ -37,7 +37,7 @@ export function page(obj, key = '', end = '\uffff') {
   });
 }
 
-export function link(path) {
-  path = makePath(path);
+export function link(rawPath) {
+  const path = makePath(rawPath);
   return (key, version) => ({ key, version, path });
 }

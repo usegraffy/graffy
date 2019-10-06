@@ -12,12 +12,11 @@ Bugs/missing
 - [ ] Resumable subscriptions in client/server
 
 ## Perhaps
+
 - [ ] Handle backpressure properly in client/server
 
-
-
-
 ## Launch
+
 - [ ] Write articles:
   - https://edgecoders.com/the-falcor-data-model-is-a-graph-and-the-graphql-data-model-is-a-tree-6748ba53bb96
   - https://blog.apollographql.com/graphql-vs-falcor-4f1e9cbf7504

@@ -12,10 +12,10 @@ Live queries have a reputation of being hard and inefficient to implement on the
 
 The cache performs the following:
 
-- When a *get* occurs, try to fulfill the known subquery from the cache and delegate unknown subquery to upstream handlers. Update the cache with returned results. (Todo: eviction)
+- When a _get_ occurs, try to fulfill the known subquery from the cache and delegate unknown subquery to upstream handlers. Update the cache with returned results. (Todo: eviction)
 
-- When a *put* occurs, forward to upstream handlers and if successful, update the cache. (Todo: optimism)
+- When a _put_ occurs, forward to upstream handlers and if successful, update the cache. (Todo: optimism)
 
-- When a *sub* occurs, add the query and stream to the ongoing subscriptions list and create or update an upstream subscription that combines all current subscriptions. Remove when the sub is dropped. (Query aggregation)
+- When a _sub_ occurs, add the query and stream to the ongoing subscriptions list and create or update an upstream subscription that combines all current subscriptions. Remove when the sub is dropped. (Query aggregation)
 
 - Whenever new data is put into the cache, notify listeners whose queries intersect. For each listener, fetch additional data if the query is not fully satisfied from the cache.

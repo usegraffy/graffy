@@ -4,11 +4,11 @@ This document is intended for those working on Graffy project itself (i.e. the c
 
 Graffy is intended to be very modular, and each module is published as a separate NPM module in the @graffy scope. It's all in one repo using yarn workspaces. The current codebase has the following modules:
 
-- core. It is very similar to the middleware router in Express or Koa. There are 6 basic APIs: get, put, sub, onGet, onPut and onSub. When get is called, it calls the relevant handlers registered with onGet in sequence; similarly for the rest.
+- core. It is very similar to the middleware router in Express or Koa. There are 6 basic APIs: read, write, watch, onRead, onWrite and onWatch. When read is called, it calls the relevant handlers registered with onRead in sequence; similarly for the rest.
 
   You can register modules at different routes. For example you could have one for /users, one for /posts etc.
 
-  All the other modules simply register stuff with core's onGet, onPut and onSub. This means that third-party modules get the same level of access as first-party ones, and the hope is that there will be an ecosystem of plugins connecting Graffy to all sorts of data stores and message brokers.
+  All the other modules simply register stuff with core's onRead, onWrite and onWatch. This means that third-party modules get the same level of access as first-party ones, and the hope is that there will be an ecosystem of plugins connecting Graffy to all sorts of data stores and message brokers.
 
   The middleware architecture is pretty powerful; people may write modules to do authorization, validation, rate limiting etc. It is also planned that the type system will be implemented as a module.
 
@@ -88,22 +88,24 @@ The internal representation of queries and graphs is based on arrays. These are 
 For example,
 
 ```js
-graph({
+graph(
+  {
     foo: 10,
     bar: {
-        baz: 'a',
+      baz: 'a',
     },
-}, 1)
+  },
+  1,
+);
 ```
+
 will return the internal representation, which is:
 
 ```js
 [
-  { key: 'bar', clock: 1, children: [
-    { key: 'baz', clock: 1, value: 'a' },
-  ] },
+  { key: 'bar', clock: 1, children: [{ key: 'baz', clock: 1, value: 'a' }] },
   { key: 'foo', clock: 1, value: 10 },
-]
+];
 ```
 
 Note that the order of foo and bar have been reversed, because a node's children must always be sorted by key. Maintaining order greatly speeds up most operations as we can now use binary search. (Before the CRDT refactor I used a more straightforward approach of just storing JSON objects. This had really bad performance as many operations required iteration in key order.)
@@ -117,25 +119,36 @@ I'll skip the clock property from now to reduce noise.
 Queries are very similar. Let's switch the example a bit, here's a query to get the first 3 posts for a blog:
 
 ```js
-query({
-  posts: [ { first: 3 }, {
-    title: true,
-    author: true,
-  } ],
-}, 1)
+query(
+  {
+    posts: [
+      { first: 3 },
+      {
+        title: true,
+        author: true,
+      },
+    ],
+  },
+  1,
+);
 ```
 
 which returns the internal representation:
 
 ```js
 [
-  { key: 'posts', children: [
-    { key: '', end: '\uFFFF', count: 3, children: [
-      { key: 'title', value: 1 },
-      { key: 'author', value: 1 }
-    ] }
-  ] }
-]
+  {
+    key: 'posts',
+    children: [
+      {
+        key: '',
+        end: '\uFFFF',
+        count: 3,
+        children: [{ key: 'title', value: 1 }, { key: 'author', value: 1 }],
+      },
+    ],
+  },
+];
 ```
 
 `key: '', end: '\uFFFF', count: 3` is the internal representation of `{ first: 3 }`. It identifies a range with start and end keys and a count. To simplify in-order graph traversal, the start key is just called "key".
@@ -199,14 +212,14 @@ You can find a formal spec for these data structures [here](../src/common/graph)
 
 # Part 4: Authoritative and non-authoritative Providers (in graffy-core)
 
-Providers are the callback functions you attach via "on('get', callback)", "on('sub', callback)" etc. When a "get" or "sub" happens, these providers are called sequentially in the order they are attached.
+Providers are the callback functions you attach via "on('read', callback)", "on('watch', callback)" etc. When a 'read' or 'watch' happens, these providers are called sequentially in the order they are attached.
 
-Providers are passed three arguments - the first is the query (get / sub) or change set (put), the second is an options dictionary and the third is a "next" function, used to yield to the next provider. For example, providers doing caching, validation, authentication etc. will call next() conditionally.
+Providers are passed three arguments - the first is the query (read / watch) or change set (put), the second is an options dictionary and the third is a "next" function, used to yield to the next provider. For example, providers doing caching, validation, authentication etc. will call next() conditionally.
 
 Very often, Graffy users (as opposed to graffy module developers) will write authoritative providers. These providers are connected to the "source of truth" database for the paths they handle, and only call next() for paths that they are not handling.
 
 For example, if we have an authoritative handler on /users and it is passed a query for both users and posts, it must call next() with a new query for posts.
 
-As a convenience, we do this automatically for authoritative providers, which are attached using the onGet, onSub methods rather than on('get', ...). If you look at the implementation, the wrapGet and wrapSub functions add the logic for calling next. Authoritative providers aren't passed the next function.
+As a convenience, we do this automatically for authoritative providers, which are attached using the onRead, onWatch methods rather than on('read', ...). If you look at the implementation, the wrapGet and wrapSub functions add the logic for calling next. Authoritative providers aren't passed the next function.
 
-p.s. Node.js frameworks like Express also make this distinction between "authoritative" handlers that are attached using .get(), .post() etc. and non-authoritative ones that are attached with .use().
+p.s. Node.js frameworks like Express also make this distinction between "authoritative" handlers that are attached using .read(), .post() etc. and non-authoritative ones that are attached with .use().

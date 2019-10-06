@@ -4,12 +4,13 @@ import pageInfo from './pageInfo';
 const LINK_PLACEHOLDER = Symbol();
 
 export function descend(tree, path) {
+  let node = tree;
   for (const key of path) {
-    if (!tree) return;
-    if (!(key in tree)) return undefined;
-    tree = tree[key];
+    if (!node) return;
+    if (!(key in node)) return undefined;
+    node = node[key];
   }
-  return tree;
+  return node;
 }
 
 export default function decorate(graph, links = []) {
@@ -48,7 +49,7 @@ function decoratePage(graph, links) {
     if (isRange(node)) continue;
     if (isLink(node)) {
       links.push([result, result.length, node.path]);
-      result.push(LINK_PLACEHOLDER); // Placeholder that will get replaced.
+      result.push(LINK_PLACEHOLDER); // Placeholder that will read replaced.
       continue;
     }
     if (isBranch(node)) {

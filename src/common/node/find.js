@@ -1,18 +1,20 @@
 export default function find(items, compare, first = 0, last = items.length) {
-  while (first < last) {
-    const ix = ((first + last) / 2) | 0;
+  let currentFirst = first;
+  let currentLast = last;
+  while (currentFirst < currentLast) {
+    const ix = ((currentFirst + currentLast) / 2) | 0;
     const d = compare(items[ix]);
 
     if (d < 0) {
-      first = ix + 1;
+      currentFirst = ix + 1;
     } else if (d > 0) {
-      last = ix;
+      currentLast = ix;
     } else {
       return ix;
     }
   }
 
-  return first;
+  return currentFirst;
 }
 
 // export function findFirst(items, compare, first = 0, last = items.length) {

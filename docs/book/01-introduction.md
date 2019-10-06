@@ -16,7 +16,7 @@ GraphQL rejected live queries because they are notoriously hard to implement on 
 
 An ideal solution would let server-side code publish change events and client-side code make live queries, with the data fetching library translating between them. This is what Graffy does.
 
-To do this, Graffy uses data types that provide consistency guarantees  and a wire protocol that can efficiently represent diffs, neither of which are available in GraphQL. This is why Graffy has to be a separate library rather than a GraphQL client.
+To do this, Graffy uses data types that provide consistency guarantees and a wire protocol that can efficiently represent diffs, neither of which are available in GraphQL. This is why Graffy has to be a separate library rather than a GraphQL client.
 
 ### Theory of operation
 
