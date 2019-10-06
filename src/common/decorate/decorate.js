@@ -4,12 +4,13 @@ import pageInfo from './pageInfo';
 const LINK_PLACEHOLDER = Symbol();
 
 export function descend(tree, path) {
+  let node = tree;
   for (const key of path) {
-    if (!tree) return;
-    if (!(key in tree)) return undefined;
-    tree = tree[key];
+    if (!node) return;
+    if (!(key in node)) return undefined;
+    node = node[key];
   }
-  return tree;
+  return node;
 }
 
 export default function decorate(graph, links = []) {

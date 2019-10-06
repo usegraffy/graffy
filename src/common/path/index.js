@@ -8,20 +8,22 @@ export function makePath(path) {
   }
   if (typeof path !== 'string') throw Error('makePath.path_not_string');
   if (!path.length || path === PATH_SEPARATOR) return [];
-  path = path.split(PATH_SEPARATOR);
-  if (path[0] === '') path = path.slice(1);
-  return path;
+
+  const pathArray = path.split(PATH_SEPARATOR);
+  return pathArray[0] === '' ? pathArray.slice(1) : pathArray;
 }
 
-export function wrap(children, path, version = 0) {
+export function wrap(graph, path, version = 0) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
+  let children = graph;
   for (let i = path.length - 1; i >= 0; i--) {
     children = [{ key: path[i], version, children }];
   }
   return children;
 }
 
-export function unwrap(children, path) {
+export function unwrap(graph, path) {
+  let children = graph;
   if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
   let node = { children };
   for (let i = 0; i < path.length; i++) {

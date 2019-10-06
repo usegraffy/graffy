@@ -9,9 +9,9 @@ export function shiftFn(fn, path) {
     const remainingPayload = remove(payload, path) || [];
 
     // This next function is offered to the provider function.
-    async function shiftedNext(nextPayload) {
+    async function shiftedNext(unwrappedNextPayload) {
       nextCalled = true;
-      nextPayload = wrap(nextPayload, path);
+      const nextPayload = wrap(unwrappedNextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
       const nextResult = await next(nextPayload);
 
@@ -44,9 +44,9 @@ export function shiftGen(fn, path) {
     const unwrappedPayload = unwrap(payload, path);
     const remainingPayload = remove(payload, path) || [];
 
-    const shiftedNext = async function*(nextPayload) {
+    const shiftedNext = async function*(unwrappedNextPayload) {
       nextCalled = true;
-      nextPayload = wrap(nextPayload, path);
+      const nextPayload = wrap(unwrappedNextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
 
       let pushRemaining;

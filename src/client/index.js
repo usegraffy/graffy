@@ -16,9 +16,7 @@ export default function GraffyClient(baseUrl) {
 
       return makeStream((push, end) => {
         source.onmessage = ({ data }) => {
-          data = JSON.parse(data);
-          // console.log('<<<', debug(data));
-          push(data);
+          push(JSON.parse(data));
         };
 
         source.onerror = e => {
