@@ -7,6 +7,7 @@ Option 1: Based on linkKnown. Whenever links are encountered, the query is expan
 Option 2: Based on unknown / extraneous. Expand the subscription when unknown values are encountered after putting data, contract it when extraneous values are discovered. The problem is that this conflates query and subscription, it is possible that a backend provides link traversal for query but not for subscription. We may end up not making a necessary subscription if the initial query returns with traversed data.
 
 Consider:
+
 - Perhaps combining "query link traversal" module with "live" module and adding it all into core (rather than as pluggable modules) will help?
 - Perhaps providers can be required to be consistent between query and subscription (with respect to which links they can traverse and which they can't)?
 
@@ -22,22 +23,21 @@ In live queries, the first payload is the current state of the backend matching 
 
 In change subscriptions, the first payload must be undefined.
 
+## Should there be a separate onWatch() callback?
 
-## Should there be a separate onSub() callback?
+No: The onRead() handler receives a cancellation signal as argument. The signal is invoked when the subscriber leaves. The handler is expected to return the initial state and subsequently call graffy.write() whenever there are changes.
 
-No: The onGet() handler receives a cancellation signal as argument. The signal is invoked when the subscriber leaves. The handler is expected to return the initial state and subsequently call grue.put() whenever there are changes.
+Yes: The onRead() handler is called for the initial state, AND the onWatch() handler is called for subscribing to future changes. The onWatch() handler returns a function that is invoked to request an unsubscribe.
 
-Yes: The onGet() handler is called for the initial state, AND the onSub() handler is called for subscribing to future changes. The onSub() handler returns a function that is invoked to request an unsubscribe.
-
-Decision: No. We use onGet() with a cancellation signal.
+Decision: No. We use onRead() with a cancellation signal.
 
 ## Should there be separate APIs for get, getRaw, sub, subRaw?
 
-Alternately, only a single .get() with an options hash for `once` and `raw`.
+Alternately, only a single .read() with an options hash for `once` and `raw`.
 
-Decision: Single .get().
+Decision: Single .read().
 
-## Should onGet handlers call next() or just return the payload and have the resolver call sprout() to decide whether to go to the next handler?
+## Should onRead handlers call next() or just return the payload and have the resolver call sprout() to decide whether to go to the next handler?
 
 Decision: Handlers should explicitly call next(). This is because handlers may need to use the results of downstream handlers (e.g. to update cache).
 
@@ -47,31 +47,33 @@ We may provide helpers for common operations we're expecting handlers to perform
 
 Decision: The handler closest to the root will be called first; if it calls next(), then child handlers are called.
 
-## Should handlers (onGet, onPut) modify the query object before calling next(), should call next with new object?
+## Should handlers (onRead, onWrite) modify the query object before calling next(), should call next with new object?
 
 Decision: New object. In most cases where it needs to modify, it will need the old object after downstream handlers have returned.
-
-
 
 ## Should cached data be stored as a graph (with path metadata) or a tree with symlinks?
 
 Pros:
-  - Prune, Sprout become much simpler as they don't need to follow links
-  - As an optimization in production, don't prune
+
+- Prune, Sprout become much simpler as they don't need to follow links
+- As an optimization in production, don't prune
 
 Cons:
-  - When a section of the graph is created or deleted, incoming links to that section may need updating. This is very complex, and was the blocker.
-  - Not pruning in production is not feasible; users might iterate over children.
+
+- When a section of the graph is created or deleted, incoming links to that section may need updating. This is very complex, and was the blocker.
+- Not pruning in production is not feasible; users might iterate over children.
 
 Decision: Keep cached data in a tree with symlinks
 
 ## Should Graffy Server have full REST compatibility?
 
 This would require:
+
 - returning just the branch at path, rather than sparse trees from the root
 - converting range results into arrays
 
 Cons:
+
 - Returning the branch at path will require links to be grafted / resolved; this causes duplication if multiple links point to the same path.
 
 Decision: Keep a GraphQL/Falcor-like single URL for all requests.

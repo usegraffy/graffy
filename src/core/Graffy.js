@@ -1,131 +1,111 @@
-import mergeStreams from 'merge-async-iterators';
-import { merge, wrap, unwrap, remove, makePath } from '@graffy/common';
-// import { decorate } from '@graffy/common';
+import {
+  decorate,
+  decorateQuery,
+  descend,
+  makeGraph,
+  makePath,
+  makeQuery,
+  makeFinalGraph,
+  unwrap,
+  wrap,
+} from '@graffy/common';
 
-import resolve from './resolve';
+import { shiftFn, shiftGen } from './shift.js';
+import Core from './Core';
 
-function ensurePath(expLength, basePath, path, ...args) {
-  if (!basePath) basePath = [];
-  let argLength = args.length;
-  while (argLength && typeof args[argLength - 1] === 'undefined') argLength--;
-  if (argLength === expLength) {
-    return [
-      basePath.concat(Array.isArray(path) ? path : makePath(path)),
-      ...args,
-    ];
-  } else {
-    return [basePath, path, ...args];
+function validateArgs(first, ...args) {
+  let path;
+  try {
+    path = makePath(first);
+  } catch {
+    args.unshift(first);
+    path = [];
   }
-}
 
-function shiftFn(fn, path) {
-  if (!path || !path.length) return fn;
-  return async (payload, options, next) => {
-    const shiftedNext = async nextPayload =>
-      unwrap(await next(wrap(nextPayload, path)), path);
-    return wrap(await fn(unwrap(payload, path), options, shiftedNext), path);
-  };
-}
-
-function shiftGen(fn, path) {
-  if (!path || !path.length) return fn;
-  return async function*(payload, options, next) {
-    const shiftedNext = async function*(nextPayload) {
-      for await (const value of await next(wrap(nextPayload, path))) {
-        yield unwrap(value, path);
-      }
-    };
-    for await (const value of fn(unwrap(payload, path), options, shiftedNext)) {
-      yield wrap(value, path);
+  for (const arg of args) {
+    if (
+      typeof arg !== 'undefined' &&
+      typeof arg !== 'object' &&
+      typeof arg !== 'function'
+    ) {
+      throw Error('validateArgs.invalid_argument ' + JSON.stringify(arg));
     }
-  };
-}
+  }
 
-function wrapGet(handle, path) {
-  return async (query, options, next) => {
-    const value = await handle(query, options);
-
-    const nextQuery = remove(query, path);
-    if (!nextQuery || !nextQuery.length) return value;
-    const nextValue = await next(nextQuery);
-    return merge(value, nextValue);
-  };
-}
-
-function wrapSub(handle, path) {
-  return (query, options, next) => {
-    const stream = handle(query, options);
-
-    const nextQuery = remove(query, path);
-    if (!nextQuery || !nextQuery.length) return stream;
-    const nextStream = next(nextQuery);
-    return mergeStreams([stream, nextStream]);
-  };
+  return [path, ...args];
 }
 
 export default class Graffy {
-  constructor(path, root) {
-    if (root) {
-      this.root = root;
-      this.path = path;
-      this.handlers = this.root.handlers;
-    } else {
-      this.handlers = {};
-    }
+  constructor(path = [], core = new Core()) {
+    this.core = core;
+    this.path = path;
   }
 
-  on(type, path, handle) {
-    this.handlers[type] = this.handlers[type] || [];
-    this.handlers[type].push({ path, handle });
+  on(type, ...args) {
+    const [rawPath, rawHandler] = validateArgs(...args);
+    const path = this.path.concat(rawPath);
+    const handler = path.length
+      ? (type === 'watch' ? shiftGen : shiftFn)(rawHandler, path)
+      : rawHandler;
+
+    this.core.on(type, path, handler);
   }
 
-  onGet(path, handle) {
-    [path, handle] = ensurePath(1, this.path, path, handle);
-    if (this.path) handle = shiftFn(handle, this.path);
-    handle = wrapGet(handle, path);
-    this.on('get', path, handle);
+  onRead(...args) {
+    const [path, handle] = validateArgs(...args);
+    this.on('read', path, async function porcelainRead(query, options) {
+      return makeFinalGraph(await handle(decorateQuery(query), options), query);
+    });
   }
 
-  onPut(path, handle) {
-    [path, handle] = ensurePath(1, this.path, path, handle);
-    if (this.path) handle = shiftFn(handle, this.path);
-    this.on('put', path, handle);
-  }
-
-  onSub(path, handle) {
-    [path, handle] = ensurePath(1, this.path, path, handle);
-    if (this.path) handle = shiftGen(handle, this.path);
-    handle = wrapSub(handle, path);
-    this.on('sub', path, handle);
-  }
-
-  use(path, provider) {
-    [path, provider] = ensurePath(1, this.path, path, provider);
-    provider(
-      new Graffy(this.path ? this.path.concat(path) : path, this.root || this),
-    );
-  }
-
-  get(query, options = {}) {
-    const result = Promise.resolve(resolve(this.handlers.get, query, options));
-    return result;
-  }
-
-  async *sub(query, options = {}) {
-    const stream = resolve(this.handlers.sub, query, options);
-
-    try {
-      for await (const value of stream) {
-        yield value;
+  onWatch(...args) {
+    const [path, handle] = validateArgs(...args);
+    this.on('watch', path, async function* porcelainWatch(query, options) {
+      const subscription = handle(decorateQuery(query), options);
+      let firstValue = (await subscription.next()).value;
+      yield firstValue && makeFinalGraph(firstValue, query);
+      for await (const value of subscription) {
+        yield value && makeGraph(value, query);
       }
-    } catch (e) {
-      console.log('Graffy: Sub stream error', e);
-    }
+    });
   }
 
-  async put(change, options = {}) {
-    change = await Promise.resolve(resolve(this.handlers.put, change, options));
-    for (const id in this.subs) this.subs[id].pub(change);
-    return change;
+  onWrite(...args) {
+    const [path, handle] = validateArgs(...args);
+    this.on('write', path, async function porcelainWrite(change, options) {
+      return makeGraph(await handle(decorate(change), options));
+    });
+  }
+
+  use(...args) {
+    const [path, provider] = validateArgs(...args);
+    provider(new Graffy(path, this.core));
+  }
+
+  call(type, unwrappedPayload, options) {
+    const payload = wrap(unwrappedPayload, this.path);
+    const result = this.core.call(type, payload, options);
+    return unwrap(result, this.path);
+  }
+
+  async read(...args) {
+    const [path, porcelainQuery, options] = validateArgs(...args);
+    const query = wrap(makeQuery(porcelainQuery), path);
+    const result = await this.call('read', query, options || {});
+    return descend(decorate(result), path);
+  }
+
+  async *watch(...args) {
+    const [path, porcelainQuery, options] = validateArgs(...args);
+    const query = wrap(makeQuery(porcelainQuery), path);
+    const stream = this.call('watch', query, options || {});
+    for await (const value of stream) yield descend(decorate(value), path);
+  }
+
+  async write(...args) {
+    const [path, porcelainChange, options] = validateArgs(...args);
+    const change = wrap(makeGraph(porcelainChange), path);
+    const writtenChange = await this.call('write', change, options || {});
+    return descend(decorate(writtenChange), path);
   }
 }

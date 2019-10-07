@@ -4,7 +4,7 @@ export default function() {
   return store => {
     const cache = [];
 
-    store.on('get', [], async (query, options, next) => {
+    store.on('read', [], async (query, options, next) => {
       if (options.skipCache) return next(query);
       const { known, unknown } = slice(cache, query);
       if (!unknown) return known;

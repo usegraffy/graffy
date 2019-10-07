@@ -8,6 +8,7 @@
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
+    "lint": "eslint scripts src",
     "test": "jest",
     "package": "./scripts/package",
     "server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",

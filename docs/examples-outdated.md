@@ -7,11 +7,11 @@ import { Poke, PokeFilter } from './poke';
 
 const { number, string, map } = types;
 
-export default (Schema = {
+export default Schema = {
   users: map(string, User),
   pokes: map(string, Poke),
   pokeByTime: map(PokeFilter, map(tuple(number, string), Poke)),
-});
+};
 ```
 
 DSL Option 1:
@@ -154,8 +154,8 @@ describe('store', () => {
   });
 
   test('get keys', () => {
-    const a = await store.get('pokes/a', { message });
-    const b = await store.get('pokes/b', { message });
+    const a = await store.read('pokes/a', { message });
+    const b = await store.read('pokes/b', { message });
     expect(a).toEqual({ message: 'Hi a 0' });
     expect(b).toEqual({ message: 'Hi b 0' });
   });

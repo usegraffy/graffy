@@ -35,9 +35,10 @@ class Result {
 
 export default function slice(graph, query, root) {
   let result = new Result(root);
-  while (query) {
+  let currentQuery = query;
+  while (currentQuery) {
     let index = 0;
-    for (const queryNode of query) {
+    for (const queryNode of currentQuery) {
       if (isRange(queryNode)) {
         sliceRange(graph, queryNode, result);
       } else {
@@ -47,8 +48,7 @@ export default function slice(graph, query, root) {
         sliceNode(graph[index], queryNode, result);
       }
     }
-    query = result.linked;
-    // if (query) console.log('Linked', query);
+    currentQuery = result.linked;
     delete result.linked;
   }
   delete result.root;

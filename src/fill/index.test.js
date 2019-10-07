@@ -1,7 +1,7 @@
 // index.test.js
 
 import Graffy from '@graffy/core';
-import { page, link, graph, query } from '@graffy/common';
+import { page, link, makeGraph, makeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import live from './index.js';
 
@@ -13,23 +13,26 @@ beforeEach(() => {
   backend = mockBackend();
   g.use(backend.middleware);
 
-  backend.put(
-    graph({
-      bar: {
-        1: { x: 1 },
-        2: { x: 2 },
-        3: { x: 3 },
-        4: { x: 4 },
-        5: { x: 5 },
+  backend.write(
+    makeGraph(
+      {
+        bar: {
+          1: { x: 1 },
+          2: { x: 2 },
+          3: { x: 3 },
+          4: { x: 4 },
+          5: { x: 5 },
+        },
+        foo: page({
+          a: link(['bar', '1']),
+          b: link(['bar', '2']),
+          c: link(['bar', '3']),
+          d: link(['bar', '4']),
+          e: link(['bar', '5']),
+        }),
       },
-      foo: page({
-        a: link(['bar', '1']),
-        b: link(['bar', '2']),
-        c: link(['bar', '3']),
-        d: link(['bar', '4']),
-        e: link(['bar', '5']),
-      }),
-    }),
+      0,
+    ),
   );
 });
 
@@ -39,33 +42,37 @@ beforeEach(() => {
 // 4. no broken link (linked data and link removed together)
 
 test('indexes', async () => {
-  const sub = g.sub(
-    query({
+  const subscription = g.call(
+    'watch',
+    makeQuery({
       foo: [{ first: 3 }, { x: true }],
     }),
   );
 
-  expect((await sub.next()).value).toEqual(
-    graph({
-      bar: {
-        1: { x: 1 },
-        2: { x: 2 },
-        3: { x: 3 },
-      },
-      foo: page(
-        {
-          a: link(['bar', '1']),
-          b: link(['bar', '2']),
-          c: link(['bar', '3']),
+  expect((await subscription.next()).value).toEqual(
+    makeGraph(
+      {
+        bar: {
+          1: { x: 1 },
+          2: { x: 2 },
+          3: { x: 3 },
         },
-        '',
-        'c',
-      ),
-    }),
+        foo: page(
+          {
+            a: link(['bar', '1']),
+            b: link(['bar', '2']),
+            c: link(['bar', '3']),
+          },
+          '',
+          'c',
+        ),
+      },
+      0,
+    ),
   );
 
-  backend.put(
-    graph(
+  backend.write(
+    makeGraph(
       {
         bar: {
           2: null,
@@ -78,23 +85,26 @@ test('indexes', async () => {
     ),
   );
 
-  expect((await sub.next()).value).toEqual(
-    graph({
-      bar: {
-        1: { x: 1 },
-        3: { x: 3 },
-        4: { x: 4 },
+  expect((await subscription.next()).value).toEqual(
+    makeGraph(
+      {
+        bar: {
+          1: { x: 1 },
+          3: { x: 3 },
+          4: { x: 4 },
+        },
+        foo: [
+          { key: '', end: '`\uffff', version: 0 },
+          { key: 'a', path: ['bar', '1'], version: 0 },
+          { key: 'a\0', end: 'a\uffff', version: 0 },
+          { key: 'b', end: 'b', version: 1 },
+          { key: 'b\0', end: 'b\uffff', version: 0 },
+          { key: 'c', path: ['bar', '3'], version: 0 },
+          { key: 'c\0', end: 'c\uffff', version: 0 },
+          { key: 'd', path: ['bar', '4'], version: 0 },
+        ],
       },
-      foo: [
-        { key: '', end: '`\uffff', version: 0 },
-        { key: 'a', path: ['bar', '1'], version: 0 },
-        { key: 'a\0', end: 'a\uffff', version: 0 },
-        { key: 'b', end: 'b', version: 1 },
-        { key: 'b\0', end: 'b\uffff', version: 0 },
-        { key: 'c', path: ['bar', '3'], version: 0 },
-        { key: 'c\0', end: 'c\uffff', version: 0 },
-        { key: 'd', path: ['bar', '4'], version: 0 },
-      ],
-    }),
+      0,
+    ),
   );
 });

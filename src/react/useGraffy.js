@@ -1,22 +1,22 @@
 import React from 'react';
 import isEqual from 'lodash/isEqual';
 import GraffyContext from './GraffyContext';
-// import { debug } from '@graffy/testing';
 
 const { useRef, useState, useEffect, useContext } = React;
 
-const consumeSubscription = async (sub, setState) => {
+const consumeSubscription = async (subscription, setState) => {
   try {
-    for await (const val of sub) {
-      if (sub.closed) {
-        console.warn('Ignoring update after subscription has closed.');
+    for await (const val of subscription) {
+      if (subscription.closed) {
+        // console.warn('Ignoring update after subscription has closed.');
         break;
       }
 
       setState([val, null]);
     }
   } catch (e) {
-    console.log('Error reading stream in useGraffy', e);
+    // eslint-disable-next-line no-console
+    console.error('Error reading stream in useGraffy', e);
   }
 };
 
@@ -42,7 +42,7 @@ export default function useGraffy(query) {
 
   useEffect(() => {
     if (state[1] !== true) setState([state[0], true]);
-    const subscription = store.sub(query);
+    const subscription = store.watch(query);
     consumeSubscription(subscription, setState);
 
     return () => {

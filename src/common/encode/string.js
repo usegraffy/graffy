@@ -1,11 +1,11 @@
-import { TextEncoderLite, TextDecoderLite } from 'text-encoder-lite';
+import TextEncoderLite from 'text-encoder-lite';
 
 (function(g) {
   if (!g.TextEncoder || !g.TextDecoder) {
-    g.TextEncoder = TextEncoderLite;
-    g.TextDecoder = TextDecoderLite;
+    g.TextEncoder = TextEncoderLite.TextEncoderLite;
+    g.TextDecoder = TextEncoderLite.TextDecoderLite;
   }
-})(global || window || this);
+})((typeof global !== 'undefined' && global) || window);
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder('utf-8');

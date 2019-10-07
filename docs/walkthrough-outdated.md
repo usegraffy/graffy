@@ -30,9 +30,9 @@ JSONPaths like `/pokes/1` represent links.
 
 Graffy supports three operations:
 
-- get: Query
-- sub: Live query
-- put: Mutation
+- read: Query
+- watch: Live query
+- write: Mutation
 
 Graffy is also very modular, with most functionality being implemented in Providers.
 
@@ -45,16 +45,16 @@ graffy.use(new ClientCache({ age: 5 * 60 }));
 graffy.use(new Connector('https://example.com/api/'));
 
 // One-time query
-const val = await graffy.get(path, shape);
+const val = await graffy.read(path, shape);
 
 // Live query
-for await (const val of graffy.sub(path, shape)) {
+for await (const val of graffy.watch(path, shape)) {
   // Handle live query value
   break; // unsubscribe
 }
 
 // Mutation
-await graffy.put(path, change);
+await graffy.write(path, change);
 ```
 
 `Schema`, `Cache` and `Connector` are Graffy Providers. Custom Providers can also be written.
@@ -64,7 +64,7 @@ await graffy.put(path, change);
 Leaf nodes can be fetched directly with their JSONPaths:
 
 ```js
-graffy.get('users/1/name');
+graffy.read('users/1/name');
 // Returns a promise resolving to:
 ('Alice');
 ```
@@ -82,7 +82,7 @@ GET /users/1/name
 However, querying objects and arrays in a similar way does not work as expected:
 
 ```js
-graffy.get('pokes/1');
+graffy.read('pokes/1');
 {
 }
 ```
@@ -92,7 +92,7 @@ This is because Graffy does not include child fields by default.
 The client must specify the fields it is interested in, using a GraphQL-like object we call the _shape_, a Falcor-like array we call the _pathset_, or a combination of both. These examples use shapes:
 
 ```js
-graffy.get('pokes/1', { time: true, message: true })
+graffy.read('pokes/1', { time: true, message: true })
 { time: '2018-01-01T00:00:00', message: 'Hi!' }
 ```
 
@@ -105,7 +105,7 @@ GET /pokes/1/(time,message)
 Links can be traversed transparently:
 
 ```js
-graffy.get(['pokes', 1, 'participants', 'poker', 'name']);
+graffy.read(['pokes', 1, 'participants', 'poker', 'name']);
 ('Alice');
 ```
 
@@ -123,14 +123,14 @@ GET /pokes/1/participants/poker/name
 Links themselves are considered strings, which allow them to be modified with put:
 
 ```js
-graffy.get(['pokes', 1, 'participants', 'poker']);
+graffy.read(['pokes', 1, 'participants', 'poker']);
 ('users/1');
 ```
 
 What if we need the names of all participants? We can use the `*` wildcard:
 
 ```js
-graffy.get(['pokes', 1, 'participants'], { '*': { name: true } })
+graffy.read(['pokes', 1, 'participants'], { '*': { name: true } })
 { "poker": { "name": "Alice" },
   "pokee": { "name": "Bob" } }
 ```
@@ -146,7 +146,7 @@ GET /pokes/1/participants/*/name
 Let's say we want the first 10 users, ordered by user ID:
 
 ```js
-graffy.get('users', Map { { $first: 10 } = { name: true } })
+graffy.read('users', Map { { $first: 10 } = { name: true } })
 Map {
   1 = { name: 'Alice' },
   2 = { name: 'Bob' },
@@ -173,7 +173,7 @@ See the [Reference](#reference) section below for more information.
 Paginating over things by ID alone isn't very useful. More realistically, we might want the latest 10 pokes by `time`:
 
 ```js
-graffy.get('pokesByTime', [ { $last: 10 }, 'message' ])
+graffy.read('pokesByTime', [ { $last: 10 }, 'message' ])
 Map {
   ...
   1999 = { message: 'Poke!' },
@@ -198,7 +198,7 @@ GET /pokesByTime/**10/message
 Say we want the latest 10 pokes received by user 2:
 
 ```js
-graffy.get(['pokesByTime', { pokee: 'users/2' }], [{ $last: 10 }, 'message'])
+graffy.read(['pokesByTime', { pokee: 'users/2' }], [{ $last: 10 }, 'message'])
 Map {
   ...
   1999 = { message: 'Poke!' },
@@ -212,12 +212,12 @@ Map {
 
 ## Live queries
 
-`graffy.sub()` works with the same arguments as `graffy.get()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
+`graffy.watch()` works with the same arguments as `graffy.read()` but returns a stream of responses. The responses are _immutable_, i.e. when the data changes it emits a new object rather than modifying objects that were emitted previously.
 
 The API is based on ES2018 Async Iterators:
 
 ```js
-const stream = graffy.sub('/users/1', { name });
+const stream = graffy.watch('/users/1', { name });
 
 for await (const value of stream) {
   /* do something */
@@ -349,8 +349,8 @@ class CustomProvider {
 
   init(graffy) {
     this.graffy = graffy;
-    graffy.onGet(this.handleGet);
-    graffy.onPut(this.handlePut);
+    graffy.onRead(this.handleGet);
+    graffy.onWrite(this.handlePut);
   }
 
   async handleGet({ shape, token }, next) {

@@ -3,21 +3,21 @@
 One simple (albeit inefficient) way to implement watches is by polling the required data itself:
 
 ```js
-onSub('users', async function*(query) {
+onWatch('users', async function*(query) {
   const userIds = Object.keys(query);
-  while(true) {
+  while (true) {
     yield getUsers(userIds);
     await sleep(POLL_INTERVAL);
   }
 });
 ```
 
-If an event log (e.g. Kafka) is available, it's more efficient to poll it instead. Note that in this case, as it's possible that there are no relevant events for a while after the the sub handler is called; it's necessary to `yield` undefined at the start to signal that the subscription is ready.
+If an event log (e.g. Kafka) is available, it's more efficient to poll it instead. Note that in this case, as it's possible that there are no relevant events for a while after the the watch handler is called; it's necessary to `yield` undefined at the start to signal that the subscription is ready.
 
 ```js
-onSub('users', async function*(query) {
+onWatch('users', async function*(query) {
   yield;
-  while(true) {
+  while (true) {
     const events = getEventsSinceLastOffset();
     for (const event of events) yield event;
     await sleep(POLL_INTERVAL);
@@ -30,8 +30,8 @@ If the data source supports it, push should be preferred for low-frequency chang
 ```js
 import { makeStream } from '@graffy/common';
 
-onSub('users', (query, options) => {
-  const [ stream, push ] = makeStream();
+onWatch('users', (query, options) => {
+  const [stream, push] = makeStream();
   startUpstreamSubscription(event => push(event));
   options.onEnd(() => stopUpstreamSubscription());
   return stream;

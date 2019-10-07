@@ -15,6 +15,7 @@ Unfortunately subscriptions do not provide these benefits; nested relations are 
 The GraphQL docs [explain](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries) why Facebook decided not to support live queries. Here's the gist:
 
 Even something as simple as the "Person and 3 others liked this" message change on lots of events:
+
 - Someone liked or unliked your post 👍
 - Someone who liked your post deactivated or re-activated their account
 - Someone who liked your post changed their name

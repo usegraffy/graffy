@@ -19,7 +19,7 @@ export default class GraffyConsumer extends Component {
     const { query } = this.state;
 
     if (this.subscription) this.subscription.return();
-    this.subscription = store.sub(query);
+    this.subscription = store.watch(query);
     this.setState({ loading: true });
 
     for await (const data of this.subscription) {

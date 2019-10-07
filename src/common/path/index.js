@@ -3,22 +3,27 @@ import { getIndex, isRange, isBranch } from '../node';
 export const PATH_SEPARATOR = '/';
 
 export function makePath(path) {
-  if (Array.isArray(path)) return path;
-  if (typeof path !== 'string') throw Error('resolve.path');
+  if (Array.isArray(path) && path.every(key => typeof key === 'string')) {
+    return path;
+  }
+  if (typeof path !== 'string') throw Error('makePath.path_not_string');
   if (!path.length || path === PATH_SEPARATOR) return [];
-  if (path[0] !== PATH_SEPARATOR) throw Error('resolve.path');
-  return path.split(PATH_SEPARATOR).slice(1);
+
+  const pathArray = path.split(PATH_SEPARATOR);
+  return pathArray[0] === '' ? pathArray.slice(1) : pathArray;
 }
 
-export function wrap(children, path, version) {
+export function wrap(graph, path, version = Date.now()) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
+  let children = graph;
   for (let i = path.length - 1; i >= 0; i--) {
     children = [{ key: path[i], version, children }];
   }
   return children;
 }
 
-export function unwrap(children, path) {
+export function unwrap(graph, path) {
+  let children = graph;
   if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
   let node = { children };
   for (let i = 0; i < path.length; i++) {
@@ -36,6 +41,7 @@ export function remove(children, path) {
   if (!Array.isArray(path)) throw Error('del.path_not_array ' + path);
   if (!children) return null; // This path does not exist.
   if (!path.length) return []; // Remove everything.
+
   const key = path[0];
   const ix = getIndex(children, key);
   const node = children[ix];
