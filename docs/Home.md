@@ -1,6 +1,6 @@
 # Graffy
 
-Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's built on a sound [set-theoretic model of queries and graphs](docs/Theory.md).
+Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's based on a novel application of [set theory](docs/Theory.md) to data exchange.
 
 ## Why Graffy?
 
