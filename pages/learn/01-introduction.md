@@ -1,3 +1,7 @@
+import Head from 'next/head';
+
+<Head><title>Introduction to Graffy</title></Head>
+
 # Introducing Graffy
 
 Graffy is a real-time data fetching library for the browser and Node.js. It is still being implemented, and these posts often describe things that don't exist (yet). However the PoC is functional enough to introduce the project and get feedback.

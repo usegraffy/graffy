@@ -3,6 +3,7 @@ coverage
 dist
 bundle.js
 bundle.mjs
+.next
 
 # misc
 .DS_Store

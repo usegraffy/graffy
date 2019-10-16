@@ -1,0 +1,42 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/><link rel="shortcut icon" href="favicon.png"/><link rel="stylesheet" href="index.css"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="theme-color" content="#000000"/><title>Graffy</title><meta charSet="utf-8"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1"/><meta name="next-head-count" content="2"/><link rel="preload" href="/_next/static/YReoqK_Er8BD_ieOT4qIG/pages/learn/99-recipes.js" as="script"/><link rel="preload" href="/_next/static/YReoqK_Er8BD_ieOT4qIG/pages/_app.js" as="script"/><link rel="preload" href="/_next/static/runtime/webpack-035ac2b14bde147cb4a8.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.1f14ce44d930c2368bf0.js" as="script"/><link rel="preload" href="/_next/static/runtime/main-7362d5fe4a1ff1ce8dc9.js" as="script"/></head><body class="jsx-2561753026"><div id="__next"><header class="jsx-2085888330">Graffy</header><div><h1>Graffy Recipies</h1><p>These are recommended</p><h1>Fulfilling an index from a relational database</h1><pre><code class="language-js" metaString="">store.onFetch(&#x27;/postsByDate&#x27;, async query =&gt; {
+  const result = { posts: {}, postsByDate: {} };
+  for (const key in query.postsByDate) {
+    const { before, after, first, last } = decode(key);
+    const { id, title, body, author, date } = query.postsByDate[key];
+
+    const rows = await db.query(
+      `SELECT ${[
+        &#x27;id&#x27;,
+        &#x27;created_at&#x27;,
+        title &amp;&amp; &#x27;title&#x27;,
+        body &amp;&amp; &#x27;body&#x27;,
+        author &amp;&amp; &#x27;author_id&#x27;,
+      ]
+        .filter(Boolean)
+        .join(&#x27;, &#x27;)} FROM posts WHERE ${[
+        slice.before &amp;&amp; &#x27;date &lt;= $before&#x27;,
+        slice.after &amp;&amp; &#x27;date &gt;= $after&#x27;,
+      ]
+        .filter(Boolean)
+        .join(&#x27; AND &#x27;)} ORDER BY date ${last ? &#x27;DESC&#x27; : &#x27;ASC&#x27;} LIMIT ${last ||
+        first}`,
+      { before, after, count: last || first },
+    );
+
+    rows.forEach(row =&gt; {
+      const post = {};
+      if (id) post.id = row.id;
+      if (title) post.title = row.title;
+      if (body) post.body = row.body;
+      if (author) post.author = link(`/users/${row.author_id}`);
+      if (date) post.date = row.created_at;
+      result.posts[row.id] = post;
+      result.postsByDate[key(row.created_at, row.id)] = link(
+        `/posts/${row.id}`,
+      );
+    });
+
+    return result;
+  }
+});
+</code></pre></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/learn/99-recipes","query":{},"buildId":"YReoqK_Er8BD_ieOT4qIG","nextExport":true,"autoExport":true}</script><script async="" data-next-page="/learn/99-recipes" src="/_next/static/YReoqK_Er8BD_ieOT4qIG/pages/learn/99-recipes.js"></script><script async="" data-next-page="/_app" src="/_next/static/YReoqK_Er8BD_ieOT4qIG/pages/_app.js"></script><script src="/_next/static/runtime/webpack-035ac2b14bde147cb4a8.js" async=""></script><script src="/_next/static/chunks/commons.1f14ce44d930c2368bf0.js" async=""></script><script src="/_next/static/runtime/main-7362d5fe4a1ff1ce8dc9.js" async=""></script></body></html>
