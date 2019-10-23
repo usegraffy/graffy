@@ -9,14 +9,14 @@ Constructs a store. Does not accept any arguments.
 ### store.**get**(query, options)
 
 - Arguments: [query](Encoding#Queries), _options_
-- Returns: Promise<Graph>
+- Returns: Promise:Graph
 
 Retrieve data from the store.
 
 ### store.**sub**(query, options)
 
 - Arguments: [query](Encoding#Queries), _options_
-- Returns: AsyncIterable<Graph>
+- Returns: AsyncIterable:Graph
 
 #### options
 
@@ -36,14 +36,14 @@ Writes changes into the store.
 #### handler(query, options, next)
 
 - Arguments: [query](Encoding#Queries), options, next
-- Expected return value: Promise<Graph>
+- Expected return value: Promise:Graph
 
 Called when fulfilling a `get()` that overlaps the path.
 
 #### next(nextQuery)
 
 - Argument: nextQuery
-- Returns: Promise<Graph>
+- Returns: Promise:Graph
 
 The handler may call `next` to delegate fulfillment of all or part of its query to downstream handlers. It should then incorporate the tree returned by `next` into its own return value.
 
@@ -54,7 +54,7 @@ The handler may call `next` to delegate fulfillment of all or part of its query 
 #### handler(query, options, next)
 
 - Arguments: [query](Encoding#Queries), options, next
-- Expected return value: AsyncIterable<Graph>
+- Expected return value: AsyncIterable:Graph
 
 Called when fulfilling a `sub()` that overlaps the path.
 
@@ -63,7 +63,7 @@ If this handler provides _live query_ semantics, the first value yielded by the 
 #### next(nextQuery)
 
 - Argument: nextQuery
-- Returns: Promise<Graph>
+- Returns: Promise:Graph
 
 The handler may call `next` to delegate fulfillment of all or part of its query to downstream handlers. It should then incorporate the stream returned by `next` into its own return value.
 

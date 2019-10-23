@@ -1,14 +1,19 @@
-const fetch = require('isomorphic-unfetch');
 const withMDX = require('@zeit/next-mdx')({ extension: /\.mdx?$/ });
 
 module.exports = withMDX({
   pageExtensions: ['js', 'jsx', 'mdx', 'md'],
   exportTrailingSlash: true,
 
-  webpack(config) {
+  // Build @graffy libs with Webpack even for server-side builds.
+  // This is because externals are loaded with require(), and Next.js
+  // uses the esm polyfill to support ES modules under Node which
+  // refuses to import ES modules with require().
+
+  // So for now, even though it's slower, we bundle up the @graffy
+  // dependencies on Node to render static pages.
+  webpack(config, { isServer }) {
     if (config.externals) {
       const nextExternals = config.externals[0];
-      // console.log(nextExternals.toString());
       config.externals = [
         (context, request, callback) => {
           if (request.indexOf('@graffy/') === 0) return callback();
@@ -16,6 +21,17 @@ module.exports = withMDX({
         },
       ];
     }
+
+    config.resolve.extensions = config.resolve.extensions
+      .map(ext => `.${isServer ? 'server' : 'client'}${ext}`)
+      .concat(config.resolve.extensions);
+
+    if (isServer) {
+      console.log('webPack', config.context, config.node);
+      // config.context = '/';
+      config.node = { __dirname: false };
+    }
+
     return config;
   },
 

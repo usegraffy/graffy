@@ -1,30 +1,30 @@
 import React from 'react';
 import App from 'next/app';
 import Head from 'next/head';
+import Navigation from '../components/navigation';
 
 class GraffyDocApp extends App {
-  // Only uncomment this method if you have blocking data requirements for
-  // every single page in your application. This disables the ability to
-  // perform automatic static optimization, causing every page in your app to
-  // be server-side rendered.
-  //
-  // static async getInitialProps(appContext) {
-  //   // calls page's `getInitialProps` and fills `appProps.pageProps`
-  //   const appProps = await App.getInitialProps(appContext);
-  //
-  //   return { ...appProps }
-  // }
+  static async getInitialProps(appContext) {
+    const appProps = await App.getInitialProps(appContext);
+    const navProps = await Navigation.getInitialProps();
+    return { ...appProps, navProps };
+  }
 
   render() {
-    const { Component, pageProps } = this.props;
-    console.log('pageProps', pageProps);
+    const {
+      Component,
+      pageProps: { navProps, ...pageProps },
+    } = this.props;
 
     return (
       <div className="App">
         <Head>
           <title>Graffy</title>
         </Head>
-        <header>Graffy</header>
+        <header>
+          Graffy
+          <Navigation {...navProps} />
+        </header>
         <main>
           <Component {...pageProps} />
         </main>
