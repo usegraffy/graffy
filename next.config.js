@@ -1,4 +1,9 @@
-const withMDX = require('@zeit/next-mdx')({ extension: /\.mdx?$/ });
+const withMDX = require('@zeit/next-mdx')({
+  extension: /\.mdx?$/,
+  options: {
+    hastPlugins: [require('@mapbox/rehype-prism')],
+  },
+});
 
 module.exports = withMDX({
   pageExtensions: ['js', 'jsx', 'mdx', 'md'],
@@ -27,9 +32,9 @@ module.exports = withMDX({
       .concat(config.resolve.extensions);
 
     if (isServer) {
-      console.log('webPack', config.context, config.node);
-      // config.context = '/';
-      config.node = { __dirname: false };
+      if (!config.plugins[1].definitions)
+        throw Error('Define plugin not found');
+      config.plugins[1].definitions['__dirroot'] = `'${__dirname}'`;
     }
 
     return config;

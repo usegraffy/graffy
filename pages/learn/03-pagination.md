@@ -12,12 +12,12 @@ Let's take a look at our blog example again.
 }
 ```
 
-It's straightforward to get a post when you know its ID, but that's pretty limiting. More realistically, we might want to fetch, say, 10 posts at a time. We can specify that in the query using an array.
+It's straightforward to get a post when you know its ID, but that's pretty limiting. More realistically, we might want to read, say, 10 posts at a time. We can specify that in the query using an array.
 
 ### Slices
 
 ```js
-graffy.fetch({
+graffy.read({
   posts: [
     { first: 10 },
     {

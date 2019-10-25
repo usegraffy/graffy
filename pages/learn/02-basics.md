@@ -29,11 +29,11 @@ The `author` property on each post is a link to the corresponding user. `link()`
 
 ### Queries
 
-Graffy queries specify all the nodes (down to leaf nodes) they want to fetch, in a tree that mirrors the expected result. This works just like GraphQL:
+Graffy queries specify all the nodes (down to leaf nodes) they want to read, in a tree that mirrors the expected result. This works just like GraphQL:
 
 ```js
 // Query
-store.fetch({ posts: { 1: { author: { name: true, avatar: true } } } });
+store.read({ posts: { 1: { author: { name: true, avatar: true } } } });
 
 // Result
 { posts: { 1: { author: { name: 'Bob', avatar: '👨' } } } }
@@ -59,16 +59,16 @@ store.use(GraffyClient('https://example.com/api'));
 
 #### "Outer" APIs
 
-- `store.fetch(query)` for one-time queries
+- `store.read(query)` for one-time queries
 - `store.watch(query)` for live queries
-- `store.patch(graph)` for writes
+- `store.write(graph)` for writes
 
-Fetch and patch return promises, while watch returns async iterables.
+Fetch and write return promises, while watch returns async iterables.
 
 ```js
-const result = await store.fetch(query);
+const result = await store.read(query);
 
-await store.patch(changes); // Wait till complete.
+await store.write(changes); // Wait till complete.
 
 for await (const result of store.watch(query)) {
   /* Each iteration has an updated value of result. */
@@ -77,14 +77,14 @@ for await (const result of store.watch(query)) {
 
 #### "Inner" APIs
 
-- `store.onFetch(path, handler)`
+- `store.onRead(path, handler)`
 - `store.onWatch(path, handler)`
-- `store.onPatch(path, handler)`
+- `store.onWrite(path, handler)`
 
-These handlers connect the store to your custom backend databases. Naturally, onFetch and onPatch handlers should return promises and onWatch handlers should return async iterables.
+These handlers connect the store to your custom backend databases. Naturally, onRead and onWrite handlers should return promises and onWatch handlers should return async iterables.
 
 ```js
-store.onFetch('/users', query => {
+store.onRead('/users', query => {
   const ids = Object.keys(query);
   return db.collection('users').findAll(ids);
 });

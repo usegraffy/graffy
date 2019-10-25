@@ -19,7 +19,8 @@
     "next": "next",
     "next:build": "next build",
     "next:start": "next start",
-    "next:static": "next build && next export -o docs"
+    "next:static": "next build && next export -o docs",
+    "now-build": "next build && next export -o docs"
   },
   "workspaces": [
     "src/*",
@@ -42,6 +43,7 @@
     "@babel/preset-react": "^7.6.3",
     "@babel/runtime": "^7.6.3",
     "@mdx-js/mdx": "^1.5.1",
+    "@mapbox/rehype-prism": "^0.3.1",
     "@zeit/next-mdx": "^1.2.0",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
