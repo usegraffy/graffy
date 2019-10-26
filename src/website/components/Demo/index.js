@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Graffy from '@graffy/core';
+import GraffyFill from '@graffy/fill';
 import { GraffyProvider } from '@graffy/react';
 
 import Source, { provider } from './Source';
@@ -7,11 +8,12 @@ import Query from './Query';
 import Result from './Result';
 
 const store = new Graffy();
+store.use(GraffyFill());
 store.use(provider);
 
 export default function Demo() {
   const [query, setQuery] = useState({
-    players: [{ first: 2 }, { name: true, avatar: true }],
+    players: [{ first: 2 }, { name: true, score: true }],
   });
 
   const [expanded, setExpanded] = useState('result');
