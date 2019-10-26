@@ -65,7 +65,7 @@ export default class Graffy {
       let firstValue = (await subscription.next()).value;
       yield firstValue && makeFinalGraph(firstValue, query);
       for await (const value of subscription) {
-        yield value && makeGraph(value, query);
+        yield value && makeGraph(value);
       }
     });
   }

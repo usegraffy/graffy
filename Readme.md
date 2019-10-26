@@ -2,7 +2,29 @@
 
 # Graffy [![Build Status](https://travis-ci.org/usegraffy/graffy.svg?branch=master)](https://travis-ci.org/usegraffy/graffy) [![NPM version](https://img.shields.io/npm/v/graffy)](https://www.npmjs.com/org/graffy)
 
-Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's built on a sound [set-theoretic model of queries and graphs](docs/Theory.md).
+Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's based on a novel application of [set theory](docs/Theory.md) to data exchange.
+
+## Example
+
+```js
+import Graffy from '@graffy/core';
+import GraffyClient from '@graffy/client';
+
+const store = new Graffy();
+store.use(new GraffyClient('/api'));
+
+const query = {
+  posts: [{ last: 10 }, { // Pagination parameters
+    title: true,
+    author: { name: true }
+  }]
+};
+
+for await (const state of store.watch(query)) {
+  // Iterates each time relevant data changes on the server.
+  console.log(state);
+}
+```
 
 ## Why Graffy?
 
