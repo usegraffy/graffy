@@ -8,7 +8,7 @@ function finalize(value) {
   if (!value || typeof value !== 'object') return value;
   const obj = {};
   if (Array.isArray(value)) {
-    value.forEach((v, i) => (obj[i] = finalize(v)));
+    value.forEach((v, i) => (obj[encodeKey(i)] = finalize(v)));
     return page(obj);
   }
   for (const i in value) obj[i] = finalize(value[i]);
