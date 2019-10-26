@@ -15,6 +15,7 @@ body {
   box-sizing: border-box;
 }
 
+html,
 body,
 input,
 select,
@@ -40,16 +41,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 h1 {
   font-size: 30px;
-  font-weight: normal;
 }
 h2 {
   font-size: 24px;
-  font-weight: normal;
 }
 h3 {
   font-size: 19px;
-  font-weight: normal;
 }
+
+h4 {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+h5 {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 
 blockquote, pre {
   padding: 0 16px;
@@ -60,11 +71,14 @@ blockquote, pre {
 a {
   color: inherit;
   text-decoration: underline;
+  text-decoration-color: #f36;
 }
 
 a:hover {
-  color: #000;
-  text-shadow: 0 0 3px #f36;
+  background-color: #f36;
+  box-shadow: -4px 0 0 0 #f36, 4px 0 0 0 #f36;
+  color: #fff;
+  text-decoration: none;
 }
 
 

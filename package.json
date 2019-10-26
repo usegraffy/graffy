@@ -8,14 +8,14 @@
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "lint": "eslint scripts src",
+    "lint": "eslint scripts src pages",
     "test": "jest",
     "package": "./scripts/package",
     "example:server": "node --experimental-modules --es-module-specifier-resolution=node example/server.js",
     "example:client": "rollup -c example/rollup.config.js",
     "example": "yarn example:client && yarn example:server",
     "site": "rollup -w -c site/rollup.config.js",
-    "format": "prettier --write '{src,scripts,docs}/**/*.{js,css,html,json,md}' && eslint --fix src",
+    "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
     "next": "next",
     "next:build": "next build",
     "next:start": "next start",

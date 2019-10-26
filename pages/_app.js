@@ -55,17 +55,22 @@ class GraffyDocApp extends App {
             margin: -4rem -4rem 2rem -4rem;
             background: #f36;
             text-align: center;
-            max-height: 15vh;
+            height: 6rem;
             display: flex;
           }
+          .logo a,
           .logo img {
+            display: flex;
+            flex: 1;
+            height: auto;
             max-width: 100%;
             max-height: 100%;
+            box-shadow: none;
           }
           main {
             flex: 1 1 0;
             padding: 4rem;
-            max-width: 40rem;
+            max-width: 55rem;
           }
           @media screen and (max-width: 60rem) {
             .App {
@@ -73,6 +78,7 @@ class GraffyDocApp extends App {
             }
             header {
               max-height: 2rem;
+              width: 100vw;
               overflow: hidden;
             }
             header:focus-within {

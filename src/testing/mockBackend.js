@@ -6,6 +6,7 @@ export default function mockBackend(options = {}) {
   const listeners = new Set();
 
   const backend = {
+    state,
     read: () => state,
     watch: () =>
       makeStream((push, _end) => {
