@@ -14,10 +14,10 @@ export default () => {
   return {
     menu: [
       { title: 'Home', url: '/' },
-      { title: 'Learn', url: '#', children: getContent('learn') },
-      { title: 'Recipes', url: '#', children: getContent('recipes') },
-      { title: 'Theory', url: '#', children: getContent('theory') },
-      { title: 'Reference', url: '#', children: getContent('reference') },
+      { title: 'Learn', url: '#l', children: getContent('learn') },
+      { title: 'Recipes', url: '#p', children: getContent('recipes') },
+      { title: 'Theory', url: '#t', children: getContent('theory') },
+      { title: 'Reference', url: '#r', children: getContent('reference') },
     ],
   };
 };

@@ -1,17 +1,22 @@
 import React from 'react';
 import App from 'next/app';
 import Head from 'next/head';
+import Link from 'next/link';
 import { Navigation } from '@graffy/website';
+
+let initNavProps;
+// On the client, we need to remember this value between navigations.
 
 class GraffyDocApp extends App {
   static async getInitialProps(appContext) {
     const appProps = await App.getInitialProps(appContext);
-    const navProps = await Navigation.getInitialProps();
+    const navProps = initNavProps || (await Navigation.getInitialProps());
     return { ...appProps, navProps };
   }
 
   render() {
     const { Component, pageProps, navProps } = this.props;
+    initNavProps = initNavProps || navProps; // Save this for later.
 
     return (
       <div className="App">
@@ -19,7 +24,13 @@ class GraffyDocApp extends App {
           <title>Graffy</title>
         </Head>
         <header>
-          <img alt="Graffy Logo" src="/graffy-logo.svg" />
+          <div className="logo">
+            <Link href="/">
+              <a>
+                <img alt="Graffy Logo" src="/graffy-logo.svg" />
+              </a>
+            </Link>
+          </div>
           <Navigation {...navProps} />
         </header>
         <main>
@@ -28,17 +39,28 @@ class GraffyDocApp extends App {
         <style jsx>{`
           .App {
             display: flex;
-            min-height: 1vh;
+            min-height: 100vh;
           }
           header {
             flex: 0 0 auto;
-            width: 20rem;
+            width: 10rem;
             padding: 4rem;
             position: sticky;
             top: 0;
             bottom: 0;
             background: #eee;
             color: #555;
+          }
+          .logo {
+            margin: -4rem -4rem 2rem -4rem;
+            background: #f36;
+            text-align: center;
+            max-height: 15vh;
+            display: flex;
+          }
+          .logo img {
+            max-width: 100%;
+            max-height: 100%;
           }
           main {
             flex: 1 1 0;

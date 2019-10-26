@@ -14,7 +14,7 @@ export function descend(tree, path) {
 }
 
 export default function decorate(graph, links = []) {
-  const result = decorateChildren(graph, links);
+  const result = graph && decorateChildren(graph, links);
 
   let link;
   while ((link = links.shift())) {

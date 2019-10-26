@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import getNavProps from './getNavProps';
 
 // const { menu } = getNavProps();
@@ -8,7 +9,11 @@ function Navigation({ menu }) {
     <ul>
       {menu.map(({ title, url, children }) => (
         <li key={url}>
-          {title && <a href={url}>{title}</a>}
+          {title && (
+            <Link href={url}>
+              <a>{title}</a>
+            </Link>
+          )}
           {children && <Navigation menu={children} />}
         </li>
       ))}
@@ -18,6 +23,10 @@ function Navigation({ menu }) {
         ul {
           padding: 0 0 0 1rem;
           margin: 0;
+          font-weight: bold;
+        }
+        ul ul {
+          font-weight: normal;
         }
       `}</style>
     </ul>

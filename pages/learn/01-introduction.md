@@ -1,6 +1,3 @@
-import Head from 'next/head';
-<Head><title>Introducing Graffy</title></Head>
-
 # Introducing Graffy
 
 Graffy is a real-time data reading library for the browser and Node.js. It occupies the same space as the highly popular GraphQL - which I've been working with for about a year - so it's important to explain why Graffy exists.
