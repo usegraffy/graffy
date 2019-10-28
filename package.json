@@ -21,7 +21,7 @@
     "next:start": "next start",
     "next:static": "next build && next export -o docs",
     "build": "yarn next:build",
-    "start": "yarn next:start",
+    "start": "yarn next:start -p $PORT",
     "now-build": "pwd && ls -al outdated && yarn next:static"
   },
   "workspaces": [
