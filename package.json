@@ -20,7 +20,7 @@
     "next:build": "next build",
     "next:start": "next start",
     "next:static": "next build && next export -o docs",
-    "now-build": "yarn next:static"
+    "now-build": "pwd && ls -al outdated && yarn next:static"
   },
   "workspaces": [
     "src/*",
@@ -80,5 +80,8 @@
   "peerDependencies": {
     "react": "^16.8.4",
     "react-dom": "^16.8.4"
+  },
+  "engines": {
+    "node": "12.x"
   }
 }
