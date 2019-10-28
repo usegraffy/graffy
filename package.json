@@ -17,10 +17,9 @@
     "site": "rollup -w -c site/rollup.config.js",
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
     "next": "next",
-    "next:build": "next build",
-    "next:start": "next start",
-    "next:static": "next build && next export -o docs",
-    "now-build": "pwd && ls -al outdated && yarn next:static"
+    "build": "next build",
+    "start": "next start",
+    "static": "next build && next export -o docs"
   },
   "workspaces": [
     "src/*",
