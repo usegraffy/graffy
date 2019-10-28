@@ -1,22 +1,14 @@
+/* global __navMenu */
+
 import React from 'react';
 import App from 'next/app';
 import Head from 'next/head';
 import Link from 'next/link';
 import { Navigation } from '@graffy/website';
 
-let initNavProps;
-// On the client, we need to remember this value between navigations.
-
 class GraffyDocApp extends App {
-  static async getInitialProps(appContext) {
-    const appProps = await App.getInitialProps(appContext);
-    const navProps = initNavProps || (await Navigation.getInitialProps());
-    return { ...appProps, navProps };
-  }
-
   render() {
-    const { Component, pageProps, navProps } = this.props;
-    initNavProps = initNavProps || navProps; // Save this for later.
+    const { Component, pageProps } = this.props;
 
     return (
       <div className="App">
@@ -31,7 +23,7 @@ class GraffyDocApp extends App {
               </a>
             </Link>
           </div>
-          <Navigation {...navProps} />
+          <Navigation menu={__navMenu} />
         </header>
         <main>
           <Component {...pageProps} />

@@ -5,7 +5,6 @@ module.exports = {
     node: true,
     jest: true
   },
-  globals: { __dirroot: true },
   extends: ["eslint:recommended", "plugin:react/recommended", "prettier"],
   parser: "babel-eslint",
   parserOptions: {

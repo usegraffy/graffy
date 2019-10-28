@@ -1,3 +1,16 @@
+const fs = require('fs');
+const path = require('path');
+
+function getContent(name) {
+  return JSON.stringify(
+    fs.readdirSync(path.join(__dirname, 'pages', name)).map(filename => {
+      const url = filename.substr(0, filename.length - 3);
+      const title = url[3].toUpperCase() + url.substr(4);
+      return { title, url: `/${name}/${url}` };
+    }),
+  );
+}
+
 const withMDX = require('@zeit/next-mdx')({
   extension: /\.mdx?$/,
   options: {
@@ -16,7 +29,7 @@ module.exports = withMDX({
 
   // So for now, even though it's slower, we bundle up the @graffy
   // dependencies on Node to render static pages.
-  webpack(config, { isServer }) {
+  webpack(config) {
     if (config.externals) {
       const nextExternals = config.externals[0];
       config.externals = [
@@ -27,15 +40,14 @@ module.exports = withMDX({
       ];
     }
 
-    config.resolve.extensions = config.resolve.extensions
-      .map(ext => `.${isServer ? 'server' : 'client'}${ext}`)
-      .concat(config.resolve.extensions);
-
-    if (isServer) {
-      if (!config.plugins[1].definitions)
-        throw Error('Define plugin not found');
-      config.plugins[1].definitions['__dirroot'] = `'${__dirname}'`;
-    }
+    if (!config.plugins[1].definitions) throw Error('Define plugin not found');
+    config.plugins[1].definitions['__navMenu'] = `[
+        { title: 'Home', url: '/' },
+        { title: 'Learn', url: '#l', children: ${getContent('learn')} },
+        { title: 'Recipes', url: '#p', children: ${getContent('recipes')} },
+        { title: 'Theory', url: '#t', children: ${getContent('theory')} },
+        { title: 'Reference', url: '#r', children: ${getContent('reference')} },
+      ]`;
 
     return config;
   },

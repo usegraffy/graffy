@@ -82,8 +82,5 @@
   "peerDependencies": {
     "react": "^16.8.4",
     "react-dom": "^16.8.4"
-  },
-  "engines": {
-    "node": "12.x"
   }
 }

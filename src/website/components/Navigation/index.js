@@ -1,8 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import getNavProps from './getNavProps';
-
-// const { menu } = getNavProps();
 
 function Navigation({ menu }) {
   return (
@@ -32,7 +29,5 @@ function Navigation({ menu }) {
     </ul>
   );
 }
-
-Navigation.getInitialProps = getNavProps;
 
 export default Navigation;
