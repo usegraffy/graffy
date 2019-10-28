@@ -1,1 +1,1 @@
-web: yarn next:start
+web: yarn next:start -p $PORT
