@@ -28,11 +28,15 @@ export default function Demo() {
     <GraffyProvider store={store}>
       <div className="demo">
         <div className="pane" {...paneProps('source')}>
-          <h5>Source Data</h5>
+          <h5>
+            <a>Source Data</a>
+          </h5>
           <Source />
         </div>
         <div className="pane" {...paneProps('query')}>
-          <h5>Graffy Query</h5>
+          <h5>
+            <a>Graffy Query</a>
+          </h5>
           <Query value={query} onChange={setQuery} />
         </div>
         <div className="pane" {...paneProps('result')}>
@@ -57,6 +61,7 @@ export default function Demo() {
           flex: 1 1 0;
           transition: 0.2s all ease-in-out 0.05s;
           position: relative;
+          cursor: pointer;
         }
         .pane::after {
           content: ' ';
@@ -75,10 +80,11 @@ export default function Demo() {
         .pane[data-expanded] {
           outline: none;
           background: #fff;
-          box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.33), inset 0 0 0 1px #f36;
+          box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.33);
           z-index: 1;
           color: #555;
           min-width: 20rem;
+          cursor: auto;
         }
         .pane[data-expanded]::after {
           display: none;
@@ -95,6 +101,13 @@ export default function Demo() {
           margin: 0 0 0.5rem 0;
           color: inherit;
           white-space: nowrap;
+        }
+
+        .pane:hover a {
+          background-color: #f36;
+          box-shadow: -4px 0 0 0 #f36, 4px 0 0 0 #f36;
+          color: #fff;
+          text-decoration: none;
         }
 
         @media screen and (max-width: 60rem) {

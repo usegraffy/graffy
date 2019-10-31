@@ -47,7 +47,7 @@ class GraffyDocApp extends App {
             margin: -4rem -4rem 2rem -4rem;
             background: #f36;
             text-align: center;
-            height: 6rem;
+            height: 8rem;
             display: flex;
           }
           .logo a,

@@ -1,20 +1,7 @@
 # Introducing Graffy
 
-Graffy is a real-time data reading library for the browser and Node.js. It occupies the same space as the highly popular GraphQL - which I've been working with for about a year - so it's important to explain why Graffy exists.
+Graffy is a real-time data fetching library for the browser and Node.js. It occupies the same space as the highly popular GraphQL - which I've been working with for about a year - so it's important to explain why Graffy exists.
 
-### Why not GraphQL?
-
-GraphQL brings together a large number of good ideas, and Graffy shamelessly borrows many of them. Graffy is also heavily inspired by Falcor, another data reading library.
-
-Graffy has several advantages over GraphQL such as improved caching and a simpler data model, but the biggest one - and the reason for starting this project - is support for efficient, scalable **live queries**.
-
-Live queries are like queries where the server, after returning the initial results, keeps pushing updates to those results as long as the client needs them. These are often the most natural abstractions to use on the client, but GraphQL does not provide an easy way to build them. (No, [GraphQL subscriptions are not live queries](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries).)
-
-GraphQL rejected live queries because they are notoriously hard to implement on the server, especially in a distributed environment. GraphQL subscriptions, which allow server-side events to be pushed pushed more or less directly to the client, are much easier.
-
-An ideal solution would let server-side code publish change events and client-side code make live queries, with the data reading library translating between them. This is what Graffy does.
-
-To do this, Graffy uses data types that provide consistency guarantees and a wire protocol that can efficiently represent diffs, neither of which are available in GraphQL. This is why Graffy has to be a separate library rather than a GraphQL client.
 
 ### Theory of operation
 
