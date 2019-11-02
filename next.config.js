@@ -20,7 +20,7 @@ const withMDX = require('@zeit/next-mdx')({
 
 module.exports = withMDX({
   pageExtensions: ['js', 'jsx', 'mdx', 'md'],
-  exportTrailingSlash: true,
+  // exportTrailingSlash: true,
 
   // Build @graffy libs with Webpack even for server-side builds.
   // This is because externals are loaded with require(), and Next.js

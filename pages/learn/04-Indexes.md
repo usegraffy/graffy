@@ -30,10 +30,16 @@ Index keys must be unique; as two posts may have the same date, we append the ID
 // Query: First 10 posts created in January
 {
   posts$date: [
-    { after: ['2019-01-01', 0], before: ['2019-01-31', 0], first: 10 },
+    {
+      after: ['2019-01-01', 0],
+      before: ['2019-01-31', 0],
+      first: 10 },
     {
       title: true,
-      author: { name: true, avatar: true },
+      author: {
+        name: true,
+        avatar: true
+      },
       date: true,
     },
   ];
@@ -53,16 +59,20 @@ import { key, decodeKey } from '@graffy/common';
 import _ from 'lodash';
 
 store.onRead('/posts$date', async query => {
-  const { first, after } = query[0]; // Range queries are [ range, subQuery ]
+  const { first, after } = query[0];
   const [ date, id ] = decodeKey(after);
 
   const posts = await db.query(`
     SELECT * FROM posts
-    WHERE date > $date OR (date = $date AND id > $id)
+    WHERE date > $date OR
+      (date = $date AND id > $id)
     ORDER BY date, id
     LIMIT $first
   `, { date, id, first });
-  return _.fromPairs(posts.map(post => [key(post.date, post.id), post]));
+
+  return _.fromPairs(posts.map(
+    post => [key(post.date, post.id), post]
+  ));
 });
 ```
 > Warning: This code is missing essential validations for the sake of brevity. For a complete example, see the SQL recipe.
@@ -74,11 +84,17 @@ It's possible to create indexes that support filtering as well as pagination. Fo
 ```js
 {
   posts$date: {
-    [key({authorId: 14, tags: ['english', 'coffee']})]: [
+    [key({
+      authorId: 14,
+      tags: ['english', 'coffee']
+    })]: [
       { first: 10 },
       {
         title: true,
-        author: { name: true, avatar: true },
+        author: {
+          name: true,
+          avatar: true
+        },
         date: true,
       }
     ]

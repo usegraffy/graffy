@@ -13,8 +13,10 @@ Here's an example graph for a toy blog with some `users` and some `posts`:
 ```js
 {
   users: {
-    1: { name: 'Alice', avatar: '👧', … },
-    2: { name: 'Bob', avatar: '👨', … },
+    1: { name: 'Alice',
+         avatar: '👧', … },
+    2: { name: 'Bob',
+         avatar: '👨', … },
     …
   },
   posts: {
@@ -35,10 +37,22 @@ Graffy queries specify all the nodes (down to leaf nodes) they want to read, in 
 
 ```js
 // Query
-store.read({ posts: { 1: { author: { name: true, avatar: true } } } });
+store.read({
+  posts: { 1: {
+    author: {
+      name: true,
+      avatar: true
+    }
+  } }
+});
 
 // Result
-{ posts: { 1: { author: { name: 'Bob', avatar: '👨' } } } }
+{ posts: { 1: {
+  author: {
+    name: 'Bob',
+    avatar: '👨'
+  }
+} } }
 ```
 
 You might have noticed that the query went right through a symlink. This allows Graffy to return multiple nested resources in a single query.

@@ -53,8 +53,8 @@ export default function Demo() {
         .pane {
           display: block;
           margin: 4px;
-          min-width: 2rem;
-          min-height: 1.5rem;
+          min-width: 0;
+          min-height: 0;
           padding: 1rem;
           border-radius: 4px;
           color: #777;
@@ -62,6 +62,7 @@ export default function Demo() {
           transition: 0.2s all ease-in-out 0.05s;
           position: relative;
           cursor: pointer;
+          overflow: hidden;
         }
         .pane::after {
           content: ' ';
@@ -83,8 +84,11 @@ export default function Demo() {
           box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.33);
           z-index: 1;
           color: #555;
-          min-width: 20rem;
+          flex: 4 4 0;
+          min-width: 50%;
+          max-width: 80%;
           cursor: auto;
+          overflow: auto;
         }
         .pane[data-expanded]::after {
           display: none;
@@ -110,14 +114,32 @@ export default function Demo() {
           text-decoration: none;
         }
 
-        @media screen and (max-width: 60rem) {
+        @media screen and (max-width: 68rem) {
           .demo {
             flex-direction: column;
+            width: 100%;
+            height: 80vh;
           }
 
           .pane + .pane {
             margin-top: 0;
             margin-left: 4px;
+          }
+
+          .pane[data-expanded] {
+            min-width: auto;
+            max-width: none;
+            min-height: 50%;
+            max-height: 80%;
+          }
+
+          .pane::after {
+            top: auto;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: auto;
+            height: 0;
           }
         }
       `}</style>

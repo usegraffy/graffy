@@ -30,7 +30,7 @@ Graffy also has built-in, efficient pagination, avoiding the `edges`, `node` and
 
 Unlike GraphQL resolvers and Falcor data sources, Graffy providers can be _composed_ - i.e. providers can delegate to each other. This works just like the familiar middleware model used by Express or Koa, and allows authentication, validation, custom caches and resource limiting to be implemented easily and distributed as modules.
 
-In fact, the core of Graffy is just a simple middleware framework; most of the functionality is provided by built-in modules like @graffy/fill and @graffy/cache.
+In fact, the core of Graffy is just a simple middleware framework; most of the functionality is provided by built-in modules like [@graffy/fill](https://www.npmjs.com/package/@graffy/fill) and [@graffy/cache](https://www.npmjs.com/package/@graffy/cache).
 
 ## Efficient bulk reads
 

@@ -18,12 +18,20 @@ function Navigation({ menu }) {
         text-decoration: none;
         list-style-type: none;
         ul {
-          padding: 0 0 0 1rem;
+          padding: 0;
           margin: 0;
           font-weight: bold;
+          line-height: 2rem;
         }
         ul ul {
           font-weight: normal;
+          text-indent: 1rem;
+        }
+        a {
+          display: block;
+          margin: 0 -4rem;
+          padding: 0 4rem;
+          box-shadow: none;
         }
       `}</style>
     </ul>

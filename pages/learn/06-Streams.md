@@ -68,8 +68,9 @@ import makeStream from '@graffy/stream';
 
 onWatch('users', query => makeStream(push => {
   const socket = openSocketToUpstream();
-  socket.on('open', () => push()); // Change stream is ready.
-  socket.on('message', message => push(JSON.parse(message)));
+  socket.on('open', () => push());
+  socket.on('message', message =>
+    push(JSON.parse(message)));
   return () => socket.close();
 }));
 ```

@@ -22,7 +22,10 @@ graffy.read({
     { first: 10 },
     {
       title: true,
-      author: { name: true, avatar: true },
+      author: {
+        name: true,
+        avatar: true
+      },
       date: true,
     },
   ],
