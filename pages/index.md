@@ -1,18 +1,16 @@
 import { Demo } from '@graffy/website';
 
-# Bring your APIs a_live_
+# Bring your APIs a**live**
 
-### [Live queries](why/02-Live-Queries) let each client _watch_ the data it needs.
+Graffy is a [live query](why/02-Live-Queries) library for the browser and Node.js. Graffy-powered servers fulfill each query with its initial result followed by a stream of relevant incremental updates. This is different (and better!) than GraphQL subscriptions, PouchDB sync, etc.
 
-Graffy is a live query library for the browser and Node.js. Graffy-powered servers fulfill each query with its initial result followed by a stream of relevant incremental updates. This is different (and better!) than GraphQL subscriptions, PouchDB sync, etc.
+Graffy supports complex, expressive live queries - with multiple levels of resource expansion and pagination - based on a novel application of [set theory and CRDTs](advanced/01-Theory). Graffy was inspired by (and borrows from) Facebook's [GraphQL](https://graphql.org) and Netflix's [Falcor](https://netflix.github.io/falcor/).
 
-Graffy supports complex, expressive live queries - like multiple levels of resource expansion and pagination - with a novel application of [set theory and CRDTs](theory/01-Theory).
-
-Give it a try! Change the data or query below.
+Give Graffy a try! Change the data or query below.
 
 <Demo />
 
-## Simple, intuitive data model
+## Intuitive [data model](learn/)
 
 Graffy lets you think of all your data as a single global filesystem, parts of which are synced with clients.
 
@@ -22,19 +20,18 @@ Different parts of the graph can live on different databases and backend systems
 
 ## Expressive queries
 
-Graffy queries can express 
+The Graffy query language has similar capabilities as GraphQL. In fact, Graffy even supports writing queries using GraphQL syntax!
+
+Graffy clients specify exactly the data they need - to each field - and they get just that. This has a lot of benefits, such as efficiency and observability. Queries can also "follow the graph" and fetch multiple linked resources in one round trip.
+
+Graffy also has built-in, efficient pagination, avoiding the `edges`, `node` and `pageInfo` boilerplate of the Relay cursor specification. It also supports full cursor-based pagination, unlike Falcor.
 
 ## Highly modular
 
-Unlike GraphQL resolvers and Falcor data providers, Graffy providers can be _composed_ like Express/Koa middleware. This allows authentication, validation, custom caches and resource limiting to be implemented in a straightforward manner.
+Unlike GraphQL resolvers and Falcor data sources, Graffy providers can be _composed_ - i.e. providers can delegate to each other. This works just like the familiar middleware model used by Express or Koa, and allows authentication, validation, custom caches and resource limiting to be implemented easily and distributed as modules.
 
-## Built-in pagination
+In fact, the core of Graffy is just a simple middleware framework; most of the functionality is provided by built-in modules like @graffy/fill and @graffy/cache.
 
-Graffy queries
+## Efficient bulk reads
 
-Graffy provides [live queries](why/02-Live-Queries), which give clients a real-time view of the data they need. Graffy supports complex queries with nested graph traversals and pagination, while exposing a simple and intuitive API for building clients and servers.
-
-Graffy was inspired by (and borrows from) Facebook's GraphQL and Netflix's Falcor. Compared to GraphQL, Graffy offers a more familiar data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
-
-
-Graffy providers can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries). This is particularly hard to do with GraphQL (see dataloader) and Falcor.
+Graffy's provider model can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries with range operations, joins etc.). This is particularly hard, if not impossible, to do with GraphQL resolvers - making hacks like [dataloader](https://github.com/graphql/dataloader) necessary.

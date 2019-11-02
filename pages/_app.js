@@ -31,11 +31,13 @@ class GraffyDocApp extends App {
         <style jsx>{`
           .App {
             display: flex;
+            align-items: flex-start;
             min-height: 100vh;
           }
           header {
             flex: 0 0 auto;
-            width: 10rem;
+            width: 18rem;
+            min-height: 100vh;
             padding: 4rem;
             position: sticky;
             top: 0;

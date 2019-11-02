@@ -4,8 +4,8 @@ const path = require('path');
 function getContent(name) {
   return JSON.stringify(
     fs.readdirSync(path.join(__dirname, 'pages', name)).map(filename => {
-      const url = filename.substr(0, filename.length - 3);
-      const title = url[3].toUpperCase() + url.substr(4);
+      const url = filename.substr(0, filename.length - 3); // Remove .md
+      const title = url.substr(3).replace(/-+/g, ' ');
       return { title, url: `/${name}/${url}` };
     }),
   );
@@ -44,9 +44,10 @@ module.exports = withMDX({
     config.plugins[1].definitions['__navMenu'] = `[
         { title: 'Home', url: '/' },
         { title: 'Learn', url: '#l', children: ${getContent('learn')} },
-        { title: 'Recipes', url: '#p', children: ${getContent('recipes')} },
-        { title: 'Theory', url: '#t', children: ${getContent('theory')} },
+        { title: 'Why', url: '#w', children: ${getContent('why')} },
+        { title: 'Theory', url: '/advanced/01-Theory' },
         { title: 'Reference', url: '#r', children: ${getContent('reference')} },
+        { title: 'Github', url: 'https://github.com/usegraffy/graffy' }
       ]`;
 
     return config;

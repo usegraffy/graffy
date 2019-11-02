@@ -1,14 +1,16 @@
-### Why not GraphQL?
+# Graffy vs GraphQL?
 
 GraphQL brings together a large number of good ideas, and Graffy shamelessly borrows many of them. Graffy is also heavily inspired by Falcor, another data fetching library.
 
 Graffy has several advantages over GraphQL such as improved caching and a simpler data model, but the biggest one - and the reason for starting this project - is support for efficient, scalable **live queries**.
 
-## Live queries, not subscriptions
+## Live queries vs subscriptions
 
-Live queries are like queries where the server, after returning the initial results, keeps pushing updates to those results as long as the client needs them. These are often the most natural abstractions to use on the client, but GraphQL does not provide an easy way to build them.
+Quite often, clients need to keep query results up-to-date as they change on the server. Polling is an obvious solution to this, but the latencies and resource usage make this infeasible for many use-cases.
 
-No, [GraphQL subscriptions are not live queries](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries). GraphQL rejected live queries because they are hard to implement on the server, especially in a distributed environment.
+Live queries are the friendliest solution to this - they are queries where the server, after returning the initial results, keeps pushing updates to those results as long as the client needs them. These are often the most natural abstractions to use on the client, but GraphQL does not provide an easy way to build them.
+
+[GraphQL subscriptions are not live queries](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries). GraphQL rejected live queries because they are hard to implement on the server, especially in a distributed environment.
 
 GraphQL subscriptions, where server-side events (such as those published to a message queue) are pushed more or less unchanged to the client, are much easier to build. However they simply end up transfering that complexity to the front-end, at significant performance and complexity cost.
 
@@ -20,67 +22,24 @@ An ideal solution would let server-side code continue to publish change events -
 
 To do this, Graffy uses data types that provide consistency guarantees and a wire protocol that can efficiently represent diffs, neither of which are available in GraphQL. This is why Graffy has to be a separate library rather than a GraphQL client.
 
-## Live queries, not subscriptions
+## Paths vs Types
 
-Quite often, clients need to keep the query results up-to-date as they change on the server. Polling is an obvious solution to this, but the latencies and resource usage make this infeasible for most use-cases.
+> Note: Graffy will have an _optional_ type system for automatic validation and self-documenting APIs.
 
-GraphQL offers subscriptions as the mechanism to do this, but GraphQL subsccriptions are are very a poor fit for this use case.
+Graffy lets you think of all your data as a single global filesystem, parts of which are synced with clients. This is familiar and intuitive, compared to the type-based mental model that GraphQL imposes.
 
-A key benefit of using GraphQL for one-time queries is that deeply nested relations can be fetched in one round trip. It also makes it easy to keep complex business logic on the backend and compute and send results to the client only when requested.
+Every scalar value (string, number) is a "file" in this virtual tree, each with its own unique path. Some values are "symbolic links" pointing to other paths in the filesystem - making the data model a graph rather than a tree.
 
-Unfortunately subscriptions do not provide these benefits; nested relations are difficult to support and perform poorly, and using subscriptions to synchronize state with the server requires the client to implement state transition logic, duplicating server-side logic.
+Different parts of the graph can live on different databases and backend systems, just as (in Unix-like systems) different parts of the filesystem can live on different physical devices. Graffy lets you "mount" a _provider_ at any path in your data model.
 
-### Why GraphQL does not have live queries
+## Providers vs. Resolvers
 
-The GraphQL docs [explain](https://graphql.org/blog/subscriptions-in-graphql-and-relay/#why-not-live-queries) why Facebook decided not to support live queries. Here's the gist:
+Unlike GraphQL resolvers, Graffy providers can be _composed_ - i.e. providers can delegate to each other. This works just like the familiar middleware model used by Express or Koa, and allows authentication, validation, custom caches and resource limiting to be implemented easily and distributed as modules.
 
-Even something as simple as the "Person and 3 others liked this" message change on lots of events:
+In fact, the core of Graffy is just a simple middleware framework; most of the functionality is provided by built-in modules like [@graffy/fill](https://www.npmjs.com/package/@graffy/fill) and [@graffy/cache](https://www.npmjs.com/package/@graffy/cache).
 
-- Someone liked or unliked your post 👍
-- Someone who liked your post deactivated or re-activated their account
-- Someone who liked your post changed their name
-- Facebook's algorithm for choosing your bestest friend changed 🙄
+Graffy's provider model can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries with range operations, joins etc.). This is particularly hard, if not impossible, to do with GraphQL resolvers - making hacks like [dataloader](https://github.com/graphql/dataloader) necessary.
 
-Building a live query framework that updates all interested clients when any of these things happen is understandably hard. In their words,
+## Pagination
 
-> “Implementing live queries for this set of data proved to be immensely complicated.”
-
-Translation: It’s a hard problem, so let the frontend do it. 😂
-
-### GraphQL live queries vs Graffy
-
-As I understand it, GraphQL's recommendation for frontends that require real-time view of data is:
-
-1. query the current count
-2. subscribe to frequent events (likes and unlikes)
-3. update the count (using frontend logic) when they happen
-4. repeat when the user refreshes the page
-
-In comparison, with Graffy the frontend would do this:
-
-1. make a live query to the like count
-2. there is no step 2
-
-There are several problems with GraphQL's recommended approach.
-
-First is the need to write state update logic on the frontend - this logic already exists on the backend, and reimplementing it on the frontend will cause maintainability and consistency problems down the line.
-
-With Graffy, the frontend receives a diff between the old and new states rather than the raw event.
-
-Second, the lack of an atomic "query and subscribe" operation makes consistency hard. If we query and then subscribe, events that occurred in between will be dropped; if we subscribe and then query, events already accounted for in the query result may be re-sent, and we will require even more frontend logic to de-duplicate them.
-
-With Graffy, the live query is an atomic operation. The Graffy backend guarantees this even when there are delays between the different upstream providers, by using the subscribe-first approach and using data structures (CRDTs) that make state updates idempotent (i.e. applying a change twice has no effect).
-
-Third, as the subscription does not include infrequent events, it relies on the user refreshing the page periodically and manually polling the backend for changes.
-
-With Graffy, providers can perform this polling automatically on the backend instead, and push changes to all users in their live update streams. Polling becomes much cheaper (by doing it once for thousands of users) and can be made much more frequent; clients do not need to do anything different.
-
-## Parameters vs Paths, Filters and Ranges
-
-TODO
-
-## Path-specific middleware over Type-specific resolvers
-
-Note: Graffy will have an _optional_ type system for automatic validation and self-documenting APIs.
-
-TODO
+Graffy also has built-in, efficient pagination, avoiding the `edges`, `node` and `pageInfo` boilerplate of the Relay cursor specification.

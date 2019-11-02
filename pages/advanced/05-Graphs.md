@@ -1,6 +1,6 @@
-# Changes
+# Graphs
 
-Graffy uses graphs to represent several different things:
+All data in Graffy is represented using graphs.
 
 - The conceptual "total" graph, containing _all_ the data in the system. Except for trivial applications, it isn't possible to materialize this graph in a single machine. For any possible path, this graph will have either a value or `null` if the path does not exist.
 

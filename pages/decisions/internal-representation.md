@@ -90,7 +90,7 @@ Query:
 Query:
 
 {
-postsByTime: [{ after: '123', first: 10, query: {
+posts$time: [{ after: '123', first: 10, query: {
 title: 1,
 subtitle: 1,
 timestamp: 1,
@@ -111,7 +111,7 @@ title: 'adsf'
 }
 }
 
-    postsByTime: [
+    posts$time: [
       undefined,
       '123',
       { __ref__: ['posts', '22'] },
@@ -125,7 +125,7 @@ version: {
 posts: {
 22: 2837
 },
-postsByTime: [
+posts$time: [
 
     ]
 
@@ -134,7 +134,7 @@ postsByTime: [
 
 gql`{
 
-postsByTime(after: 123, first: 10) {
+posts$time(after: 123, first: 10) {
 title
 subtitle
 timestamp
@@ -162,7 +162,7 @@ avatar: 1
 ]
 }, 3)
 
-['postsByTime', r.first(10).after('234'), [
+['posts$time', r.first(10).after('234'), [
 'title',
 'subtitle',
 'timestamp',
@@ -194,7 +194,7 @@ Graph:
 }
 
 Query:
-[ 'postsByTime', { after: '123', first: 10 }, [
+[ 'posts$time', { after: '123', first: 10 }, [
 'title',
 'subtitle',
 'timestamp',
