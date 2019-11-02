@@ -71,8 +71,9 @@ class GraffyDocApp extends App {
             box-shadow: none;
             transition: 0.2s all cubic-bezier(0.175, 0.885, 0.5, 1.5);
           }
-          .logo:hover img {
-            transform: rotate(15deg);
+          .logo:hover img,
+          header[data-expanded] .logo img {
+            transform: rotate(12deg);
           }
           a.menuButton {
             display: none;
@@ -85,7 +86,8 @@ class GraffyDocApp extends App {
             text-decoration: none;
             cursor: pointer;
           }
-          a.menuButton:hover {
+          a.menuButton:hover,
+          header[data-expanded] a.menuButton {
             color: #fff;
           }
           main {
