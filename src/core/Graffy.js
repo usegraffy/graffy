@@ -9,7 +9,7 @@ import {
   unwrap,
   wrap,
 } from '@graffy/common';
-
+import makeStream from '@graffy/stream';
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
 
@@ -60,13 +60,18 @@ export default class Graffy {
 
   onWatch(...args) {
     const [path, handle] = validateArgs(...args);
-    this.on('watch', path, async function* porcelainWatch(query, options) {
-      const subscription = handle(decorateQuery(query), options);
-      let firstValue = (await subscription.next()).value;
-      yield firstValue && makeFinalGraph(firstValue, query);
-      for await (const value of subscription) {
-        yield value && makeGraph(value, query);
-      }
+    this.on('watch', path, function porcelainWatch(query, options) {
+      return makeStream(push => {
+        const subscription = handle(decorateQuery(query), options);
+        (async function() {
+          let firstValue = (await subscription.next()).value;
+          push(firstValue && makeFinalGraph(firstValue, query));
+          for await (const value of subscription) {
+            push(value && makeGraph(value));
+          }
+        })();
+        return () => subscription.return();
+      });
     });
   }
 

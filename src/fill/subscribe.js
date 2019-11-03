@@ -60,7 +60,7 @@ export default function subscribe(store, originalQuery, raw) {
 
   function putValue(value, isChange) {
     if (typeof value === 'undefined') return;
-    // console.log('PutValue', debug(value));
+    // console.log('Fill/subscribe: PutValue', value);
 
     if (isChange) {
       // console.log('Data before sieve', debug(data));

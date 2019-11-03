@@ -14,6 +14,7 @@ export function makePath(path) {
 }
 
 export function wrap(graph, path, version = Date.now()) {
+  if (!Array.isArray(graph) || !graph.length) return;
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
   let children = graph;
   for (let i = path.length - 1; i >= 0; i--) {

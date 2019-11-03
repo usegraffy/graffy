@@ -1,6 +1,12 @@
 import { wrap, unwrap, remove, merge, mergeStreams } from '@graffy/common';
 import makeStream from '@graffy/stream';
 
+async function mapStream(stream, fn) {
+  for await (const value of stream) {
+    fn(value);
+  }
+}
+
 export function shiftFn(fn, path) {
   return async function shiftedFn(payload, options, next) {
     let nextCalled = false;
@@ -44,6 +50,7 @@ export function shiftGen(fn, path) {
     const unwrappedPayload = unwrap(payload, path);
     const remainingPayload = remove(payload, path) || [];
 
+    // TODO: This should probably use makeStream and propagate returns.
     const shiftedNext = async function*(unwrappedNextPayload) {
       nextCalled = true;
       const nextPayload = wrap(unwrappedNextPayload, path);
@@ -66,16 +73,20 @@ export function shiftGen(fn, path) {
 
     // We expect next() to be called before the first value is yielded.
     const firstValue = await (await unwrappedStream.next()).value;
-    const resultStream = (async function*() {
-      yield wrap(firstValue, path);
-      for await (const value of unwrappedStream) yield wrap(value, path);
-    })();
+    const resultStream = makeStream(push => {
+      push(wrap(firstValue, path));
+      mapStream(unwrappedStream, value => {
+        push(wrap(value, path));
+      });
+      return () => unwrappedStream.return();
+    });
 
     if (!nextCalled && remainingPayload.length) {
       remainingNextStream = next(remainingPayload);
     }
 
-    if (!remainingNextStream) yield* resultStream;
-    yield* mergeStreams(resultStream, remainingNextStream);
+    yield* remainingNextStream
+      ? mergeStreams(resultStream, remainingNextStream)
+      : resultStream;
   };
 }

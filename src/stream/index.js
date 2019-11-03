@@ -6,7 +6,7 @@ export default function makeStream(init, options = {}) {
   let complete;
   let drain;
 
-  const { highWatermark = Infinity, lowWatermark = 0 } = options;
+  const { highWatermark = Infinity, lowWatermark = 0, debugId } = options;
 
   const push = value => {
     if (complete) return;
@@ -29,6 +29,8 @@ export default function makeStream(init, options = {}) {
   const close = init(push, end);
 
   return {
+    debugId,
+
     next: () => {
       if (drain && payloads.length <= lowWatermark) {
         drain();
