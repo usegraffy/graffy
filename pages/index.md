@@ -4,13 +4,15 @@ import { Demo } from '@graffy/website';
 
 Graffy is a [live query](why/02-Live-Queries) library for the browser and Node.js. Graffy-powered servers fulfill each query with its initial result followed by a stream of relevant incremental updates. This is different (and better!) than GraphQL subscriptions, PouchDB sync, etc.
 
+> `npm install graffy`
+
 Graffy supports complex, expressive live queries - with multiple levels of resource expansion and pagination - based on a novel application of [set theory and CRDTs](advanced/01-Theory). Graffy was inspired by (and borrows from) Facebook's [GraphQL](https://graphql.org) and Netflix's [Falcor](https://netflix.github.io/falcor/).
 
 Give Graffy a try! Change the data or query below.
 
 <Demo />
 
-## Intuitive [data model](learn/)
+## Intuitive [data model](learn/01-Data-Model)
 
 Graffy lets you think of all your data as a single global filesystem, parts of which are synced with clients.
 
