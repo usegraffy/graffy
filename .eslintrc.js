@@ -23,6 +23,8 @@ module.exports = {
     }],
     "no-param-reassign": "error",
     "prettier/prettier": "error",
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
   },
   settings: {
     react: {

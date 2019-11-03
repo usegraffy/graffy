@@ -1,15 +1,11 @@
-# Graffy Recipies
-
-These are recommended
-
 # Fulfilling an index from a relational database
 
 ```js
-store.onFetch('/postsByDate', async query => {
-  const result = { posts: {}, postsByDate: {} };
-  for (const key in query.postsByDate) {
+store.onFetch('/posts$date', async query => {
+  const result = { posts: {}, posts$date: {} };
+  for (const key in query.posts$date) {
     const { before, after, first, last } = decode(key);
-    const { id, title, body, author, date } = query.postsByDate[key];
+    const { id, title, body, author, date } = query.posts$date[key];
 
     const rows = await db.query(
       `SELECT ${[
@@ -38,7 +34,7 @@ store.onFetch('/postsByDate', async query => {
       if (author) post.author = link(`/users/${row.author_id}`);
       if (date) post.date = row.created_at;
       result.posts[row.id] = post;
-      result.postsByDate[key(row.created_at, row.id)] = link(
+      result.posts$date[key(row.created_at, row.id)] = link(
         `/posts/${row.id}`,
       );
     });

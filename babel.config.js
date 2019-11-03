@@ -1,27 +1,12 @@
 const testConf = {
   presets: [
-    [
-      '@babel/preset-env',
-      {
-        targets: {
-          node: 10,
-        },
-      },
-    ],
-    ['@babel/preset-react'],
+    ['@babel/preset-env', { targets: { node: 10 } }],
+    '@babel/preset-react',
   ],
 };
 
 const devConf = {
-  presets: [
-    [
-      '@babel/preset-env',
-      {
-        loose: true,
-      },
-    ],
-    ['@babel/preset-react'],
-  ],
+  presets: [['@babel/preset-env', { loose: true }], '@babel/preset-react'],
   plugins: [
     [
       '@babel/plugin-transform-runtime',
@@ -32,7 +17,18 @@ const devConf = {
   ],
 };
 
-if (process.env.NODE_ENV === 'test') {
+// switch (process.env.npm_lifecycle_event) {
+//   case 'next':
+//     module.exports = nextConf;
+// }
+
+if (process.env.npm_lifecycle_event.indexOf('next') === 0) {
+  console.log('Using next config');
+  module.exports = {
+    presets: ['next/babel'],
+    plugins: [],
+  };
+} else if (process.env.NODE_ENV === 'test') {
   module.exports = testConf;
 } else {
   module.exports = devConf;

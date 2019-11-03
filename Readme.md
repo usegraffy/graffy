@@ -38,16 +38,14 @@ Graffy providers can also perform efficient bulk reads from underlying data stor
 
 ## [Documentation](https://graffy.js.org)
 
-## Development status
-
-**Graffy is under heavy development and not ready for production use.**
+## Modules
 
 All the Graffy packages are published under the [@graffy scope](https://www.npmjs.com/org/graffy) on NPM.
 
 | Module   | Description                         |
 | -------- | ----------------------------------- |
 | core     | Module management                   |
-| fill     | Fulfil queries from many backends   |
+| fill     | Fulfil queries from many providers  |
 | client   | EventStream/HTTP client             |
 | server   | EventStream/HTTP server             |
 | cache    | In-memory cache                     |
@@ -55,13 +53,15 @@ All the Graffy packages are published under the [@graffy scope](https://www.npmj
 | react    | React container and hooks API       |
 | stream   | Utility for making AsyncIterables   |
 | testing  | Testing and debugging utilities     |
-| graphql  | ⌛ Translate GraphQL to Graffy      |
+| graphql  | Translate GraphQL to Graffy      |
 | schema   | ⌛ Validation, introspection API    |
 | viewer   | ⌛ Schema introspection client      |
 | auth     | ⌛ Authentication and authorization |
 | limit    | ⌛ Resource consumption accounting  |
 | mysql    | ⌛ Data source connector            |
 | postgres | ⌛ Data source connector            |
+
+⌛ = On the roadmap.
 
 ## Capabilities
 

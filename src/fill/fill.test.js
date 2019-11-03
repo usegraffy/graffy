@@ -17,6 +17,7 @@ describe('changes', () => {
     g = new Graffy();
     g.use(fill());
     backend = mockBackend();
+    backend.read = jest.fn(backend.read);
     g.use(backend.middleware);
   });
 
@@ -155,6 +156,7 @@ describe('values', () => {
     g = new Graffy();
     g.use(fill());
     backend = mockBackend();
+    backend.read = jest.fn(backend.read);
     g.use(backend.middleware);
   });
 
