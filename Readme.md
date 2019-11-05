@@ -1,8 +1,8 @@
-![Graffy logo](docs/graffy-logo.svg)
+![Graffy logo](public/graffy-logo.svg)
 
 # Graffy [![Build Status](https://img.shields.io/travis/usegraffy/graffy?style=flat-square)](https://travis-ci.org/usegraffy/graffy) [![NPM version](https://img.shields.io/npm/v/@graffy/core?style=flat-square)](https://www.npmjs.com/org/graffy)
 
-Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's based on a novel application of [set theory](docs/Theory.md) to data exchange.
+Graffy is a Javascript library to power efficient and intuitive real-time APIs. It's based on a novel application of [set theory](pages/advanced/01-Theory.md) to data exchange.
 
 ## Example
 
@@ -28,7 +28,7 @@ for await (const state of store.watch(query)) {
 
 ## Why Graffy?
 
-Graffy provides [live queries](docs/LiveQuery.md), which give clients a real-time view of the data they need. Graffy supports complex queries with nested graph traversals and pagination, while exposing a simple and intuitive API for building clients and servers.
+Graffy provides [live queries](pages/why/02-LiveQueries.md), which give clients a real-time view of the data they need. Graffy supports complex queries with nested graph traversals and pagination, while exposing a simple and intuitive API for building clients and servers.
 
 Graffy was inspired by (and borrows from) Facebook's GraphQL and Netflix's Falcor. Compared to GraphQL, Graffy offers a more familiar data model, true live queries and more efficient caching. Compared to Falcor, it provides cursor-based pagination and real-time subscriptions.
 
