@@ -1,33 +1,35 @@
-# makeStream(initializer)
+# graffy/stream
+
+## makeStream(initializer)
 
 Constructs an async iterable. This utility is more convenient than async generator functions for consuming from a callback-based event emitter.
 
 - Arguments: initializer
 - Returns: AsyncIterable
 
-## initializer(push, end)
+### initializer(push, end)
 
 Called synchronously, the initializer should subscribe to the event emitter and return a function that, when called, unsubscribes from it.
 
 - Arguments: push, end
 - Returns: unsubscribe
 
-## push(value)
+### push(value)
 
 Yield this value from the async iterator. This function is typically called from the event emitter subscription handler.
 
 - Argument: value
 - Return: drainPromise
 
-## end(error)
+### end(error)
 
 Signal to the consumer of the async iterator that the event emitter has closed. The error argument is optional. This is typically called from the event emitter's close and error handlers.
 
-## unsubscribe(error)
+### unsubscribe(error)
 
 The unsubscribe function returned by the initializer is called when the consumer of the async iterator stops consuming it. If it stopped consuming due to an error, the error argument will be passed.
 
-## drainPromise
+### drainPromise
 
 **Advanced**: Async iterators are a pull-based streaming mechanism, whereas event emitters are push-based. If the event emitter is pushing values faster than the consumer is pulling, the internal value buffer used by makeStream might grow too big.
 

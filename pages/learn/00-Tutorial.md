@@ -49,7 +49,7 @@ The response should be:
 
 ## A place for data
 
-Our data model will have two entities, users - with names and avatars - and messages - with text, timestamp and a link to the sender. We'll be storing everything in memory.
+Our data model will have two entities, users - with names and avatars - and messages - with text, timestamp and a link to the sender.
 
 We'll write this as a Graffy module, `GraffyChat.js`. First, we will set up the database.
 
@@ -59,7 +59,8 @@ We'll write this as a Graffy module, `GraffyChat.js`. First, we will set up the 
 
 We'll also add some dummy users.
 
-
+```js
+```
 
 
 First, we'll handle read requests.

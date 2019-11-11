@@ -1,101 +1,112 @@
-# @graffy/core
+# graffy/core
 
 ## new Graffy()
 
 Constructs a store. Does not accept any arguments.
 
-## store.**get**(query, options)
+## store.**read**([path], query, [options])
 
-- Arguments: [query](Encoding#Queries), _options_
-- Returns: Promise:Graph
+- Arguments: [path](20-Types#Paths), [query](20-Types#Queries), options
+- Returns: Promise:[ObjectGraph](20-Types#ObjectGraphs)
 
 Retrieve data from the store.
 
-## store.**sub**(query, options)
+`options` is an object that's passed unchanged to providers.
 
-- Arguments: [query](Encoding#Queries), _options_
-- Returns: AsyncIterable:Graph
+## store.**watch**([path], query, [options])
 
-### options
+- Arguments: [path](20-Types#Paths), [query](20-Types#Queries), options
+- Returns: AsyncIterable:[ObjectGraph](20-Types#ObjectGraphs)
 
-- **raw**: If false (default), returns full data objects; if true, returns [changes](Encoding#Changes).
+Retrieve data from the store, and receive a stream of changes to that data.
 
-## store.**put**(change, options)
+`options` is an object that's passed unchanged to providers.
 
-- Arguments: [change](Encoding#Changes), _options_
-- Returns: Promise of all changes applied
+## store.**write**([path], change, [options])
 
-Writes changes into the store.
+- Arguments: [path](20-Types#Paths), [change](20-Types#Graphs), options
+- Returns: Promise:Any
 
-## store.**onGet**(path, handler)
+Writes changes into the store. The write provider may return any data in the promise - Graffy makes no assumption about what's in it.
 
-- Arguments: _[path](Encoding#Paths)_, handler
+`options` is an object that's passed unchanged to providers.
 
-### handler(query, options, next)
+## store.**onRead**([path], provider)
 
-- Arguments: [query](Encoding#Queries), options, next
-- Expected return value: Promise:Graph
+- Arguments: [path](20-Types#Paths), provider
 
-Called when fulfilling a `get()` that overlaps the path.
+Called when fulfilling a `read()` that overlaps the path. Handler
 
-### next(nextQuery)
+### provider(query, options)
 
-- Argument: nextQuery
-- Returns: Promise:Graph
+- Arguments: [query](20-Types#Queries), options
+- Expected return value: Promise:[Graph](20-Types#Graphs)
 
-The handler may call `next` to delegate fulfillment of all or part of its query to downstream handlers. It should then incorporate the tree returned by `next` into its own return value.
+## store.**onWatch**([path], provider)
 
-## store.**onSub**(path, handler)
+- Arguments: [path](20-Types#Paths), provider
 
-- Arguments: _[path](Encoding#Paths)_, handler
+Called when fulfilling a `watch()` that overlaps the path.
 
-### handler(query, options, next)
+### provider(query, options)
 
-- Arguments: [query](Encoding#Queries), options, next
-- Expected return value: AsyncIterable:Graph
+- Arguments: [query](20-Types#Queries), options
+- Expected return value: AsyncIterable:[Graph](20-Types#Graphs)
 
-Called when fulfilling a `sub()` that overlaps the path.
+If this provider provides _live query_ semantics, the first value yielded by the returned AsyncIterable must be the full query results. Subsequent values may be partial changes. On the other hand, if the provider provides only a change stream, it must signal this by yielding `undefined` first.
 
-If this handler provides _live query_ semantics, the first value yielded by the returned AsyncIterable must be the full query results. Subsequent values may be partial changes. On the other hand, if the handler provides only a change stream, it must signal this by yielding `undefined` first.
+## store.**onWrite**([path], provider)
 
-### next(nextQuery)
+- Arguments: [path](20-Types#Paths), provider
 
-- Argument: nextQuery
-- Returns: Promise:Graph
+Called when processing a `write()` that overlaps the path.
 
-The handler may call `next` to delegate fulfillment of all or part of its query to downstream handlers. It should then incorporate the stream returned by `next` into its own return value.
+### provider(change, options)
 
-## store.**onPut**(path, handler)
+- Arguments: [change](20-Types#Graphs), options
+- Expected return value: Promise:Any
 
-- Arguments: _[path](Encoding#Paths)_, handler
+## store.**use**([path], module)
 
-### handler(change, options, next)
+- Arguments: [path](20-Types#Paths), module
 
-- Arguments: [change](Encoding#Changes), options, next
+Mounts a module to the store at the given path.
+
+### module(shiftedStore)
+
+- Argument: shiftedStore
+
+Providers receive a Graffy store (with all the APIs shifted to reflect the path) as argument. Typically, modules attach providers to the store.
+
+----
+
+## store.**call**(operation, payload, [options])
+
+- Arguments: operation, payload, options
+- Return value: Depends on operation
+
+A low-level (plumbing) API that's used by `read()`, `watch()` and `write()`. Operation may be `'read'`, `'watch'` or `'write'`.
+
+The payload and return value should be queries and graphs in Graffy's internal representation.
+
+Options is an object that's passed to the providers.
+
+## store.**on**(operation, [path], provider)
+
+- Arguments: operation, path, provider
 - Expected return value: Promise
 
-Called when processing a `put()` that overlaps the path.
+A low-level (plumbing) API that's used by onRead, onWatch and onWrite. Operation may be `'read'`, `'watch'` or `'write'`.
 
-### options
+### provider(payload, options, next)
 
-- **source**: A string identifying the source of the change.
-- **version**: A numeric timestamp for the change.
+- Arguments: payload, options, next
+
+`payload` is a query or graph (depending on operation) in Graffy's internal representation. Options is the object passed to `.call()`.
 
 ### next(nextChange)
 
 - Argument: nextChange
 - Returns: Promise of all changes applied
 
-The handler may call `next` to delegate the application of all or part of its changes, or additional changes that it constructed, to other handlers. It should then incorporate the changes returned by `next` into its own return value.
-
-## store.**use**(path, provider)
-
-- Arguments: _[path](Encoding#Paths)_, provider
-
-Mounts a provider to the store at the given path.
-
-### provider(shiftedStore)
-
-- Argument: shiftedStore
-
-Providers receive a Graffy store (shifted to the path) as argument. They typically attach handlers to the store.
+A provider may call `next` to delegate fulfillment of all or part of the operation to downstream providers. It should incorporate the value returned by `next` into its own return value.

@@ -1,6 +1,6 @@
-# @graffy/common
+# Common utilities
 
-This package provides a set of utilities to help work with graph and query data structures.
+These common utilities are also exported by `graffy/core`.
 
 ## Builders
 
@@ -12,7 +12,7 @@ This package provides a set of utilities to help work with graph and query data 
 
 ## decorate(graph)
 
-Converts a graph data structure into easier-to-use JS objects and arrays.
+Converts a JSONGraph data structure into a JS Object graph.
 
 ## Utilities
 
