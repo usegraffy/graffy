@@ -68,9 +68,39 @@ Note how posts is an array. Graphs don't really support arrays, so the provider 
 
 which Graffy converts to an array and adds pagination properties to.
 
-## Pagination
+Note that keys are not included in the final array; if your application requires the properties used to construct the key, they should be explicitly requested and provided.
 
-The array returned by `.read()` and `.watch()` for range queries has two useful non-enumerable properties, `nextRange` and `prevRange`: these contain range objects that can be used to paginate. `nextRange` is null if the current range is already at the end, and `prevRange` is null if it's at the beginning.
+In the example above, if the consumer requires post IDs, it should request `id` alongside `title`, and the provider should return them in the posts as well as the post keys. This small duplication helps Graffy avoid a magic `_id_` property.
+
+## Pagination properties
+
+The array returned by `.read()` and `.watch()` for range queries has two useful non-enumerable properties, `nextRange` and `prevRange`. For example:
+
+```js
+const query = { posts: [
+  { first: 10 },
+  { title: true },
+] };
+
+const result = graffy.read(query);
+console.log(result);
+// { posts: [ ... ]}
+
+console.log(result.posts.nextRange);
+// { first: 10, after: 'some_key' }
+
+console.log(result.posts.prevRange);
+// null - this is the first page.
+//
+```
+
+Typically, if the UI has a Next button, clicking it should make the query:
+```js
+{ posts: [
+  prevResult.posts.nextRange,
+  { title: true },
+] }
+```
 
 This works for multiple levels of nested pagination.
 

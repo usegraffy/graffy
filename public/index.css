@@ -69,6 +69,7 @@ blockquote, pre {
   padding: 0 16px;
   margin: 16px 0;
   border-left: 1px solid #555;
+  overflow: auto hidden;
 }
 
 a {
@@ -101,7 +102,7 @@ code, pre {
 	word-spacing: normal;
 	word-break: normal;
 	word-wrap: normal;
-	line-height: 1;
+	line-height: 1.13;
 
 	-moz-tab-size: 4;
 	-o-tab-size: 4;

@@ -99,6 +99,7 @@ export default function Demo() {
           margin: 0;
           padding: 0;
           color: inherit;
+          overflow: hidden;
         }
 
         .pane h5 {
