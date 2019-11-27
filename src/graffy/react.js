@@ -1,1 +1,1 @@
-export default from '@graffy/react';
+export * from '@graffy/react';

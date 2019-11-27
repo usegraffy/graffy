@@ -1,1 +1,2 @@
-export default from '@graffy/client';
+import client from '@graffy/client';
+export default client;

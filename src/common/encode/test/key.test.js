@@ -15,3 +15,5 @@ test('sink', () => {
     e: null,
   });
 });
+
+test('num', () => tryValue(123));

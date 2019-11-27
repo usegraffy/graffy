@@ -53,7 +53,7 @@ function encodeParts(value) {
   if (typeof value === 'string') return [STR, encodeString(value), NULL];
   if (Array.isArray(value)) return encodeArray(value);
   if (typeof value === 'object') return encodeObject(value);
-  return NULL;
+  return [NULL];
 }
 
 export function encode(value) {

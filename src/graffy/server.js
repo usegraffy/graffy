@@ -1,1 +1,2 @@
-export default from '@graffy/server';
+import server from '@graffy/server';
+export default server;

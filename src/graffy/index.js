@@ -1,8 +1,6 @@
 import Graffy from '@graffy/core';
 import Fill from '@graffy/fill';
 import Cache from '@graffy/cache';
-export * from '@graffy/common';
-export { default as makeStream } from '@graffy/stream';
 
 export default function(options) {
   const store = new Graffy();

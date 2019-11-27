@@ -29,6 +29,11 @@ console.log('Building version', version);
 const src = join(__dirname, '..', 'src');
 const dst = join(__dirname, '..', 'dist');
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
+const depAstNodes = [
+  'ImportDeclaration',
+  'ExportAllDeclaration',
+  'ExportNamedDeclaration',
+];
 
 async function build(name) {
   const cwd = join(src, name);
@@ -48,10 +53,9 @@ async function build(name) {
 
   // Make destination directories
   await mkdir(join(dst, name, 'src'));
-  await mkdir(join(dst, name, 'dst'));
   for (const dir of await globby('**/*', { cwd, onlyDirectories: true })) {
     await mkdir(join(dst, name, 'src', dir));
-    await mkdir(join(dst, name, 'dst', dir));
+    await mkdir(join(dst, name, dir));
   }
 
   // Keep track of dependencies found during source transformation
@@ -59,11 +63,11 @@ async function build(name) {
   let peerDependencies;
   function addDeps(ast) {
     ast.program.body
-      .filter(({ type }) => type === 'ImportDeclaration')
+      .filter(({ type, source }) => depAstNodes.includes(type) && source)
       .map(({ source }) => source.value)
-      .forEach(dep => {
-        if (dep[0] === '.') return;
-        dep = dep.match(depPattern)[0];
+      .forEach(imp => {
+        if (imp[0] === '.') return;
+        const dep = imp.match(depPattern)[0];
         if (peerDepVersions[dep]) {
           peerDependencies = peerDependencies || {};
           peerDependencies[dep] = peerDepVersions[dep];
@@ -87,7 +91,7 @@ async function build(name) {
         const ast = await parse(source);
 
         await writeFile(
-          join(dst, name, 'dst', path),
+          join(dst, name, path),
           (await transform(ast, source)).code,
         );
 
@@ -107,7 +111,7 @@ async function build(name) {
         description,
         author: 'aravind (https://github.com/aravindet)',
         version,
-        main: 'dst/index.js',
+        main: 'index.js',
         source: 'src/index.js',
         esnext: 'src/index.js',
         repository: {
