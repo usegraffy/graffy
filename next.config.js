@@ -42,12 +42,18 @@ module.exports = withMDX({
 
     if (!config.plugins[1].definitions) throw Error('Define plugin not found');
     config.plugins[1].definitions['__navMenu'] = `[
-        { title: 'Home', url: '/' },
-        { title: 'Learn', url: '#l', children: ${getContent('learn')} },
-        { title: 'Why', url: '#w', children: ${getContent('why')} },
-        { title: 'Theory', url: '/advanced/01-Theory' },
-        { title: 'Reference', url: '#r', children: ${getContent('reference')} },
-        { title: 'Github', url: 'https://github.com/usegraffy/graffy' }
+        { title: 'Home', external: false, url: '/' },
+        { title: 'Learn', external: false, url: '#l', children: ${getContent(
+          'learn',
+        )} },
+        { title: 'Why', external: false, url: '#w', children: ${getContent(
+          'why',
+        )} },
+        { title: 'Theory', external: false, url: '/advanced/01-Theory' },
+        { title: 'Reference', external: false, url: '#r', children: ${getContent(
+          'reference',
+        )} },
+        { title: 'Github', external: true, url: 'https://github.com/usegraffy/graffy' }
       ]`;
 
     return config;

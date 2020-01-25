@@ -4,13 +4,14 @@ import Link from 'next/link';
 function Navigation({ menu }) {
   return (
     <ul>
-      {menu.map(({ title, url, children }) => (
+      {menu.map(({ title, url, external, children }) => (
         <li key={url}>
-          {title && (
+          {title && !external && (
             <Link href={url}>
               <a>{title}</a>
             </Link>
           )}
+          {title && external && <a href={url}>{title}</a>}
           {children && <Navigation menu={children} />}
         </li>
       ))}
