@@ -24,7 +24,7 @@ graffy.read({
       title: true,
       author: {
         name: true,
-        avatar: true
+        avatar: true,
       },
       date: true,
     },
@@ -77,10 +77,7 @@ In the example above, if the consumer requires post IDs, it should request `id` 
 The array returned by `.read()` and `.watch()` for range queries has two useful non-enumerable properties, `nextRange` and `prevRange`. For example:
 
 ```js
-const query = { posts: [
-  { first: 10 },
-  { title: true },
-] };
+const query = { posts: [{ first: 10 }, { title: true }] };
 
 const result = graffy.read(query);
 console.log(result);
@@ -95,11 +92,11 @@ console.log(result.posts.prevRange);
 ```
 
 Typically, if the UI has a Next button, clicking it should make the query:
+
 ```js
-{ posts: [
-  prevResult.posts.nextRange,
-  { title: true },
-] }
+{
+  posts: [prevResult.posts.nextRange, { title: true }];
+}
 ```
 
 This works for multiple levels of nested pagination.

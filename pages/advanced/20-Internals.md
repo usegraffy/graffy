@@ -144,7 +144,10 @@ which returns the internal representation:
         key: '',
         end: '\uFFFF',
         count: 3,
-        children: [{ key: 'title', value: 1 }, { key: 'author', value: 1 }],
+        children: [
+          { key: 'title', value: 1 },
+          { key: 'author', value: 1 },
+        ],
       },
     ],
   },

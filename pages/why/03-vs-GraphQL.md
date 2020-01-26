@@ -57,6 +57,7 @@ Graffy queries look like GraphQL and have similar capabilities, but are written 
 ### Versioning
 
 Graffy's CRDT uses a monotonically increasing _version_ attribute on every node. This allows some advanced capabilities:
+
 - Queries can specify a minimum version number - caches will ignore older data for that query, even if it's within the cache's expiry time. This is more flexible than, say, the `"network-only"` and `"cache-first"` fetch policies in Apollo.
 - Updates can specify a last seen version number. If the data had changed since that version, the write will fail; this avoids inadvertently overwriting changes.
 
@@ -183,8 +184,10 @@ function subscribeToMessage(id) {
 }
 
 function unsubscribeFromMessage(id) {
-  msgUpdateSubscriptions[id]?.unsubscribe();
-  msgDeleteSubscriptions[id]?.unsubscribe();  
+  msgUpdateSubscriptions[id].unsubscribe();
+  msgDeleteSubscriptions[id].unsubscribe();
+  delete msgUpdateSubscriptions[id];
+  delete msgDeleteSubscriptions[id];
 }
 
 chat.logs.forEach(subscribeToMessage);

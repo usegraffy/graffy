@@ -66,13 +66,14 @@ If the data source supports it, push should be preferred for low-frequency chang
 ```js
 import makeStream from '@graffy/stream';
 
-onWatch('users', query => makeStream(push => {
-  const socket = openSocketToUpstream();
-  socket.on('open', () => push());
-  socket.on('message', message =>
-    push(JSON.parse(message)));
-  return () => socket.close();
-}));
+onWatch('users', query =>
+  makeStream(push => {
+    const socket = openSocketToUpstream();
+    socket.on('open', () => push());
+    socket.on('message', message => push(JSON.parse(message)));
+    return () => socket.close();
+  }),
+);
 ```
 
 This, too, returns a change stream - note the `push()` on socket open, which tells Graffy that this is a change stream, and that the stream has been initialized.

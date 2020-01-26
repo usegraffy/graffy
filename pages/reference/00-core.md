@@ -78,7 +78,7 @@ Mounts a module to the store at the given path.
 
 Providers receive a Graffy store (with all the APIs shifted to reflect the path) as argument. Typically, modules attach providers to the store.
 
-----
+---
 
 ## store.**call**(operation, payload, [options])
 

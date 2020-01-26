@@ -10,6 +10,7 @@ A client for the Graffy server. It delegates all reads, watches and writes to th
 It uses the EventStream API for server push.
 
 ### Example
+
 ```js
 import Graffy from 'graffy';
 import graffyClient from `graffy/client`;

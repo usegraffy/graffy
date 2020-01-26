@@ -37,7 +37,10 @@ describe('remove', () => {
   test('not-last', () => {
     expect(
       remove(
-        [{ key: 'bar', value: '10' }, { key: 'foo', value: '10' }],
+        [
+          { key: 'bar', value: '10' },
+          { key: 'foo', value: '10' },
+        ],
         ['foo'],
       ),
     ).toEqual([{ key: 'bar', value: '10' }]);

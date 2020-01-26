@@ -34,9 +34,7 @@ store.onFetch('/posts$date', async query => {
       if (author) post.author = link(`/users/${row.author_id}`);
       if (date) post.date = row.created_at;
       result.posts[row.id] = post;
-      result.posts$date[key(row.created_at, row.id)] = link(
-        `/posts/${row.id}`,
-      );
+      result.posts$date[key(row.created_at, row.id)] = link(`/posts/${row.id}`);
     });
 
     return result;

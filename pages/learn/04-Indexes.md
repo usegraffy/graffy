@@ -33,12 +33,13 @@ Index keys must be unique; as two posts may have the same date, we append the ID
     {
       after: ['2019-01-01', 0],
       before: ['2019-01-31', 0],
-      first: 10 },
+      first: 10,
+    },
     {
       title: true,
       author: {
         name: true,
-        avatar: true
+        avatar: true,
       },
       date: true,
     },
@@ -60,21 +61,23 @@ import _ from 'lodash';
 
 store.onRead('/posts$date', async query => {
   const { first, after } = query[0];
-  const [ date, id ] = decodeKey(after);
+  const [date, id] = decodeKey(after);
 
-  const posts = await db.query(`
+  const posts = await db.query(
+    `
     SELECT * FROM posts
     WHERE date > $date OR
       (date = $date AND id > $id)
     ORDER BY date, id
     LIMIT $first
-  `, { date, id, first });
+  `,
+    { date, id, first },
+  );
 
-  return _.fromPairs(posts.map(
-    post => [key(post.date, post.id), post]
-  ));
+  return _.fromPairs(posts.map(post => [key(post.date, post.id), post]));
 });
 ```
+
 > Warning: This code is missing essential validations for the sake of brevity. For a complete example, see the SQL recipe.
 
 ## Filtering
@@ -83,7 +86,7 @@ It's possible to create indexes that support filtering as well as pagination. Fo
 
 ```js
 {
-  posts$date: {
+  posts$$date: {
     [key({
       authorId: 14,
       tags: ['english', 'coffee']
@@ -103,3 +106,5 @@ It's possible to create indexes that support filtering as well as pagination. Fo
 ```
 
 Note that the "filter" parameters are passed as-is to the index provider - they don't need to correspond to fields of the object, and Graffy makes no special assumptions about them.
+
+By convention, indexes that support filtering are named with a `$$` separating the entity name and the ordering property. 

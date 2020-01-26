@@ -17,6 +17,7 @@ $ npm i --save express graffy sqlite3
 We'll be using `npm start` to start the React dev server for the client, which runs on port 3000. We'll run the chat server on port 5000, so we need to tell the React dev server to make it available to the client.
 
 To do this, edit `package.json` and add:
+
 ```json
 "proxy": "http://localhost:5000"`
 ```
@@ -31,7 +32,9 @@ const Graffy = require('graffy');
 const GraffyServer = require('graffy/server');
 
 const store = Graffy();
-store.onRead(() => { hello: 'world' });
+store.onRead(() => {
+  hello: 'world';
+});
 
 const app = express();
 app.use('/api', GraffyServer(g));
@@ -43,8 +46,9 @@ console.log('Server started at 5000');
 Run the server with `node server.js` and test it out by visiting http://localhost:5000/api?q=hello
 
 The response should be:
+
 ```json
-{"hello":"world"}
+{ "hello": "world" }
 ```
 
 ## A place for data
@@ -62,20 +66,19 @@ We'll also add some dummy users.
 ```js
 ```
 
-
 First, we'll handle read requests.
 
 ```js
 const users = {
-  'alice': { name: 'Alice', avatar: 'alice.png' },
-  'bob': { name: 'Bob', avatar: 'bob.png' },
+  alice: { name: 'Alice', avatar: 'alice.png' },
+  bob: { name: 'Bob', avatar: 'bob.png' },
 };
 const messages = {};
 
 module.exports = store => {
   store.onRead('/users', () => users);
   store.onRead('/messages', () => messages);
-}
+};
 ```
 
 Here, we're returning the full data hash to graffy and letting it extract the parts that are relevant to it. When we store data into an external database, onRead
