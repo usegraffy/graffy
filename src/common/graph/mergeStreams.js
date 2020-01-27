@@ -10,7 +10,7 @@ export default async function* mergeStreams(...streams) {
   if (firstValues.some(value => typeof value === 'undefined')) {
     yield undefined;
     for (const value of firstValues) {
-      if (typeof value === 'undefined') yield value;
+      if (typeof value !== 'undefined') yield value;
     }
   } else {
     let merged = [];
