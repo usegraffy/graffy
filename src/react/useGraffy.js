@@ -12,44 +12,51 @@ const consumeSubscription = async (subscription, setState) => {
         break;
       }
 
-      setState([val, null]);
+      setState([val, null, null]);
     }
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('Error reading stream in useGraffy', e);
+    setState([null, false, e]);
   }
 };
 
-export default function useGraffy(query) {
+const retrieveResult = async (promise, setState) => {
+  try {
+    setState([await promise, false, null]);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching result in useGraffy', e);
+    setState([null, false, e]);
+  }
+};
+
+export default function useGraffy(query, { once } = {}) {
   const queryRef = useRef(null);
 
-  const [state, setState] = useState([null, true]);
-
-  // const [loading, setLoading] = useState(true);
-  // const [value, setValue] = useState(null);
+  const [state, setState] = useState([null, true, null]);
   const store = useContext(GraffyContext);
 
   const queryHasChanged = !isEqual(queryRef.current, query);
   if (queryHasChanged) {
-    // console.log(
-    //   'Query changed from',
-    //   debug(queryRef.current),
-    //   'to',
-    //   debug(query),
-    // );
+    // console.log('Query changed', debug(queryRef.current), debug(query));
     queryRef.current = query;
   }
 
   useEffect(() => {
-    if (state[1] !== true) setState([state[0], true]);
-    const subscription = store.watch(query);
-    consumeSubscription(subscription, setState);
+    if (state[1] !== true) setState([state[0], true, state[2]]);
+    if (once) {
+      retrieveResult(store.read(query));
+    } else {
+      const subscription = store.watch(query);
+      consumeSubscription(subscription, setState);
 
-    return () => {
-      subscription.closed = true;
-      subscription.return();
-    };
+      return () => {
+        subscription.closed = true;
+        subscription.return();
+      };
+    }
   }, [queryHasChanged ? query : queryRef.current]);
 
-  return queryHasChanged ? [state[0], true] : state;
+  return queryHasChanged ? [state[0], true, state[2]] : state;
 }
