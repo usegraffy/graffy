@@ -46,7 +46,7 @@ export default function useGraffy(query, { once } = {}) {
   useEffect(() => {
     if (state[1] !== true) setState([state[0], true, state[2]]);
     if (once) {
-      retrieveResult(store.read(query));
+      retrieveResult(store.read(query), setState);
     } else {
       const subscription = store.watch(query);
       consumeSubscription(subscription, setState);
