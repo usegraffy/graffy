@@ -105,8 +105,7 @@ export default function subscribe(store, originalQuery, raw) {
   }
 
   function error(e) {
-    // eslint-disable-next-line no-console
-    console.error('subscribe', e);
+    // console.error('subscribe', e);
     end(e);
     unsubscribe();
   }

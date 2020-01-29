@@ -15,8 +15,7 @@ const consumeSubscription = async (subscription, setState) => {
       setState([val, null, null]);
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error('Error reading stream in useGraffy', e);
+    // console.error('Error reading stream in useGraffy', e);
     setState([null, false, e]);
   }
 };
@@ -25,8 +24,7 @@ const retrieveResult = async (promise, setState) => {
   try {
     setState([await promise, false, null]);
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching result in useGraffy', e);
+    // console.error('Error fetching result in useGraffy', e);
     setState([null, false, e]);
   }
 };

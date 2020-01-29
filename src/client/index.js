@@ -20,8 +20,6 @@ export default function GraffyClient(baseUrl) {
         };
 
         source.onerror = e => {
-          // eslint-disable-next-line no-console
-          if (console && console.error) console.error(e);
           end(e);
         };
 
