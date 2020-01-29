@@ -29,6 +29,14 @@ const retrieveResult = async (promise, setState) => {
   }
 };
 
+/** @type {(query: {
+ *  [key in string]: [{
+ *    first?: number,
+ *    after?: string,
+ *    last?: number,
+ *    before?: string
+ *  }, Object]
+ * }, params: any) => [any, boolean, Error]} */
 export default function useGraffy(query, { once } = {}) {
   const queryRef = useRef(null);
 
