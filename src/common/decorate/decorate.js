@@ -68,7 +68,10 @@ function decorateBranch(graph, links) {
   const result = {};
   for (const node of graph) {
     const key = node.key;
-    if (isRange(node)) continue;
+    if (isRange(node)) {
+      result[key] = null;
+      continue;
+    }
     if (isLink(node)) {
       links.push([result, key, node.path]);
       result[key] = LINK_PLACEHOLDER;
