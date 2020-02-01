@@ -5,7 +5,7 @@ import {
   makeGraph,
   makePath,
   makeQuery,
-  makeFinalGraph,
+  finalize,
   unwrap,
   wrap,
 } from '@graffy/common';
@@ -54,7 +54,10 @@ export default class Graffy {
   onRead(...args) {
     const [path, handle] = validateArgs(...args);
     this.on('read', path, async function porcelainRead(query, options) {
-      return makeFinalGraph(await handle(decorateQuery(query), options), query);
+      return finalize(
+        makeGraph(await handle(decorateQuery(query), options)),
+        query,
+      );
     });
   }
 
@@ -65,7 +68,7 @@ export default class Graffy {
         const subscription = handle(decorateQuery(query), options);
         (async function() {
           let firstValue = (await subscription.next()).value;
-          push(firstValue && makeFinalGraph(firstValue, query));
+          push(firstValue && finalize(makeGraph(firstValue), query));
           for await (const value of subscription) {
             push(value && makeGraph(value));
           }
