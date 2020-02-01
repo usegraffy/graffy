@@ -76,7 +76,11 @@ describe('branches', () => {
     expect(original).toEqual([
       {
         key: 'foo',
-        children: [{ key: 'baz', value: 25, version: 3 }],
+        children: [
+          { key: '', end: 'bay\uffff', version: 2 },
+          { key: 'baz', value: 25, version: 3 },
+          { key: 'baz\0', end: '\uffff', version: 2 },
+        ],
       },
     ]);
   });
@@ -110,7 +114,11 @@ describe('branches', () => {
     expect(original).toEqual([
       {
         key: 'foo',
-        children: [{ key: 'baz', value: 25, version: 3 }],
+        children: [
+          { key: '', end: 'bay\uffff', version: 2 },
+          { key: 'baz', value: 25, version: 3 },
+          { key: 'baz\0', end: '\uffff', version: 2 },
+        ],
       },
     ]);
   });
@@ -226,7 +234,11 @@ describe('addToRange', () => {
       { key: 'foo', end: 'fuy\uffff', version: 2 },
       {
         key: 'fuz',
-        children: [{ key: 'baz', value: 25, version: 3 }],
+        children: [
+          { key: '', end: 'bay\uffff', version: 2 },
+          { key: 'baz', value: 25, version: 3 },
+          { key: 'baz\0', end: '\uffff', version: 2 },
+        ],
       },
       { key: 'fuz\0', end: 'gah', version: 2 },
     ]);
@@ -262,7 +274,11 @@ describe('addRange', () => {
       { key: 'foo', end: 'fuy\uffff', version: 3 },
       {
         key: 'fuz',
-        children: [{ key: 'baz', value: 25, version: 4 }],
+        children: [
+          { key: '', end: 'bay\uffff', version: 3 },
+          { key: 'baz', value: 25, version: 4 },
+          { key: 'baz\0', end: '\uffff', version: 3 },
+        ],
       },
       { key: 'fuz\0', end: 'gag\uffff', version: 3 },
       { key: 'gah', value: 42, version: 4 },
