@@ -13,7 +13,7 @@ export function makePath(path) {
   return pathArray[0] === '' ? pathArray.slice(1) : pathArray;
 }
 
-export function wrap(graph, path, version = Date.now()) {
+export function wrap(graph, path, version = 0) {
   if (!Array.isArray(graph) || !graph.length) return;
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
   let children = graph;
