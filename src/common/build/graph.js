@@ -1,5 +1,6 @@
 import { merge } from '../graph';
 import { makePath } from '../path';
+import { isRange } from '../node';
 
 function makeGraph(key, value, version) {
   if (typeof value === 'function') {
@@ -30,11 +31,16 @@ export function graph(obj, version = Date.now()) {
 }
 
 export function page(obj, key = '', end = '\uffff') {
-  return (outerKey, version) => ({
-    key: outerKey,
-    version,
-    children: merge([{ key, end, version }], graph(obj, version)),
-  });
+  return (outerKey, version) => {
+    const nodes = graph(obj, version);
+    const gaps = merge(
+      [{ key, end, version }],
+      Object.keys(obj).map(key => ({ key, value: 1, version })),
+    ).filter(node => isRange(node));
+    const children = merge(nodes, gaps);
+
+    return { key: outerKey, version, children };
+  };
 }
 
 export function link(rawPath) {
