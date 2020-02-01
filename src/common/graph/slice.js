@@ -64,7 +64,7 @@ function sliceNode(graph, query, result) {
     result.addUnknown(query);
   } else if (isRange(graph)) {
     // The graph is indicating that this value was deleted.
-    result.addKnown(graph);
+    result.addKnown({ key, end: key, version: graph.version });
   } else if (isBranch(graph) && isBranch(query)) {
     // Both sides are branches; recurse into them.
     const { known, unknown } = slice(graph.children, query.children, root);
