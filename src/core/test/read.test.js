@@ -32,7 +32,7 @@ describe('read', () => {
   test('remove_null', async () => {
     g.onRead('/foo', () => ({ bar: 45, baz: null }));
     expect(await g.read({ foo: { bar: 1, baz: 1 } })).toEqual({
-      foo: { bar: 45 },
+      foo: { bar: 45, baz: null },
     });
   });
 
@@ -58,31 +58,27 @@ describe('read', () => {
   });
 
   describe('range-getKnown', () => {
-    let resolver;
+    let provider;
     beforeEach(() => {
-      resolver = jest.fn();
-      resolver.mockReturnValue({
-        foo: page({
-          a: { baz: 15, bar: 42 },
-          b: { baz: 16, bar: 41 },
-          c: { baz: 17, bar: 40 },
-          d: { baz: 18, bar: 39 },
-          e: { baz: 19, bar: 38 },
-        }),
+      provider = jest.fn(() => {
+        return {
+          foo: page({
+            a: { baz: 15, bar: 42 },
+            b: { baz: 16, bar: 41 },
+            c: { baz: 17, bar: 40 },
+            d: { baz: 18, bar: 39 },
+            e: { baz: 19, bar: 38 },
+          }),
+        };
       });
-      g.use(graffy => {
-        graffy.onRead((...args) => {
-          const res = resolver(...args);
-          return res;
-        });
-      });
+      g.onRead(provider);
     });
 
     test('all', async () => {
       const result = await g.read({
         foo: [{ after: '', before: '\uffff' }, { bar: 1 }],
       });
-      expect(resolver).toBeCalledWith(
+      expect(provider).toBeCalledWith(
         { foo: [{ first: 4096 }, { bar: true }] },
         {},
       );
@@ -152,7 +148,7 @@ describe('read', () => {
 
     test('multi', async () => {
       const result = await g.read({ foo: { a: { bar: 1 }, b: { baz: 1 } } });
-      expect(resolver).toBeCalledWith(
+      expect(provider).toBeCalledWith(
         { foo: { a: { bar: true }, b: { baz: true } } },
         {},
       );
@@ -164,10 +160,8 @@ describe('read', () => {
 
   describe('link', () => {
     beforeEach(() => {
-      g.use(graffy => {
-        graffy.onRead('/foo', () => ({ x: link(['bar']) }));
-        graffy.onRead('/bar', () => ({ baz: 3 }));
-      });
+      g.onRead('/foo', () => ({ x: link(['bar']) }));
+      g.onRead('/bar', () => ({ baz: 3 }));
     });
 
     // test('raw', async () => {

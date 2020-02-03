@@ -7,6 +7,7 @@ export default function setVersion(graph, version) {
     node.version = version;
     if (node.children) setVersion(node.children, version);
   }
+  return graph;
 }
 
 // function mergeRanges(graph) {

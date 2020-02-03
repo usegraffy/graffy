@@ -38,7 +38,7 @@ export default function subscribe(store, originalQuery, raw) {
         // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.read response is newer.
 
-        value = await store.call('read', unknown, { skipFill: true });
+        value = await store.call('read', unknown);
       }
       value = slice(value, unknown).known;
       putValue(value, false);

@@ -1,76 +1,53 @@
 import faker from 'faker';
-import {
-  makeGraph,
-  link,
-  page,
-  merge,
-  unwrap,
-  setVersion,
-} from '@graffy/common';
-
-import makeStream from '@graffy/stream';
+import { makeGraph, link, page } from '@graffy/common';
 
 const TARGET = 2000;
 
-const state = makeGraph({ visitors: {}, visitorsByTime: page({}) });
+// const state = makeGraph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const listeners = new Set();
-
-export default function(g) {
-  g.onRead(() => {
-    // console.log('Get: Returning', debug(state));
-    ts = Date.now();
-    setVersion(state, ts);
-    return state;
-  });
-
-  g.onWatch(() =>
-    makeStream((push, _end) => {
-      listeners.add(push);
-      push(state);
-      return () => listeners.delete(push);
-    }),
-  );
-}
-
+let store;
 let ts = Date.now();
 let id = 0;
 let enter = 0,
   leave = 0,
   update = 0;
 
-while (id < TARGET) {
-  const change = simulateEnter();
-  merge(state, change);
-  ts -= Math.floor(1 + Math.random() * 100);
-}
+// const listeners = new Set();
 
-(async function() {
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    ts = Date.now();
-    const change = simulate();
-    for (const push of listeners) push(change);
-    await sleep(1);
+export default function(g) {
+  store = g;
+
+  while (id < TARGET) {
+    store.call('write', simulateEnter());
+    ts -= Math.floor(1 + Math.random() * 100);
   }
-})();
 
-if (process.stdout.isTTY) {
   (async function() {
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      process.stdout.cursorTo(0);
-      process.stdout.write(
-        `${id - freeIds.size} users `.padStart(16) +
-          `${enter} enters `.padStart(16) +
-          `${leave} leaves `.padStart(16) +
-          `${update} updates `.padStart(16),
-      );
-      await sleep(200);
+      ts = Date.now();
+      store.call('write', await simulate());
+      await sleep(1);
     }
   })();
+
+  if (process.stdout.isTTY) {
+    (async function() {
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        process.stdout.cursorTo(0);
+        process.stdout.write(
+          `${id - freeIds.size} users `.padStart(16) +
+            `${enter} enters `.padStart(16) +
+            `${leave} leaves `.padStart(16) +
+            `${update} updates `.padStart(16),
+        );
+        await sleep(500);
+      }
+    })();
+  }
 }
 
 function simulate() {
@@ -81,7 +58,6 @@ function simulate() {
       ? simulateLeave()
       : simulateEnter();
 
-  merge(state, change);
   return change;
 }
 
@@ -118,7 +94,7 @@ function simulateEnter() {
   );
 }
 
-function simulateLeave() {
+async function simulateLeave() {
   let delId;
   do {
     delId = Math.floor(Math.random() * id);
@@ -126,7 +102,8 @@ function simulateLeave() {
   freeIds.add(delId);
   delId = '' + delId;
 
-  const delTs = unwrap(state, ['visitors', delId, 'ts']);
+  const delTs = (await store.read(['visitors', delId], { ts: true })).ts;
+  // const delTs = unwrap(state, ['visitors', delId, 'ts']);
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
   leave++;

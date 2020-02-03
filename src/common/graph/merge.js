@@ -63,7 +63,7 @@ export function insertNode(current, change, start = 0) {
 function insertNodeIntoRange(current, index, change) {
   const key = change.key;
   const range = current[index];
-  const newChange = getNewer(change, range.version);
+  const newChange = getNewer(change, range);
   if (!newChange) return;
 
   const insertions = [
@@ -85,20 +85,22 @@ function updateNode(current, index, change) {
     // Current node is a branch but the change is a leaf; if the branch
     // has newer children, ignore the change and keep only those children;
     // Otherwise, discard the branch and keep the change.
-    const newNode = getNewer(node, change.version);
+    const newNode = getNewer(node, change);
     current[index] = newNode || change;
   } else {
     // Current node is a leaf. Replace with the change if it is newer.
-    const newChange = getNewer(change, node.version);
+    const newChange = getNewer(change, node);
     if (newChange) current[index] = newChange;
   }
   return index + 1;
 }
 
-function getNewer(node, version) {
+function getNewer(node, base) {
+  const { version } = base;
   if (isBranch(node)) {
-    const children = node.children.filter(child => getNewer(child, version));
-    return children.length && { ...node, children };
+    const children = [{ key: '', end: '\uffff', version }];
+    merge(children, node.children);
+    return children.length === 1 ? null : { ...node, children };
   } else {
     // assertVersion(node, version);
     return node.version >= version ? node : null;

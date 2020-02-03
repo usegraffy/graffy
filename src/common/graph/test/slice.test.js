@@ -329,4 +329,23 @@ describe('version', () => {
       ],
     });
   });
+
+  test('leafInRange', () => {
+    expect(
+      slice(
+        [
+          { key: '', end: 'fon\uffff', version: 0 },
+          { key: 'foo', version: 1580541870611, value: 42 },
+          { key: 'foo\u0000', end: '\uffff', version: 0 },
+        ],
+        [
+          { key: 'bar', version: 0, value: 1 },
+          { key: 'foo', version: 0, value: 1 },
+        ],
+      ).known,
+    ).toEqual([
+      { key: 'bar', end: 'bar', version: 0 },
+      { key: 'foo', version: 1580541870611, value: 42 },
+    ]);
+  });
 });
