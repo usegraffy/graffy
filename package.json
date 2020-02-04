@@ -20,7 +20,8 @@
     "next:start": "next start",
     "next:static": "next build && next export",
     "build": "yarn next:build",
-    "start": "yarn next:start -p $PORT"
+    "start": "yarn next:start -p $PORT",
+    "definition-graffy-core": "tsc --allowJs ./src/core/Graffy.js -d"
   },
   "workspaces": [
     "src/*",
@@ -33,7 +34,9 @@
   },
   "homepage": "https://graffy.js.org",
   "dependencies": {
-    "@babel/runtime-corejs3": "^7.8.3"
+    "@babel/runtime-corejs3": "^7.8.3",
+    "global": "^4.4.0",
+    "typescript": "^3.7.5"
   },
   "devDependencies": {
     "@babel/core": "^7.8.3",
