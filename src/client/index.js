@@ -20,13 +20,27 @@ export default function GraffyClient(baseUrl) {
         };
 
         source.onerror = e => {
-          end(e);
+          end(Error('client.sse.transport: ' + e.message));
         };
+
+        source.addEventListener('graffyerror', e => {
+          end(Error('server:' + e.data));
+        });
 
         return () => {
           source.close();
         };
       });
+    });
+
+    store.on('write', change => {
+      if (!fetch) throw Error('client.fetch.unavailable');
+      console.log('Making post');
+      return fetch(baseUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(change),
+      }).then(res => res.json());
     });
   };
 }

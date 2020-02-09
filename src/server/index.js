@@ -42,6 +42,20 @@ export default function server(store) {
         res.end(`${e.message}\n\n`);
         return;
       }
+    } else if (req.method === 'POST') {
+      console.log('POST received');
+      try {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const change = JSON.parse(Buffer.concat(chunks).toString());
+        const value = await store.call('write', change);
+        res.writeHead(200);
+        res.end(JSON.stringify(value));
+      } catch (e) {
+        res.writeHead(400);
+        res.end(`${e.message}\n\n`);
+        return;
+      }
     } else {
       res.writeHead(501);
       res.end('Not implemented');

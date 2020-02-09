@@ -4,11 +4,17 @@
 
 - Props: `store` (the Graffy store).
 
-Adds a Graffy store to a React subtree. The useGraffy hook in that subtree will use this store.
+Adds a Graffy store to a React subtree. The useQuery hook in that subtree will use this store.
 
-## useGraffy(query, [options])
+## useQuery(query, [options])
 
 - Arguments: [query](20-Types#Queries), options
-- Returns: [[result](20-Types#Graphs), status]
+- Returns: [[result](20-Types#Graphs), loading, error]
 
-The `live` option is used to choose between .watch (if true) and .read (if false). Status may be `'loading'`, `'ready'`, or an error object.
+The `once` option is used to choose between `.watch()` (if false) and `.read()` (if true). `loading` is a boolean, and `error` an error object.
+
+## useStore()
+
+- Returns: `store` (the Graffy store)
+
+Retrieve the store passed by the nearest GraffyProvider.
