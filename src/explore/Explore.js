@@ -5,18 +5,21 @@ function Result({ result, loading, error }) {
   return (
     <>
       {loading ? (
-        <div>Loading...</div>
+        <div className="status">Loading...</div>
       ) : error ? (
         <div className="error">{error.toString()}</div>
       ) : result ? (
         <pre>{JSON.stringify(result, null, 2)}</pre>
       ) : (
-        'No results.'
+        <div className="status">No results</div>
       )}
       <style jsx>{`
         .error {
-          color: #fff;
-          background: #f36;
+          color: #c00;
+          padding: 1rem;
+        }
+        .status {
+          color: #888;
           padding: 1rem;
         }
       `}</style>
@@ -116,8 +119,7 @@ export default function Explore() {
 
       <style jsx>{`
         .error {
-          background: #f36;
-          color: #fff;
+          color: #c00;
           padding: 1rem;
         }
         .opbar {
@@ -142,7 +144,7 @@ export default function Explore() {
           cursor: pointer;
           box-shadow: inset 0 0 0 20px rgba(0, 0, 0, 0.1);
         }
-        .opbtn:not(:disabled)[data-active],
+        .opbtn[data-active='true']:not(:disabled),
         .opbtn:not(:disabled):active {
           background: #f36;
           color: #fff;
