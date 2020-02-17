@@ -52,7 +52,7 @@ export default function Explore() {
     try {
       setResult(await store.read(input));
     } catch (e) {
-      setError(e);
+      setError(e.message);
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function Explore() {
     try {
       setResult(await store.write(input));
     } catch (e) {
-      setError(e);
+      setError(e.message);
     } finally {
       setLoading(false);
     }

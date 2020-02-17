@@ -35,7 +35,14 @@ describe('final', () => {
   });
 
   test('simple', async () => {
-    const result1 = await store.read({ foo: 1, bar: 1 });
-    expect(result1).toEqual({ foo: 42, bar: null });
+    const result = await store.read({ foo: 1, bar: 1 });
+    expect(result).toEqual({ foo: 42, bar: null });
+  });
+
+  test('watch', async () => {
+    const result = store.watch({ foo: 1 });
+    expect((await result.next()).value).toEqual(undefined);
+    store.write({ foo: 44 });
+    expect((await result.next()).value).toEqual({ foo: 44 });
   });
 });
