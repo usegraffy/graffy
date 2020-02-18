@@ -4,11 +4,13 @@ import { decodeUrl } from '@graffy/common';
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');
   return async (req, res) => {
+    const parsed = url.parse(req.url, true);
+    const query = parsed.query.q && decodeUrl(parsed.query.q);
+    const options =
+      parsed.query.opts && JSON.parse(decodeURIComponent(parsed.query.opts));
+
     if (req.method === 'GET') {
       try {
-        const parsed = url.parse(req.url, true);
-        const query = decodeUrl(parsed.query.q);
-
         if (req.headers['accept'] === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');
 
@@ -17,13 +19,16 @@ export default function server(store) {
               clearInterval(keepAlive);
               return;
             }
-            res.write(':stayinalive');
-          }, 2000);
+            res.write(': \n\n');
+          }, 29000);
 
           // TODO: Resumable subscriptions using timestamp ID.
           // const lastId = req.headers['last-event-id'];
           try {
-            const stream = store.call('watch', query, { raw: true });
+            const stream = store.call('watch', query, {
+              ...options,
+              raw: true,
+            });
             for await (const value of stream) {
               if (req.aborted || res.finished) break;
               res.write(`data: ${JSON.stringify(value)}\n\n`);
@@ -33,7 +38,10 @@ export default function server(store) {
           }
           res.end();
         } else {
-          const value = await store.call('read', query, { raw: true });
+          const value = await store.call('read', query, {
+            ...options,
+            raw: true,
+          });
           res.writeHead(200);
           res.end(JSON.stringify(value));
         }
@@ -43,12 +51,11 @@ export default function server(store) {
         return;
       }
     } else if (req.method === 'POST') {
-      console.log('POST received');
       try {
         const chunks = [];
         for await (const chunk of req) chunks.push(chunk);
         const change = JSON.parse(Buffer.concat(chunks).toString());
-        const value = await store.call('write', change);
+        const value = await store.call('write', change, options);
         res.writeHead(200);
         res.end(JSON.stringify(value));
       } catch (e) {

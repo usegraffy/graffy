@@ -6,7 +6,7 @@ import { GraffyProvider } from '@graffy/react';
 
 import Explore from './Explore';
 
-export default function ExploreContainer({ baseUrl = '/' }) {
+export default function ExploreContainer({ baseUrl = '/', ...options }) {
   const [store, setStore] = useState();
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function ExploreContainer({ baseUrl = '/' }) {
 
   return store ? (
     <GraffyProvider store={store}>
-      <Explore />
+      <Explore {...options} />
     </GraffyProvider>
   ) : null;
 }

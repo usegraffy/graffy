@@ -29,7 +29,7 @@ const retrieveResult = async (promise, setState) => {
   }
 };
 
-export default function useQuery(query, { once } = {}) {
+export default function useQuery(query, { once, ...options } = {}) {
   const queryRef = useRef(null);
 
   const [state, setState] = useState([null, true, null]);
@@ -46,7 +46,7 @@ export default function useQuery(query, { once } = {}) {
     if (once) {
       retrieveResult(store.read(query), setState);
     } else {
-      const subscription = store.watch(query);
+      const subscription = store.watch(query, options);
       consumeSubscription(subscription, setState);
 
       return () => {

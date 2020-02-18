@@ -27,7 +27,7 @@ function Result({ result, loading, error }) {
   );
 }
 
-export default function Explore() {
+export default function Explore(options) {
   const [input, setInput] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,7 @@ export default function Explore() {
     setWatching(false);
     setLoading(true);
     try {
-      setResult(await store.read(input));
+      setResult(await store.read(input, options));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -62,7 +62,7 @@ export default function Explore() {
     setWatching(false);
     setLoading(true);
     try {
-      setResult(await store.write(input));
+      setResult(await store.write(input, options));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -112,7 +112,9 @@ export default function Explore() {
       {error ? (
         <div className="error">{error}</div>
       ) : watching ? (
-        <Query query={input}>{props => <Result {...props} />}</Query>
+        <Query query={input} options={options}>
+          {props => <Result {...props} />}
+        </Query>
       ) : (
         <Result {...{ result, loading, error }} />
       )}
