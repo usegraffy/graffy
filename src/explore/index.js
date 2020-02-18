@@ -6,13 +6,17 @@ import { GraffyProvider } from '@graffy/react';
 
 import Explore from './Explore';
 
-export default function ExploreContainer({ baseUrl = '/', ...options }) {
+export default function ExploreContainer({
+  baseUrl = '/',
+  getOptions,
+  ...options
+}) {
   const [store, setStore] = useState();
 
   useEffect(() => {
     const store = new Graffy();
     store.use(GraffyFill());
-    store.use(GraffyClient(baseUrl));
+    store.use(GraffyClient(baseUrl, getOptions));
     setStore(store);
   }, [baseUrl]);
 

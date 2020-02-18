@@ -1,18 +1,22 @@
 import { encodeUrl } from '@graffy/common';
 import makeStream from '@graffy/stream';
 
-export default function GraffyClient(baseUrl) {
+export default function GraffyClient(baseUrl, getOptions = () => ({})) {
   return function(store) {
     store.on('read', (query, options) => {
       if (!fetch) throw Error('client.fetch.unavailable');
-      const encodedOptions = encodeURIComponent(JSON.stringify(options));
+      const encodedOptions = encodeURIComponent(
+        JSON.stringify(getOptions('read', options)),
+      );
       const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${encodedOptions}`;
       return fetch(url).then(res => res.json());
     });
 
     store.on('watch', (query, options) => {
       if (!EventSource) throw Error('client.sse.unavailable');
-      const encodedOptions = encodeURIComponent(JSON.stringify(options));
+      const encodedOptions = encodeURIComponent(
+        JSON.stringify(getOptions('watch', options)),
+      );
       const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${encodedOptions}`;
       const source = new EventSource(url);
 
@@ -37,7 +41,9 @@ export default function GraffyClient(baseUrl) {
 
     store.on('write', (change, options) => {
       if (!fetch) throw Error('client.fetch.unavailable');
-      const encodedOptions = encodeURIComponent(JSON.stringify(options));
+      const encodedOptions = encodeURIComponent(
+        JSON.stringify(getOptions('write', options)),
+      );
       const url = `${baseUrl}?opts=${encodedOptions}`;
       return fetch(url, {
         method: 'POST',
