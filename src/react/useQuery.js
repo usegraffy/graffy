@@ -15,7 +15,7 @@ const consumeSubscription = async (subscription, setState) => {
       setState([val, null, null]);
     }
   } catch (e) {
-    // console.error('Error reading stream in useGraffy', e);
+    // console.error('Error reading stream in useQuery', e);
     setState([null, false, e]);
   }
 };
@@ -24,12 +24,12 @@ const retrieveResult = async (promise, setState) => {
   try {
     setState([await promise, false, null]);
   } catch (e) {
-    // console.error('Error fetching result in useGraffy', e);
+    // console.error('Error fetching result in useQuery', e);
     setState([null, false, e]);
   }
 };
 
-export default function useGraffy(query, { once } = {}) {
+export default function useQuery(query, { once, ...options } = {}) {
   const queryRef = useRef(null);
 
   const [state, setState] = useState([null, true, null]);
@@ -46,7 +46,7 @@ export default function useGraffy(query, { once } = {}) {
     if (once) {
       retrieveResult(store.read(query), setState);
     } else {
-      const subscription = store.watch(query);
+      const subscription = store.watch(query, options);
       consumeSubscription(subscription, setState);
 
       return () => {

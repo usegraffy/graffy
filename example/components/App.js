@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { keyBefore, keyAfter } from '@graffy/common';
-import { useGraffy } from '@graffy/react';
+import { useQuery } from '@graffy/react';
 
 import VisitorList from './VisitorList';
 import Pagination from './Pagination';
@@ -27,7 +27,7 @@ function getQuery(range) {
 export default function App() {
   const [range, setRange] = useState({ first: PAGE_SIZE });
   const q = getQuery(range);
-  const [data, loading] = useGraffy(q);
+  const [data, loading] = useQuery(q);
 
   if (!data || !data.visitorsByTime) {
     // We are still performing the initial load

@@ -16,6 +16,17 @@ store.use(GraffyCache({ final: true }));
 store.use(mock);
 
 const app = express();
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+
+  if (req.method === 'OPTIONS') {
+    res.end('Ok');
+    return;
+  }
+  next();
+});
+
 app.use('/api', GraffyServer(store));
 app.use(express.static(__dirname + '/public'));
 app.listen(8443);

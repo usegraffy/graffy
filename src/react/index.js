@@ -1,3 +1,4 @@
 export { GraffyProvider } from './GraffyContext';
-export { default as GraffyConsumer } from './GraffyConsumer';
-export { default as useGraffy } from './useGraffy';
+export { default as Query } from './Query';
+export { default as useQuery } from './useQuery';
+export { default as useStore } from './useStore';
