@@ -1,3 +1,8 @@
+/*
+  This file should not use async/await as it's intended to be usable without
+  the regenerator polyfill.
+*/
+
 const normalCompletion = Promise.resolve({ value: void 0, done: true });
 
 export default function makeStream(init, options = {}) {
@@ -41,10 +46,28 @@ export default function makeStream(init, options = {}) {
       return new Promise(resolve => requests.push(resolve));
     },
 
-    return(val) {
-      complete = normalCompletion;
+    map(fn) {
+      return makeStream((push, end) => {
+        const next = () => {
+          this.next()
+            .then(({ value, done }) => {
+              if (done) return end();
+              push(fn(value));
+              next();
+            })
+            .catch(error => end(error));
+        };
+        next();
+        return (error, value) => {
+          error ? this.throw(error) : this.return(value);
+        };
+      });
+    },
+
+    return(value) {
+      complete = Promise.resolve({ value, done: true });
       payloads.length = 0;
-      close(null, val);
+      close(null, value);
       return complete;
     },
 

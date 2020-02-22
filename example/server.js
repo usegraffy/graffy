@@ -6,6 +6,7 @@ import Graffy from '@graffy/core';
 import GraffyFill from '@graffy/fill';
 import GraffyCache from '@graffy/cache';
 import GraffyServer from '@graffy/server';
+import GraffyWsServer from '@graffy/server/wsServer';
 import mock from './mockVisitorList';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,7 +30,9 @@ app.use((req, res, next) => {
 
 app.use('/api', GraffyServer(store));
 app.use(express.static(__dirname + '/public'));
-app.listen(8443);
+const server = app.listen(8443);
+
+server.on('upgrade', GraffyWsServer(store));
 
 // eslint-disable-next-line no-console
 console.log('Server started at 8443');

@@ -103,11 +103,11 @@ export default class Graffy {
     return descend(decorate(result), path);
   }
 
-  async *watch(...args) {
+  watch(...args) {
     const [path, porcelainQuery, options] = validateArgs(...args);
     const query = wrap(makeQuery(porcelainQuery), path);
     const stream = this.call('watch', query, options || {});
-    for await (const value of stream) yield descend(decorate(value), path);
+    return stream.map(value => descend(decorate(value), path));
   }
 
   async write(...args) {
