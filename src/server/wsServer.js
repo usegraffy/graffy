@@ -1,4 +1,7 @@
 import WebSocket from 'ws';
+
+const PING_INTERVAL = 30000;
+
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');
 
@@ -8,7 +11,13 @@ export default function server(store) {
     ws.graffyStreams = {}; // We use this to keep track of streams to close.
     ws.on('message', async function message(msg) {
       try {
-        const [op, id, payload, options] = JSON.parse(msg);
+        const [id, op, payload, options] = JSON.parse(msg);
+
+        if (id === ':pong') {
+          ws.pingPending = false;
+          return;
+        }
+
         switch (op) {
           case 'read':
           case 'write':
@@ -39,15 +48,28 @@ export default function server(store) {
             if (!ws.graffyStreams[id]) break;
             ws.graffyStreams[id].return();
             delete ws.graffyStreams[id];
+            break;
         }
-      } catch (e) {
-        console.log('WebSocket message error', e);
+      } catch (_) {
         ws.close();
       }
     });
 
-    ws.on('close', () => {});
+    ws.on('close', () => {
+      for (const id in ws.graffyStreams) {
+        ws.graffyStreams[id].return();
+        delete ws.graffyStreams[id];
+      }
+    });
   });
+
+  setInterval(function ping() {
+    wss.clients.forEach(function each(ws) {
+      if (ws.pingPending) return ws.terminate();
+      ws.pingPending = true;
+      ws.send(JSON.stringify([':ping']));
+    });
+  }, PING_INTERVAL);
 
   return async (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, function done(ws) {
