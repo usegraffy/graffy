@@ -64,7 +64,7 @@ This returns a change stream; note the `yield;` on the second line, which tells 
 If the data source supports it, push should be preferred for low-frequency changes. This requires starting and stopping upstream listeners, which can't be done using the `async function*` syntax but can be done using the `makeStream` helper.
 
 ```js
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 
 onWatch('users', query =>
   makeStream(push => {

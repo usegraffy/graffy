@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 import { page, encodeKey } from '@graffy/common';
 
 const listeners = new Set();

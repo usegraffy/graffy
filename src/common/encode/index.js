@@ -4,3 +4,4 @@ export {
   encode as encodeKey,
   decode as decodeKey,
 } from './key.js';
+export { default as makeId } from './id.js';

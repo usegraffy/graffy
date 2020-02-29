@@ -60,6 +60,7 @@
     "jest": "^25.1.0",
     "lodash": "^4.17.15",
     "merge-async-iterators": "^0.2.1",
+    "nanoid": "^2.1.11",
     "next": "^9.2.1",
     "nodemon": "^2.0.2",
     "prettier": "^1.19.1",
@@ -75,6 +76,7 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-replace": "^2.1.0",
     "text-encoder-lite": "^2.0.0",
+    "ws": "^7.2.1",
     "yargs": "^15.1.0"
   },
   "peerDependencies": {

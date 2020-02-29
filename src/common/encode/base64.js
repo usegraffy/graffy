@@ -1,10 +1,4 @@
-/*
-  This is just like standard URL-safe Base64, except for using an alphabet
-  re-ordered for sortability.
-*/
-
-const alpha =
-  '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+import alpha from './alphabet';
 
 function getByte(view, offset) {
   return offset < view.byteLength ? view.getUint8(offset) : 0;

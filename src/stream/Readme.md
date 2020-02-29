@@ -29,7 +29,7 @@ and do stuff. We might also want to call `removeEventListener` when we break (or
 The default export is a factory function.
 
 ```js
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 ```
 
 ### Minimal Example

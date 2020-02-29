@@ -1,5 +1,5 @@
 import { merge, slice, setVersion } from '@graffy/common';
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 // import { debug } from '@graffy/testing';
 
 export default function({ final } = {}) {
