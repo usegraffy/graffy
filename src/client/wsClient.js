@@ -1,4 +1,4 @@
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 import Socket from './Socket';
 
 export default (url, getOptions) => store => {

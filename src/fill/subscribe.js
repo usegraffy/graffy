@@ -1,5 +1,5 @@
 import { merge, slice, sieve, add } from '@graffy/common';
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 
 export default function subscribe(store, originalQuery, raw) {
   let push, end;

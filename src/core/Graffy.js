@@ -9,7 +9,7 @@ import {
   unwrap,
   wrap,
 } from '@graffy/common';
-import makeStream from '@graffy/stream';
+import { makeStream, mapStream } from '@graffy/stream';
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
 
@@ -107,7 +107,7 @@ export default class Graffy {
     const [path, porcelainQuery, options] = validateArgs(...args);
     const query = wrap(makeQuery(porcelainQuery), path);
     const stream = this.call('watch', query, options || {});
-    return stream.map(value => descend(decorate(value), path));
+    return mapStream(stream, value => descend(decorate(value), path));
   }
 
   async write(...args) {

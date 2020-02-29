@@ -1,5 +1,5 @@
 import { wrap, unwrap, remove, merge, mergeStreams } from '@graffy/common';
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 
 async function mapStream(stream, fn) {
   for await (const value of stream) {

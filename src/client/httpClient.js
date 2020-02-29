@@ -1,5 +1,5 @@
 import { encodeUrl } from '@graffy/common';
-import makeStream from '@graffy/stream';
+import { makeStream } from '@graffy/stream';
 
 export default (baseUrl, getOptions) => store => {
   store.on('read', (query, options) => {
