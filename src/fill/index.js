@@ -8,6 +8,7 @@ export default function fill(_) {
     store.on('read', [], async function fillOnRead(query, options, next) {
       let value = await next(query);
       if (options.skipFill) return value;
+      if (!value || !value.length) return null;
 
       let budget = MAX_RECURSIONS;
 
@@ -20,6 +21,7 @@ export default function fill(_) {
       }
 
       if (!budget) throw new Error('fill.max_recursion');
+      // console.log('Read', debug(query), 'returned', debug(value));
       return value;
     });
 

@@ -45,4 +45,9 @@ describe('final', () => {
     store.write({ foo: 44 });
     expect((await result.next()).value).toEqual({ foo: 44 });
   });
+
+  test('range', async () => {
+    const result = await store.read([{ first: 3 }, 1]);
+    expect(result).toEqual([42]);
+  });
 });

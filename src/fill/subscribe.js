@@ -1,11 +1,12 @@
-import { merge, slice, sieve, add } from '@graffy/common';
+import { merge, slice, sieve, add, finalize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 export default function subscribe(store, originalQuery, raw) {
+  const empty = () => finalize([], originalQuery, 0);
   let push, end;
   let upstream;
   let query = [];
-  let data = [];
+  let data = empty();
   let payload = [];
 
   resubscribe(originalQuery);
@@ -40,7 +41,7 @@ export default function subscribe(store, originalQuery, raw) {
 
         value = await store.call('read', unknown);
       }
-      value = slice(value, unknown).known;
+      value = value && slice(value, unknown).known;
       putValue(value, false);
     } catch (e) {
       error(e);
@@ -62,8 +63,15 @@ export default function subscribe(store, originalQuery, raw) {
     if (typeof value === 'undefined') return;
     // console.log('Fill/subscribe: PutValue', value);
 
+    if (value === null) {
+      // No results exist at this moment.
+      data = empty();
+      push(null);
+      return;
+    }
+
     if (isChange) {
-      // console.log('Data before sieve', debug(data));
+      // console.log('Data before sieve', debug(data), debug(value));
       const sieved = sieve(data, value);
       // console.log('Data after sieve', debug(data));
       if (!sieved.length) return;
@@ -76,7 +84,7 @@ export default function subscribe(store, originalQuery, raw) {
     }
 
     let { known, unknown, extraneous } = slice(data, originalQuery);
-    data = known || [];
+    data = known || empty();
 
     // console.log('After slice', debug(data), unknown && debug(unknown));
     // console.log('Payload and value', debug(payload), value && debug(value));

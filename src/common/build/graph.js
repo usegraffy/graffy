@@ -27,6 +27,8 @@ function makeGraph(key, value, version) {
 }
 
 export function graph(obj, version = Date.now()) {
+  // console.log('makeGraph called with', obj);
+  if (!obj) return obj;
   return makeGraph('', obj, version).children;
 }
 
