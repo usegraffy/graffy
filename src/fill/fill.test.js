@@ -44,6 +44,17 @@ describe('changes', () => {
     await expectNext(subscription, { foo: { a: 4 } }, 1);
   });
 
+  test('simple-empty', async () => {
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0), {
+      raw: true,
+    });
+    await expectNext(subscription, null);
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(subscription, { foo: { a: 4 } }, 1);
+  });
+
   test('overlap', async () => {
     backend.write(makeGraph({ foo: { a: 2 }, bar: { b: 2 } }, 0));
     const subscription = g.call(
