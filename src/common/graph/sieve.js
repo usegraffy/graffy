@@ -1,6 +1,5 @@
 import { isBranch, isRange, getIndex, getLastIndex } from '../node';
 import { keyAfter, keyBefore } from './step';
-// import merge from './merge';
 
 export default function sieve(current, changes, result = []) {
   let index = 0;
@@ -122,7 +121,6 @@ function updateNode(current, index, change, result) {
 }
 
 function getNewer(node, base) {
-  // const { version } = base;
   if (isBranch(node)) {
     const children = node.children.filter(child => getNewer(child, base));
     return children.length && { ...node, children };
