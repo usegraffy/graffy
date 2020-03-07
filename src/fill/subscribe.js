@@ -61,7 +61,7 @@ export default function subscribe(store, originalQuery, raw) {
 
   function putValue(value, isChange) {
     if (typeof value === 'undefined') return;
-    // console.log('Fill/subscribe: PutValue', value);
+    // console.log('Fill/subscribe: PutValue', debug(value));
 
     if (value === null) {
       // No results exist at this moment.
@@ -73,7 +73,7 @@ export default function subscribe(store, originalQuery, raw) {
     if (isChange) {
       // console.log('Data before sieve', debug(data), debug(value));
       const sieved = sieve(data, value);
-      // console.log('Data after sieve', debug(data));
+      // console.log('Data after sieve', debug(data), debug(sieved));
       if (!sieved.length) return;
       merge(payload, sieved);
     } else {
@@ -104,7 +104,7 @@ export default function subscribe(store, originalQuery, raw) {
 
     // This is not an else; previous block might update unknown.
     if (!unknown) {
-      // console.log('Pushing', payload);
+      // console.log('Pushing', debug(payload));
       push(raw ? payload : data);
       payload = [];
     }

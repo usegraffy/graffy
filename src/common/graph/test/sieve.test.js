@@ -1,4 +1,4 @@
-import { sieve } from '..';
+import sieve from '../sieve';
 import { makeGraph } from '../../build';
 
 test('empty', () => {
@@ -32,4 +32,11 @@ test('full-add-branch', () => {
     },
     { key: 'foo\0', end: '\uffff', version: 0 },
   ]);
+});
+
+test('ignore-unchanged', () => {
+  const g = makeGraph({ foo: { bar: 42 } }, 0);
+  const change = sieve(g, makeGraph({ foo: { bar: 42 } }, 1));
+  expect(change).toEqual([]);
+  expect(g).toEqual(makeGraph({ foo: { bar: 42 } }, 1));
 });
