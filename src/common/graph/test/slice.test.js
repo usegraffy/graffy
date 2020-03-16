@@ -348,4 +348,42 @@ describe('version', () => {
       { key: 'foo', version: 1580541870611, value: 42 },
     ]);
   });
+
+  test('frozenQueryLinks', () => {
+    expect(
+      slice(
+        [
+          { key: 'bar', version: 0, path: ['foo'] },
+          { key: 'baz', version: 0, path: ['foo'] },
+          {
+            key: 'foo',
+            version: 0,
+            children: [{ key: 'x', version: 0, value: 42 }],
+          },
+        ],
+        [
+          {
+            key: 'bar',
+            version: 0,
+            children: Object.freeze([{ key: 'x', version: 0, value: 1 }]),
+          },
+          {
+            key: 'baz',
+            version: 0,
+            children: Object.freeze([{ key: 'x', version: 0, value: 1 }]),
+          },
+        ],
+      ),
+    ).toEqual({
+      known: [
+        { key: 'bar', version: 0, path: ['foo'] },
+        { key: 'baz', version: 0, path: ['foo'] },
+        {
+          key: 'foo',
+          version: 0,
+          children: [{ key: 'x', version: 0, value: 42 }],
+        },
+      ],
+    });
+  });
 });

@@ -9,6 +9,7 @@ import {
 import { keyAfter, keyBefore } from './step';
 import { wrap } from '../path';
 import merge from './merge';
+import add from './add';
 
 class Result {
   constructor(root) {
@@ -29,7 +30,7 @@ class Result {
   addLinked(children) {
     if (this.root !== this) return this.root.addLinked(children);
     this.linked = this.linked || [];
-    merge(this.linked, children);
+    add(this.linked, children);
   }
 }
 
