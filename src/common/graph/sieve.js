@@ -47,6 +47,8 @@ function mergeRanges(base, node) {
   // assertVersion(node, base.version);
   // eslint-disable-next-line no-param-reassign
   if (node.version < base.version) [node, base] = [base, node];
+  // Ensure node is newer than base
+
   return [
     base.key < node.key && { ...base, end: keyBefore(node.key) },
     node,
@@ -74,7 +76,7 @@ export function insertNode(current, change, result, start = 0) {
 function insertNodeIntoRange(current, index, change, result) {
   const key = change.key;
   const range = current[index];
-  const newChange = getNewer(change, range.version);
+  const newChange = getNewer(change, range);
   if (!newChange) return;
   result.push(newChange);
 
@@ -93,34 +95,38 @@ function updateNode(current, index, change, result) {
   if (isBranch(change) && isBranch(node)) {
     // Both are branches: Recursively merge children.
     const nextResult = [];
+    node.version = change.version;
     sieve(node.children, change.children, nextResult);
     if (nextResult.length) result.push({ ...change, children: nextResult });
   } else if (isBranch(node)) {
     // Current node is a branch but the change is a leaf; if the branch
     // has newer children, ignore the change and keep only those children;
     // Otherwise, discard the branch and keep the change.
-    const newNode = getNewer(node, change.version);
+    const newNode = getNewer(node, change);
     current[index] = newNode || change;
     if (!newNode) result.push(change);
     // TODO: In the case of partial removal, what should result be?
   } else {
     // Current node is a leaf. Replace with the change if it is newer.
-    const newChange = getNewer(change, node.version);
+    const newChange = getNewer(change, node);
     if (newChange) {
       current[index] = newChange;
-      result.push(newChange);
+      // console.log(current);
+      if (change.value !== node.value || change.path !== node.path) {
+        result.push(newChange);
+      }
     }
   }
   return index + 1;
 }
 
-function getNewer(node, version) {
+function getNewer(node, base) {
   if (isBranch(node)) {
-    const children = node.children.filter(child => getNewer(child, version));
+    const children = node.children.filter(child => getNewer(child, base));
     return children.length && { ...node, children };
   } else {
     // assertVersion(node, version);
-    return node.version >= version ? node : null;
+    return node.version >= base.version ? node : null;
   }
 }
 

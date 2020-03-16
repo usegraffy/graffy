@@ -4,6 +4,7 @@ import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
 
 const expectNext = async (subscription, expected, version = 0) => {
+  // console.log('assert', expected);
   expect((await subscription.next()).value).toEqual(
     makeGraph(expected, version),
   );
@@ -95,7 +96,7 @@ describe('changes', () => {
       foo: link(['bar', 'b']),
       bar: { b: { x: 5 } },
     });
-    backend.write(makeGraph({ bar: { a: { x: 7 } } })); // Should not be se, 0nt!
+    backend.write(makeGraph({ bar: { a: { x: 7 } } })); // Should not be sent!
     backend.write(makeGraph({ bar: { b: { x: 3 } } }, 0));
     await expectNext(subscription, { bar: { b: { x: 3 } } });
   });
@@ -222,7 +223,7 @@ describe('values', () => {
       subscription,
       // prettier-ignore
       [
-        { key: 'foo', version: 0, children: [
+        { key: 'foo', version: 1, children: [
           { key: '', end: '`\uffff', version: 0 },
           { key: 'a', value: 1, version: 0 },
           { key: 'a\0', end: 'a\uffff', version: 0},
@@ -254,7 +255,7 @@ describe('values', () => {
       subscription,
       // prettier-ignore
       [
-        { key: 'foo', version: 0, children: [
+        { key: 'foo', version: 1, children: [
           { key: '', end: '`\uffff', version: 0 },
           { key: 'a', value: 1, version: 0 },
           { key: 'a\0', end: 'a\uffff', version: 0},
@@ -295,7 +296,7 @@ describe('values', () => {
       subscription,
       // prettier-ignore
       [
-        { key: 'foo', version: 0, children: [
+        { key: 'foo', version: 1, children: [
           { key: 'b', version: 1, value: 2 },
           { key: 'b\0', end: 'c', version: 1 },
           { key: 'c\0', end: 'c\uffff', version: 0 },
@@ -371,19 +372,22 @@ describe('values', () => {
         1,
       ),
     );
-    await expectNext(subscription, {
-      users: {
-        '1': { name: 'alice' },
-        '3': { name: 'carol' },
-      },
-      usersByAge: [
-        { key: '4', path: ['users', '1'], version: 0 },
-        { key: '4\0', end: '4\uffff', version: 0 },
-        { key: '5', end: '5', version: 1 },
-        { key: '5\0', end: '6\uffff', version: 0 },
-        { key: '7', path: ['users', '3'], version: 0 },
-        { key: '7\0', end: '\uffff', version: 0 },
+    await expectNext(
+      subscription,
+      // prettier-ignore
+      [{ key: 'users', version: 1, children: makeGraph({
+          '1': { name: 'alice' },
+          '3': { name: 'carol' },
+        }, 0)},
+        { key: 'usersByAge', version: 1, children: [
+          { key: '4', path: ['users', '1'], version: 0 },
+          { key: '4\0', end: '4\uffff', version: 0 },
+          { key: '5', end: '5', version: 1 },
+          { key: '5\0', end: '6\uffff', version: 0 },
+          { key: '7', path: ['users', '3'], version: 0 },
+          { key: '7\0', end: '\uffff', version: 0 },
+        ]}
       ],
-    });
+    );
   });
 });

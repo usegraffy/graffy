@@ -1,7 +1,3 @@
-// import mergeStreams from 'merge-async-iterators';
-// import { merge, wrap, unwrap, remove, makePath } from '@graffy/common';
-// import { decorate } from '@graffy/common';
-
 import { unwrap } from '@graffy/common';
 
 function resolve(handlers, firstPayload, options) {
@@ -18,7 +14,12 @@ function resolve(handlers, firstPayload, options) {
 
     let nextCalled = false;
     return handle(payload, options, nextPayload => {
-      if (nextCalled) throw Error('resolve.duplicate_next: ' + handle.name);
+      if (nextCalled) {
+        throw Error('resolve.duplicate_next_call: ' + handlers[i].name);
+      }
+      if (typeof nextPayload === 'undefined') {
+        throw Error('resolve.next_without_payload: ' + handlers[i].name);
+      }
       nextCalled = true;
       return run(i + 1, nextPayload);
     });

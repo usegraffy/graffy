@@ -88,11 +88,14 @@ test('indexes', async () => {
   expect((await subscription.next()).value).toEqual(
     makeGraph(
       {
-        bar: {
-          1: { x: 1 },
-          3: { x: 3 },
-          4: { x: 4 },
-        },
+        bar: makeGraph(
+          {
+            1: { x: 1 },
+            3: { x: 3 },
+            4: { x: 4 },
+          },
+          0,
+        ),
         foo: [
           { key: '', end: '`\uffff', version: 0 },
           { key: 'a', path: ['bar', '1'], version: 0 },
@@ -104,7 +107,7 @@ test('indexes', async () => {
           { key: 'd', path: ['bar', '4'], version: 0 },
         ],
       },
-      0,
+      1,
     ),
   );
 });
