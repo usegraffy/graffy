@@ -61,7 +61,7 @@
     "lodash": "^4.17.15",
     "merge-async-iterators": "^0.2.1",
     "nanoid": "^2.1.11",
-    "next": "^9.2.1",
+    "next": "^9.3.2",
     "nodemon": "^2.0.2",
     "prettier": "^1.19.1",
     "prop-types": "^15.7.2",
