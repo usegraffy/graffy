@@ -1,4 +1,4 @@
-import { mergeStreams } from '@graffy/common';
+import mergeIterators from 'merge-async-iterators';
 import { makeStream } from '@graffy/stream';
 
 export default function({ final } = {}) {
@@ -7,12 +7,12 @@ export default function({ final } = {}) {
 
     store.on('watch', [], (query, options, next) => {
       const writeStream = makeStream((push, _end) => {
-        push(undefined);
+        if (final) push(undefined);
         listeners.add(push);
         return () => listeners.delete(push);
       });
 
-      return final ? writeStream : mergeStreams(writeStream, next(query));
+      return final ? writeStream : mergeIterators([writeStream, next(query)]);
     });
 
     store.on('write', [], async (change, options, next) => {

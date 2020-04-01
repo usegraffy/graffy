@@ -28,7 +28,6 @@ describe('nonfinal', () => {
     store.use(WriteWatcher());
     store.onWrite(change => change);
     store.onWatch(async function*() {
-      console.log('Called');
       yield { foo: 100 };
       await forever;
     });
