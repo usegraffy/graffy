@@ -49,3 +49,7 @@ export function link(rawPath) {
   const path = makePath(rawPath);
   return (key, version) => ({ key, version, path });
 }
+
+export function value(value) {
+  return (key, version) => ({ key, version, value });
+}
