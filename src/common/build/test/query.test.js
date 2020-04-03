@@ -10,6 +10,7 @@ it('should encode queries', () => {
           { title: 1, body: 1, author: { name: 1 } },
         ],
         tags: [{ first: 10 }, true],
+        reactions: [true],
       },
       2,
     ),
@@ -25,6 +26,9 @@ it('should encode queries', () => {
           { key: 'body', value: 1, version: 2 },
           { key: 'title', value: 1, version: 2 },
         ] },
+      ] },
+      { key: 'reactions', version: 2, children: [
+        { key: '', end: '\uffff', count: 4096, version: 2, value: 1 }
       ] },
       { key: 'tags', version: 2, children: [
         { key: '', end: '\uffff', count: 10, version: 2, value: 1 }

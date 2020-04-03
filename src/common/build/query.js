@@ -14,6 +14,7 @@ const freeze = obj => Object.freeze(obj);
 
 function makeQuery(value, version) {
   if (Array.isArray(value)) {
+    if (value.length === 1) value.unshift({});
     return freeze({
       children: freeze([
         freeze({
