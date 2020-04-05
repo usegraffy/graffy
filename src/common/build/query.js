@@ -2,6 +2,12 @@ const MAX_PAGE_SIZE = 4096;
 
 function pageToRange(page) {
   const node = {};
+  if (
+    (typeof page.after !== 'undefined' && typeof page.after !== 'string') ||
+    (typeof page.before !== 'undefined' && typeof page.before !== 'string')
+  ) {
+    throw Error('makeQuery: before/after not string');
+  }
   node.key = page.after || '';
   node.end = page.before || '\uffff';
   node.count = page.first || -page.last || MAX_PAGE_SIZE;
