@@ -1,16 +1,12 @@
-const MAX_PAGE_SIZE = 4096;
+import { key } from '../encode';
+
+const FALLBACK_PAGE_SIZE = 4096;
 
 function pageToRange(page) {
   const node = {};
-  if (
-    (typeof page.after !== 'undefined' && typeof page.after !== 'string') ||
-    (typeof page.before !== 'undefined' && typeof page.before !== 'string')
-  ) {
-    throw Error('makeQuery: before/after not string');
-  }
-  node.key = page.after || '';
-  node.end = page.before || '\uffff';
-  node.count = page.first || -page.last || MAX_PAGE_SIZE;
+  node.key = typeof page.after !== 'undefined' ? key(page.after) : '';
+  node.end = typeof page.before !== 'undefined' ? key(page.before) : '\uffff';
+  node.count = page.first || -page.last || FALLBACK_PAGE_SIZE;
   return node;
 }
 

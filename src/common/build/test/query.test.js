@@ -1,4 +1,5 @@
 import { query } from '../query';
+import { key } from '../../encode';
 
 it('should encode queries', () => {
   expect(
@@ -19,7 +20,7 @@ it('should encode queries', () => {
     [
       { key: 'postCount', value: 1, version: 2 },
       { key: 'posts', version: 2, children: [
-        { key: '1984', end: '\uffff', count: 10, version: 2, children: [
+        { key: key('1984'), end: '\uffff', count: 10, version: 2, children: [
           { key: 'author', version: 2, children: [
             { key: 'name', value: 1, version: 2 }
           ] },
