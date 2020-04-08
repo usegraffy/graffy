@@ -27,7 +27,7 @@ export default function fill(_) {
 
     store.on('watch', [], function fillOnWatch(query, options, next) {
       if (options.skipFill) return next(query);
-      return subscribe(store, query, options.raw);
+      return subscribe(store, query, options);
     });
   };
 }
