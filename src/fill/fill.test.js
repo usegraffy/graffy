@@ -485,7 +485,7 @@ describe('noinit', () => {
     await expectNext(subscription, { bar: { b: { x: 3 } } });
   });
 
-  test('range_deletion', async () => {
+  test.only('range_deletion', async () => {
     backend.write(
       makeGraph(
         {
@@ -511,8 +511,6 @@ describe('noinit', () => {
       [
         { key: 'foo', version: 1, children: [
           { key: 'b', end: 'b', version: 1 },
-          { key: 'c\0', end: 'c\uffff', version: 0 },
-          { key: 'd', value: 4, version: 0 }
         ] }
       ],
     );

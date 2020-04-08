@@ -9,7 +9,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
   let data = empty();
   let payload = [];
 
-  resubscribe(originalQuery);
+  resubscribe(originalQuery, init);
 
   return makeStream((streamPush, streamEnd) => {
     push = v => {
@@ -20,7 +20,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
     return unsubscribe;
   });
 
-  async function resubscribe(unknown, _extraneous) {
+  async function resubscribe(unknown, initialize = true) {
     try {
       const changed = add(query, unknown);
       console.log('Resubscribe', debug(unknown), changed);
@@ -38,15 +38,13 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
 
         // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.read response is newer.
-        if (init) {
+        if (initialize) {
           value = await store.call('read', unknown, { skipCache: true });
-          value = value && slice(value, unknown).known;
         } else {
           push(undefined);
         }
-      } else {
-        value = value && slice(value, unknown).known;
       }
+      value = value && slice(value, unknown).known;
       putValue(value, false);
     } catch (e) {
       error(e);
@@ -88,7 +86,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
       // console.log('Payload after adding value');
     }
 
-    let { known, unknown, extraneous } = slice(data, originalQuery);
+    let { known, unknown } = slice(data, originalQuery);
     data = known || empty();
 
     // console.log('After slice', debug(data), unknown && debug(unknown));
@@ -114,7 +112,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
       payload = [];
     }
 
-    if (unknown || extraneous) resubscribe(unknown, extraneous);
+    if (unknown) resubscribe(unknown);
   }
 
   function error(e) {
