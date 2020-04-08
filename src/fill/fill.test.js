@@ -391,3 +391,153 @@ describe('values', () => {
     );
   });
 });
+
+describe('noinit', () => {
+  let g;
+  let backend;
+
+  beforeEach(() => {
+    g = new Graffy();
+    g.use(fill());
+    backend = mockBackend();
+    backend.read = jest.fn(backend.read);
+    g.use(backend.middleware);
+  });
+
+  test('simple-skipFill', async () => {
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0), {
+      init: false,
+      raw: true,
+      skipFill: 1,
+    });
+
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(subscription, { foo: { a: 4 } }, 1);
+  });
+
+  test('simple', async () => {
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0), {
+      init: false,
+      raw: true,
+    });
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(subscription, { foo: { a: 4 } }, 1);
+  });
+
+  test('simple-empty', async () => {
+    const subscription = g.call('watch', makeQuery({ foo: { a: 1 } }, 0), {
+      init: false,
+      raw: true,
+    });
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 1));
+    await expectNext(subscription, { foo: { a: 4 } }, 1);
+  });
+
+  test('overlap', async () => {
+    backend.write(makeGraph({ foo: { a: 2 }, bar: { b: 2 } }, 0));
+    const subscription = g.call(
+      'watch',
+      makeQuery({ foo: { a: 1 }, bar: { b: 1 } }, 0),
+      {
+        init: false,
+        raw: true,
+      },
+    );
+
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { a: 3 } }, 0));
+    await expectNext(subscription, { foo: { a: 3 } });
+    backend.write(makeGraph({ foo: { a: 4 } }, 0));
+    await expectNext(subscription, { foo: { a: 4 } });
+    backend.write(makeGraph({ bar: { a: 7 } }, 0));
+    backend.write(makeGraph({ bar: { b: 6 } }, 0));
+    await expectNext(subscription, { bar: { b: 6 } });
+  });
+
+  test('link', async () => {
+    backend.write(
+      makeGraph(
+        { foo: link(['bar', 'a']), bar: { a: { x: 3 }, b: { x: 5 } } },
+        0,
+      ),
+    );
+    const subscription = g.call('watch', makeQuery({ foo: { x: 1 } }, 0), {
+      init: false,
+      raw: true,
+    });
+
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: link(['bar', 'b']) }, 0));
+    await expectNext(subscription, {
+      foo: link(['bar', 'b']),
+      bar: { b: { x: 5 } },
+    });
+    backend.write(makeGraph({ bar: { a: { x: 7 } } })); // Should not be sent!
+    backend.write(makeGraph({ bar: { b: { x: 3 } } }, 0));
+    await expectNext(subscription, { bar: { b: { x: 3 } } });
+  });
+
+  test('range_deletion', async () => {
+    backend.write(
+      makeGraph(
+        {
+          foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
+        },
+        0,
+      ),
+    );
+
+    const subscription = g.call(
+      'watch',
+      makeQuery({ foo: [{ first: 3 }, 1] }, 0),
+      {
+        init: false,
+        raw: true,
+      },
+    );
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { b: null } }, 1, 0));
+    await expectNext(
+      subscription,
+      // prettier-ignore
+      [
+        { key: 'foo', version: 1, children: [
+          { key: 'b', end: 'b', version: 1 },
+          { key: 'c\0', end: 'c\uffff', version: 0 },
+          { key: 'd', value: 4, version: 0 }
+        ] }
+      ],
+    );
+  });
+
+  test('range_insertion', async () => {
+    backend.write(
+      makeGraph(
+        {
+          foo: page({ a: 1, c: 3, d: 4, e: 5 }),
+        },
+        0,
+      ),
+    );
+
+    const subscription = g.call(
+      'watch',
+      makeQuery({ foo: [{ first: 3 }, 1] }, 0),
+      {
+        init: false,
+        raw: true,
+      },
+    );
+    await expectNext(subscription, undefined);
+    backend.write(makeGraph({ foo: { b: 2 } }, 0));
+    await expectNext(subscription, { foo: { b: 2 } });
+  });
+});

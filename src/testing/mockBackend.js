@@ -16,6 +16,7 @@ export default function mockBackend(options = {}) {
       }),
     write: change => {
       merge(state, change);
+      console.log('Emitting change', debug(change));
       for (const push of listeners) push(change);
       return change;
     },
