@@ -28,7 +28,11 @@ test('full-add-branch', () => {
     {
       key: 'foo',
       version: 0,
-      children: [{ key: 'bar', value: 42, version: 0 }],
+      children: [
+        { key: '', end: 'baq\uffff', version: 0 },
+        { key: 'bar', value: 42, version: 0 },
+        { key: 'bar\0', end: '\uffff', version: 0 },
+      ],
     },
     { key: 'foo\0', end: '\uffff', version: 0 },
   ]);

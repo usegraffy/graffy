@@ -76,13 +76,14 @@ export function insertNode(current, change, result, start = 0) {
 function insertNodeIntoRange(current, index, change, result) {
   const key = change.key;
   const range = current[index];
-  const newChange = getNewer(change, range);
+  const newChange = getNewerChange(change, range);
+  const newNode = getNewerNode(change, range);
   if (!newChange) return;
   result.push(newChange);
 
   const insertions = [
     range.key < key && { ...range, end: keyBefore(key) },
-    newChange,
+    newNode,
     range.end > key && { ...range, key: keyAfter(key) },
   ].filter(Boolean);
   current.splice(index, 1, ...insertions);
@@ -102,15 +103,16 @@ function updateNode(current, index, change, result) {
     // Current node is a branch but the change is a leaf; if the branch
     // has newer children, ignore the change and keep only those children;
     // Otherwise, discard the branch and keep the change.
-    const newNode = getNewer(node, change);
+    const newNode = getNewerNode(node, change);
     current[index] = newNode || change;
     if (!newNode) result.push(change);
     // TODO: In the case of partial removal, what should result be?
   } else {
     // Current node is a leaf. Replace with the change if it is newer.
-    const newChange = getNewer(change, node);
+    const newChange = getNewerChange(change, node);
+    const newNode = getNewerNode(change, node);
     if (newChange) {
-      current[index] = newChange;
+      current[index] = newNode;
       // console.log(current);
       if (change.value !== node.value || change.path !== node.path) {
         result.push(newChange);
@@ -120,9 +122,20 @@ function updateNode(current, index, change, result) {
   return index + 1;
 }
 
-function getNewer(node, base) {
+function getNewerNode(node, base) {
   if (isBranch(node)) {
-    const children = node.children.filter(child => getNewer(child, base));
+    const children = [{ key: '', end: '\uffff', version: base.version }];
+    sieve(children, node.children);
+    return children.length === 1 ? null : { ...node, children };
+  } else {
+    // assertVersion(node, version);
+    return node.version >= base.version ? node : null;
+  }
+}
+
+function getNewerChange(node, base) {
+  if (isBranch(node)) {
+    const children = node.children.filter(child => getNewerChange(child, base));
     return children.length && { ...node, children };
   } else {
     // assertVersion(node, version);
