@@ -6,7 +6,7 @@ import fill from './index.js';
 const expectNext = async (subscription, expected, version = 0) => {
   // console.log('assert', expected);
   expect((await subscription.next()).value).toEqual(
-    makeGraph(expected, version),
+    Array.isArray(expected) ? expected : makeGraph(expected, version),
   );
 };
 

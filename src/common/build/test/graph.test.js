@@ -1,4 +1,5 @@
 import { graph, page, link, value } from '../graph';
+import { key } from '../../encode';
 
 it('should encode graphs', () => {
   expect(
@@ -22,6 +23,10 @@ it('should encode graphs', () => {
           },
           '1984',
         ),
+        posts$: [
+          [[8483, '2001'], link(['posts', '2001'])],
+          [[4563, '1984'], link(['posts', '1984'])],
+        ],
       },
       2,
     ),
@@ -45,6 +50,10 @@ it('should encode graphs', () => {
         ] },
         { key: '2001\0', end: '\uffff', version: 2 }
       ] },
+      { key: 'posts$', version: 2, children: [
+        { key: key([4563, '1984']), version: 2, path: ['posts', '1984'] },
+        { key: key([8483, '2001']), version: 2, path: ['posts', '2001'] },
+      ] }
     ],
   );
 });

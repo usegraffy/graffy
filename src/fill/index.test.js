@@ -85,29 +85,32 @@ test('indexes', async () => {
     ),
   );
 
-  expect((await subscription.next()).value).toEqual(
-    makeGraph(
-      {
-        bar: makeGraph(
-          {
-            1: { x: 1 },
-            3: { x: 3 },
-            4: { x: 4 },
-          },
-          0,
-        ),
-        foo: [
-          { key: '', end: '`\uffff', version: 0 },
-          { key: 'a', path: ['bar', '1'], version: 0 },
-          { key: 'a\0', end: 'a\uffff', version: 0 },
-          { key: 'b', end: 'b', version: 1 },
-          { key: 'b\0', end: 'b\uffff', version: 0 },
-          { key: 'c', path: ['bar', '3'], version: 0 },
-          { key: 'c\0', end: 'c\uffff', version: 0 },
-          { key: 'd', path: ['bar', '4'], version: 0 },
-        ],
-      },
-      1,
-    ),
-  );
+  expect((await subscription.next()).value).toEqual([
+    {
+      key: 'bar',
+      version: 1,
+      children: makeGraph(
+        {
+          1: { x: 1 },
+          3: { x: 3 },
+          4: { x: 4 },
+        },
+        0,
+      ),
+    },
+    {
+      key: 'foo',
+      version: 1,
+      children: [
+        { key: '', end: '`\uffff', version: 0 },
+        { key: 'a', path: ['bar', '1'], version: 0 },
+        { key: 'a\0', end: 'a\uffff', version: 0 },
+        { key: 'b', end: 'b', version: 1 },
+        { key: 'b\0', end: 'b\uffff', version: 0 },
+        { key: 'c', path: ['bar', '3'], version: 0 },
+        { key: 'c\0', end: 'c\uffff', version: 0 },
+        { key: 'd', path: ['bar', '4'], version: 0 },
+      ],
+    },
+  ]);
 });
