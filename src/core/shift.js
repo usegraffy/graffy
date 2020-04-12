@@ -51,7 +51,7 @@ export function shiftGen(fn, path) {
     const remainingPayload = remove(payload, path) || [];
 
     // TODO: This should probably use makeStream and propagate returns.
-    const shiftedNext = async function*(unwrappedNextPayload) {
+    const shiftedNext = async function* shiftedNextFn(unwrappedNextPayload) {
       nextCalled = true;
       const nextPayload = wrap(unwrappedNextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);

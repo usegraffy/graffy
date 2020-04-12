@@ -93,7 +93,15 @@ export default class Graffy {
   call(type, unwrappedPayload, options) {
     const payload = wrap(unwrappedPayload, this.path);
     const result = this.core.call(type, payload, options);
-    return unwrap(result, this.path);
+    const unwrapResult = value => {
+      return value && unwrap(value, this.path);
+    };
+
+    if (!this.path.length) return result;
+
+    return type === 'watch'
+      ? mapStream(result, unwrapResult)
+      : result.then(unwrapResult);
   }
 
   async read(...args) {

@@ -1,14 +1,14 @@
 import Graffy from '@graffy/core';
 import Fill from '@graffy/fill';
 import IndexWatcher from './index.js';
-import { key, page, link } from '@graffy/common';
+import { key, page, link, makeGraph } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 
 const paramKey = key({ country: 'us' });
 
-const forever = new Promise(() => {});
+// const forever = new Promise(() => {});
 
-describe.skip('indexer', () => {
+describe('indexer', () => {
   let store;
   let users;
   let stream;
@@ -18,34 +18,48 @@ describe.skip('indexer', () => {
     store.use(Fill());
 
     users = new mockBackend();
-    store.use('/users', users);
+    store.use('/users', users.middleware);
 
-    users.write({
-      1: { name: 'Alice', country: 'us', timestamp: 104 },
-      2: { name: 'Bob', country: 'us', timestamp: 100 },
-      3: { name: 'Charles', country: 'us', timestamp: 107 },
-      4: { name: 'Debra', country: 'eu', timestamp: 109 },
-      5: { name: 'Edmond', country: 'eu', timestamp: 103 },
-    });
+    users.write(
+      makeGraph(
+        page({
+          1: { name: 'Alice', country: 'us', timestamp: 104 },
+          2: { name: 'Bob', country: 'us', timestamp: 100 },
+          3: { name: 'Charles', country: 'us', timestamp: 107 },
+          4: { name: 'Debra', country: 'eu', timestamp: 109 },
+          5: { name: 'Edmond', country: 'eu', timestamp: 103 },
+        }),
+        0,
+      ),
+    );
+
+    // console.log(debug(users.state));
 
     store.use(
       '/users$',
-      IndexWatcher('/users', (user, params, emit) => {
-        if (user.country !== params.country) return; // No keys.
-        emit(user.timestamp);
-      }),
+      IndexWatcher(
+        '/users',
+        { country: true, timestamp: true },
+        (user, params) => {
+          if (user.country !== params.country) return; // No keys.
+          return [user.timestamp];
+        },
+      ),
     );
 
-    store.onRead('/users$', () => ({
-      paramKey: page({
-        100: link('/users/2'),
-        104: link('/users/1'),
-        107: link('/users/3'),
-      }),
-    }));
+    store.on('read', ['users$'], () => {
+      const results = {};
+      for (const { key: id, end, children } of users.state) {
+        if (end || children[0].value !== 'us') continue;
+        results[key(children[2].value)] = link(['users', id]);
+      }
+      return makeGraph({ [paramKey]: page(results) }, 0);
+    });
+
+    // console.log(store.core.handlers.watch);
 
     stream = store.watch(
-      ['user$', paramKey],
+      ['users$', paramKey],
       [{ first: 2 }, { name: true, country: true, timestamp: true }],
     );
   });
@@ -58,7 +72,9 @@ describe.skip('indexer', () => {
   });
 
   test('keyChangeIn', async () => {
-    users.write({ 3: { timestamp: 101 } });
+    await stream.next();
+    await stream.next(); // TODO: Fix this duplicate initialization.
+    users.write(makeGraph({ 3: { timestamp: 101 } }, 1));
     expect((await stream.next()).value).toEqual([
       { name: 'Bob', country: 'us', timestamp: 100 },
       { name: 'Charles', country: 'us', timestamp: 101 },
@@ -66,7 +82,10 @@ describe.skip('indexer', () => {
   });
 
   test('keyChangeOut', async () => {
-    users.write({ 1: { timestamp: 115 } });
+    await stream.next();
+    await stream.next();
+    users.write(makeGraph({ 1: { timestamp: 115 } }, 10));
+    await stream.next(); // TODO: Fix this duplicate initialization.
     expect((await stream.next()).value).toEqual([
       { name: 'Bob', country: 'us', timestamp: 100 },
       { name: 'Charles', country: 'us', timestamp: 107 },

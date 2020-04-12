@@ -485,7 +485,7 @@ describe('noinit', () => {
     await expectNext(subscription, { bar: { b: { x: 3 } } });
   });
 
-  test.only('range_deletion', async () => {
+  test('range_deletion', async () => {
     backend.write(
       makeGraph(
         {

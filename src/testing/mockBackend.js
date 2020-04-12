@@ -8,15 +8,18 @@ export default function mockBackend(options = {}) {
   const backend = {
     state,
     read: () => state,
-    watch: () =>
-      makeStream((push, _end) => {
+    watch: () => {
+      // console.log('onWatch received');
+      return makeStream((push, _end) => {
         listeners.add(push);
         push(options.liveQuery ? state : undefined);
         return () => listeners.delete(push);
-      }),
+      });
+    },
     write: change => {
+      // change = setVersion(change, Date.now());
       merge(state, change);
-      console.log('Emitting change', debug(change));
+      // console.log('Emitting change', listeners.size, debug(change));
       for (const push of listeners) push(change);
       return change;
     },

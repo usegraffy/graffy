@@ -9,9 +9,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
   let data = empty();
   let payload = [];
 
-  resubscribe(originalQuery, init);
-
-  return makeStream((streamPush, streamEnd) => {
+  const stream = makeStream((streamPush, streamEnd) => {
     push = v => {
       // console.log('Push', debug(v));
       streamPush(v);
@@ -20,10 +18,14 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
     return unsubscribe;
   });
 
+  resubscribe(originalQuery, init);
+
+  return stream;
+
   async function resubscribe(unknown, initialize = true) {
     try {
       const changed = add(query, unknown);
-      console.log('Resubscribe', debug(unknown), changed);
+      // console.log('Resubscribe', debug(unknown), changed);
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
@@ -64,7 +66,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
 
   function putValue(value, isChange) {
     if (typeof value === 'undefined') return;
-    console.log('Fill/subscribe: PutValue', debug(value));
+    // console.log('Fill/subscribe: PutValue', debug(value));
 
     if (value === null) {
       // No results exist at this moment.
@@ -74,9 +76,9 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
     }
 
     if (isChange) {
-      console.log('Data before sieve', debug(data), debug(value));
+      // console.log('Data before sieve', debug(data), debug(value));
       const sieved = sieve(data, value);
-      console.log('Data after sieve', debug(data), debug(sieved));
+      // console.log('Data after sieve', debug(data), debug(sieved));
       if (!sieved.length) return;
       merge(payload, sieved);
     } else {
@@ -107,7 +109,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
 
     // This is not an else; previous block might update unknown.
     if (!unknown) {
-      console.log('Pushing', debug(payload));
+      // console.log('Pushing', debug(payload));
       push(raw ? payload : data);
       payload = [];
     }

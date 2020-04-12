@@ -49,7 +49,7 @@ export default function slice(graph, query, root) {
         sliceNode(graph[index], queryNode, result);
       }
     }
-    currentQuery = result.linked;
+    currentQuery = root ? undefined : result.linked;
     delete result.linked;
   }
   delete result.root;
