@@ -1,4 +1,5 @@
 import { key } from '../encode';
+import { keyBefore, keyAfter } from '../graph';
 
 const FALLBACK_PAGE_SIZE = 4096;
 
@@ -7,6 +8,8 @@ function pageToRange(page) {
   node.key = typeof page.after !== 'undefined' ? key(page.after) : '';
   node.end = typeof page.before !== 'undefined' ? key(page.before) : '\uffff';
   node.count = page.first || -page.last || FALLBACK_PAGE_SIZE;
+  if (page.excludeAfter) node.key = keyAfter(node.key);
+  if (page.excludeBefore) node.end = keyBefore(node.end);
   return node;
 }
 

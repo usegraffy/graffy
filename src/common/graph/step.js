@@ -17,7 +17,7 @@ export function keyStep(key) {
 }
 
 export function keyBefore(key) {
-  if (key === '') return key;
+  if (key === '' || key === '\uffff') return key;
   const l = key.length - 1;
   return key.charCodeAt(l) === 0
     ? key.substr(0, l)
@@ -25,7 +25,7 @@ export function keyBefore(key) {
 }
 
 export function keyAfter(key) {
-  if (key === '\uffff') return key;
+  if (key === '' || key === '\uffff') return key;
   const l = key.length - 1;
   return key.charCodeAt(l) === 0xffff
     ? key.substr(0, l - 1) + String.fromCharCode(key.charCodeAt(l - 1) + 1)
