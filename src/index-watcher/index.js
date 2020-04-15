@@ -74,7 +74,6 @@ export default function(entityPrefix, entityQuery, getIndexKeys) {
         if (updates) {
           const change = [{ key: paramKey, version, children: updates }];
           for (const listener of listeners) {
-            // console.log('Pushing change', debug(change));
             listener(change);
           }
 
@@ -127,18 +126,17 @@ export default function(entityPrefix, entityQuery, getIndexKeys) {
     store.on('watch', [], (query, _options, _next) => {
       const keys = query.map(({ key }) => key);
 
-      // console.log('indexer onWatch', debug(query));
-
       return makeStream((push, _end) => {
         addListener(keys, push);
 
         store.call('read', query).then(initial => {
-          // console.log('Push initial', debug(initial));
           putInitial(initial);
           push(initial);
         });
 
-        return () => removeListener(keys, push);
+        return () => {
+          removeListener(keys, push);
+        };
       });
     });
   };

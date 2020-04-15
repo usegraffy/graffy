@@ -73,7 +73,6 @@ describe('indexer', () => {
 
   test('keyChangeIn', async () => {
     await stream.next();
-    await stream.next(); // TODO: Fix this duplicate initialization.
     users.write(makeGraph({ 3: { timestamp: 101 } }, 1));
     expect((await stream.next()).value).toEqual([
       { name: 'Bob', country: 'us', timestamp: 100 },
@@ -83,7 +82,7 @@ describe('indexer', () => {
 
   test('keyChangeOut', async () => {
     await stream.next();
-    await stream.next();
+    // await stream.next();
     users.write(makeGraph({ 1: { timestamp: 115 } }, 10));
     await stream.next(); // TODO: Fix this duplicate initialization.
     expect((await stream.next()).value).toEqual([

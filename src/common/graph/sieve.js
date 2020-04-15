@@ -24,8 +24,45 @@ export function insertRange(current, change, result, start = 0) {
     return keyIx;
   }
 
-  // TODO: Extract the parts of result that are relevant.
-  result.push(change);
+  const appliedChange = [];
+  let currentKey = change.key;
+  for (let i = keyIx; i < endIx; i++) {
+    const node = current[i];
+    // We treat a negative version as a non-existent node
+    // as this is a hack used by subscribe.
+    if (isRange(node) && node.version >= 0) {
+      if (node.key > currentKey) {
+        appliedChange.push({
+          key: currentKey,
+          end: keyBefore(node.key),
+          version: change.version,
+        });
+      }
+      currentKey = keyAfter(node.end);
+    } else {
+      if (getNewerChange(node, change)) {
+        appliedChange.push({
+          key: currentKey,
+          end: keyBefore(node.key),
+          version: change.version,
+        });
+        currentKey = keyAfter(node.key);
+      }
+    }
+    if (currentKey >= change.end) {
+      break;
+    }
+  }
+
+  if (currentKey <= change.end) {
+    appliedChange.push({
+      key: currentKey,
+      end: change.end,
+      version: change.version,
+    });
+  }
+
+  if (appliedChange.length) result.push(...appliedChange);
 
   // If current contains nodes that are newer than this range, keep them.
   // We do this by merging them back into insertions first.
@@ -33,11 +70,15 @@ export function insertRange(current, change, result, start = 0) {
   for (let i = keyIx; i < endIx; i++) {
     const node = current[i];
     if (isRange(node)) {
+      // console.log('Sieve Range-Range', debug(change), debug(node));
       insertions.push(...mergeRanges(insertions.pop(), node));
     } else {
+      // console.log('Sieve Change-Node', debug(change), debug(node));
       insertNode(insertions, node, [], insertions.length - 1);
     }
   }
+
+  // console.log('Sieve:insertions', debug(insertions));
 
   current.splice(keyIx, endIx - keyIx, ...insertions);
   return keyIx + insertions.length;
@@ -111,15 +152,26 @@ function updateNode(current, index, change, result) {
     // Current node is a leaf. Replace with the change if it is newer.
     const newChange = getNewerChange(change, node);
     const newNode = getNewerNode(change, node);
-    if (newChange) {
-      current[index] = newNode;
-      // console.log(current);
-      if (change.value !== node.value || change.path !== node.path) {
-        result.push(newChange);
-      }
+    if (newNode) current[index] = newNode;
+    // console.log(current);
+    if (
+      newChange &&
+      (change.value !== node.value || !isPathEqual(change.path, node.path))
+    ) {
+      result.push(newChange);
     }
   }
   return index + 1;
+}
+
+function isPathEqual(first, second) {
+  if (!first && !second) return true;
+  if (!first || !second) return false;
+  if (first.length !== second.length) return false;
+  for (let i = 0; i < first.length; i++) {
+    if (first[i] !== second[i]) return false;
+  }
+  return true;
 }
 
 function getNewerNode(node, base) {

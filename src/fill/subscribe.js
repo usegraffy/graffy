@@ -1,7 +1,7 @@
 import { merge, slice, sieve, add, finalize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-export default function subscribe(store, originalQuery, { init = true, raw }) {
+export default function subscribe(store, originalQuery, { raw }) {
   const empty = () => finalize([], originalQuery, 0);
   let push, end;
   let upstream;
@@ -18,21 +18,21 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
     return unsubscribe;
   });
 
-  resubscribe(originalQuery, init);
+  resubscribe(originalQuery);
 
   return stream;
 
-  async function resubscribe(unknown, initialize = true) {
+  async function resubscribe(unknown) {
     try {
       const changed = add(query, unknown);
-      // console.log('Resubscribe', debug(unknown), changed);
+      // console.log('Resubscribe', changed, debug(unknown));
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
       upstream = store.call('watch', query, { skipFill: true });
 
       let { value } = await upstream.next();
-      // console.log('Got first subscription value', value && debug(value));
+      // console.log('Got first subscription value', debug(value));
 
       if (typeof value === 'undefined') {
         // The upstream is a change subscription, not a live query,
@@ -40,11 +40,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
 
         // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.read response is newer.
-        if (initialize) {
-          value = await store.call('read', unknown, { skipCache: true });
-        } else {
-          push(undefined);
-        }
+        value = await store.call('read', unknown, { skipCache: true });
       }
       value = value && slice(value, unknown).known;
       putValue(value, false);
@@ -66,7 +62,7 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
 
   function putValue(value, isChange) {
     if (typeof value === 'undefined') return;
-    // console.log('Fill/subscribe: PutValue', debug(value));
+    // console.log('Put', isChange ? 'Change' : 'Value', debug(value));
 
     if (value === null) {
       // No results exist at this moment.
@@ -75,18 +71,18 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
       return;
     }
 
-    if (isChange) {
-      // console.log('Data before sieve', debug(data), debug(value));
-      const sieved = sieve(data, value);
-      // console.log('Data after sieve', debug(data), debug(sieved));
-      if (!sieved.length) return;
-      merge(payload, sieved);
-    } else {
-      merge(data, value);
-      // console.log('Payload before adding value', debug(payload));
-      if (raw) merge(payload, value);
-      // console.log('Payload after adding value');
-    }
+    // We do this to ensure that everything in value gets incorporated
+    // into data, even as we use sieve to ensure only actual changes are
+    // added to payload.
+    if (!isChange) merge(data, [{ key: '', end: '\uffff', version: -1 }]);
+
+    // console.log('Data before sieve', debug(data));
+    const sieved = sieve(data, value);
+    // console.log('Sieved: ', debug(sieved));
+    // console.log('Payload before adding sieved', debug(payload));
+    merge(payload, sieved);
+    // console.log('Payload after adding sieved', debug(payload));
+    // }
 
     let { known, unknown } = slice(data, originalQuery);
     data = known || empty();
@@ -108,8 +104,9 @@ export default function subscribe(store, originalQuery, { init = true, raw }) {
     }
 
     // This is not an else; previous block might update unknown.
-    if (!unknown) {
+    if (!unknown && payload.length) {
       // console.log('Pushing', debug(payload));
+      // console.log('Data', debug(data));
       push(raw ? payload : data);
       payload = [];
     }
