@@ -5,6 +5,7 @@ import {
   encodeKey,
   decodeKey,
   makeQuery,
+  merge,
   wrap,
   unwrap,
   makePath,
@@ -64,16 +65,17 @@ export default function(entityPrefix, entityQuery, getIndexKeys) {
         const version = entity.version + 1;
 
         for (const key of oldKeys) {
-          if (!newKeys.has(key)) updates.push({ key, end: key, version });
+          if (!newKeys.has(key)) merge(updates, [{ key, end: key, version }]);
         }
 
         for (const key of newKeys) {
-          if (!oldKeys.has(key)) updates.push({ key, version, path });
+          if (!oldKeys.has(key)) merge(updates, [{ key, version, path }]);
         }
 
-        if (updates) {
+        if (updates.length) {
           const change = [{ key: paramKey, version, children: updates }];
           for (const listener of listeners) {
+            // console.log('Index Watcher pushing change', debug(change));
             listener(change);
           }
 

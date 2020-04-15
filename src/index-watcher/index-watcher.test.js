@@ -11,7 +11,6 @@ const paramKey = key({ country: 'us' });
 describe('indexer', () => {
   let store;
   let users;
-  let stream;
 
   beforeEach(() => {
     store = new Graffy();
@@ -57,14 +56,14 @@ describe('indexer', () => {
     });
 
     // console.log(store.core.handlers.watch);
-
-    stream = store.watch(
-      ['users$', paramKey],
-      [{ first: 2 }, { name: true, country: true, timestamp: true }],
-    );
   });
 
   test('initial', async () => {
+    const stream = store.watch(
+      ['users$', paramKey],
+      [{ first: 2 }, { name: true, country: true, timestamp: true }],
+    );
+
     expect((await stream.next()).value).toEqual([
       { name: 'Bob', country: 'us', timestamp: 100 },
       { name: 'Alice', country: 'us', timestamp: 104 },
@@ -72,6 +71,11 @@ describe('indexer', () => {
   });
 
   test('keyChangeIn', async () => {
+    const stream = store.watch(
+      ['users$', paramKey],
+      [{ first: 2 }, { name: true, country: true, timestamp: true }],
+    );
+
     await stream.next();
     users.write(makeGraph({ 3: { timestamp: 101 } }, 1));
     expect((await stream.next()).value).toEqual([
@@ -81,13 +85,57 @@ describe('indexer', () => {
   });
 
   test('keyChangeOut', async () => {
+    const stream = store.watch(
+      ['users$', paramKey],
+      [{ first: 2 }, { name: true, country: true, timestamp: true }],
+    );
+
     await stream.next();
-    // await stream.next();
     users.write(makeGraph({ 1: { timestamp: 115 } }, 10));
     await stream.next(); // TODO: Fix this duplicate initialization.
     expect((await stream.next()).value).toEqual([
       { name: 'Bob', country: 'us', timestamp: 100 },
       { name: 'Charles', country: 'us', timestamp: 107 },
+    ]);
+  });
+
+  test('keyReorder forwards', async () => {
+    const stream = store.watch(
+      ['users$', paramKey],
+      [{ name: true, timestamp: true }],
+    );
+    expect((await stream.next()).value).toEqual([
+      { name: 'Bob', timestamp: 100 },
+      { name: 'Alice', timestamp: 104 },
+      { name: 'Charles', timestamp: 107 },
+    ]);
+    users.write(makeGraph({ 1: { timestamp: 110 } }));
+    await stream.next();
+    await stream.next();
+    expect((await stream.next()).value).toEqual([
+      { name: 'Bob', timestamp: 100 },
+      { name: 'Charles', timestamp: 107 },
+      { name: 'Alice', timestamp: 110 },
+    ]);
+  });
+
+  test('keyReorder backwards', async () => {
+    const stream = store.watch(
+      ['users$', paramKey],
+      [{ name: true, timestamp: true }],
+    );
+    expect((await stream.next()).value).toEqual([
+      { name: 'Bob', timestamp: 100 },
+      { name: 'Alice', timestamp: 104 },
+      { name: 'Charles', timestamp: 107 },
+    ]);
+    users.write(makeGraph({ 1: { timestamp: 91 } }));
+    await stream.next();
+    await stream.next();
+    expect((await stream.next()).value).toEqual([
+      { name: 'Alice', timestamp: 91 },
+      { name: 'Bob', timestamp: 100 },
+      { name: 'Charles', timestamp: 107 },
     ]);
   });
 
