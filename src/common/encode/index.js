@@ -5,3 +5,4 @@ export {
   decode as decodeKey,
 } from './key.js';
 export { default as makeId } from './id.js';
+export * from './serialize.js';

@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import { serialize, deserialize } from '@graffy/common';
 
 const PING_INTERVAL = 30000;
 
@@ -11,7 +12,7 @@ export default function server(store) {
     ws.graffyStreams = {}; // We use this to keep track of streams to close.
     ws.on('message', async function message(msg) {
       try {
-        const [id, op, payload, options] = JSON.parse(msg);
+        const [id, op, payload, options] = deserialize(msg);
 
         if (id === ':pong') {
           ws.pingPending = false;
@@ -23,9 +24,9 @@ export default function server(store) {
           case 'write':
             try {
               const result = await store.call(op, payload, options);
-              ws.send(JSON.stringify([id, null, result]));
+              ws.send(serialize([id, null, result]));
             } catch (e) {
-              ws.send(JSON.stringify([id, e.message]));
+              ws.send(serialize([id, e.message]));
             }
             break;
           case 'watch':
@@ -38,10 +39,10 @@ export default function server(store) {
               ws.graffyStreams[id] = stream;
 
               for await (const value of stream) {
-                ws.send(JSON.stringify([id, null, value]));
+                ws.send(serialize([id, null, value]));
               }
             } catch (e) {
-              ws.send(JSON.stringify([id, e.message]));
+              ws.send(serialize([id, e.message]));
             }
             break;
           case 'unwatch':
@@ -67,7 +68,7 @@ export default function server(store) {
     wss.clients.forEach(function each(ws) {
       if (ws.pingPending) return ws.terminate();
       ws.pingPending = true;
-      ws.send(JSON.stringify([':ping']));
+      ws.send(serialize([':ping']));
     });
   }, PING_INTERVAL);
 

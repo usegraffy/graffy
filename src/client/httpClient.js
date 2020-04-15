@@ -1,11 +1,11 @@
-import { encodeUrl } from '@graffy/common';
+import { encodeUrl, serialize, deserialize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 export default (baseUrl, getOptions) => store => {
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const encodedOptions = encodeURIComponent(
-      JSON.stringify(getOptions('read', options)),
+      serialize(getOptions('read', options)),
     );
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${encodedOptions}`;
     return fetch(url).then(res => res.json());
@@ -14,14 +14,14 @@ export default (baseUrl, getOptions) => store => {
   store.on('watch', (query, options) => {
     if (!EventSource) throw Error('client.sse.unavailable');
     const encodedOptions = encodeURIComponent(
-      JSON.stringify(getOptions('watch', options)),
+      serialize(getOptions('watch', options)),
     );
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${encodedOptions}`;
     const source = new EventSource(url);
 
     return makeStream((push, end) => {
       source.onmessage = ({ data }) => {
-        push(JSON.parse(data));
+        push(deserialize(data));
       };
 
       source.onerror = e => {
@@ -41,13 +41,13 @@ export default (baseUrl, getOptions) => store => {
   store.on('write', (change, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const encodedOptions = encodeURIComponent(
-      JSON.stringify(getOptions('write', options)),
+      serialize(getOptions('write', options)),
     );
     const url = `${baseUrl}?opts=${encodedOptions}`;
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(change),
+      body: serialize(change),
     }).then(res => res.json());
   });
 };
