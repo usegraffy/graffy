@@ -1,6 +1,6 @@
 import Graffy from '../Graffy';
 import GraffyFill from '@graffy/fill';
-import { link } from '@graffy/common';
+import { link, value } from '@graffy/common';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -122,4 +122,32 @@ test('Porcelain subscription', async () => {
   });
 
   expect((await result.next()).value).toEqual(expectedResult);
+});
+
+test('write array value', async () => {
+  const store = new Graffy();
+  store.use(GraffyFill());
+
+  const provider = jest.fn(change => {
+    expect(change).toEqual({ foo: ['hello', 'world'] });
+    return change;
+  });
+  store.onWrite(provider);
+
+  await store.write({ foo: value(['hello', 'world']) });
+  expect(provider).toBeCalled();
+});
+
+test('read array value', async () => {
+  const store = new Graffy();
+  store.use(GraffyFill());
+
+  const provider = jest.fn(() => {
+    return { foo: value(['hello', 'world']) };
+  });
+  store.onRead(provider);
+
+  const result = await store.read({ foo: 1 });
+  expect(provider).toBeCalled();
+  expect(result).toEqual({ foo: ['hello', 'world'] });
 });
