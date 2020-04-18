@@ -12,7 +12,7 @@ export default function fill(_) {
 
       let budget = MAX_RECURSIONS;
 
-      while (budget-- > 0) {
+      while (budget-- > 1) {
         const { known, unknown } = slice(value, query);
         value = known;
         if (!unknown) break;
