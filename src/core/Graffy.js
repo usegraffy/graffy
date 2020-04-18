@@ -64,13 +64,17 @@ export default class Graffy {
   onWatch(...args) {
     const [path, handle] = validateArgs(...args);
     this.on('watch', path, function porcelainWatch(query, options) {
-      return makeStream(push => {
+      return makeStream((push, end) => {
         const subscription = handle(decorateQuery(query), options);
         (async function() {
-          let firstValue = (await subscription.next()).value;
-          push(firstValue && finalize(makeGraph(firstValue), query));
-          for await (const value of subscription) {
-            push(value && makeGraph(value));
+          try {
+            let firstValue = (await subscription.next()).value;
+            push(firstValue && finalize(makeGraph(firstValue), query));
+            for await (const value of subscription) {
+              push(value && makeGraph(value));
+            }
+          } catch (e) {
+            end(e);
           }
         })();
         return () => subscription.return();
