@@ -31,12 +31,16 @@ export default function makeStream(init, options = {}) {
     while ((resolve = requests.shift())) resolve(complete);
   };
 
-  const close = init(push, end);
+  let close;
+  let initialized = false;
 
   return {
     debugId,
 
     next: () => {
+      if (!initialized) {
+        close = init(push, end);
+      }
       if (drain && payloads.length <= lowWatermark) {
         drain();
         drain = null;
@@ -49,14 +53,14 @@ export default function makeStream(init, options = {}) {
     return(value) {
       complete = Promise.resolve({ value, done: true });
       payloads.length = 0;
-      close(null, value);
+      if (close) close(null, value);
       return complete;
     },
 
     throw(error) {
       complete = Promise.reject(error);
       payloads.length = 0;
-      close(error);
+      if (close) close(error);
       return complete;
     },
 
