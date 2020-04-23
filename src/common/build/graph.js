@@ -13,7 +13,13 @@ function makeGraph(key, value, version) {
       key,
       version,
       children: value
-        .map(([k, v]) => makeGraph(encodeKey(k), v, version))
+        .map(({ key: k, name, value: v, children, path }) =>
+          makeGraph(
+            name || encodeKey(k),
+            children || (path && link(path)) || (v && value(v)),
+            version,
+          ),
+        )
         .sort((a, b) => (a.key <= b.key ? -1 : 1)),
     };
   } else if (value === null) {

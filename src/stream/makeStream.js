@@ -40,6 +40,7 @@ export default function makeStream(init, options = {}) {
     next: () => {
       if (!initialized) {
         close = init(push, end);
+        initialized = true;
       }
       if (drain && payloads.length <= lowWatermark) {
         drain();
