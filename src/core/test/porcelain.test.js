@@ -1,6 +1,6 @@
 import Graffy from '../Graffy';
 import GraffyFill from '@graffy/fill';
-import { link, value } from '@graffy/common';
+import { link, scalar } from '@graffy/common';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -134,7 +134,7 @@ test('write array value', async () => {
   });
   store.onWrite(provider);
 
-  await store.write({ foo: value(['hello', 'world']) });
+  await store.write({ foo: scalar(['hello', 'world']) });
   expect(provider).toBeCalled();
 });
 
@@ -143,7 +143,7 @@ test('read array value', async () => {
   store.use(GraffyFill());
 
   const provider = jest.fn(() => {
-    return { foo: value(['hello', 'world']) };
+    return { foo: scalar(['hello', 'world']) };
   });
   store.onRead(provider);
 

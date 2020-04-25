@@ -16,7 +16,7 @@ function makeGraph(key, value, version) {
         .map(({ key: k, name, value: v, children, path }) =>
           makeGraph(
             name || encodeKey(k),
-            children || (path && link(path)) || (v && value(v)),
+            children || (path && link(path)) || (v && scalar(v)),
             version,
           ),
         )
@@ -62,6 +62,6 @@ export function link(rawPath) {
   return (key, version) => ({ key, version, path });
 }
 
-export function value(value) {
+export function scalar(value) {
   return (key, version) => ({ key, version, value });
 }

@@ -1,4 +1,4 @@
-import { graph, page, link, value } from '../graph';
+import { graph, page, link, scalar } from '../graph';
 import { key } from '../../encode';
 
 it('should encode graphs', () => {
@@ -12,13 +12,13 @@ it('should encode graphs', () => {
               title: '1984',
               body: 'Lorem ipsum',
               author: link(['users', '1']),
-              options: value({ inStock: true }),
+              options: scalar({ inStock: true }),
             },
             '2001': {
               title: '2001',
               body: 'Hello world',
               author: link(['users', '2']),
-              options: value({ borrowed: true }),
+              options: scalar({ borrowed: true }),
             },
           },
           '1984',
