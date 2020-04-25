@@ -5,7 +5,7 @@ const TARGET = 2000;
 
 // const state = makeGraph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let store;
 let ts = Date.now();
@@ -16,7 +16,7 @@ let enter = 0,
 
 // const listeners = new Set();
 
-export default function(g) {
+export default function (g) {
   store = g;
 
   while (id < TARGET) {
@@ -24,7 +24,7 @@ export default function(g) {
     ts -= Math.floor(1 + Math.random() * 100);
   }
 
-  (async function() {
+  (async function () {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       ts = Date.now();
@@ -34,7 +34,7 @@ export default function(g) {
   })();
 
   if (process.stdout.isTTY) {
-    (async function() {
+    (async function () {
       // eslint-disable-next-line no-constant-condition
       while (true) {
         process.stdout.cursorTo(0);

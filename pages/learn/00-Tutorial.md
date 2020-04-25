@@ -75,7 +75,7 @@ const users = {
 };
 const messages = {};
 
-module.exports = store => {
+module.exports = (store) => {
   store.onRead('/users', () => users);
   store.onRead('/messages', () => messages);
 };

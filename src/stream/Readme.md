@@ -37,7 +37,7 @@ import { makeStream } from '@graffy/stream';
 This handles subscribing and unsubscribing from the event emitter.
 
 ```js
-const stream = makeStream(push => {
+const stream = makeStream((push) => {
   eventSource.on('event', push);
   return () => eventSource.off('event', push);
 });
@@ -51,7 +51,7 @@ This handles situations where the "upstream" event emitter has an "end" event, w
 
 ```js
 const stream = makeStream((push, end) => {
-  eventSource.on('event', event => push(event));
+  eventSource.on('event', (event) => push(event));
   eventSource.on('end', () => end());
   return () => eventSource.close();
 });
@@ -65,10 +65,10 @@ Both are handled by the "end" functions being called with an error object as an 
 
 ```js
 const stream = makeStream((push, end) => {
-  eventSource.on('event', event => push(event));
+  eventSource.on('event', (event) => push(event));
   eventSource.on('end', () => end());
-  eventSource.on('error', error => end(error));
-  return error => {
+  eventSource.on('error', (error) => end(error));
+  return (error) => {
     if (error) {
       eventSource.closeWithError();
       return;
@@ -88,8 +88,8 @@ Graffy stream exposes an interface to do these, with configurable high and low w
 
 ```js
 const stream = makeStream(
-  push => {
-    eventSource.on('event', event => {
+  (push) => {
+    eventSource.on('event', (event) => {
       const wait = push(event);
       if (wait) {
         eventSource.pause();

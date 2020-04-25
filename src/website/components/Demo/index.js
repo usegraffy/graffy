@@ -17,7 +17,7 @@ export default function Demo() {
   });
 
   const [expanded, setExpanded] = useState('result');
-  const paneProps = name => ({
+  const paneProps = (name) => ({
     ...(expanded === name ? { 'data-expanded': 'true' } : {}),
     tabIndex: 0,
     onFocus: () => setExpanded(name),

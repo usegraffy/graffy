@@ -5,7 +5,7 @@ import Visitor from './Visitor';
 export default function VisitorList({ visitors }) {
   return (
     <div className="List">
-      {visitors.map(visitor => (
+      {visitors.map((visitor) => (
         <Visitor key={visitor.id} {...visitor} />
       ))}
     </div>

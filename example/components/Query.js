@@ -4,7 +4,7 @@ import { pretty } from '@graffy/testing';
 
 export default function Query({ query, onChange }) {
   const [error, setError] = useState(false);
-  const onChangElement = event => {
+  const onChangElement = (event) => {
     try {
       const value = JSON.parse(event.target.value);
       onChange(value);

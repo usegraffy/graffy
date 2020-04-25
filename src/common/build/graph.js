@@ -31,7 +31,7 @@ function makeGraph(key, value, version) {
       version,
       children: Object.keys(value)
         .sort()
-        .map(k => makeGraph(k, value[k], version)),
+        .map((k) => makeGraph(k, value[k], version)),
     };
   } else {
     return { key, version, value };
@@ -49,8 +49,8 @@ export function page(obj, key = '', end = '\uffff') {
     const nodes = graph(obj, version);
     const gaps = merge(
       [{ key, end, version }],
-      Object.keys(obj).map(key => ({ key, value: 1, version })),
-    ).filter(node => isRange(node));
+      Object.keys(obj).map((key) => ({ key, value: 1, version })),
+    ).filter((node) => isRange(node));
     const children = merge(nodes, gaps);
 
     return { key: outerKey, version, children };

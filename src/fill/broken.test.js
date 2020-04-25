@@ -1,14 +1,7 @@
 import Graffy from '@graffy/core';
-import { page, link, makeGraph, makeQuery } from '@graffy/common';
+import { link, makeGraph } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
-
-const expectNext = async (subscription, expected, version = 0) => {
-  // console.log('assert', expected);
-  expect((await subscription.next()).value).toEqual(
-    Array.isArray(expected) ? expected : makeGraph(expected, version),
-  );
-};
 
 describe('nonlive', () => {
   let store;

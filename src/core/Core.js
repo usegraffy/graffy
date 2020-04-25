@@ -13,7 +13,7 @@ function resolve(handlers, firstPayload, options) {
     if (!unwrap(payload, path)) return run(i + 1, payload);
 
     let nextCalled = false;
-    return handle(payload, options, nextPayload => {
+    return handle(payload, options, (nextPayload) => {
       if (nextCalled) {
         throw Error('resolve.duplicate_next_call: ' + handlers[i].name);
       }

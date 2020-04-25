@@ -2,8 +2,8 @@ import { merge, slice, setVersion } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 // import { debug } from '@graffy/testing';
 
-export default function({ final } = {}) {
-  return store => {
+export default function ({ final } = {}) {
+  return (store) => {
     const state = final ? [{ key: '', end: '\uffff', version: 0 }] : [];
     const listeners = new Set();
 

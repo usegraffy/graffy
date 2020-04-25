@@ -66,7 +66,7 @@ export default class Graffy {
     this.on('watch', path, function porcelainWatch(query, options) {
       return makeStream((push, end) => {
         const subscription = handle(decorateQuery(query), options);
-        (async function() {
+        (async function () {
           try {
             let firstValue = (await subscription.next()).value;
             push(firstValue && finalize(makeGraph(firstValue), query));
@@ -97,7 +97,7 @@ export default class Graffy {
   call(type, unwrappedPayload, options) {
     const payload = wrap(unwrappedPayload, this.path);
     const result = this.core.call(type, payload, options);
-    const unwrapResult = value => {
+    const unwrapResult = (value) => {
       return value && unwrap(value, this.path);
     };
 
@@ -119,7 +119,7 @@ export default class Graffy {
     const [path, porcelainQuery, options] = validateArgs(...args);
     const query = wrap(makeQuery(porcelainQuery), path);
     const stream = this.call('watch', query, options || {});
-    return mapStream(stream, value => descend(decorate(value), path));
+    return mapStream(stream, (value) => descend(decorate(value), path));
   }
 
   async write(...args) {

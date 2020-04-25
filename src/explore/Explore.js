@@ -31,7 +31,7 @@ function Result({ result, loading, error }) {
 function evaluate(expression) {
   const names = Object.keys(common);
   const fn = new Function(...names, `return ${expression};`);
-  return fn(...names.map(name => common[name]));
+  return fn(...names.map((name) => common[name]));
 }
 
 export default function Explore(options) {
@@ -43,7 +43,7 @@ export default function Explore(options) {
   const [watching, setWatching] = useState(null);
   const store = useStore();
 
-  const onInputEnd = useCallback(event => {
+  const onInputEnd = useCallback((event) => {
     try {
       setInput(evaluate(event.target.textContent));
     } catch (e) {
@@ -80,7 +80,7 @@ export default function Explore(options) {
   const onWatchClick = () => {
     setResult(null);
     setLoading(false);
-    setWatching(w => !w);
+    setWatching((w) => !w);
   };
 
   return (
@@ -106,7 +106,7 @@ export default function Explore(options) {
         <div className="error">{error}</div>
       ) : watching ? (
         <Query query={input} options={options}>
-          {props => <Result {...props} />}
+          {(props) => <Result {...props} />}
         </Query>
       ) : (
         <Result {...{ result, loading, error }} />

@@ -39,7 +39,7 @@ export default function add(base, diff) {
 }
 
 function compare(node) {
-  return item => {
+  return (item) => {
     const v =
       compareValue(item.key, node.key) ||
       compareValue(item.end, node.end) ||
@@ -59,6 +59,6 @@ function compareValue(a, b) {
 
 function clone(node) {
   const copy = { ...node };
-  if (node.children) copy.children = node.children.map(child => clone(child));
+  if (node.children) copy.children = node.children.map((child) => clone(child));
   return copy;
 }

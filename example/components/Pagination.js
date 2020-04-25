@@ -4,7 +4,7 @@ import { keyBefore, keyAfter } from '@graffy/common';
 import getTime from './getTime';
 
 export default function Pagination({ range, count, onNext, onPrev }) {
-  const getButtonProps = fn => (fn ? { onClick: fn } : { disabled: true });
+  const getButtonProps = (fn) => (fn ? { onClick: fn } : { disabled: true });
 
   return (
     <div className="Pagination">

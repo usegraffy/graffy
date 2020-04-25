@@ -7,7 +7,7 @@ describe('final', () => {
   beforeEach(() => {
     store = new Graffy();
     store.use(WriteWatcher({ final: true }));
-    store.onWrite(change => change);
+    store.onWrite((change) => change);
   });
 
   test('simple', async () => {
@@ -26,8 +26,8 @@ describe('nonfinal', () => {
   beforeEach(() => {
     store = new Graffy();
     store.use(WriteWatcher());
-    store.onWrite(change => change);
-    store.onWatch(async function*() {
+    store.onWrite((change) => change);
+    store.onWatch(async function* () {
       yield { foo: 100 };
       await forever;
     });

@@ -59,7 +59,7 @@ Here's an example provider for the `posts$date` index:
 import { key, decodeKey } from '@graffy/common';
 import _ from 'lodash';
 
-store.onRead('/posts$date', async query => {
+store.onRead('/posts$date', async (query) => {
   const { first, after } = query[0];
   const [date, id] = decodeKey(after);
 
@@ -74,7 +74,7 @@ store.onRead('/posts$date', async query => {
     { date, id, first },
   );
 
-  return _.fromPairs(posts.map(post => [key(post.date, post.id), post]));
+  return _.fromPairs(posts.map((post) => [key(post.date, post.id), post]));
 });
 ```
 
@@ -107,4 +107,4 @@ It's possible to create indexes that support filtering as well as pagination. Fo
 
 Note that the "filter" parameters are passed as-is to the index provider - they don't need to correspond to fields of the object, and Graffy makes no special assumptions about them.
 
-By convention, indexes that support filtering are named with a `$$` separating the entity name and the ordering property. 
+By convention, indexes that support filtering are named with a `$$` separating the entity name and the ordering property.

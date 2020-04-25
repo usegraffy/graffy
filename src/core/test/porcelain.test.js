@@ -128,7 +128,7 @@ test('write array value', async () => {
   const store = new Graffy();
   store.use(GraffyFill());
 
-  const provider = jest.fn(change => {
+  const provider = jest.fn((change) => {
     expect(change).toEqual({ foo: ['hello', 'world'] });
     return change;
   });

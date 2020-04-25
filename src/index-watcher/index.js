@@ -12,17 +12,17 @@ import {
   decorate,
 } from '@graffy/common';
 
-export default function(entityPrefix, entityQuery, getIndexKeys) {
+export default function (entityPrefix, entityQuery, getIndexKeys) {
   const prefix = makePath(entityPrefix);
   const children = makeQuery(entityQuery);
   const skipFill = { skipFill: true };
 
-  return store => {
+  return (store) => {
     const state = {};
     const root = new Graffy([], store.core);
     let error = null;
 
-    (async function() {
+    (async function () {
       const version = 0;
       const watchQuery = wrap(
         [{ key: '', end: '\uffff', version, children }],
@@ -146,12 +146,12 @@ export default function(entityPrefix, entityQuery, getIndexKeys) {
       return makeStream((push, end) => {
         store
           .call('read', query)
-          .then(initial => {
+          .then((initial) => {
             addListener(keys, push, end);
             putInitial(initial);
             push(initial);
           })
-          .catch(e => end(e));
+          .catch((e) => end(e));
 
         return () => {
           removeListener(keys, push, end);

@@ -1,8 +1,8 @@
 import mergeIterators from 'merge-async-iterators';
 import { makeStream } from '@graffy/stream';
 
-export default function({ final } = {}) {
-  return store => {
+export default function ({ final } = {}) {
+  return (store) => {
     const listeners = new Set();
 
     store.on('watch', [], (query, options, next) => {

@@ -1,7 +1,7 @@
 import { encodeNumber, decodeNumber } from './dencorder';
 import { variants } from './variants';
 
-const base = type => ({
+const base = (type) => ({
   validate(value) {
     return typeof value === type;
   },

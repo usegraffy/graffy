@@ -1,14 +1,14 @@
 import { encodeUrl, serialize, deserialize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-export default (baseUrl, getOptions) => store => {
+export default (baseUrl, getOptions) => (store) => {
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const encodedOptions = encodeURIComponent(
       serialize(getOptions('read', options)),
     );
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${encodedOptions}`;
-    return fetch(url).then(res => res.json());
+    return fetch(url).then((res) => res.json());
   });
 
   store.on('watch', (query, options) => {
@@ -24,11 +24,11 @@ export default (baseUrl, getOptions) => store => {
         push(deserialize(data));
       };
 
-      source.onerror = e => {
+      source.onerror = (e) => {
         end(Error('client.sse.transport: ' + e.message));
       };
 
-      source.addEventListener('graffyerror', e => {
+      source.addEventListener('graffyerror', (e) => {
         end(Error('server:' + e.data));
       });
 
@@ -48,6 +48,6 @@ export default (baseUrl, getOptions) => store => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: serialize(change),
-    }).then(res => res.json());
+    }).then((res) => res.json());
   });
 };

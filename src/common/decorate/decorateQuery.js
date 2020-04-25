@@ -24,7 +24,7 @@ export default function decorateQuery(query) {
 }
 
 function decorateChildren(query) {
-  const isPage = query.some(node => isRange(node));
+  const isPage = query.some((node) => isRange(node));
   if (isPage) {
     return decoratePage(query);
   } else {

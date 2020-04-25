@@ -4,7 +4,7 @@ import subscribe from './subscribe';
 const MAX_RECURSIONS = 10;
 
 export default function fill(_) {
-  return store => {
+  return (store) => {
     store.on('read', [], async function fillOnRead(query, options, next) {
       let value = await next(query);
       if (options.skipFill) return value;

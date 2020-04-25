@@ -50,7 +50,7 @@ export default function App() {
     <div className="App">
       <Query
         query={q}
-        onChange={value => {
+        onChange={(value) => {
           console.log(value);
         }}
       />

@@ -11,7 +11,7 @@ describe('read', () => {
   });
 
   test('simple', async () => {
-    g.use('/foo', graffy => {
+    g.use('/foo', (graffy) => {
       graffy.onRead('/bar', () => Promise.resolve({ baz: 42 }));
     });
     expect(await g.read('foo', { bar: { baz: 1 } })).toEqual({
@@ -20,7 +20,7 @@ describe('read', () => {
   });
 
   test('overlap', async () => {
-    g.use('/foo', graffy => {
+    g.use('/foo', (graffy) => {
       graffy.onRead('/baz', () => Promise.resolve({ x: 15 }));
       graffy.onRead('/bar', () => Promise.resolve({ x: 42 }));
     });
@@ -49,7 +49,7 @@ describe('read', () => {
   });
 
   test('getKnown', async () => {
-    g.use(graffy => {
+    g.use((graffy) => {
       graffy.onRead('/foo', () => Promise.resolve({ baz: 15, bar: 42 }));
     });
     expect(await g.read({ foo: { bar: 1 } })).toEqual({

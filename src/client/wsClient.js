@@ -1,7 +1,7 @@
 import { makeStream } from '@graffy/stream';
 import Socket from './Socket';
 
-export default (url, getOptions) => store => {
+export default (url, getOptions) => (store) => {
   if (!WebSocket) throw Error('client.websocket.unavailable');
 
   let socket = new Socket(url, { onUnhandled });

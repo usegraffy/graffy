@@ -15,7 +15,7 @@ function pageToRange(page) {
 
 // We freeze constructed queries to guard against bugs that might mutate them.
 // TODO: Don't freeze in production builds, as a perf optimization.
-const freeze = obj => Object.freeze(obj);
+const freeze = (obj) => Object.freeze(obj);
 
 function makeQuery(value, version) {
   if (Array.isArray(value)) {
@@ -35,7 +35,7 @@ function makeQuery(value, version) {
       children: freeze(
         Object.keys(value)
           .sort()
-          .map(key => freeze({ key, ...makeQuery(value[key], version) })),
+          .map((key) => freeze({ key, ...makeQuery(value[key], version) })),
       ),
     });
   } else {

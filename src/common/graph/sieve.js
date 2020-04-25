@@ -187,7 +187,9 @@ function getNewerNode(node, base) {
 
 function getNewerChange(node, base) {
   if (isBranch(node)) {
-    const children = node.children.filter(child => getNewerChange(child, base));
+    const children = node.children.filter((child) =>
+      getNewerChange(child, base),
+    );
     return children.length && { ...node, children };
   } else {
     // assertVersion(node, version);

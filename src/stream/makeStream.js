@@ -13,19 +13,19 @@ export default function makeStream(init, options = {}) {
 
   const { highWatermark = Infinity, lowWatermark = 0, debugId } = options;
 
-  const push = value => {
+  const push = (value) => {
     if (complete) return;
     const payload = Promise.resolve({ value, done: false });
     if (requests.length) return requests.shift()(payload);
     payloads.push(payload);
     if (payloads.length >= highWatermark) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         drain = resolve;
       });
     }
   };
 
-  const end = error => {
+  const end = (error) => {
     complete = error ? Promise.reject(error) : normalCompletion;
     let resolve;
     while ((resolve = requests.shift())) resolve(complete);
@@ -48,7 +48,7 @@ export default function makeStream(init, options = {}) {
       }
       if (payloads.length) return payloads.shift();
       if (complete) return complete;
-      return new Promise(resolve => requests.push(resolve));
+      return new Promise((resolve) => requests.push(resolve));
     },
 
     return(value) {

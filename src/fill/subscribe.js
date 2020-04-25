@@ -10,7 +10,7 @@ export default function subscribe(store, originalQuery, { raw }) {
   let payload = [];
 
   const stream = makeStream((streamPush, streamEnd) => {
-    push = v => {
+    push = (v) => {
       // console.log('Push', debug(v));
       streamPush(v);
     };
