@@ -1,6 +1,6 @@
-import resolve from 'rollup-plugin-node-resolve';
-import replace from 'rollup-plugin-replace';
-import commonjs from 'rollup-plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import commonjs from '@rollup/plugin-commonjs';
 import babel from 'rollup-plugin-babel';
 import analyze from 'rollup-plugin-analyzer';
 
@@ -38,7 +38,7 @@ function onAnalysis({ bundleSize, bundleOrigSize, moduleCount, modules }) {
     .reduce(
       (acc, { id, size, dependents }) => {
         acc.own[id] = (acc.own[id] || 0) + size;
-        dependents.forEach(d => {
+        dependents.forEach((d) => {
           acc.deps[d] = (acc.deps[d] || 0) + size;
         });
         acc.max = Math.max(acc.max, id.length);
@@ -53,8 +53,8 @@ function onAnalysis({ bundleSize, bundleOrigSize, moduleCount, modules }) {
       '+Deps'.padStart(8) +
       `\n${'-'.repeat(max + 16)}\n` +
       Object.keys(own)
-        .filter(id => id[0] !== '\u0000')
-        .map(id => ({ id, size: own[id] + (deps[id] || 0) }))
+        .filter((id) => id[0] !== '\u0000')
+        .map((id) => ({ id, size: own[id] + (deps[id] || 0) }))
         .sort((a, b) => b.size - a.size)
         .slice(0, 10)
         .map(

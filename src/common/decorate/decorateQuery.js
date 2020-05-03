@@ -1,10 +1,20 @@
 import { isRange, isBranch } from '../node';
+import { decodeKey } from '../encode';
+import { keyStep } from '../graph';
 
 function rangeToPage(key, end, count) {
   const page = {};
   page[count > 0 ? 'first' : 'last'] = count;
-  if (key !== '') page.after = key;
-  if (end !== '\uffff') page.before = end;
+  if (key !== '') {
+    const { key: k, step } = keyStep(key);
+    page.after = decodeKey(k);
+    if (step === 1) page.excludeAfter = true;
+  }
+  if (end !== '\uffff') {
+    const { key: k, step } = keyStep(end);
+    page.before = decodeKey(k);
+    if (step === -1) page.excludeBefore = true;
+  }
   return page;
 }
 
@@ -14,7 +24,7 @@ export default function decorateQuery(query) {
 }
 
 function decorateChildren(query) {
-  const isPage = query.some(node => isRange(node));
+  const isPage = query.some((node) => isRange(node));
   if (isPage) {
     return decoratePage(query);
   } else {

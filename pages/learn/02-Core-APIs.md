@@ -31,17 +31,17 @@ for await (const result of store.watch(query)) {
 These handlers connect the store to your custom backend databases. Naturally, onRead and onWrite handlers should return promises and onWatch handlers should return async iterables.
 
 ```js
-store.onRead('/users', query => {
+store.onRead('/users', (query) => {
   const ids = Object.keys(query);
   return db.collection('users').findAll(ids);
 });
 
-store.onWatch('/posts', query => {
+store.onWatch('/posts', (query) => {
   const ids = Object.keys(query);
 
   // makeStream is a helper
-  return makeStream(push => {
-    const stream = bus.on('posts', post => {
+  return makeStream((push) => {
+    const stream = bus.on('posts', (post) => {
       if (ids.includes(post.id)) push(post);
     });
     return () => stream.close();

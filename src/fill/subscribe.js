@@ -1,7 +1,7 @@
 import { merge, slice, sieve, add, finalize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-export default function subscribe(store, originalQuery, raw) {
+export default function subscribe(store, originalQuery, { raw }) {
   const empty = () => finalize([], originalQuery, 0);
   let push, end;
   let upstream;
@@ -9,10 +9,8 @@ export default function subscribe(store, originalQuery, raw) {
   let data = empty();
   let payload = [];
 
-  resubscribe(originalQuery);
-
-  return makeStream((streamPush, streamEnd) => {
-    push = v => {
+  const stream = makeStream((streamPush, streamEnd) => {
+    push = (v) => {
       // console.log('Push', debug(v));
       streamPush(v);
     };
@@ -20,17 +18,21 @@ export default function subscribe(store, originalQuery, raw) {
     return unsubscribe;
   });
 
-  async function resubscribe(unknown, _extraneous) {
+  resubscribe(originalQuery);
+
+  return stream;
+
+  async function resubscribe(unknown) {
     try {
       const changed = add(query, unknown);
-      // console.log('Resubscribe');
+      // console.log('Resubscribe', changed, debug(unknown));
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
       upstream = store.call('watch', query, { skipFill: true });
 
       let { value } = await upstream.next();
-      // console.log('Got first subscription value', value && debug(value));
+      // console.log('Got first subscription value', debug(value));
 
       if (typeof value === 'undefined') {
         // The upstream is a change subscription, not a live query,
@@ -38,8 +40,7 @@ export default function subscribe(store, originalQuery, raw) {
 
         // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.read response is newer.
-
-        value = await store.call('read', unknown);
+        value = await store.call('read', unknown, { skipCache: true });
       }
       value = value && slice(value, unknown).known;
       putValue(value, false);
@@ -61,7 +62,7 @@ export default function subscribe(store, originalQuery, raw) {
 
   function putValue(value, isChange) {
     if (typeof value === 'undefined') return;
-    // console.log('Fill/subscribe: PutValue', debug(value));
+    // console.log('Put', isChange ? 'Change' : 'Value', debug(value));
 
     if (value === null) {
       // No results exist at this moment.
@@ -70,20 +71,20 @@ export default function subscribe(store, originalQuery, raw) {
       return;
     }
 
-    if (isChange) {
-      // console.log('Data before sieve', debug(data), debug(value));
-      const sieved = sieve(data, value);
-      // console.log('Data after sieve', debug(data), debug(sieved));
-      if (!sieved.length) return;
-      merge(payload, sieved);
-    } else {
-      merge(data, value);
-      // console.log('Payload before adding value', debug(payload));
-      if (raw) merge(payload, value);
-      // console.log('Payload after adding value');
-    }
+    // We do this to ensure that everything in value gets incorporated
+    // into data, even as we use sieve to ensure only actual changes are
+    // added to payload.
+    if (!isChange) merge(data, [{ key: '', end: '\uffff', version: -1 }]);
 
-    let { known, unknown, extraneous } = slice(data, originalQuery);
+    // console.log('Data before sieve', debug(data));
+    const sieved = sieve(data, value);
+    // console.log('Sieved: ', debug(sieved));
+    // console.log('Payload before adding sieved', debug(payload));
+    merge(payload, sieved);
+    // console.log('Payload after adding sieved', debug(payload));
+    // }
+
+    let { known, unknown } = slice(data, originalQuery);
     data = known || empty();
 
     // console.log('After slice', debug(data), unknown && debug(unknown));
@@ -93,7 +94,7 @@ export default function subscribe(store, originalQuery, raw) {
       // The sieve may have removed some necessary data (that we weren't aware
       // was necessary). Get it back.
 
-      // console.log('Here');
+      // console.log('Here', debug(unknown));
       const valueParts = slice(value, unknown);
       if (valueParts.known) {
         merge(data, valueParts.known);
@@ -103,13 +104,14 @@ export default function subscribe(store, originalQuery, raw) {
     }
 
     // This is not an else; previous block might update unknown.
-    if (!unknown) {
+    if (!unknown && payload.length) {
       // console.log('Pushing', debug(payload));
+      // console.log('Data', debug(data));
       push(raw ? payload : data);
       payload = [];
     }
 
-    if (unknown || extraneous) resubscribe(unknown, extraneous);
+    if (unknown) resubscribe(unknown);
   }
 
   function error(e) {

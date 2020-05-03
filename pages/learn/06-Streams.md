@@ -29,7 +29,7 @@ Here are some example `onWatch` providers:
 One simple (albeit inefficient) way to implement watches is by polling the required data itself:
 
 ```js
-onWatch('users', async function*(query) {
+onWatch('users', async function* (query) {
   const userIds = Object.keys(query);
   while (true) {
     yield getUsers(userIds);
@@ -47,7 +47,7 @@ In practice, you would never do this, as Graffy can be configured to do the poll
 If a pull-based event log (e.g. Kafka) is available, it's more efficient to poll it instead.
 
 ```js
-onWatch('users', async function*(query) {
+onWatch('users', async function* (query) {
   yield; // Signal that change stream is ready
   while (true) {
     const events = getEventsSinceLastOffset();
@@ -66,11 +66,11 @@ If the data source supports it, push should be preferred for low-frequency chang
 ```js
 import { makeStream } from '@graffy/stream';
 
-onWatch('users', query =>
-  makeStream(push => {
+onWatch('users', (query) =>
+  makeStream((push) => {
     const socket = openSocketToUpstream();
     socket.on('open', () => push());
-    socket.on('message', message => push(JSON.parse(message)));
+    socket.on('message', (message) => push(JSON.parse(message)));
     return () => socket.close();
   }),
 );

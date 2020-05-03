@@ -1,6 +1,6 @@
 import TextEncoderLite from 'text-encoder-lite';
 
-(function(g) {
+(function (g) {
   if (!g.TextEncoder || !g.TextDecoder) {
     g.TextEncoder = TextEncoderLite.TextEncoderLite;
     g.TextDecoder = TextEncoderLite.TextDecoderLite;

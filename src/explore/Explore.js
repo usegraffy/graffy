@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Query, useStore } from '@graffy/react';
+import * as common from '@graffy/common';
 
 function Result({ result, loading, error }) {
   return (
@@ -27,6 +28,12 @@ function Result({ result, loading, error }) {
   );
 }
 
+function evaluate(expression) {
+  const names = Object.keys(common);
+  const fn = new Function(...names, `return ${expression};`);
+  return fn(...names.map((name) => common[name]));
+}
+
 export default function Explore(options) {
   const [input, setInput] = useState({});
   const [error, setError] = useState(null);
@@ -36,9 +43,9 @@ export default function Explore(options) {
   const [watching, setWatching] = useState(null);
   const store = useStore();
 
-  const onInputEnd = useCallback(event => {
+  const onInputEnd = useCallback((event) => {
     try {
-      setInput(JSON.parse(event.target.textContent));
+      setInput(evaluate(event.target.textContent));
     } catch (e) {
       setError(e.message);
     }
@@ -73,7 +80,7 @@ export default function Explore(options) {
   const onWatchClick = () => {
     setResult(null);
     setLoading(false);
-    setWatching(w => !w);
+    setWatching((w) => !w);
   };
 
   return (
@@ -83,29 +90,15 @@ export default function Explore(options) {
         contentEditable
         onFocus={onInputStart}
         onBlur={onInputEnd}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(input, null, 2) }}
       />
       <div className="opbar">
-        <button
-          className="opbtn"
-          disabled={!!error || watching}
-          onClick={onReadClick}
-        >
+        <button className="opbtn" disabled={watching} onClick={onReadClick}>
           read()
         </button>
-        <button
-          className="opbtn"
-          disabled={!!error || watching}
-          onClick={onWriteClick}
-        >
+        <button className="opbtn" disabled={watching} onClick={onWriteClick}>
           write()
         </button>
-        <button
-          className="opbtn"
-          disabled={!!error}
-          data-active={watching}
-          onClick={onWatchClick}
-        >
+        <button className="opbtn" data-active={watching} onClick={onWatchClick}>
           watch()
         </button>
       </div>
@@ -113,7 +106,7 @@ export default function Explore(options) {
         <div className="error">{error}</div>
       ) : watching ? (
         <Query query={input} options={options}>
-          {props => <Result {...props} />}
+          {(props) => <Result {...props} />}
         </Query>
       ) : (
         <Result {...{ result, loading, error }} />
@@ -123,6 +116,10 @@ export default function Explore(options) {
         .error {
           color: #c00;
           padding: 1rem;
+        }
+        .editor {
+          min-height: 1rem;
+          width: 100%;
         }
         .opbar {
           display: flex;

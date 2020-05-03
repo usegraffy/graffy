@@ -16,12 +16,14 @@ test('decorate', () => {
         { key: '1984', version: 2, children: [
           { key: 'author', version: 2, path: ['users', '1'] },
           { key: 'body', value: 'Lorem ipsum', version: 2 },
+          { key: 'options', value: { inStock: true }, version: 2 },
           { key: 'title', value: '1984', version: 2 },
         ] },
         { key: '1984\0', end: '2000\uffff', version: 2},
         { key: '2001', version: 2, children: [
           { key: 'author', version: 2, path: ['users', '2'] },
           { key: 'body', value: 'Hello world', version: 2 },
+          { key: 'options', value: { borrowed: true }, version: 2 },
           { key: 'title', value: '2001', version: 2 },
         ] },
         { key: '2001\0', end: '\uffff', version: 2 }
@@ -37,11 +39,13 @@ test('decorate', () => {
       {
         title: '1984',
         body: 'Lorem ipsum',
+        options: { inStock: true },
         author: { name: 'George Orwell' },
       },
       {
         title: '2001',
         body: 'Hello world',
+        options: { borrowed: true },
         author: { name: 'Arthur C Clarke' },
       },
     ],

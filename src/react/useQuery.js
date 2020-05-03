@@ -44,7 +44,7 @@ export default function useQuery(query, { once, ...options } = {}) {
   useEffect(() => {
     if (state[1] !== true) setState([state[0], true, state[2]]);
     if (once) {
-      retrieveResult(store.read(query), setState);
+      retrieveResult(store.read(query, options), setState);
     } else {
       const subscription = store.watch(query, options);
       consumeSubscription(subscription, setState);

@@ -1,5 +1,5 @@
 import url from 'url';
-import { decodeUrl } from '@graffy/common';
+import { decodeUrl, serialize, deserialize } from '@graffy/common';
 
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');
@@ -7,7 +7,7 @@ export default function server(store) {
     const parsed = url.parse(req.url, true);
     const query = parsed.query.q && decodeUrl(parsed.query.q);
     const options =
-      parsed.query.opts && JSON.parse(decodeURIComponent(parsed.query.opts));
+      parsed.query.opts && deserialize(decodeURIComponent(parsed.query.opts));
 
     if (req.method === 'GET') {
       try {
@@ -31,7 +31,7 @@ export default function server(store) {
             });
             for await (const value of stream) {
               if (req.aborted || res.finished) break;
-              res.write(`data: ${JSON.stringify(value)}\n\n`);
+              res.write(`data: ${serialize(value)}\n\n`);
             }
           } catch (e) {
             res.write(`event: graffyerror\ndata: ${e.message}\n\n`);
@@ -43,7 +43,7 @@ export default function server(store) {
             raw: true,
           });
           res.writeHead(200);
-          res.end(JSON.stringify(value));
+          res.end(serialize(value));
         }
       } catch (e) {
         res.writeHead(400);
@@ -54,10 +54,10 @@ export default function server(store) {
       try {
         const chunks = [];
         for await (const chunk of req) chunks.push(chunk);
-        const change = JSON.parse(Buffer.concat(chunks).toString());
+        const change = deserialize(Buffer.concat(chunks).toString());
         const value = await store.call('write', change, options);
         res.writeHead(200);
-        res.end(JSON.stringify(value));
+        res.end(serialize(value));
       } catch (e) {
         res.writeHead(400);
         res.end(`${e.message}\n\n`);

@@ -3,7 +3,7 @@ import { getIndex, isRange, isBranch } from '../node';
 export const PATH_SEPARATOR = '/';
 
 export function makePath(path) {
-  if (Array.isArray(path) && path.every(key => typeof key === 'string')) {
+  if (Array.isArray(path) && path.every((key) => typeof key === 'string')) {
     return path;
   }
   if (typeof path !== 'string') throw Error('makePath.path_not_string');

@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react';
 export default function Query({ value, onChange }) {
   const [error, setError] = useState(null);
 
-  const handleChange = useCallback(event => {
+  const handleChange = useCallback((event) => {
     let query;
     try {
       query = JSON.parse(event.target.textContent);

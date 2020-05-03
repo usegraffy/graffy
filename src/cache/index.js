@@ -2,13 +2,13 @@ import { merge, slice, setVersion } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 // import { debug } from '@graffy/testing';
 
-export default function({ final } = {}) {
-  return store => {
+export default function ({ final } = {}) {
+  return (store) => {
     const state = final ? [{ key: '', end: '\uffff', version: 0 }] : [];
     const listeners = new Set();
 
     store.on('read', [], async (query, options, next) => {
-      if (options.skipCache) return next(query);
+      if (options.skipCache && !final) return next(query);
       const { known, unknown } = slice(state, query);
       if (final) return setVersion(known, Date.now());
       if (!unknown) return known;

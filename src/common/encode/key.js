@@ -14,7 +14,7 @@ function encodeArray(array) {
   return [
     ARR,
     encodeInteger(array.length),
-    ...array.flatMap(value => encodeParts(value)),
+    ...array.flatMap((value) => encodeParts(value)),
   ];
 }
 
@@ -23,7 +23,7 @@ function encodeObject(object) {
   return [
     OBJ,
     encodeInteger(keys.length),
-    ...keys.flatMap(key => [
+    ...keys.flatMap((key) => [
       encodeString(key),
       NULL,
       ...encodeParts(object[key]),

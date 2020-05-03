@@ -3,6 +3,7 @@ import Graffy from '@graffy/core';
 import GraffyFill from '@graffy/fill';
 import GraffyClient from '@graffy/client';
 import { GraffyProvider } from '@graffy/react';
+import * as common from '@graffy/common';
 
 import Explore from './Explore';
 
@@ -18,6 +19,8 @@ export default function ExploreContainer({
     store.use(GraffyFill());
     store.use(GraffyClient(baseUrl, getOptions));
     setStore(store);
+    window.store = store;
+    window.graffy = common;
   }, [baseUrl]);
 
   return store ? (

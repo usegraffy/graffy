@@ -49,7 +49,7 @@ export default function slice(graph, query, root) {
         sliceNode(graph[index], queryNode, result);
       }
     }
-    currentQuery = result.linked;
+    currentQuery = root ? undefined : result.linked;
     delete result.linked;
   }
   delete result.root;
@@ -65,7 +65,15 @@ function sliceNode(graph, query, result) {
     result.addUnknown(query);
   } else if (isRange(graph)) {
     // The graph is indicating that this value was deleted.
-    result.addKnown({ key, end: key, version: graph.version });
+    if (isBranch(query)) {
+      const { known } = slice(
+        [{ key: '', end: '\uffff', version: graph.version }],
+        query.children,
+      );
+      result.addKnown({ key, version: graph.version, children: known });
+    } else {
+      result.addKnown({ key, end: key, version: graph.version });
+    }
   } else if (isBranch(graph) && isBranch(query)) {
     // Both sides are branches; recurse into them.
     const { known, unknown } = slice(graph.children, query.children, root);

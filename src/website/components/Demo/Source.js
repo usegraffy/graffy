@@ -32,7 +32,7 @@ let state = generateState();
 export function provider(store) {
   store.onRead(() => finalize(state));
   store.onWatch(() =>
-    makeStream(push => {
+    makeStream((push) => {
       listeners.add(push);
       push(undefined);
       return () => listeners.delete(push);
@@ -60,7 +60,7 @@ export default function Source() {
   const [error, setError] = useState(null);
   const [_, forceRender] = useState(null);
 
-  const handleChange = useCallback(event => {
+  const handleChange = useCallback((event) => {
     let change;
     resumeTimer = setTimeout(() => {
       paused = false;

@@ -4,7 +4,7 @@ import subscribe from './subscribe';
 const MAX_RECURSIONS = 10;
 
 export default function fill(_) {
-  return store => {
+  return (store) => {
     store.on('read', [], async function fillOnRead(query, options, next) {
       let value = await next(query);
       if (options.skipFill) return value;
@@ -12,7 +12,7 @@ export default function fill(_) {
 
       let budget = MAX_RECURSIONS;
 
-      while (budget-- > 0) {
+      while (budget-- > 1) {
         const { known, unknown } = slice(value, query);
         value = known;
         if (!unknown) break;
@@ -27,7 +27,7 @@ export default function fill(_) {
 
     store.on('watch', [], function fillOnWatch(query, options, next) {
       if (options.skipFill) return next(query);
-      return subscribe(store, query, options.raw);
+      return subscribe(store, query, options);
     });
   };
 }

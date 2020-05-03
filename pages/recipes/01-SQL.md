@@ -1,7 +1,7 @@
 # Fulfilling an index from a relational database
 
 ```js
-store.onFetch('/posts$date', async query => {
+store.onFetch('/posts$date', async (query) => {
   const result = { posts: {}, posts$date: {} };
   for (const key in query.posts$date) {
     const { before, after, first, last } = decode(key);
@@ -21,12 +21,13 @@ store.onFetch('/posts$date', async query => {
         slice.after && 'date >= $after',
       ]
         .filter(Boolean)
-        .join(' AND ')} ORDER BY date ${last ? 'DESC' : 'ASC'} LIMIT ${last ||
-        first}`,
+        .join(' AND ')} ORDER BY date ${last ? 'DESC' : 'ASC'} LIMIT ${
+        last || first
+      }`,
       { before, after, count: last || first },
     );
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const post = {};
       if (id) post.id = row.id;
       if (title) post.title = row.title;

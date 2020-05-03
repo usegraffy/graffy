@@ -10,7 +10,7 @@ export default function mapStream(stream, fn) {
           push(fn(value));
           next();
         })
-        .catch(error => end(error));
+        .catch((error) => end(error));
     };
     next();
     return (error, value) => {

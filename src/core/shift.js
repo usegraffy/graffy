@@ -51,13 +51,13 @@ export function shiftGen(fn, path) {
     const remainingPayload = remove(payload, path) || [];
 
     // TODO: This should probably use makeStream and propagate returns.
-    const shiftedNext = async function*(unwrappedNextPayload) {
+    const shiftedNext = async function* shiftedNextFn(unwrappedNextPayload) {
       nextCalled = true;
       const nextPayload = wrap(unwrappedNextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
 
       let pushRemaining;
-      remainingNextStream = makeStream(push => {
+      remainingNextStream = makeStream((push) => {
         pushRemaining = push;
       });
 
@@ -73,9 +73,9 @@ export function shiftGen(fn, path) {
 
     // We expect next() to be called before the first value is yielded.
     const firstValue = await (await unwrappedStream.next()).value;
-    const resultStream = makeStream(push => {
+    const resultStream = makeStream((push) => {
       push(wrap(firstValue, path));
-      mapStream(unwrappedStream, value => {
+      mapStream(unwrappedStream, (value) => {
         push(wrap(value, path));
       });
       return () => unwrappedStream.return();

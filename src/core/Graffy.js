@@ -64,13 +64,17 @@ export default class Graffy {
   onWatch(...args) {
     const [path, handle] = validateArgs(...args);
     this.on('watch', path, function porcelainWatch(query, options) {
-      return makeStream(push => {
+      return makeStream((push, end) => {
         const subscription = handle(decorateQuery(query), options);
-        (async function() {
-          let firstValue = (await subscription.next()).value;
-          push(firstValue && finalize(makeGraph(firstValue), query));
-          for await (const value of subscription) {
-            push(value && makeGraph(value));
+        (async function () {
+          try {
+            let firstValue = (await subscription.next()).value;
+            push(firstValue && finalize(makeGraph(firstValue), query));
+            for await (const value of subscription) {
+              push(value && makeGraph(value));
+            }
+          } catch (e) {
+            end(e);
           }
         })();
         return () => subscription.return();
@@ -93,7 +97,15 @@ export default class Graffy {
   call(type, unwrappedPayload, options) {
     const payload = wrap(unwrappedPayload, this.path);
     const result = this.core.call(type, payload, options);
-    return unwrap(result, this.path);
+    const unwrapResult = (value) => {
+      return value && unwrap(value, this.path);
+    };
+
+    if (!this.path.length) return result;
+
+    return type === 'watch'
+      ? mapStream(result, unwrapResult)
+      : result.then(unwrapResult);
   }
 
   async read(...args) {
@@ -107,7 +119,7 @@ export default class Graffy {
     const [path, porcelainQuery, options] = validateArgs(...args);
     const query = wrap(makeQuery(porcelainQuery), path);
     const stream = this.call('watch', query, options || {});
-    return mapStream(stream, value => descend(decorate(value), path));
+    return mapStream(stream, (value) => descend(decorate(value), path));
   }
 
   async write(...args) {

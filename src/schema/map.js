@@ -42,7 +42,7 @@ export const map = (kt, vt) => {
 
     encodePage(page) {
       const { first, last, before, after } = page;
-      const encodePageType = n => {
+      const encodePageType = (n) => {
         const arr = [];
         pts[n].intoKey(page, arr);
         return '\0' + n + arr.join('\0');

@@ -24,8 +24,45 @@ export function insertRange(current, change, result, start = 0) {
     return keyIx;
   }
 
-  // TODO: Extract the parts of result that are relevant.
-  result.push(change);
+  const appliedChange = [];
+  let currentKey = change.key;
+  for (let i = keyIx; i < endIx; i++) {
+    const node = current[i];
+    // We treat a negative version as a non-existent node
+    // as this is a hack used by subscribe.
+    if (isRange(node) && node.version >= 0) {
+      if (node.key > currentKey) {
+        appliedChange.push({
+          key: currentKey,
+          end: keyBefore(node.key),
+          version: change.version,
+        });
+      }
+      currentKey = keyAfter(node.end);
+    } else {
+      if (getNewerChange(node, change)) {
+        appliedChange.push({
+          key: currentKey,
+          end: keyBefore(node.key),
+          version: change.version,
+        });
+        currentKey = keyAfter(node.key);
+      }
+    }
+    if (currentKey >= change.end) {
+      break;
+    }
+  }
+
+  if (currentKey <= change.end) {
+    appliedChange.push({
+      key: currentKey,
+      end: change.end,
+      version: change.version,
+    });
+  }
+
+  if (appliedChange.length) result.push(...appliedChange);
 
   // If current contains nodes that are newer than this range, keep them.
   // We do this by merging them back into insertions first.
@@ -33,11 +70,15 @@ export function insertRange(current, change, result, start = 0) {
   for (let i = keyIx; i < endIx; i++) {
     const node = current[i];
     if (isRange(node)) {
+      // console.log('Sieve Range-Range', debug(change), debug(node));
       insertions.push(...mergeRanges(insertions.pop(), node));
     } else {
+      // console.log('Sieve Change-Node', debug(change), debug(node));
       insertNode(insertions, node, [], insertions.length - 1);
     }
   }
+
+  // console.log('Sieve:insertions', debug(insertions));
 
   current.splice(keyIx, endIx - keyIx, ...insertions);
   return keyIx + insertions.length;
@@ -76,13 +117,14 @@ export function insertNode(current, change, result, start = 0) {
 function insertNodeIntoRange(current, index, change, result) {
   const key = change.key;
   const range = current[index];
-  const newChange = getNewer(change, range);
+  const newChange = getNewerChange(change, range);
+  const newNode = getNewerNode(change, range);
   if (!newChange) return;
   result.push(newChange);
 
   const insertions = [
     range.key < key && { ...range, end: keyBefore(key) },
-    newChange,
+    newNode,
     range.end > key && { ...range, key: keyAfter(key) },
   ].filter(Boolean);
   current.splice(index, 1, ...insertions);
@@ -102,27 +144,52 @@ function updateNode(current, index, change, result) {
     // Current node is a branch but the change is a leaf; if the branch
     // has newer children, ignore the change and keep only those children;
     // Otherwise, discard the branch and keep the change.
-    const newNode = getNewer(node, change);
+    const newNode = getNewerNode(node, change);
     current[index] = newNode || change;
     if (!newNode) result.push(change);
     // TODO: In the case of partial removal, what should result be?
   } else {
     // Current node is a leaf. Replace with the change if it is newer.
-    const newChange = getNewer(change, node);
-    if (newChange) {
-      current[index] = newChange;
-      // console.log(current);
-      if (change.value !== node.value || change.path !== node.path) {
-        result.push(newChange);
-      }
+    const newChange = getNewerChange(change, node);
+    const newNode = getNewerNode(change, node);
+    if (newNode) current[index] = newNode;
+    // console.log(current);
+    if (
+      newChange &&
+      (change.value !== node.value || !isPathEqual(change.path, node.path))
+    ) {
+      result.push(newChange);
     }
   }
   return index + 1;
 }
 
-function getNewer(node, base) {
+function isPathEqual(first, second) {
+  if (!first && !second) return true;
+  if (!first || !second) return false;
+  if (first.length !== second.length) return false;
+  for (let i = 0; i < first.length; i++) {
+    if (first[i] !== second[i]) return false;
+  }
+  return true;
+}
+
+function getNewerNode(node, base) {
   if (isBranch(node)) {
-    const children = node.children.filter(child => getNewer(child, base));
+    const children = [{ key: '', end: '\uffff', version: base.version }];
+    sieve(children, node.children);
+    return children.length === 1 ? null : { ...node, children };
+  } else {
+    // assertVersion(node, version);
+    return node.version >= base.version ? node : null;
+  }
+}
+
+function getNewerChange(node, base) {
+  if (isBranch(node)) {
+    const children = node.children.filter((child) =>
+      getNewerChange(child, base),
+    );
     return children.length && { ...node, children };
   } else {
     // assertVersion(node, version);

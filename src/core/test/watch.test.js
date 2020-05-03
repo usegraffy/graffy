@@ -8,7 +8,7 @@ describe('watch', () => {
   });
 
   test('object', async () => {
-    g.onWatch('/foo', async function*() {
+    g.onWatch('/foo', async function* () {
       yield { a: 3 };
       await Promise.resolve();
       yield { a: 4 };

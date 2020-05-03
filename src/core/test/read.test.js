@@ -1,6 +1,6 @@
 import Graffy from '../Graffy';
 import fill from '@graffy/fill';
-import { page, link } from '@graffy/common';
+import { page, link, key } from '@graffy/common';
 // import { merge } from '@graffy/common';
 
 describe('read', () => {
@@ -11,7 +11,7 @@ describe('read', () => {
   });
 
   test('simple', async () => {
-    g.use('/foo', graffy => {
+    g.use('/foo', (graffy) => {
       graffy.onRead('/bar', () => Promise.resolve({ baz: 42 }));
     });
     expect(await g.read('foo', { bar: { baz: 1 } })).toEqual({
@@ -20,7 +20,7 @@ describe('read', () => {
   });
 
   test('overlap', async () => {
-    g.use('/foo', graffy => {
+    g.use('/foo', (graffy) => {
       graffy.onRead('/baz', () => Promise.resolve({ x: 15 }));
       graffy.onRead('/bar', () => Promise.resolve({ x: 42 }));
     });
@@ -49,7 +49,7 @@ describe('read', () => {
   });
 
   test('getKnown', async () => {
-    g.use(graffy => {
+    g.use((graffy) => {
       graffy.onRead('/foo', () => Promise.resolve({ baz: 15, bar: 42 }));
     });
     expect(await g.read({ foo: { bar: 1 } })).toEqual({
@@ -63,11 +63,11 @@ describe('read', () => {
       provider = jest.fn(() => {
         return {
           foo: page({
-            a: { baz: 15, bar: 42 },
-            b: { baz: 16, bar: 41 },
-            c: { baz: 17, bar: 40 },
-            d: { baz: 18, bar: 39 },
-            e: { baz: 19, bar: 38 },
+            [key('a')]: { baz: 15, bar: 42 },
+            [key('b')]: { baz: 16, bar: 41 },
+            [key('c')]: { baz: 17, bar: 40 },
+            [key('d')]: { baz: 18, bar: 39 },
+            [key('e')]: { baz: 19, bar: 38 },
           }),
         };
       });
@@ -76,7 +76,7 @@ describe('read', () => {
 
     test('all', async () => {
       const result = await g.read({
-        foo: [{ after: '', before: '\uffff' }, { bar: 1 }],
+        foo: [{ bar: 1 }],
       });
       expect(provider).toBeCalledWith(
         { foo: [{ first: 4096 }, { bar: true }] },
@@ -147,13 +147,15 @@ describe('read', () => {
     });
 
     test('multi', async () => {
-      const result = await g.read({ foo: { a: { bar: 1 }, b: { baz: 1 } } });
+      const result = await g.read({
+        foo: { [key('a')]: { bar: 1 }, [key('b')]: { baz: 1 } },
+      });
       expect(provider).toBeCalledWith(
-        { foo: { a: { bar: true }, b: { baz: true } } },
+        { foo: { [key('a')]: { bar: true }, [key('b')]: { baz: true } } },
         {},
       );
       expect(result).toEqual({
-        foo: { a: { bar: 42 }, b: { baz: 16 } },
+        foo: { [key('a')]: { bar: 42 }, [key('b')]: { baz: 16 } },
       });
     });
   });

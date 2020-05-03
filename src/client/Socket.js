@@ -3,7 +3,7 @@
   a higher level concept of "requests". Requests are retried when a connection
   reconnects.
 */
-import { makeId } from '@graffy/common';
+import { makeId, serialize, deserialize } from '@graffy/common';
 
 const MIN_DELAY = 1000;
 const MAX_DELAY = 300000;
@@ -39,7 +39,7 @@ export default function Socket(url, { onUnhandled }) {
   }
 
   function receive(event) {
-    const [id, ...data] = JSON.parse(event.data);
+    const [id, ...data] = deserialize(event.data);
     if (id === ':ping') {
       ping();
     } else if (handlers[id]) {
@@ -85,7 +85,7 @@ export default function Socket(url, { onUnhandled }) {
 
   function send(req) {
     if (isOpen) {
-      socket.send(JSON.stringify(req));
+      socket.send(serialize(req));
     } else {
       buffer.push(req);
     }

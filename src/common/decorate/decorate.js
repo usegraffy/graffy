@@ -35,7 +35,7 @@ export default function decorate(graph, links = []) {
 }
 
 function decorateChildren(graph, links) {
-  const isPage = graph.some(node => isRange(node) && node.key !== node.end);
+  const isPage = graph.some((node) => isRange(node) && node.key !== node.end);
   if (isPage) {
     return decoratePage(graph, links);
   } else {
