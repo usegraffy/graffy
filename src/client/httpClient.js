@@ -8,7 +8,12 @@ export default (baseUrl, getOptions) => (store) => {
       serialize(getOptions('read', options)),
     );
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${encodedOptions}`;
-    return fetch(url).then((res) => res.json());
+    return fetch(url).then((res) => {
+      if (res.status === 200) return res.json();
+      return res.text().then((message) => {
+        throw Error('server.' + message);
+      });
+    });
   });
 
   store.on('watch', (query, options) => {
@@ -29,7 +34,7 @@ export default (baseUrl, getOptions) => (store) => {
       };
 
       source.addEventListener('graffyerror', (e) => {
-        end(Error('server:' + e.data));
+        end(Error('server.' + e.data));
       });
 
       return () => {

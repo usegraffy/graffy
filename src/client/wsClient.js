@@ -16,7 +16,7 @@ export default (url, getOptions) => (store) => {
         [op, payload, getOptions(op, options)],
         (error, result) => {
           socket.stop(id);
-          error ? reject(new Error(error)) : resolve(result);
+          error ? reject(Error('server.' + error)) : resolve(result);
         },
       );
     });
@@ -33,7 +33,7 @@ export default (url, getOptions) => (store) => {
         (error, result) => {
           if (error) {
             socket.stop(id);
-            end(new Error(error));
+            end(Error('server.' + error));
             return;
           }
           push(result);

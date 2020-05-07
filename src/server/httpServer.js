@@ -47,7 +47,7 @@ export default function server(store) {
         }
       } catch (e) {
         res.writeHead(400);
-        res.end(`${e.message}\n\n`);
+        res.end(`${e.message}`);
         return;
       }
     } else if (req.method === 'POST') {
@@ -60,7 +60,7 @@ export default function server(store) {
         res.end(serialize(value));
       } catch (e) {
         res.writeHead(400);
-        res.end(`${e.message}\n\n`);
+        res.end(`${e.message}`);
         return;
       }
     } else {
