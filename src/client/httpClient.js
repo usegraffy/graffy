@@ -53,6 +53,11 @@ export default (baseUrl, getOptions) => (store) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: serialize(change),
-    }).then((res) => res.json());
+    }).then((res) => {
+      if (res.status === 200) return res.json();
+      return res.text().then((message) => {
+        throw Error('server.' + message);
+      });
+    });
   });
 };
