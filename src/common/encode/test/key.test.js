@@ -6,6 +6,22 @@ function tryValue(value) {
   expect(dec).toEqual(value);
 }
 
+test('emptyobj', () => {
+  tryValue({});
+});
+
+test('emptyarr', () => {
+  tryValue([]);
+});
+
+test('simpleobj', () => {
+  tryValue({ f: 3 });
+});
+
+test('simplearr', () => {
+  tryValue([33]);
+});
+
 test('sink', () => {
   tryValue({
     a: '',
@@ -17,3 +33,8 @@ test('sink', () => {
 });
 
 test('num', () => tryValue(123));
+
+test.only('arrayorder', () => {
+  expect(encode([15.6, 'abc']) < encode([15.7])).toBe(true);
+  expect(encode([15.6, 'abc']) > encode([15.6])).toBe(true);
+});

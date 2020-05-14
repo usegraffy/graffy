@@ -2,19 +2,21 @@ import { encode as encodeString, decode as decodeString } from './string.js';
 import { encode as encodeNumber, decode as decodeNumber } from './number.js';
 import { encode as encodeB64, decode as decodeB64 } from './base64.js';
 
-const NULL = 0;
-const FALSE = 1;
-const TRUE = 2;
-const NUM = 3;
-const STR = 4;
-const ARR = 5;
-const OBJ = 6;
+const END = 0;
+const NULL = 1;
+const FALSE = 2;
+const TRUE = 3;
+const NUM = 4;
+const STR = 5;
+const ARR = 6;
+const OBJ = 7;
 
 function encodeArray(array) {
   return [
     ARR,
-    encodeInteger(array.length),
+    // encodeInteger(array.length),
     ...array.flatMap((value) => encodeParts(value)),
+    END,
   ];
 }
 
@@ -22,27 +24,15 @@ function encodeObject(object) {
   const keys = Object.keys(object).sort();
   return [
     OBJ,
-    encodeInteger(keys.length),
+    // encodeInteger(keys.length),
     ...keys.flatMap((key) => [
+      STR,
       encodeString(key),
-      NULL,
+      END,
       ...encodeParts(object[key]),
     ]),
+    END,
   ];
-}
-
-function encodeInteger(n) {
-  // Note: Cannot use Uint32Array: We need to ensure big-endian for sortability.
-  const buffer = new ArrayBuffer(4);
-  const view = new DataView(buffer);
-  view.setUint32(0, n);
-  return new Uint8Array(buffer);
-}
-
-function decodeInteger(u8Arr) {
-  const { buffer, byteOffset, byteLength } = u8Arr;
-  const view = new DataView(buffer, byteOffset, byteLength);
-  return view.getUint32(0);
 }
 
 function encodeParts(value) {
@@ -50,7 +40,7 @@ function encodeParts(value) {
   if (value === false) return [FALSE];
   if (value === true) return [TRUE];
   if (typeof value === 'number') return [NUM, encodeNumber(value)];
-  if (typeof value === 'string') return [STR, encodeString(value), NULL];
+  if (typeof value === 'string') return [STR, encodeString(value), END];
   if (Array.isArray(value)) return encodeArray(value);
   if (typeof value === 'object') return encodeObject(value);
   return [NULL];
@@ -58,6 +48,7 @@ function encodeParts(value) {
 
 export function encode(value) {
   const parts = encodeParts(value);
+  while (parts[parts.length - 1] === END) parts.pop();
   const length = parts.reduce(
     (sum, part) => sum + (typeof part === 'number' ? 1 : part.length),
     0,
@@ -73,71 +64,54 @@ export function encode(value) {
       i += part.length;
     }
   }
-  return encodeB64(buffer);
+  return '\0' + encodeB64(buffer);
 }
 
-const COUNT = Symbol();
 const NEXTKEY = Symbol();
 
 export function decode(key) {
   let i = 0;
-  const buffer = decodeB64(key);
-  const root = [];
-  root[COUNT] = Infinity;
-  const stack = [root];
+  if (key[0] !== '\0') throw Error('decode.not_encoded_key');
+  const buffer = decodeB64(key, 1);
+  const stack = [[]];
 
   function readString() {
     let start = i;
-    while (i < buffer.length && buffer[i] !== 0) i++;
+    while (i < buffer.length && buffer[i] !== END) i++;
     const str = decodeString(buffer.subarray(start, i));
     i++;
     return str;
   }
 
-  function pushToken(type, token) {
-    let value;
+  function pushToken(type, value) {
+    const current = stack[stack.length - 1];
+    if (type === ARR || type === OBJ) stack.push(value);
+    if (!current) return;
 
-    if (type === ARR) {
-      value = [];
-      if (token) {
-        value[COUNT] = token;
-        stack.push(value);
-        return;
-      }
-    } else if (type === OBJ) {
-      value = {};
-      if (token) {
-        value[COUNT] = token;
-        value[NEXTKEY] = readString();
-        stack.push(value);
-        return;
-      }
+    if (Array.isArray(current)) {
+      current.push(value);
     } else {
-      value = token;
-    }
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const current = stack[stack.length - 1];
-      if (Array.isArray(current)) {
-        current.push(value);
-        current[COUNT]--;
-      } else {
+      if (NEXTKEY in current) {
         current[current[NEXTKEY]] = value;
-        if (--current[COUNT]) current[NEXTKEY] = readString();
+        delete current[NEXTKEY];
+      } else {
+        current[NEXTKEY] = value;
       }
-      if (current[COUNT]) break;
-
-      delete current[COUNT];
-      delete current[NEXTKEY];
-      value = stack.pop();
     }
+  }
+
+  function popToken() {
+    if (stack.length) delete stack[stack.length - 1][NEXTKEY];
+    stack.pop();
   }
 
   while (i < buffer.length) {
     const type = buffer[i];
     const start = ++i;
     switch (type) {
+      case END:
+        popToken();
+        break;
       case NULL:
         pushToken(type, null);
         break;
@@ -155,9 +129,10 @@ export function decode(key) {
         pushToken(type, readString());
         break;
       case ARR:
+        pushToken(type, []);
+        break;
       case OBJ:
-        i += 4;
-        pushToken(type, decodeInteger(buffer.subarray(start, i)));
+        pushToken(type, {});
         break;
       default:
         throw new Error('Invalid byte ' + type + ' at ' + start);
