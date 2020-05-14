@@ -30,11 +30,11 @@ export function encode(u8Arr) {
   return str.substr(0, Math.ceil((view.byteLength * 4) / 3));
 }
 
-export function decode(string) {
-  const buffer = new ArrayBuffer(Math.floor((string.length * 3) / 4));
+export function decode(string, start = 0) {
+  const buffer = new ArrayBuffer(Math.floor(((string.length - start) * 3) / 4));
   const view = new DataView(buffer);
 
-  for (let i = 0; i < string.length; i += 4) {
+  for (let i = start; i < string.length; i += 4) {
     let value =
       (getChar(string, i) << 18) +
       (getChar(string, i + 1) << 12) +
