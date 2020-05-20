@@ -1,7 +1,13 @@
+import cache from '@graffy/cache';
 import { encodeUrl, serialize, deserialize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-export default (baseUrl, getOptions) => (store) => {
+export default (
+  baseUrl,
+  { getOptions = () => {}, noWatch = false, connInfoPath = '/connection' } = {},
+) => (store) => {
+  store.use(connInfoPath, cache({ final: true }));
+
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const encodedOptions = encodeURIComponent(
@@ -12,6 +18,7 @@ export default (baseUrl, getOptions) => (store) => {
   });
 
   store.on('watch', (query, options) => {
+    if (noWatch) throw Error('client.no_watch');
     if (!EventSource) throw Error('client.sse.unavailable');
     const encodedOptions = encodeURIComponent(
       serialize(getOptions('watch', options)),
