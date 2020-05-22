@@ -21,7 +21,6 @@ module.exports = {
       caughtErrors: "all",
       caughtErrorsIgnorePattern: "_",
     }],
-    "no-param-reassign": "error",
     "prettier/prettier": "error",
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",

@@ -10,47 +10,21 @@ class MockWebSocket {
   close = jest.fn();
 }
 
-let now = 0;
-function useFakeDate() {
-  Date._now = Date.now;
-  Date.now = () => now;
-}
-
-function advanceTime(ms) {
-  while (ms > 100) {
-    now += 100;
-    jest.advanceTimersByTime(100);
-    ms -= 100;
-  }
-  now += ms;
-  jest.advanceTimersByTime(ms);
-}
-
-function useRealDate() {
-  Date.now = Date._now;
-  delete Date._now;
-}
-
 describe('Socket', () => {
-  const listeners = {};
   let socket, ws;
 
-  function event(name) {
-    return new Promise((resolve) => {
-      listeners[name] = (value) => {
-        delete listeners[name];
-        resolve(value);
-      };
-    });
-  }
-
   beforeEach(() => {
-    jest.useFakeTimers();
-    useFakeDate();
+    jest.useFakeTimers('modern');
     MockWebSocket.instances.splice(0);
     global.WebSocket = MockWebSocket;
     socket = new Socket('ws://localhost:3684');
     ws = MockWebSocket.instances[0];
+  });
+
+  afterEach(async () => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    delete global.WebSocket;
   });
 
   test('connect', () => {
@@ -59,40 +33,58 @@ describe('Socket', () => {
 
   test('reconnect_failed', () => {
     ws.onclose();
-    advanceTime(1490);
+    jest.advanceTimersByTime(1490);
     expect(MockWebSocket.instances.length).toBe(1);
-    advanceTime(20);
+    jest.advanceTimersByTime(20);
     expect(MockWebSocket.instances.length).toBe(2);
   });
 
-  test('reconnect_unstable', () => {
+  test('reconnect_later_unstable', () => {
     ws.onopen();
     ws.onclose();
-    advanceTime(1490);
+    jest.advanceTimersByTime(1490);
     expect(MockWebSocket.instances.length).toBe(1);
-    advanceTime(20);
+    jest.advanceTimersByTime(20);
     expect(MockWebSocket.instances.length).toBe(2);
   });
 
-  test.only('close_disconnected', () => {
+  test('reconnect_immediately_stable', () => {
     ws.onopen();
-    advanceTime(41000);
-    expect(ws.close).toBeCalled();
-  });
-
-  test('reconnect_stable', () => {
-    ws.onopen();
-    advanceTime(11000); // Connection needs to be stable for 10s
+    jest.advanceTimersByTime(11000); // Connection needs to be stable for 10s
     ws.onmessage({ data: '[":ping"]' });
     expect(MockWebSocket.instances.length).toBe(1);
     ws.onclose();
     expect(MockWebSocket.instances.length).toBe(2);
   });
 
-  afterEach(async () => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
-    useRealDate();
-    delete global.WebSocket;
+  test('close_ping_timeout', () => {
+    ws.onopen();
+    jest.advanceTimersByTime(41000);
+    expect(ws.close).toBeCalled();
+  });
+
+  test('no_close_if_pings', () => {
+    ws.onopen();
+    jest.advanceTimersByTime(39000);
+    ws.onmessage({ data: '[":ping"]' });
+    jest.advanceTimersByTime(10000);
+    expect(ws.close.mock.calls.length).toBe(0);
+  });
+
+  describe('cleared_timer_after_stable', () => {
+    beforeEach(() => {
+      ws.onopen();
+      jest.advanceTimersByTime(11000);
+      ws.onmessage({ data: '[":ping"]' });
+      jest.clearAllTimers();
+      jest.advanceTimersByTime(11000); // Re-advance Date.now()
+
+      jest.advanceTimersByTime(41000);
+      expect(ws.close.mock.calls.length).toBe(0); // Timers were cleared
+    });
+    test('reconnect_on_start', () => {
+      socket.start(['example']);
+      expect(ws.close).toBeCalled();
+    });
   });
 });

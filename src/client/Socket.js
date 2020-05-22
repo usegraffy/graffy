@@ -125,13 +125,13 @@ export default function Socket(url, { onUnhandled, onStatusChange } = {}) {
   }
 
   function setAlive() {
-    log('Set alive', lastAlive - lastAttempt);
     lastAlive = Date.now();
+    log('Set alive', lastAlive - lastAttempt);
     if (lastAlive - lastAttempt > RESET_TIMEOUT) attempts = 0;
   }
 
   function isAlive() {
-    log('Liveness check', isOpen, Date.now() - lastAlive);
+    log('Liveness check', isOpen ? 'open' : 'closed', Date.now() - lastAlive);
 
     clearTimeout(aliveTimer);
     aliveTimer = setTimeout(isAlive, INTERVAL);
