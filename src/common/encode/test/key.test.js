@@ -34,7 +34,7 @@ test('sink', () => {
 
 test('num', () => tryValue(123));
 
-test.only('arrayorder', () => {
+test('arrayorder', () => {
   expect(encode([15.6, 'abc']) < encode([15.7])).toBe(true);
   expect(encode([15.6, 'abc']) > encode([15.6])).toBe(true);
 });

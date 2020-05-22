@@ -38,7 +38,7 @@ describe('live', () => {
     backend.write(makeGraph({ foo: link('/bar') }, 0));
   });
 
-  test.only('watch broken link', async () => {
+  test('watch broken link', async () => {
     const stream = store.watch({ foo: { x: true } });
     expect(stream.next()).rejects.toThrow('fill.max_recursion');
   });

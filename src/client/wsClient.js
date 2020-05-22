@@ -1,4 +1,5 @@
 import { makeStream } from '@graffy/stream';
+import { makePath } from '@graffy/common';
 import cache from '@graffy/cache';
 import Socket from './Socket';
 
@@ -7,11 +8,16 @@ export default (
   { getOptions = () => {}, noWatch = false, connInfoPath = '/connection' } = {},
 ) => (store) => {
   if (!WebSocket) throw Error('client.websocket.unavailable');
+  connInfoPath = makePath(connInfoPath);
 
-  let socket = new Socket(url, { onUnhandled });
+  let socket = new Socket(url, { onUnhandled, onStatusChange });
 
   function onUnhandled(id) {
     socket.stop(id, ['unwatch']);
+  }
+
+  function onStatusChange(status) {
+    store.write(connInfoPath, { status });
   }
 
   function once(op, payload, options) {
@@ -25,6 +31,11 @@ export default (
       );
     });
   }
+
+  store.on('write', [...connInfoPath, 'status'], () => {
+    socket.isAlive();
+    return [];
+  });
 
   store.use(connInfoPath, cache({ final: true }));
 
