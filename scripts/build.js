@@ -62,10 +62,11 @@ module.exports = async function build(name, version) {
         } else {
           dependencies = dependencies || {};
           if (ownPattern.test(imp)) {
-            depVersions[dep] = version;
+            dependencies[dep] = version;
           } else if (depVersions[dep]) {
             dependencies[dep] = depVersions[dep];
           } else if (require.resolve(dep) === dep) {
+            console.log('Ignoring built-in', dep);
             // This is a node built-in; ignore.
           } else {
             console.warn('No version found for package:', dep);
