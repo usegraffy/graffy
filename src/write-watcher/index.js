@@ -1,23 +1,17 @@
-import mergeIterators from 'merge-async-iterators';
-import { makeStream } from '@graffy/stream';
+import { makeWatcher, mergeStreams } from '@graffy/common';
 
 export default function ({ final } = {}) {
   return (store) => {
-    const listeners = new Set();
+    const watcher = makeWatcher();
 
     store.on('watch', [], (query, options, next) => {
-      const writeStream = makeStream((push, _end) => {
-        if (final) push(undefined);
-        listeners.add(push);
-        return () => listeners.delete(push);
-      });
-
-      return final ? writeStream : mergeIterators([writeStream, next(query)]);
+      const writeStream = final ? watcher.watch(undefined) : watcher.watch([]);
+      return final ? writeStream : mergeStreams(writeStream, next(query));
     });
 
     store.on('write', [], async (change, options, next) => {
       const appliedChange = await next(change);
-      for (const push of listeners) push(appliedChange);
+      watcher.write(appliedChange);
       return appliedChange;
     });
   };

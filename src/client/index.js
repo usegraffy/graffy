@@ -3,10 +3,10 @@ import wsClient from './wsClient';
 
 const WSRE = /^wss?:\/\//;
 
-export default function GraffyClient(baseUrl, getOptions = () => ({})) {
+export default function GraffyClient(baseUrl, options) {
   if (WSRE.test(baseUrl)) {
-    return wsClient(baseUrl, getOptions);
+    return wsClient(baseUrl, options);
   } else {
-    return httpClient(baseUrl, getOptions);
+    return httpClient(baseUrl, options);
   }
 }

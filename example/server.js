@@ -4,7 +4,7 @@ import express from 'express';
 
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
-import cache from '@graffy/cache';
+import memory from '@graffy/memory';
 import { httpServer, wsServer } from '@graffy/server';
 import mock from './mockVisitorList';
 
@@ -12,7 +12,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const store = new Graffy();
 store.use(fill());
-store.use(cache({ final: true }));
+store.use(memory());
 store.use(mock);
 
 const app = express();

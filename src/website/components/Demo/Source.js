@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { makeStream } from '@graffy/stream';
-import { page, encodeKey } from '@graffy/common';
+import { page, encodeKey, makeWatcher } from '@graffy/common';
 
-const listeners = new Set();
+const watcher = makeWatcher();
 
 function finalize(value) {
   if (!value || typeof value !== 'object') return value;
@@ -31,18 +31,12 @@ let state = generateState();
 
 export function provider(store) {
   store.onRead(() => finalize(state));
-  store.onWatch(() =>
-    makeStream((push) => {
-      listeners.add(push);
-      push(undefined);
-      return () => listeners.delete(push);
-    }),
-  );
+  store.onWatch(() => makeWatcher(undefined));
 }
 
 function setState(change) {
   state = change;
-  for (const push of listeners) push(finalize(change));
+  watcher.write(finalize(change));
 }
 
 let paused = false;

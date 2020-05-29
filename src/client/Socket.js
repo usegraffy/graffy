@@ -48,7 +48,7 @@ export default function Socket(url, { onUnhandled, onStatusChange } = {}) {
 
   function stop(id, params) {
     delete handlers[id];
-    if (params) socket.send([id, ...params]);
+    if (params) send([id, ...params]);
   }
 
   function connect() {

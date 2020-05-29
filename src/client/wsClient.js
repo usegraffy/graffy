@@ -1,6 +1,5 @@
 import { makeStream } from '@graffy/stream';
-import { makePath } from '@graffy/common';
-import cache from '@graffy/cache';
+import { makePath, makeWatcher } from '@graffy/common';
 import Socket from './Socket';
 
 export default (
@@ -10,14 +9,17 @@ export default (
   if (!WebSocket) throw Error('client.websocket.unavailable');
   connInfoPath = makePath(connInfoPath);
 
-  let socket = new Socket(url, { onUnhandled, onStatusChange });
+  const socket = new Socket(url, { onUnhandled, onStatusChange });
+  let status = false;
+  const statusWatcher = makeWatcher();
 
   function onUnhandled(id) {
     socket.stop(id, ['unwatch']);
   }
 
-  function onStatusChange(status) {
-    store.write(connInfoPath, { status });
+  function onStatusChange(newStatus) {
+    status = newStatus;
+    statusWatcher.write({ status });
   }
 
   function once(op, payload, options) {
@@ -32,12 +34,12 @@ export default (
     });
   }
 
-  store.on('write', [...connInfoPath, 'status'], () => {
-    socket.isAlive();
-    return [];
+  store.onWrite(connInfoPath, () => {
+    status = socket.isAlive();
+    return { status };
   });
-
-  store.use(connInfoPath, cache({ final: true }));
+  store.onRead(connInfoPath, () => ({ status }));
+  store.onWatch(connInfoPath, () => statusWatcher.watch({ status }));
 
   store.on('read', (query, options) => once('read', query, options));
   store.on('write', (change, options) => once('write', change, options));
