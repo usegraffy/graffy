@@ -14,6 +14,7 @@ const version = require('./version.js');
 const build = require('./build.js');
 const publish = require('./publish.js');
 const link = require('./link.js');
+const interlink = require('./interlink.js');
 const tag = require('./tag.js');
 const { src, dst } = require('./utils.js');
 
@@ -24,15 +25,19 @@ const { src, dst } = require('./utils.js');
   await rimraf(dst());
   await mkdir(dst());
 
-  const dirs = await globby('*', { cwd: src(), onlyDirectories: true });
-  await Promise.all(
-    dirs.map(async (dir) => {
-      if (!(await build(dir, ver))) return;
-      if (argv.publish) await publish(dir, ver);
-      if (argv.link) await link(dir);
-    }),
-  );
+  let dirs = await globby('*', { cwd: src(), onlyDirectories: true });
+  dirs = (
+    await Promise.all(
+      dirs.map(async (dir) => {
+        if (!(await build(dir, ver))) return;
+        if (argv.publish) await publish(dir, ver);
+        if (argv.link) await link(dir);
+        return dir;
+      }),
+    )
+  ).filter(Boolean);
 
+  if (argv.link) await Promise.all(dirs.map((dir) => interlink(dir)));
   if (argv.publish) tag(ver);
   console.log('Done.');
 })();

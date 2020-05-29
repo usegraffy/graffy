@@ -2,7 +2,7 @@
 
 const { mkdir, readFile, writeFile } = require('fs').promises;
 const globby = require('globby');
-const { src, dst } = require('./utils');
+const { src, dst, ownPattern } = require('./utils');
 
 const {
   parseAsync: parse,
@@ -15,7 +15,6 @@ const {
   peerDependencies: peerDepVersions,
 } = require('../package.json');
 
-const ownPattern = /^@graffy\//;
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 const depAstNodes = [
   'ImportDeclaration',

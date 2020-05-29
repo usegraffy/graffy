@@ -9,4 +9,6 @@ const yarnPath = process.env.npm_execpath;
 const yarn = (name, ...args) => execFile(yarnPath, args, { cwd: dst(name) });
 const git = (...args) => execFile('git', args, { cwd: base });
 
-module.exports = { src, dst, yarn, git };
+const ownPattern = /^@graffy\//;
+
+module.exports = { src, dst, yarn, git, ownPattern };
