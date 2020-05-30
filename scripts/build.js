@@ -102,9 +102,14 @@ module.exports = async function build(name, version) {
         description,
         author: 'aravind (https://github.com/aravindet)',
         version,
-        main: 'index.js',
-        source: 'src/index.js',
-        esnext: 'src/index.js',
+        main: './index.js',
+        exports: {
+          import: './src/index.js',
+          require: './index.js',
+        },
+        module: './src/index.js',
+        source: './src/index.js',
+        esnext: './src/index.js',
         repository: {
           type: 'git',
           url: 'git+https://github.com/usegraffy/graffy.git',
