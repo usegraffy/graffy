@@ -3,6 +3,7 @@
 const { mkdir, readFile, writeFile } = require('fs').promises;
 const globby = require('globby');
 const { src, dst, ownPattern } = require('./utils');
+const babelConfig = require('./babelConfig');
 
 const {
   parseAsync: parse,
@@ -39,10 +40,11 @@ module.exports = async function build(name, version) {
   }
 
   // Make destination directories
-  await mkdir(dst(name, 'src'));
+  await mkdir(dst(name, 'cjs'));
+  await mkdir(dst(name, 'esm'));
   for (const dir of await globby('**/*', { cwd, onlyDirectories: true })) {
-    await mkdir(dst(name, 'src', dir));
-    await mkdir(dst(name, dir));
+    await mkdir(dst(name, 'cjs', dir));
+    await mkdir(dst(name, 'esm', dir));
   }
 
   // Keep track of dependencies found during source transformation
@@ -81,10 +83,18 @@ module.exports = async function build(name, version) {
     paths.map(async (path) => {
       try {
         const source = (await readFile(src(name, path))).toString();
-        writeFile(dst(name, 'src', path), source);
-        const ast = await parse(source);
+        const ast = await parse(source, babelConfig(false));
 
-        await writeFile(dst(name, path), (await transform(ast, source)).code);
+        await Promise.all([
+          writeFile(
+            dst(name, 'cjs', path),
+            (await transform(ast, source, babelConfig(false))).code,
+          ),
+          writeFile(
+            dst(name, 'esm', path),
+            (await transform(ast, source, babelConfig(true))).code,
+          ),
+        ]);
 
         addDeps(ast);
       } catch (e) {
@@ -102,14 +112,12 @@ module.exports = async function build(name, version) {
         description,
         author: 'aravind (https://github.com/aravindet)',
         version,
-        main: './index.js',
+        main: './cjs/index.js',
         exports: {
-          import: './src/index.js',
-          require: './index.js',
+          import: './esm/index.js',
+          require: './cjs/index.js',
         },
-        module: './src/index.js',
-        source: './src/index.js',
-        esnext: './src/index.js',
+        module: './esm/index.js',
         repository: {
           type: 'git',
           url: 'git+https://github.com/usegraffy/graffy.git',
