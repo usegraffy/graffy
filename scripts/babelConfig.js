@@ -50,6 +50,7 @@ module.exports = function (esm) {
         '@babel/plugin-transform-runtime',
         { corejs: false, regenerator: false, helpers: true, useESModules: esm },
       ],
+      ...(esm ? [] : ['babel-plugin-add-module-exports']),
     ],
   };
 };
