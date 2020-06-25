@@ -1,161 +1,43 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-const { mkdir, readFile, writeFile } = require('fs').promises;
-const { join } = require('path');
-const execFile = require('util').promisify(require('child_process').execFile);
-
+const { mkdir } = require('fs').promises;
 const { sync: rimraf } = require('rimraf');
 const globby = require('globby');
 const argv = require('yargs')
-  .usage('$0 <version> [--publish]')
+  .usage('$0 <version> [--publish] [--link]')
   .boolean('publish')
+  .boolean('link')
   .demandCommand(1).argv;
-const {
-  parseAsync: parse,
-  transformFromAstAsync: transform,
-} = require('@babel/core');
 
-const {
-  dependencies: extraDeps,
-  devDependencies: depVersions,
-  peerDependencies: peerDepVersions,
-} = require('../package.json');
+const version = require('./version.js');
+const build = require('./build.js');
+const publish = require('./publish.js');
+const link = require('./link.js');
+const interlink = require('./interlink.js');
+const tag = require('./tag.js');
+const { src, dst } = require('./utils.js');
 
-const version = argv._[0];
+(async function () {
+  const ver = await version(argv._[0]);
+  console.log('Building version', ver);
 
-console.log('Building version', version);
+  await rimraf(dst());
+  await mkdir(dst());
 
-const src = join(__dirname, '..', 'src');
-const dst = join(__dirname, '..', 'dist');
-const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
-const depAstNodes = [
-  'ImportDeclaration',
-  'ExportAllDeclaration',
-  'ExportNamedDeclaration',
-];
+  let dirs = await globby('*', { cwd: src(), onlyDirectories: true });
+  dirs = (
+    await Promise.all(
+      dirs.map(async (dir) => {
+        if (!(await build(dir, ver))) return;
+        if (argv.publish) await publish(dir, ver);
+        if (argv.link) await link(dir);
+        return dir;
+      }),
+    )
+  ).filter(Boolean);
 
-async function build(name) {
-  const cwd = join(src, name);
-  let packageName, description;
-
-  // Copy the Readme file first. If there is no readme, skip this directory.
-  try {
-    ({ name: packageName } = require(join(cwd, 'package.json')));
-    const readme = (await readFile(join(cwd, 'Readme.md'))).toString();
-    description = readme.match(/^[^#].*$/m)[0].trim();
-    await mkdir(join(dst, name));
-    writeFile(join(dst, name, 'Readme.md'), readme);
-  } catch (_) {
-    console.warn(`Skipping "${name}": package.json or Readme.md missing`);
-    return;
-  }
-
-  // Make destination directories
-  await mkdir(join(dst, name, 'src'));
-  for (const dir of await globby('**/*', { cwd, onlyDirectories: true })) {
-    await mkdir(join(dst, name, 'src', dir));
-    await mkdir(join(dst, name, dir));
-  }
-
-  // Keep track of dependencies found during source transformation
-  let dependencies = extraDeps && { ...extraDeps };
-  let peerDependencies;
-  function addDeps(ast) {
-    ast.program.body
-      .filter(({ type, source }) => depAstNodes.includes(type) && source)
-      .map(({ source }) => source.value)
-      .forEach(imp => {
-        if (imp[0] === '.') return;
-        const dep = imp.match(depPattern)[0];
-        if (peerDepVersions[dep]) {
-          peerDependencies = peerDependencies || {};
-          peerDependencies[dep] = peerDepVersions[dep];
-        } else {
-          dependencies = dependencies || {};
-          if (!depVersions[dep]) {
-            console.warn('No version found for package:', dep);
-          }
-          dependencies[dep] = depVersions[dep] || 'x';
-        }
-      });
-  }
-
-  // Transform source files
-  const paths = await globby(['**/*.js', '!**/*.test*.js'], { cwd });
-  await Promise.all(
-    paths.map(async path => {
-      try {
-        const source = (await readFile(join(cwd, path))).toString();
-        writeFile(join(dst, name, 'src', path), source);
-        const ast = await parse(source);
-
-        await writeFile(
-          join(dst, name, path),
-          (await transform(ast, source)).code,
-        );
-
-        addDeps(ast);
-      } catch (e) {
-        console.error(`Skipping file ${path}:`, e.message);
-      }
-    }),
-  );
-
-  // Write package.json
-  await writeFile(
-    join(dst, name, 'package.json'),
-    JSON.stringify(
-      {
-        name: packageName,
-        description,
-        author: 'aravind (https://github.com/aravindet)',
-        version,
-        main: 'index.js',
-        source: 'src/index.js',
-        esnext: 'src/index.js',
-        repository: {
-          type: 'git',
-          url: 'git+https://github.com/aravindet/graffy.git',
-        },
-        license: 'Apache-2.0',
-        dependencies,
-        peerDependencies,
-      },
-      null,
-      2,
-    ),
-  );
-
-  if (!argv.publish) return;
-
-  try {
-    await execFile(
-      process.env.npm_execpath,
-      [
-        'publish',
-        '--access',
-        'public',
-        '--new-version',
-        version,
-        '--non-interactive',
-        '--no-git-tag-version',
-      ],
-      { cwd: join(dst, name) },
-    );
-    console.log(`Published ${packageName}@${version}`);
-  } catch (e) {
-    console.error(`Error publishing ${packageName}@${version}`);
-    console.error(e.message);
-  }
-}
-
-(async function() {
-  await rimraf(dst);
-  await mkdir(dst);
-
-  const dirs = await globby('*', { cwd: src, onlyDirectories: true });
-  for (const dir of dirs) depVersions[`@graffy/${dir}`] = version;
-  await Promise.all(dirs.map(dir => build(dir)));
+  if (argv.link) await Promise.all(dirs.map((dir) => interlink(dir)));
+  if (argv.publish) tag(ver);
   console.log('Done.');
 })();

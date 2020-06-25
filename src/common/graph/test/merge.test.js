@@ -287,7 +287,7 @@ describe('addRange', () => {
   });
 });
 
-describe.skip('fillEmpty', () => {
+test.skip('fillEmpty', () => {
   const original = [{ key: '', end: '\uffff', version: 0 }];
   expect(
     merge(original, [

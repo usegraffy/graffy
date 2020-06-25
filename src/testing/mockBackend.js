@@ -1,26 +1,17 @@
-import { merge } from '@graffy/common';
-import { makeStream } from '@graffy/stream';
+import { merge, makeWatcher } from '@graffy/common';
 
 export default function mockBackend(options = {}) {
   const state = [];
-  const listeners = new Set();
+  const watcher = makeWatcher();
 
   const backend = {
     state,
     read: () => state,
-    watch: () => {
-      // console.log('onWatch received');
-      return makeStream((push, _end) => {
-        listeners.add(push);
-        push(options.liveQuery ? state : undefined);
-        return () => listeners.delete(push);
-      });
-    },
+    watch: () => watcher.watch(options.liveQuery ? state : undefined),
     write: (change) => {
       // change = setVersion(change, Date.now());
       merge(state, change);
-      // console.log('Emitting change', listeners.size, debug(change));
-      for (const push of listeners) push(change);
+      watcher.write(change);
       return change;
     },
   };

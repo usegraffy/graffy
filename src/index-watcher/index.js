@@ -1,4 +1,3 @@
-// import mergeIterators from 'merge-async-iterators';
 import Graffy from '@graffy/core';
 import { makeStream } from '@graffy/stream';
 import {

@@ -1,7 +1,7 @@
 import { encodeUrl, serialize, deserialize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-export default (baseUrl, getOptions) => (store) => {
+export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const encodedOptions = encodeURIComponent(

@@ -176,9 +176,12 @@ function isPathEqual(first, second) {
 
 function getNewerNode(node, base) {
   if (isBranch(node)) {
-    const children = [{ key: '', end: '\uffff', version: base.version }];
+    const emptyNode = { key: '', end: '\uffff', version: base.version };
+    const children = [emptyNode];
     sieve(children, node.children);
-    return children.length === 1 ? null : { ...node, children };
+    return children.length === 1 && children[0] === emptyNode
+      ? null
+      : { ...node, children };
   } else {
     // assertVersion(node, version);
     return node.version >= base.version ? node : null;

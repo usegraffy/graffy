@@ -68,7 +68,7 @@ export default function server(store) {
     wss.clients.forEach(function each(ws) {
       if (ws.pingPending) return ws.terminate();
       ws.pingPending = true;
-      ws.send(serialize([':ping']));
+      ws.send(serialize([':ping', Date.now()]));
     });
   }, PING_INTERVAL);
 

@@ -44,3 +44,25 @@ test('ignore-unchanged', () => {
   expect(change).toEqual([]);
   expect(g).toEqual(makeGraph({ foo: { bar: 42 } }, 1));
 });
+
+test('empty knowledge', () => {
+  const data = [{ key: '', end: '\uffff', version: -1 }];
+  const change = [
+    {
+      key: 'foo',
+      version: 0,
+      children: [{ key: '', end: '\uffff', version: 1 }],
+    },
+  ];
+  const sieved = sieve(data, change);
+  expect(data).toEqual([
+    { key: '', end: 'fon\uffff', version: -1 },
+    {
+      key: 'foo',
+      version: 0,
+      children: [{ key: '', end: '\uffff', version: 1 }],
+    },
+    { key: 'foo\0', end: '\uffff', version: -1 },
+  ]);
+  expect(sieved).toEqual(change);
+});

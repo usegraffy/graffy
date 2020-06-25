@@ -17,7 +17,7 @@ export default function ExploreContainer({
   useEffect(() => {
     const store = new Graffy();
     store.use(GraffyFill());
-    store.use(GraffyClient(baseUrl, getOptions));
+    store.use(GraffyClient(baseUrl, { getOptions }));
     setStore(store);
     window.store = store;
     window.graffy = common;

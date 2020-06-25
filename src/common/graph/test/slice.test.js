@@ -48,6 +48,23 @@ describe('slice', () => {
 });
 
 describe('range', () => {
+  test('rangeEmpty', () => {
+    expect(
+      slice(
+        [{ key: '', end: '\uffff', version: 1 }],
+        [
+          {
+            key: '',
+            end: '\uffff',
+            count: 2,
+            version: 0,
+            children: [{ key: 'foo', value: 1, version: 0 }],
+          },
+        ],
+      ),
+    ).toEqual({ known: [{ key: '', end: '\uffff', version: 1 }] });
+  });
+
   test('rangeForeFull', () => {
     expect(
       slice(
