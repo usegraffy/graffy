@@ -12,7 +12,8 @@ const store = new Graffy();
 if (process.browser) {
   store.use(fill());
   // store.use(mock);
-  store.use(client('ws://localhost:3000/api'));
+  const url = `${location.origin.replace('http', 'ws')}/api`;
+  store.use(client(url));
 }
 
 export default function ExampleProvider() {
