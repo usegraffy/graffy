@@ -12,6 +12,7 @@
     "test": "jest",
     "package": "./scripts/package",
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
+    "build": "NEXTJS=1 next build",
     "start": "node --es-module-specifier-resolution=node src/website/server.js"
   },
   "workspaces": [
