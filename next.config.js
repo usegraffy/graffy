@@ -3,7 +3,7 @@ const path = require('path');
 
 function getContent(name) {
   return JSON.stringify(
-    fs.readdirSync(path.join(__dirname, 'pages', name)).map(filename => {
+    fs.readdirSync(path.join(__dirname, 'pages', name)).map((filename) => {
       const url = filename.substr(0, filename.length - 3); // Remove .md
       const title = url.substr(3).replace(/-+/g, ' ');
       return { title, url: `/${name}/${url}` };

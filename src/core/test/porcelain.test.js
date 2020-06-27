@@ -1,6 +1,6 @@
 import Graffy from '../Graffy';
 import GraffyFill from '@graffy/fill';
-import { link, scalar } from '@graffy/common';
+import { key, link, scalar } from '@graffy/common';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -20,8 +20,8 @@ test('Porcelain read', async () => {
   };
 
   const onReadBooks = jest.fn(() => ({
-    '1984': { title: '1984', author: link('/users/orwell') },
-    '2001': { title: '2001', author: link('/users/clarke') },
+    [key('1984')]: { title: '1984', author: link('/users/orwell') },
+    [key('2001')]: { title: '2001', author: link('/users/clarke') },
   }));
 
   const onReadUsers = jest.fn(() => ({
@@ -51,7 +51,7 @@ test('Porcelain read', async () => {
   ];
   Object.defineProperty(expectedResult, 'pageInfo', {
     value: {
-      start: '',
+      start: undefined,
       end: '2001',
       hasPrev: false,
       hasNext: true,
@@ -78,8 +78,8 @@ test('Porcelain subscription', async () => {
 
   const onWatchBooks = async function* onWatchBooks() {
     yield {
-      '1984': { title: '1984', author: link('/users/orwell') },
-      '2001': { title: '2001', author: link('/users/clarke') },
+      [key('1984')]: { title: '1984', author: link('/users/orwell') },
+      [key('2001')]: { title: '2001', author: link('/users/clarke') },
     };
     await forever;
   };
@@ -114,7 +114,7 @@ test('Porcelain subscription', async () => {
   ];
   Object.defineProperty(expectedResult, 'pageInfo', {
     value: {
-      start: '',
+      start: undefined,
       end: '2001',
       hasPrev: false,
       hasNext: true,

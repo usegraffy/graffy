@@ -1,9 +1,11 @@
 import faker from 'faker';
-import { makeGraph, link, page } from '@graffy/common';
+import debug from 'debug';
+const log = debug('graffy:website:server');
+import { makeGraph, key, link, page } from '@graffy/common';
 
-const TARGET = 2000;
+const TARGET = 25;
+const RATE = 5;
 
-// const state = makeGraph({ visitors: {}, visitorsByTime: page({}) });
 const freeIds = new Set();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -14,10 +16,8 @@ let enter = 0,
   leave = 0,
   update = 0;
 
-// const listeners = new Set();
-
-export default function (g) {
-  store = g;
+export default function (s) {
+  store = s;
 
   while (id < TARGET) {
     store.call('write', simulateEnter());
@@ -29,25 +29,29 @@ export default function (g) {
     while (true) {
       ts = Date.now();
       store.call('write', await simulate());
-      await sleep(1);
+      await sleep(1000 / RATE);
     }
   })();
 
-  if (process.stdout.isTTY) {
-    (async function () {
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
+  (async function () {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const line =
+        `${id - freeIds.size} users `.padStart(16) +
+        `${enter} enters `.padStart(16) +
+        `${leave} leaves `.padStart(16) +
+        `${update} updates `.padStart(16);
+
+      if (process.stdout.isTTY) {
         process.stdout.cursorTo(0);
-        process.stdout.write(
-          `${id - freeIds.size} users `.padStart(16) +
-            `${enter} enters `.padStart(16) +
-            `${leave} leaves `.padStart(16) +
-            `${update} updates `.padStart(16),
-        );
-        await sleep(500);
+        process.stdout.write(line);
+        await sleep(10000);
+      } else {
+        log(line);
+        await sleep(10000);
       }
-    })();
-  }
+    }
+  })();
 }
 
 function simulate() {
@@ -66,7 +70,7 @@ function visitorInfo() {
     name: faker.internet.userName(),
     avatar: faker.internet.avatar(),
     pageviews: page({
-      [ts]: faker.internet.url(),
+      [key(ts)]: faker.internet.url(),
     }),
   };
 }
@@ -88,7 +92,7 @@ function simulateEnter() {
   return makeGraph(
     {
       visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
-      visitorsByTime: { [ts]: link(['visitors', addId]) },
+      visitorsByTime: { [key(ts)]: link(['visitors', addId]) },
     },
     ts,
   );
@@ -110,7 +114,7 @@ async function simulateLeave() {
   return makeGraph(
     {
       visitors: { [delId]: null },
-      visitorsByTime: { [delTs]: null },
+      visitorsByTime: { [key(delTs)]: null },
     },
     ts,
   );
@@ -124,5 +128,8 @@ function simulateUpdate() {
   upId = '' + upId;
   const url = faker.internet.url();
   update++;
-  return makeGraph({ visitors: { [upId]: { pageviews: { [ts]: url } } } }, ts);
+  return makeGraph(
+    { visitors: { [upId]: { pageviews: { [key(ts)]: url } } } },
+    ts,
+  );
 }

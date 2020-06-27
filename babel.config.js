@@ -14,7 +14,7 @@ const testConf = {
   ],
 };
 
-if (process.env.npm_lifecycle_event.indexOf('next') === 0) {
+if (process.env.NEXTJS) {
   module.exports = {
     presets: ['next/babel'],
     plugins: [],

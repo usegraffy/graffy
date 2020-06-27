@@ -223,7 +223,7 @@ describe('values', () => {
       subscription,
       // prettier-ignore
       [
-        { key: 'foo', version: 0, children: [
+        { key: 'foo', version: 1, children: [
           { key: '', end: '`\uffff', version: 0 },
           { key: 'a', value: 1, version: 0 },
           { key: 'a\0', end: 'a\uffff', version: 0},
@@ -375,11 +375,11 @@ describe('values', () => {
     await expectNext(
       subscription,
       // prettier-ignore
-      [{ key: 'users', version: 0, children: makeGraph({
+      [{ key: 'users', version: 1, children: makeGraph({
           '1': { name: 'alice' },
           '3': { name: 'carol' },
         }, 0)},
-        { key: 'usersByAge', version: 0, children: [
+        { key: 'usersByAge', version: 1, children: [
           { key: '4', path: ['users', '1'], version: 0 },
           { key: '4\0', end: '4\uffff', version: 0 },
           { key: '5', end: '5', version: 1 },

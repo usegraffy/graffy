@@ -82,7 +82,7 @@ function sliceNode(graph, query, result) {
   } else if (isLink(graph) && isBranch(query)) {
     result.addKnown(graph);
     result.addLinked(wrap(query.children, graph.path, version));
-  } else if (isBranch(graph) && query.options?.subtree) {
+  } else if (isBranch(graph) && query.options && query.options.subtree) {
     // This option allows a query to say "give me the subtree under this"
     // without knowing specifically what's available. If using this, the
     // value of "unknown" is no longer reliable. It is intended for use in

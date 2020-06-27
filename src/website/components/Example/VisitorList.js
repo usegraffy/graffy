@@ -8,6 +8,13 @@ export default function VisitorList({ visitors }) {
       {visitors.map((visitor) => (
         <Visitor key={visitor.id} {...visitor} />
       ))}
+      <style jsx>{`
+        .List {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+          grid-gap: 1em;
+        }
+      `}</style>
     </div>
   );
 }

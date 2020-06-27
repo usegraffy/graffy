@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { keyBefore, keyAfter } from '@graffy/common';
 import { useQuery } from '@graffy/react';
 
 import VisitorList from './VisitorList';
 import Pagination from './Pagination';
 import Spinner from './Spinner';
-import Query from './Query';
+// import Query from './Query';
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 12;
 
 function getQuery(range) {
   return {
@@ -24,7 +23,7 @@ function getQuery(range) {
   };
 }
 
-export default function App() {
+export default function Example() {
   const [range, setRange] = useState({ first: PAGE_SIZE });
   const q = getQuery(range);
   const [data, loading] = useQuery(q);
@@ -35,7 +34,7 @@ export default function App() {
   }
 
   // Extract page info, this is used in several places
-  const { start, end, hasNext, hasPrev } = data.visitorsByTime.pageInfo;
+  let { start, end, hasNext, hasPrev } = data.visitorsByTime.pageInfo;
 
   const visitors = data.visitorsByTime;
 
@@ -47,27 +46,35 @@ export default function App() {
   }
 
   return (
-    <div className="App">
-      <Query
+    <div className="Example">
+      {/*<Query
         query={q}
         onChange={(value) => {
           console.log(value);
         }}
-      />
+      />*/}
       <Pagination
         onPrev={
           hasPrev &&
-          (() => setRange({ last: PAGE_SIZE, before: keyBefore(start) }))
+          (() =>
+            setRange({ last: PAGE_SIZE, before: start, excludeBefore: true }))
         }
         range={range}
         count={visitors.length}
         onNext={
           hasNext &&
-          (() => setRange({ first: PAGE_SIZE, after: keyAfter(end) }))
+          (() => setRange({ first: PAGE_SIZE, after: end, excludeAfter: true }))
         }
       />
       <VisitorList visitors={visitors} />
       {loading && <Spinner />}
+      <style jsx>{`
+        .Example {
+          text-align: left;
+          width: 100%;
+          line-height: 1em;
+        }
+      `}</style>
     </div>
   );
 }

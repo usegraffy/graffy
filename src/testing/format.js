@@ -20,8 +20,10 @@ function interval(start, finish) {
   ].join('');
 }
 
-export default function debug(graph, indent = '') {
+let lastPrintedVersion;
+export default function format(graph, indent = '') {
   if (!graph) return graph;
+  if (indent === '') lastPrintedVersion = null;
   // eslint-disable-next-line no-param-reassign
   if (!Array.isArray(graph)) graph = [graph];
   if (!graph.length) return '[]';
@@ -30,14 +32,16 @@ export default function debug(graph, indent = '') {
     graph
       .map(({ key, end, children, version, path, value, ...rest }) =>
         [
-          `${version}`.padEnd(16),
+          lastPrintedVersion === version
+            ? ''
+            : '<@' + (lastPrintedVersion = version) + '>\n',
           indent,
           end ? interval(key, end) : escape(key),
           path ? ` ➚/${path.join('/')}` : '',
           value ? ` ${JSON.stringify(value)}` : '',
           Object.keys(rest).length > 0 ? ' ' + JSON.stringify(rest) : '',
           children ? ' {' : '',
-          children ? debug(children, indent + '  ') : '',
+          children ? format(children, indent + '  ') : '',
           children ? ' }' : '',
         ].join(''),
       )
