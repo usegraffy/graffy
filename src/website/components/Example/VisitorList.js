@@ -11,7 +11,7 @@ export default function VisitorList({ visitors }) {
       <style jsx>{`
         .List {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(512px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
           grid-gap: 1em;
         }
       `}</style>

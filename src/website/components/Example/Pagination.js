@@ -32,6 +32,12 @@ export default function Pagination({ range, count, onNext, onPrev }) {
           color: #333;
         }
 
+        .Pagination > span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
         .Pagination > button {
           width: 3em;
           border-radius: 0;

@@ -129,6 +129,7 @@ class GraffyDocApp extends App {
             }
             main {
               padding-top: 1rem;
+              align-self: stretch;
             }
           }
         `}</style>
