@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { makeStream } from '@graffy/stream';
 import { page, encodeKey, makeWatcher } from '@graffy/common';
 
 const watcher = makeWatcher();
@@ -31,7 +30,7 @@ let state = generateState();
 
 export function provider(store) {
   store.onRead(() => finalize(state));
-  store.onWatch(() => makeWatcher(undefined));
+  store.onWatch(() => watcher.watch(undefined));
 }
 
 function setState(change) {
@@ -52,7 +51,7 @@ setTimeout(simulateChange, 1000);
 
 export default function Source() {
   const [error, setError] = useState(null);
-  const [_, forceRender] = useState(null);
+  const [html, setHtml] = useState(JSON.stringify(state, null, 2));
 
   const handleChange = useCallback((event) => {
     let change;
@@ -78,8 +77,13 @@ export default function Source() {
   });
 
   useEffect(() => {
-    listeners.add(forceRender);
-    return () => listeners.delete(forceRender);
+    const sourceStream = watcher.watch();
+    (async () => {
+      for await (const _ of sourceStream) {
+        setHtml(JSON.stringify(state, null, 2));
+      }
+    })();
+    return () => sourceStream.return();
   }, []);
 
   return (
@@ -89,7 +93,7 @@ export default function Source() {
         contentEditable
         onFocus={clearError}
         onBlur={handleChange}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(state, null, 2) }}
+        dangerouslySetInnerHTML={{ __html: html }}
       />
       {error && <div className="error">{error}</div>}
       <style jsx>{`

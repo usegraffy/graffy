@@ -38,7 +38,7 @@ describe('indexer', () => {
       '/users$',
       IndexWatcher(
         '/users',
-        { country: true, timestamp: true },
+        { name: true, country: true, timestamp: true },
         (user, params) => {
           if (user.country !== params.country) return; // No keys.
           return [user.timestamp];
