@@ -1,13 +1,16 @@
 import { fork } from 'child_process';
 import puppeteer from 'puppeteer';
 
+const PORT = 1025 + Math.floor(Math.random() * 30000);
+jest.setTimeout(60000);
+
 let server;
 let browser;
-beforeEach(() => {
-  jest.setTimeout(60000);
+beforeAll(() => {
   return Promise.all([
     new Promise((resolve, reject) => {
       server = fork(`${__dirname + '/server.js'}`, {
+        env: { PORT },
         stdio: 'ignore',
         execArgv: ['--es-module-specifier-resolution=node'],
       });
@@ -22,14 +25,12 @@ beforeEach(() => {
   ]);
 });
 
-test('example', async () => {
+async function runExampleTests(url) {
   const page = await browser.newPage();
   let label;
 
   // Go to example and wait until there are only two network connections.
-  await page.goto('http://localhost:3000/learn/10-Full-Example', {
-    waitUntil: 'networkidle2',
-  });
+  await page.goto(url, { waitUntil: 'networkidle2' });
   expect((await page.$$('.Visitor')).length).toBe(12);
 
   // Go to second page and assert.
@@ -58,9 +59,15 @@ test('example', async () => {
   label = await (await page.$('.CurrPage')).evaluate((el) => el.textContent);
   expect(label).toMatch(/First/);
   expect(label).not.toMatch(/after/);
-});
 
-afterEach(() => {
+  page.close();
+}
+
+const exampleUrl = `http://localhost:${PORT}/learn/10-Full-Example`;
+test('exampleWs', () => runExampleTests(exampleUrl));
+test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
+
+afterAll(() => {
   return Promise.all([
     new Promise((resolve, reject) => {
       server.kill();

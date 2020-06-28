@@ -12,7 +12,9 @@ const store = new Graffy();
 if (process.browser) {
   store.use(fill());
   // store.use(mock);
-  const url = `${location.origin.replace('http', 'ws')}/api`;
+  const url = /\busehttp\b/.test(location.search)
+    ? '/api'
+    : `${location.origin.replace('http', 'ws')}/api`;
   store.use(client(url));
 }
 
