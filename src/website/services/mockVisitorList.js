@@ -3,7 +3,7 @@ import debug from 'debug';
 const log = debug('graffy:website:server');
 import { makeGraph, key, link, page } from '@graffy/common';
 
-const TARGET = 25;
+const TARGET = 30;
 const RATE = 5;
 
 const freeIds = new Set();
