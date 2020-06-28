@@ -1,3 +1,4 @@
+import { join } from 'path';
 import next from 'next';
 import express from 'express';
 import debug from 'debug';
@@ -9,7 +10,8 @@ import mock from './services/mockVisitorList';
 
 const log = debug('graffy:website:server');
 const dev = process.env.NODE_ENV !== 'production';
-const nextApp = next({ dev });
+const dir = join(import.meta.url.substr(5), '../../..');
+const nextApp = next({ dev, dir });
 const handle = nextApp.getRequestHandler();
 const port = process.env.PORT || 3000;
 
@@ -32,6 +34,7 @@ nextApp
 
     const conn = server.listen(port, (err) => {
       if (err) throw err;
+      if (process.send) process.send('ready');
       log(`Ready on port ${port}`);
     });
 

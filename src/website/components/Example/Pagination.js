@@ -7,15 +7,19 @@ export default function Pagination({ range, count, onNext, onPrev }) {
 
   return (
     <div className="Pagination">
-      <button {...getButtonProps(onPrev)}>&lt;</button>
-      <span>
+      <button className="PrevPage" {...getButtonProps(onPrev)}>
+        &lt;
+      </button>
+      <span className="CurrPage">
         {range.first && `First ${range.first} `}
         {range.last && `Last ${range.last} `}
         {range.after && `after ${getTime(range.after)} `}
         {range.before && `before ${getTime(range.before)} `}
         {count !== (range.first || range.last) ? `(got ${count})` : ''}
       </span>
-      <button {...getButtonProps(onNext)}>&gt;</button>
+      <button className="NextPage" {...getButtonProps(onNext)}>
+        &gt;
+      </button>
       <style jsx>{`
         .Pagination {
           display: flex;
