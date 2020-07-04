@@ -8,6 +8,8 @@ import memory from '@graffy/memory';
 import { httpServer, wsServer } from '@graffy/server';
 import mock from './services/mockVisitorList';
 
+process.env.NEXTJS = 1; // Use the Next.js babel config.
+
 const log = debug('graffy:website:server');
 const dev = process.env.NODE_ENV !== 'production';
 const dir = join(import.meta.url.substr(5), '../../..');
@@ -19,8 +21,6 @@ const store = new Graffy();
 store.use(fill());
 store.use(memory());
 store.use(mock);
-
-process.env.NEXTJS = 1; // Use the Next.js babel config.
 
 nextApp
   .prepare()
