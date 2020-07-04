@@ -7,7 +7,7 @@ import {
   getLastIndex,
 } from '../node';
 import { keyAfter, keyBefore } from './step';
-import { wrap } from '../path';
+import { wrap, wrapValue } from '../path';
 import merge from './merge';
 import add from './add';
 
@@ -79,9 +79,13 @@ function sliceNode(graph, query, result) {
     const { known, unknown } = slice(graph.children, query.children, root);
     if (known) result.addKnown({ ...graph, children: known });
     if (unknown) result.addUnknown({ ...query, children: unknown });
-  } else if (isLink(graph) && isBranch(query)) {
+  } else if (isLink(graph)) {
     result.addKnown(graph);
-    result.addLinked(wrap(query.children, graph.path, version));
+    result.addLinked(
+      isBranch(query)
+        ? wrap(query.children, graph.path, version)
+        : wrapValue(query.value, graph.path, version),
+    );
   } else if (isBranch(graph) && query.options && query.options.subtree) {
     // This option allows a query to say "give me the subtree under this"
     // without knowing specifically what's available. If using this, the

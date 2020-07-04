@@ -9,6 +9,7 @@
   },
   "scripts": {
     "lint": "eslint scripts src pages",
+    "utest": "jest --testPathIgnorePatterns=example",
     "test": "jest",
     "package": "./scripts/package",
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",

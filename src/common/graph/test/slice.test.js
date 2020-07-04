@@ -5,7 +5,7 @@ describe('slice', () => {
     expect(slice([], [])).toEqual({});
   });
 
-  test.skip('simple', () => {
+  test('simple', () => {
     // Skipping because of a bug in extracting a single null from a range.
     expect(
       slice(
@@ -205,20 +205,6 @@ describe('range', () => {
 });
 
 describe('link', () => {
-  test('linkLeafonly', () => {
-    expect(
-      slice(
-        [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bat', path: ['bar'], version: 1 },
-        ],
-        [{ key: 'bat', num: 1, version: 0 }],
-      ),
-    ).toEqual({
-      known: [{ key: 'bat', path: ['bar'], version: 1 }],
-    });
-  });
-
   test('linkThrough', () => {
     expect(
       slice(
@@ -256,6 +242,21 @@ describe('link', () => {
         },
       ],
     });
+  });
+
+  test('linkToLeaf', () => {
+    expect(
+      slice(
+        [
+          { key: 'bar', version: 1, value: 25 },
+          { key: 'foo', version: 1, path: ['bar'] },
+        ],
+        [{ key: 'foo', version: 0, value: 1 }],
+      ).known,
+    ).toEqual([
+      { key: 'bar', version: 1, value: 25 },
+      { key: 'foo', version: 1, path: ['bar'] },
+    ]);
   });
 
   test('linkBroken', () => {

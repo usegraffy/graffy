@@ -36,16 +36,11 @@ describe('read', () => {
     });
   });
 
-  test.skip('empty_obj_to_null', async () => {
-    // Skipping: Leaf branch mismatch now throws.
-    // Should this change?
+  test('leaf_branch_mismatch', async () => {
     g.onRead('/foo', () => ({ bar: 45, baz: { bad: 3 }, f: 3 }));
-    expect(await g.read({ foo: { bar: 1, baz: 1 } })).toEqual({
-      foo: { bar: 45 },
-    });
-    expect(await g.read({ foo: { bar: 1, baz: 1 } })).toEqual({
-      foo: { bar: 45, baz: null },
-    });
+    expect(
+      async () => await g.read({ foo: { bar: 1, baz: 1 } }),
+    ).rejects.toThrow();
   });
 
   test('getKnown', async () => {
