@@ -95,8 +95,6 @@ function sliceNode(graph, query, result) {
   } else if (isBranch(graph) || isBranch(query)) {
     // One side is a branch while the other is a leaf; throw error.
     throw new Error('slice.leaf_branch_mismatch');
-  } else if (isRange(graph)) {
-    result.addKnown({ key, end: key, version: graph.version });
   } else {
     result.addKnown(graph);
   }
