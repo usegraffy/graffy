@@ -287,18 +287,18 @@ describe('addRange', () => {
   });
 });
 
-test.skip('fillEmpty', () => {
-  const original = [{ key: '', end: '\uffff', version: 0 }];
-  expect(
-    merge(original, [
-      {
-        key: 'foo',
-        children: [{ key: 'bar', value: 33, version: 0 }],
-        version: 0,
-      },
-    ]),
-  ).toEqual([{}]);
-});
+// test('fillEmpty', () => {
+//   const original = [{ key: '', end: '\uffff', version: 0 }];
+//   expect(
+//     merge(original, [
+//       {
+//         key: 'foo',
+//         children: [{ key: 'bar', value: 33, version: 0 }],
+//         version: 0,
+//       },
+//     ]),
+//   ).toEqual([{}]);
+// });
 
 // describe('errors', () => {
 //   test('versionCollisionError', () => {

@@ -13,6 +13,11 @@ export function makePath(path) {
   return pathArray[0] === '' ? pathArray.slice(1) : pathArray;
 }
 
+export function wrapValue(value, path, version = 0) {
+  const node = { key: path[path.length - 1], value, version };
+  return wrap([node], path.slice(0, -1), version);
+}
+
 export function wrap(graph, path, version = 0) {
   if (!Array.isArray(graph) || !graph.length) return;
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
