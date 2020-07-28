@@ -10,7 +10,7 @@ export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(getOptions('read', options));
-    const url = `${baseUrl}?q=${encodeUrl(query)}&${optionsParam}`;
+    const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
     return fetch(url).then((res) => {
       if (res.status === 200) return res.json();
       return res.text().then((message) => {
@@ -22,7 +22,7 @@ export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
   store.on('watch', (query, options) => {
     if (!EventSource) throw Error('client.sse.unavailable');
     const optionsParam = getOptionsParam(getOptions('watch', options));
-    const url = `${baseUrl}?q=${encodeUrl(query)}&${optionsParam}`;
+    const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
     const source = new EventSource(url);
 
     return makeStream((push, end) => {
