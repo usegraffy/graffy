@@ -1,6 +1,6 @@
 import { getIndex, isRange, isBranch } from '../node';
 
-export const PATH_SEPARATOR = '/';
+export const PATH_SEPARATOR = '.';
 
 export function makePath(path) {
   if (Array.isArray(path) && path.every((key) => typeof key === 'string')) {
@@ -9,8 +9,7 @@ export function makePath(path) {
   if (typeof path !== 'string') throw Error('makePath.path_not_string');
   if (!path.length || path === PATH_SEPARATOR) return [];
 
-  const pathArray = path.split(PATH_SEPARATOR);
-  return pathArray[0] === '' ? pathArray.slice(1) : pathArray;
+  return path.split(PATH_SEPARATOR);
 }
 
 export function wrapValue(value, path, version = 0) {

@@ -12,6 +12,10 @@ import {
 import { makeStream, mapStream } from '@graffy/stream';
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
+import debug from 'debug';
+import { format } from '@graffy/testing';
+
+const log = debug('graffy:porcelain');
 
 function validateArgs(first, ...args) {
   let path;
@@ -96,6 +100,7 @@ export default class Graffy {
 
   call(type, unwrappedPayload, options) {
     const payload = wrap(unwrappedPayload, this.path);
+    log(format(unwrappedPayload), format(payload));
     const result = this.core.call(type, payload, options);
     const unwrapResult = (value) => {
       return value && unwrap(value, this.path);

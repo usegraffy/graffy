@@ -4,7 +4,7 @@ import Socket from './Socket';
 
 export default (
   url,
-  { getOptions = () => {}, noWatch = false, connInfoPath = '/connection' } = {},
+  { getOptions = () => {}, noWatch = false, connInfoPath = 'connection' } = {},
 ) => (store) => {
   if (!WebSocket) throw Error('client.websocket.unavailable');
   connInfoPath = makePath(connInfoPath);

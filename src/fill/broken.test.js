@@ -12,7 +12,7 @@ describe('nonlive', () => {
     store.use(fill());
     backend = mockBackend();
     store.use(backend.middleware);
-    backend.write(makeGraph({ foo: link('/bar') }, 0));
+    backend.write(makeGraph({ foo: link('bar') }, 0));
   });
 
   test('read broken link', async () => {
@@ -35,7 +35,7 @@ describe('live', () => {
     store.use(fill());
     backend = mockBackend({ liveQuery: true });
     store.use(backend.middleware);
-    backend.write(makeGraph({ foo: link('/bar') }, 0));
+    backend.write(makeGraph({ foo: link('bar') }, 0));
   });
 
   test('watch broken link', async () => {

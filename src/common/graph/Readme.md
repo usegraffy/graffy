@@ -17,13 +17,13 @@ Query         :=  [ QueryNode | QueryRange ]
 QueryNode     :=  QueryBranch | QueryLeaf
 QueryBranch   :=  { key, version, children: Query }
 QueryLeaf     :=  { key, value, version }
-QueryRange    :=  { key, end, count, version, (value | children) }
+QueryRange    :=  { key, end, , version, (value | children) }
 ```
 
 Notes:
 
 - Ranges are specified by `key` and `end`, where `key <= end`.
-- In QueryRanges, a positive count specifies the first N items while a negative count specifies the last N items.
+- In QueryRanges, a positive  specifies the first N items while a negative  specifies the last N items.
 - Children are sorted by `key`.
 - In Graphs, Ranges may not overlap with each other or with the keys of other nodes. In Queries they may.
 
@@ -60,7 +60,7 @@ Notes:
       {
         key: '',
         end: '2000',
-        count: 10,
+        : 10,
         children: [
           { key: 'title', value: 1, version: 0 },
           { key: 'author', children: [{ key: 'name', value: 1, version: 0 }] },

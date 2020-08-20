@@ -1,8 +1,8 @@
 import Graffy from '@graffy/core';
 import { makeStream } from '@graffy/stream';
 import {
-  encodeKey,
-  decodeKey,
+  encodeValue,
+  decodeValue,
   makeQuery,
   merge,
   wrap,
@@ -68,7 +68,7 @@ export default function (entityPrefix, entityQuery, getIndexKeys) {
         const { params, entities, pushFns } = state[paramKey];
         const oldKeys = entities[entityId] || new Set();
         const newKeys = new Set(
-          getIndexKeys(porcelainEntity, params).map(encodeKey),
+          getIndexKeys(porcelainEntity, params).map(encodeValue),
         );
 
         const updates = [];
@@ -102,7 +102,7 @@ export default function (entityPrefix, entityQuery, getIndexKeys) {
       for (const key of keys) {
         if (!state[key]) {
           state[key] = {
-            params: decodeKey(key),
+            params: decodeValue(key),
             entities: {},
             pushFns: new Set(),
             endFns: new Set(),

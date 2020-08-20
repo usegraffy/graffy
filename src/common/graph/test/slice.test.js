@@ -56,7 +56,7 @@ describe('range', () => {
           {
             key: '',
             end: '\uffff',
-            count: 2,
+            limit: 2,
             version: 0,
             children: [{ key: 'foo', value: 1, version: 0 }],
           },
@@ -76,7 +76,7 @@ describe('range', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bar', end: 'egg', count: 2, num: 1, version: 0 }],
+        [{ key: 'bar', end: 'egg', limit: 2, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
@@ -98,7 +98,7 @@ describe('range', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bar', end: 'egg', count: -2, num: 1, version: 0 }],
+        [{ end: 'bar', key: 'egg', limit: 2, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
@@ -121,7 +121,7 @@ describe('range', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: '', end: 'egg', count: -3, num: 1, version: 0 }],
+        [{ end: '', key: 'egg', limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
@@ -130,7 +130,7 @@ describe('range', () => {
         { key: 'bat', value: 2, version: 1 },
         { key: 'bat\0', end: 'egg', version: 1 },
       ],
-      unknown: [{ key: '', end: 'baq\uffff', count: -1, num: 1, version: 0 }],
+      unknown: [{ end: '', key: 'baq\uffff', limit: 1, num: 1, version: 0 }],
     });
   });
 
@@ -145,7 +145,7 @@ describe('range', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bark', end: 'fuz', count: 3, num: 1, version: 0 }],
+        [{ key: 'bark', end: 'fuz', limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
@@ -169,10 +169,10 @@ describe('range', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'ark', end: 'foo', count: 3, num: 1, version: 0 }],
+        [{ key: 'ark', end: 'foo', limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
-      unknown: [{ key: 'ark', end: 'foo', count: 3, num: 1, version: 0 }],
+      unknown: [{ key: 'ark', end: 'foo', limit: 3, num: 1, version: 0 }],
     });
   });
 
@@ -188,7 +188,7 @@ describe('range', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
         ],
-        [{ key: '', end: '\uffff', count: 5000, num: 1, version: 0 }],
+        [{ key: '', end: '\uffff', limit: 5000, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
@@ -302,11 +302,11 @@ describe('version', () => {
           { key: 'foo', value: 3, version: 1 },
           { key: 'foo\0', end: 'gag', version: 1 },
         ],
-        [{ key: 'bark', end: 'fuz', count: 3, num: 1, version: 1 }],
+        [{ key: 'bark', end: 'fuz', limit: 3, num: 1, version: 1 }],
       ),
     ).toEqual({
       known: [{ key: 'bark', end: 'bas\uffff', version: 1 }],
-      unknown: [{ key: 'bat', end: 'fuz', count: 3, version: 1, num: 1 }],
+      unknown: [{ key: 'bat', end: 'fuz', limit: 3, version: 1, num: 1 }],
     });
   });
 

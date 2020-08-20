@@ -1,6 +1,8 @@
 export function keyStep(key) {
   if (key === '') return { key, step: 1 };
+  if (key === '\0') return { key, step: 1 };
   if (key === '\uffff') return { key, step: -1 };
+  if (key === '\0\uffff') return { key, step: -1 };
   const l = key.length - 1;
   switch (key.charCodeAt(l)) {
     case 0:
@@ -17,7 +19,9 @@ export function keyStep(key) {
 }
 
 export function keyBefore(key) {
-  if (key === '' || key === '\uffff') return key;
+  if (key === '' || key === '\uffff' || key === '\0' || key === '\0\uffff') {
+    return key;
+  }
   const l = key.length - 1;
   return key.charCodeAt(l) === 0
     ? key.substr(0, l)
@@ -25,7 +29,9 @@ export function keyBefore(key) {
 }
 
 export function keyAfter(key) {
-  if (key === '' || key === '\uffff') return key;
+  if (key === '' || key === '\uffff' || key === '\0' || key === '\0\uffff') {
+    return key;
+  }
   const l = key.length - 1;
   return key.charCodeAt(l) === 0xffff
     ? key.substr(0, l - 1) + String.fromCharCode(key.charCodeAt(l - 1) + 1)

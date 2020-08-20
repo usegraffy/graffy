@@ -36,7 +36,7 @@ export default function subscribe(store, originalQuery, { raw }) {
       upstream = store.call('watch', query, { skipFill: true });
 
       let { value } = await upstream.next();
-      log('First payload', typeof value);
+      log('First payload', typeof value, format(value));
 
       if (typeof value === 'undefined') {
         // The upstream is a change subscription, not a live query,

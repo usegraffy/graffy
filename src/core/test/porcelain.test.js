@@ -1,6 +1,6 @@
 import Graffy from '../Graffy';
 import GraffyFill from '@graffy/fill';
-import { key, link, scalar } from '@graffy/common';
+import { encodeValue as key } from '@graffy/common';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -19,26 +19,25 @@ test('Porcelain read', async () => {
     orwell: { name: true },
   };
 
-  const onReadBooks = jest.fn(() => ({
-    [key('1984')]: { title: '1984', author: link('/users/orwell') },
-    [key('2001')]: { title: '2001', author: link('/users/clarke') },
-  }));
+  const onReadBooks = jest.fn(() => [
+    { _key_: ['1984'], title: '1984', author: { _ref_: 'users.orwell' } },
+    { _key_: ['2001'], title: '2001', author: { _ref_: 'users.clarke' } },
+  ]);
 
   const onReadUsers = jest.fn(() => ({
     orwell: { name: 'George Orwell' },
     clarke: { name: 'Arthur C Clarke' },
   }));
 
-  store.onRead('/books', onReadBooks);
-  store.onRead('/users', onReadUsers);
+  store.onRead('books', onReadBooks);
+  store.onRead('users', onReadUsers);
 
-  const result = await store.read('/books', [
-    { first: 2 },
-    {
-      title: true,
-      author: { name: true },
-    },
-  ]);
+  const result = await store.read('books', {
+    _key_: { first: 2 },
+    title: true,
+    author: { name: true },
+  });
+
   const expectedResult = [
     {
       title: '1984',
@@ -52,7 +51,7 @@ test('Porcelain read', async () => {
   Object.defineProperty(expectedResult, 'pageInfo', {
     value: {
       start: undefined,
-      end: '2001',
+      end: ['2001'],
       hasPrev: false,
       hasNext: true,
     },
@@ -77,10 +76,18 @@ test('Porcelain subscription', async () => {
   store.use(GraffyFill());
 
   const onWatchBooks = async function* onWatchBooks() {
-    yield {
-      [key('1984')]: { title: '1984', author: link('/users/orwell') },
-      [key('2001')]: { title: '2001', author: link('/users/clarke') },
-    };
+    yield [
+      {
+        _key_: ['1984'],
+        title: '1984',
+        author: { _ref_: 'users.orwell' },
+      },
+      {
+        _key_: ['2001'],
+        title: '2001',
+        author: { _ref_: 'users.clarke' },
+      },
+    ];
     await forever;
   };
 
@@ -92,16 +99,14 @@ test('Porcelain subscription', async () => {
     await forever;
   };
 
-  store.onWatch('/books', onWatchBooks);
-  store.onWatch('/users', onWatchUsers);
+  store.onWatch('books', onWatchBooks);
+  store.onWatch('users', onWatchUsers);
 
-  const result = store.watch('/books', [
-    { first: 2 },
-    {
-      title: true,
-      author: { name: true },
-    },
-  ]);
+  const result = store.watch('books', {
+    _key_: { first: 2 },
+    title: true,
+    author: { name: true },
+  });
   const expectedResult = [
     {
       title: '1984',
@@ -115,7 +120,7 @@ test('Porcelain subscription', async () => {
   Object.defineProperty(expectedResult, 'pageInfo', {
     value: {
       start: undefined,
-      end: '2001',
+      end: ['2001'],
       hasPrev: false,
       hasNext: true,
     },
@@ -130,11 +135,11 @@ test('write array value', async () => {
 
   const provider = jest.fn((change) => {
     expect(change).toEqual({ foo: ['hello', 'world'] });
-    return change;
+    return { foo: { _ref_: ['hello', 'world'] } };
   });
   store.onWrite(provider);
 
-  await store.write({ foo: scalar(['hello', 'world']) });
+  await store.write({ foo: { _val_: ['hello', 'world'] } });
   expect(provider).toBeCalled();
 });
 
@@ -143,7 +148,7 @@ test('read array value', async () => {
   store.use(GraffyFill());
 
   const provider = jest.fn(() => {
-    return { foo: scalar(['hello', 'world']) };
+    return { foo: { _val_: ['hello', 'world'] } };
   });
   store.onRead(provider);
 

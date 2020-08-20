@@ -23,7 +23,7 @@ describe('dencorder', () => {
   });
 
   test('nan', () => {
-    let v = 0.2 * 'potato';
+    let v = NaN;
     expect(isNaN(decode(encode(v)))).toBe(true);
   });
 

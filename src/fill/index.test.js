@@ -1,7 +1,7 @@
 // index.test.js
 
 import Graffy from '@graffy/core';
-import { page, link, makeGraph, makeQuery } from '@graffy/common';
+import { makeGraph, makeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import live from './index.js';
 
@@ -23,13 +23,19 @@ beforeEach(() => {
           4: { x: 4 },
           5: { x: 5 },
         },
-        foo: page({
-          a: link(['bar', '1']),
-          b: link(['bar', '2']),
-          c: link(['bar', '3']),
-          d: link(['bar', '4']),
-          e: link(['bar', '5']),
-        }),
+        foo: [
+          { _key_: { before: ['a'] } },
+          { _key_: ['a'], _ref_: ['bar', '1'] },
+          { _key_: { after: ['a'], before: ['b'] } },
+          { _key_: ['b'], _ref_: ['bar', '2'] },
+          { _key_: { after: ['b'], before: ['c'] } },
+          { _key_: ['c'], _ref_: ['bar', '3'] },
+          { _key_: { after: ['c'], before: ['d'] } },
+          { _key_: ['d'], _ref_: ['bar', '4'] },
+          { _key_: { after: ['d'], before: ['e'] } },
+          { _key_: ['e'], _ref_: ['bar', '5'] },
+          { _key_: { after: ['e'] } },
+        ],
       },
       0,
     ),
@@ -45,7 +51,7 @@ test('indexes', async () => {
   const subscription = g.call(
     'watch',
     makeQuery({
-      foo: [{ first: 3 }, { x: true }],
+      foo: { _key_: { first: 3 }, x: true },
     }),
   );
 
@@ -57,15 +63,14 @@ test('indexes', async () => {
           2: { x: 2 },
           3: { x: 3 },
         },
-        foo: page(
-          {
-            a: link(['bar', '1']),
-            b: link(['bar', '2']),
-            c: link(['bar', '3']),
-          },
-          '',
-          'c',
-        ),
+        foo: [
+          { _key_: { before: ['a'] } },
+          { _key_: ['a'], _ref_: ['bar', '1'] },
+          { _key_: { after: ['a'], before: ['b'] } },
+          { _key_: ['b'], _ref_: ['bar', '2'] },
+          { _key_: { after: ['b'], before: ['c'] } },
+          { _key_: ['c'], _ref_: ['bar', '3'] },
+        ],
       },
       0,
     ),
@@ -74,12 +79,8 @@ test('indexes', async () => {
   backend.write(
     makeGraph(
       {
-        bar: {
-          2: null,
-        },
-        foo: {
-          b: null,
-        },
+        bar: { 2: null },
+        foo: [{ _key_: ['b'] }],
       },
       1,
     ),
@@ -102,14 +103,23 @@ test('indexes', async () => {
       key: 'foo',
       version: 1,
       children: [
-        { key: '', end: '`\uffff', version: 0 },
-        { key: 'a', path: ['bar', '1'], version: 0 },
-        { key: 'a\0', end: 'a\uffff', version: 0 },
-        { key: 'b', end: 'b', version: 1 },
-        { key: 'b\0', end: 'b\uffff', version: 0 },
-        { key: 'c', path: ['bar', '3'], version: 0 },
-        { key: 'c\0', end: 'c\uffff', version: 0 },
-        { key: 'd', path: ['bar', '4'], version: 0 },
+        ...makeGraph(
+          [
+            { _key_: { before: ['a'] } },
+            { _key_: ['a'], _ref_: ['bar', '1'] },
+            { _key_: { after: ['a'], before: ['b'] } },
+            // While there are no entries in the range
+            // { after: ['a'], before: ['b'] },
+            // our knowledge of the lack of 'b' is more recent
+            // our knowledge of other values in this range.
+            { _key_: { since: ['b'], until: ['b'] }, _ver_: 1 },
+            { _key_: { after: ['b'], before: ['c'] } },
+            { _key_: ['c'], _ref_: ['bar', '3'] },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _ref_: ['bar', '4'] },
+          ],
+          0,
+        ),
       ],
     },
   ]);

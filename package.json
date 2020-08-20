@@ -51,6 +51,7 @@
     "eslint-plugin-react": "^7.20.3",
     "express": "^4.17.1",
     "faker": "^4.1.0",
+    "global": "^4.4.0",
     "globby": "^11.0.1",
     "graphql": "^15.2.0",
     "graphql-tag": "^2.10.3",
@@ -67,6 +68,7 @@
     "react-json-view": "^1.19.1",
     "rimraf": "^3.0.2",
     "text-encoder-lite": "^2.0.0",
+    "typescript": "^3.9.7",
     "ws": "^7.3.0",
     "yargs": "^15.4.0"
   },

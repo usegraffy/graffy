@@ -20,13 +20,13 @@ describe('wsClient', () => {
   });
 
   test('readStatus', async () => {
-    expect(await store.read('/connection', { status: true })).toEqual({
+    expect(await store.read('connection', { status: true })).toEqual({
       status: false,
     });
   });
 
   test('watchStatus', async () => {
-    const stream = store.watch('/connection', { status: true });
+    const stream = store.watch('connection', { status: true });
     expect((await stream.next()).value).toEqual({ status: false });
 
     const calls = MockSocket.mock.calls;
@@ -38,7 +38,7 @@ describe('wsClient', () => {
   });
 
   test('reconnect', async () => {
-    store.write('/connection', { status: true });
+    store.write('connection', { status: true });
     const results = MockSocket.mock.results;
     expect(results[results.length - 1].value.isAlive).toBeCalled();
   });

@@ -1,7 +1,7 @@
 import faker from 'faker';
 import debug from 'debug';
 const log = debug('graffy:website:server');
-import { makeGraph, key, link, page } from '@graffy/common';
+import { makeGraph, encodeValue as key, link, page } from '@graffy/common';
 
 const TARGET = 30;
 const RATE = 5;

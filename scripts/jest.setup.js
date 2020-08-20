@@ -1,5 +1,5 @@
-import { debug } from '@graffy/testing';
-global.debug = debug;
+import { format } from '@graffy/testing';
+global.format = format;
 
 process.on('unhandledRejection', (reason) => {
   // eslint-disable-next-line no-console

@@ -1,6 +1,6 @@
 import Graffy from '@graffy/core';
-import { page, link, makeGraph, makeQuery } from '@graffy/common';
-import { mockBackend } from '@graffy/testing';
+import { makeGraph, makeQuery } from '@graffy/common';
+import { mockBackend, format } from '@graffy/testing';
 import fill from './index.js';
 
 const expectNext = async (subscription, expected, version = 0) => {
@@ -79,7 +79,7 @@ describe('changes', () => {
   test('link', async () => {
     backend.write(
       makeGraph(
-        { foo: link(['bar', 'a']), bar: { a: { x: 3 }, b: { x: 5 } } },
+        { foo: { _ref_: ['bar', 'a'] }, bar: { a: { x: 3 }, b: { x: 5 } } },
         0,
       ),
     );
@@ -88,12 +88,12 @@ describe('changes', () => {
     });
 
     await expectNext(subscription, {
-      foo: link(['bar', 'a']),
+      foo: { _ref_: ['bar', 'a'] },
       bar: { a: { x: 3 } },
     });
-    backend.write(makeGraph({ foo: link(['bar', 'b']) }, 0));
+    backend.write(makeGraph({ foo: { _ref_: ['bar', 'b'] } }, 0));
     await expectNext(subscription, {
-      foo: link(['bar', 'b']),
+      foo: { _ref_: ['bar', 'b'] },
       bar: { b: { x: 5 } },
     });
     backend.write(makeGraph({ bar: { a: { x: 7 } } })); // Should not be sent!
@@ -105,21 +105,36 @@ describe('changes', () => {
     backend.write(
       makeGraph(
         {
-          foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }),
+          foo: [
+            { _key_: { before: ['a'] } },
+            { _key_: ['a'], _val_: 1 },
+            { _key_: { after: ['a'], before: ['b'] } },
+            { _key_: ['b'], _val_: 2 },
+            { _key_: { after: ['b'], before: ['c'] } },
+            { _key_: ['c'], _val_: 3 },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+            { _key_: { after: ['d'], before: ['e'] } },
+            { _key_: ['e'], _val_: 5 },
+            { _key_: { after: ['e'] } },
+          ],
         },
         0,
       ),
     );
 
-    const subscription = g.call(
-      'watch',
-      makeQuery({ foo: [{ first: 3 }, 1] }, 0),
-      {
-        raw: true,
-      },
-    );
+    const query = makeQuery({ foo: { _key_: { first: 3 } } });
+    console.log(format(query));
+    const subscription = g.call('watch', query, { raw: true });
     await expectNext(subscription, {
-      foo: page({ a: 1, b: 2, c: 3 }, '', 'c'),
+      foo: [
+        { _key_: { before: ['a'] } },
+        { _key_: ['a'], _val_: 1 },
+        { _key_: { after: ['a'], before: ['b'] } },
+        { _key_: ['b'], _val_: 2 },
+        { _key_: { after: ['b'], before: ['c'] } },
+        { _key_: ['c'], _val_: 3 },
+      ],
     });
     backend.write(makeGraph({ foo: { b: null } }, 1, 0));
     await expectNext(
@@ -139,7 +154,17 @@ describe('changes', () => {
     backend.write(
       makeGraph(
         {
-          foo: page({ a: 1, c: 3, d: 4, e: 5 }),
+          foo: [
+            { _key_: { before: ['a'] } },
+            { _key_: ['a'], _val_: 1 },
+            { _key_: { after: ['a'], before: ['c'] } },
+            { _key_: ['c'], _val_: 3 },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+            { _key_: { after: ['d'], before: ['e'] } },
+            { _key_: ['e'], _val_: 5 },
+            { _key_: { after: ['e'] } },
+          ],
         },
         0,
       ),
@@ -153,7 +178,14 @@ describe('changes', () => {
       },
     );
     await expectNext(subscription, {
-      foo: page({ a: 1, c: 3, d: 4 }, '', 'd'),
+      foo: [
+        { _key_: { before: ['a'] } },
+        { _key_: ['a'], _val_: 1 },
+        { _key_: { after: ['a'], before: ['c'] } },
+        { _key_: ['c'], _val_: 3 },
+        { _key_: { after: ['c'], before: ['d'] } },
+        { _key_: ['d'], _val_: 4 },
+      ],
     });
     backend.write(makeGraph({ foo: { b: 2 } }, 0));
     await expectNext(subscription, { foo: { b: 2 } });
@@ -182,16 +214,16 @@ describe('values', () => {
 
   test('link', async () => {
     backend.write(makeGraph({ bar: { a: { x: 5 }, b: { x: 6 } } }, 0));
-    backend.write(makeGraph({ foo: link(['bar', 'a']) }, 0));
+    backend.write(makeGraph({ foo: { _ref_: ['bar', 'a'] } }, 0));
 
     const subscription = g.call('watch', makeQuery({ foo: { x: 1 } }, 0));
     await expectNext(subscription, {
-      foo: link(['bar', 'a']),
+      foo: { _ref_: ['bar', 'a'] },
       bar: { a: { x: 5 } },
     });
-    backend.write(makeGraph({ foo: link(['bar', 'b']) }, 0));
+    backend.write(makeGraph({ foo: { _ref_: ['bar', 'b'] } }, 0));
     await expectNext(subscription, {
-      foo: link(['bar', 'b']),
+      foo: { _ref_: ['bar', 'b'] },
       bar: { b: { x: 6 } },
     });
     backend.write(makeGraph({ bar: { a: { x: 7 } } }, 0));
@@ -199,14 +231,30 @@ describe('values', () => {
     // await subscription.next(); // TODO: Remove this!
     backend.write(makeGraph({ bar: { b: { x: 3 } } }, 0));
     await expectNext(subscription, {
-      foo: link(['bar', 'b']),
+      foo: { _ref_: ['bar', 'b'] },
       bar: { b: { x: 3 } },
     });
   });
 
   test('range_deletion', async () => {
     backend.write(
-      makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0),
+      makeGraph(
+        {
+          foo: [
+            { _key_: { before: ['a'] } },
+            { _key_: ['a'], _val_: 1 },
+            { _key_: { after: ['a'], before: ['b'] } },
+            { _key_: ['b'], _val_: 2 },
+            { _key_: { after: ['b'], before: ['c'] } },
+            { _key_: ['c'], _val_: 3 },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+            { _key_: { after: ['d'], before: ['e'] } },
+            { _key_: ['e'], _val_: 5 },
+          ],
+        },
+        0,
+      ),
     );
 
     const subscription = g.call(
@@ -214,7 +262,14 @@ describe('values', () => {
       makeQuery({ foo: [{ first: 3 }, 1] }, 0),
     );
     await expectNext(subscription, {
-      foo: page({ a: 1, b: 2, c: 3 }, '', 'c'),
+      foo: [
+        { _key_: { before: ['a'] } },
+        { _key_: ['a'], _val_: 1 },
+        { _key_: { after: ['a'], before: ['b'] } },
+        { _key_: ['b'], _val_: 2 },
+        { _key_: { after: ['b'], before: ['c'] } },
+        { _key_: ['c'], _val_: 3 },
+      ],
     });
     backend.write(makeGraph({ foo: { b: null } }, 1));
     // TODO: In a future version, update versions throughout the tree in
@@ -239,18 +294,53 @@ describe('values', () => {
 
   test('accept_range_deletion_substitute', async () => {
     backend.write(
-      makeGraph({ foo: page({ a: 1, b: 2, c: 3, d: 4, e: 5 }) }, 0),
+      makeGraph(
+        {
+          foo: [
+            { _key_: { before: ['a'] } },
+            { _key_: ['a'], _val_: 1 },
+            { _key_: { after: ['a'], before: ['b'] } },
+            { _key_: ['b'], _val_: 2 },
+            { _key_: { after: ['b'], before: ['c'] } },
+            { _key_: ['c'], _val_: 3 },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+            { _key_: { after: ['d'], before: ['e'] } },
+            { _key_: ['e'], _val_: 5 },
+          ],
+        },
+        0,
+      ),
     );
     const subscription = g.call(
       'watch',
       makeQuery({ foo: [{ first: 3 }, 1] }, 0),
     );
     await expectNext(subscription, {
-      foo: page({ a: 1, b: 2, c: 3 }, '', 'c'),
+      foo: [
+        { _key_: { before: ['a'] } },
+        { _key_: ['a'], _val_: 1 },
+        { _key_: { after: ['a'], before: ['b'] } },
+        { _key_: ['b'], _val_: 2 },
+        { _key_: { after: ['b'], before: ['c'] } },
+        { _key_: ['c'], _val_: 3 },
+      ],
     });
     expect(backend.read).toHaveBeenCalledTimes(1);
 
-    backend.write(makeGraph({ foo: page({ b: null, d: 4 }, 'c\0', 'd') }, 1));
+    backend.write(
+      makeGraph(
+        {
+          foo: [
+            { _key_: ['b'] },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+          ],
+        },
+        1,
+      ),
+    );
+
     await expectNext(
       subscription,
       // prettier-ignore
@@ -272,14 +362,33 @@ describe('values', () => {
 
   test('back_range_deletion_substitute', async () => {
     backend.write(
-      makeGraph({ foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff') }, 0),
+      makeGraph(
+        {
+          foo: [
+            { _key_: ['c'], _val_: 3 },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+            { _key_: { after: ['d'], before: ['e'] } },
+            { _key_: ['e'], _val_: 5 },
+            { _key_: { after: ['e'] } },
+          ],
+        },
+        0,
+      ),
     );
     const subscription = g.call(
       'watch',
       makeQuery({ foo: [{ last: 3 }, 1] }, 0),
     );
     await expectNext(subscription, {
-      foo: page({ c: 3, d: 4, e: 5 }, 'c', '\uffff'),
+      foo: [
+        { _key_: ['c'], _val_: 3 },
+        { _key_: { after: ['c'], before: ['d'] } },
+        { _key_: ['d'], _val_: 4 },
+        { _key_: { after: ['d'], before: ['e'] } },
+        { _key_: ['e'], _val_: 5 },
+        { _key_: { after: ['e'] } },
+      ],
     });
 
     backend.write(
@@ -311,17 +420,49 @@ describe('values', () => {
   });
 
   test('range_insertion', async () => {
-    backend.write(makeGraph({ foo: page({ a: 1, c: 3, d: 4, e: 5 }) }, 0));
+    backend.write(
+      makeGraph(
+        {
+          foo: [
+            { _key_: { before: ['a'] } },
+            { _key_: ['a'], _val_: 1 },
+            { _key_: ['a'], _val_: 1 },
+            { _key_: { after: ['a'], before: ['c'] } },
+            { _key_: { after: ['c'], before: ['d'] } },
+            { _key_: ['d'], _val_: 4 },
+            { _key_: { after: ['d'], before: ['e'] } },
+            { _key_: ['e'], _val_: 5 },
+            { _key_: { after: ['e'] } },
+          ],
+        },
+        0,
+      ),
+    );
+
     const subscription = g.call(
       'watch',
       makeQuery({ foo: [{ first: 3 }, 1] }, 0),
     );
     await expectNext(subscription, {
-      foo: page({ a: 1, c: 3, d: 4 }, '', 'd'),
+      foo: [
+        { _key_: { before: ['a'] } },
+        { _key_: ['a'], _val_: 1 },
+        { _key_: { after: ['a'], before: ['c'] } },
+        { _key_: ['c'], _val_: 3 },
+        { _key_: { after: ['c'], before: ['d'] } },
+        { _key_: ['d'], _val_: 4 },
+      ],
     });
     backend.write(makeGraph({ foo: { b: 2 } }, 0));
     await expectNext(subscription, {
-      foo: page({ a: 1, b: 2, c: 3 }, '', 'c'),
+      foo: [
+        { _key_: { before: ['a'] } },
+        { _key_: ['a'], _val_: 1 },
+        { _key_: { after: ['a'], before: ['b'] } },
+        { _key_: ['b'], _val_: 2 },
+        { _key_: { after: ['b'], before: ['c'] } },
+        { _key_: ['c'], _val_: 3 },
+      ],
     });
   });
 
@@ -334,15 +475,15 @@ describe('values', () => {
             '2': { name: 'bob' },
             '3': { name: 'carol' },
           },
-          usersByAge: page(
-            {
-              '4': link(['users', '1']),
-              '5': link(['users', '2']),
-              '7': link(['users', '3']),
-            },
-            '',
-            '\uFFFF',
-          ),
+          usersByAge: [
+            { _key_: { before: ['4'] } },
+            { _key_: ['4'], _ref_: ['users', '1'] },
+            { _key_: { after: ['4'], before: ['5'] } },
+            { _key_: ['5'], _ref_: ['users', '2'] },
+            { _key_: { after: ['5'], before: ['7'] } },
+            { _key_: ['7'], _ref_: ['users', '3'] },
+            { _key_: { after: ['7'] } },
+          ],
         },
         0,
       ),
@@ -357,11 +498,12 @@ describe('values', () => {
         '2': { name: 'bob' },
         '3': { name: 'carol' },
       },
-      usersByAge: page(
-        { '5': link(['users', '2']), '7': link(['users', '3']) },
-        '5',
-        '\uffff',
-      ),
+      usersByAge: [
+        { _key_: ['5'], _ref_: ['users', '2'] },
+        { _key_: { after: ['5'], before: ['7'] } },
+        { _key_: ['7'], _ref_: ['users', '3'] },
+        { _key_: { after: ['7'] } },
+      ],
     });
     backend.write(
       makeGraph(

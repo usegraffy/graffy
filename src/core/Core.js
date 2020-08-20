@@ -1,4 +1,8 @@
 import { unwrap } from '@graffy/common';
+import debug from 'debug';
+import { format } from '@graffy/testing';
+
+const log = debug('graffy:core');
 
 function resolve(handlers, firstPayload, options) {
   if (!handlers || !handlers.length) throw Error('resolve.no_provider');
@@ -39,6 +43,7 @@ export default class Core {
   }
 
   call(type, payload, options = {}) {
+    log('call', type, format(payload));
     return resolve(this.handlers[type], payload, options);
   }
 }

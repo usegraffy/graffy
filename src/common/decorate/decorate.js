@@ -60,7 +60,6 @@ function decoratePage(graph, links) {
   }
 
   Object.defineProperty(result, 'pageInfo', { value: pageInfo(graph) });
-  // result.pageInfo = pageInfo(graph);
   return result;
 }
 

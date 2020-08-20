@@ -8,8 +8,8 @@ const FALSE = 2;
 const TRUE = 3;
 const NUM = 4;
 const STR = 5;
-const ARR = 6;
-const OBJ = 7;
+export const ARR = 6;
+export const OBJ = 7;
 
 function encodeArray(array) {
   return [
@@ -64,15 +64,16 @@ export function encode(value) {
       i += part.length;
     }
   }
-  return '\0' + encodeB64(buffer);
+  return encodeB64(buffer);
 }
 
-const NEXTKEY = Symbol();
+const nextKey = new WeakMap();
 
 export function decode(key) {
   let i = 0;
-  if (key[0] !== '\0') throw Error('decode.not_encoded_key');
-  const buffer = decodeB64(key, 1);
+  const buffer = decodeB64(key, 0);
+
+  /** @type {Array<{ [prop: string]: any }|Array>} */
   const stack = [[]];
 
   function readString() {
@@ -91,17 +92,16 @@ export function decode(key) {
     if (Array.isArray(current)) {
       current.push(value);
     } else {
-      if (NEXTKEY in current) {
-        current[current[NEXTKEY]] = value;
-        delete current[NEXTKEY];
+      if (nextKey.has(current)) {
+        current[nextKey.get(current)] = value;
+        nextKey.delete(current);
       } else {
-        current[NEXTKEY] = value;
+        nextKey.set(current, value);
       }
     }
   }
 
   function popToken() {
-    if (stack.length) delete stack[stack.length - 1][NEXTKEY];
     stack.pop();
   }
 

@@ -1,8 +1,9 @@
 import { keyStep } from '@graffy/common';
 
 function escape(string) {
+  if (string === '') return "''";
   // eslint-disable-next-line no-control-regex
-  return string.replace(/\uffff/g, '\\FF').replace(/\u0000/g, '\\00');
+  return "'" + string.replace(/\uffff/g, '\\FF').replace(/\0/g, '\\00') + "'";
 }
 
 function interval(start, finish) {
@@ -37,7 +38,7 @@ export default function format(graph, indent = '') {
             : '<@' + (lastPrintedVersion = version) + '>\n',
           indent,
           end ? interval(key, end) : escape(key),
-          path ? ` ➚/${path.join('/')}` : '',
+          path ? ` ➚${path.join('.')}` : '',
           value ? ` ${JSON.stringify(value)}` : '',
           Object.keys(rest).length > 0 ? ' ' + JSON.stringify(rest) : '',
           children ? ' {' : '',

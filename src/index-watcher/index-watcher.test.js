@@ -1,7 +1,7 @@
 import Graffy from '@graffy/core';
 import Fill from '@graffy/fill';
 import IndexWatcher from './index.js';
-import { key, page, link, makeGraph } from '@graffy/common';
+import { encodeValue as key, page, link, makeGraph } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 
 const paramKey = key({ country: 'us' });
@@ -17,7 +17,7 @@ describe('indexer', () => {
     store.use(Fill());
 
     users = new mockBackend();
-    store.use('/users', users.middleware);
+    store.use('users', users.middleware);
 
     users.write(
       makeGraph(
@@ -35,9 +35,9 @@ describe('indexer', () => {
     // console.log(debug(users.state));
 
     store.use(
-      '/users$',
+      'users$',
       IndexWatcher(
-        '/users',
+        'users',
         { name: true, country: true, timestamp: true },
         (user, params) => {
           if (user.country !== params.country) return; // No keys.

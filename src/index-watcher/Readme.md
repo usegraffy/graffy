@@ -7,7 +7,7 @@ Watch provider for the index pattern:
   users: { userId: { ... }, ... },
   users$: {
     encodedParameters: page({
-      [indexKey]: link('/users/userId'),
+      [indexKey]: link('users.userId'),
       ...
     }),
     ...
@@ -21,9 +21,9 @@ While it is straightforward to create a watch provider (change stream) for the `
 
 ```js
 store.use(
-  '/users$',
+  'users$',
   IndexWatcher(
-    '/users', // Entity path prefix
+    'users', // Entity path prefix
     { country: true, createTime: true }, // Entity sub-query
     (user, params) => {
       // Indexing function

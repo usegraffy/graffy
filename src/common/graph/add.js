@@ -43,7 +43,7 @@ function compare(node) {
     const v =
       compareValue(item.key, node.key) ||
       compareValue(item.end, node.end) ||
-      compareValue(item.count, node.count);
+      compareValue(item.limit, node.limit);
     return v;
   };
 }

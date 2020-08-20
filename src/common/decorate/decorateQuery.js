@@ -1,5 +1,5 @@
 import { isRange, isBranch } from '../node';
-import rangeToPage from './rangeToPage';
+import { decodeArgs } from '../encode/index.js';
 
 export default function decorateQuery(query) {
   const result = decorateChildren(query);
@@ -19,13 +19,7 @@ function decoratePage(query) {
   const result = [];
   for (const node of query) {
     const child = isBranch(node) ? decorateChildren(node.children) : true;
-    if (isRange(node)) {
-      const { key, end, count } = node;
-      result.push(rangeToPage(key, end, count), child);
-    } else {
-      const { key } = node;
-      result.push(rangeToPage(key, key, 1), child);
-    }
+    result.push(decodeArgs(node), child);
   }
 
   return result;

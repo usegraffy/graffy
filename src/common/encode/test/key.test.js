@@ -1,4 +1,4 @@
-import { encode, decode } from '../key.js';
+import { encode, decode } from '../struct.js';
 
 function tryValue(value) {
   const enc = encode(value);

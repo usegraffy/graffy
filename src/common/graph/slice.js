@@ -53,6 +53,9 @@ export default function slice(graph, query, root) {
     delete result.linked;
   }
   delete result.root;
+  // console.log(
+  //   'slice:\n' + format(graph) + format(query) + format(result.known),
+  // );
   return result;
 }
 
@@ -101,35 +104,37 @@ function sliceNode(graph, query, result) {
 }
 
 export function sliceRange(graph, query, result) {
-  let { key, end, count, version } = query;
-  if (count > 0) {
-    for (let i = getIndex(graph, key); key <= end && count > 0; i++) {
+  let { key, end, limit = Infinity, version } = query;
+  const step = key < end ? 1 : -1;
+
+  if (key < end) {
+    for (let i = getIndex(graph, key); key <= end && limit > 0; i++) {
       const node = graph[i];
       if (!node || key < node.key || isOlder(node, version)) break;
       if (isRange(node)) {
         result.addKnown(getOverlap(node, key, end));
       } else {
         sliceNode(node, { ...query, key }, result);
-        count--;
+        limit--;
       }
       key = keyAfter(node.end || node.key);
     }
   } else {
-    for (let i = getLastIndex(graph, end) - 1; end >= key && count < 0; i--) {
+    for (let i = getLastIndex(graph, key) - 1; key >= end && limit > 0; i--) {
       const node = graph[i];
-      if (!node || end > (node.end || node.key) || isOlder(node, version))
+      if (!node || key > (node.end || node.key) || isOlder(node, version))
         break;
       if (isRange(node)) {
-        result.addKnown(getOverlap(node, key, end));
+        result.addKnown(getOverlap(node, end, key));
       } else {
-        sliceNode(node, { ...query, key: end }, result);
-        count++;
+        sliceNode(node, { ...query, key }, result);
+        limit--;
       }
-      end = keyBefore(node.key);
+      key = keyBefore(node.key);
     }
   }
-  if (count && key < end) {
-    const unknown = { ...query, key, end, count };
+  if (limit && (step < 0 ? key > end : key < end)) {
+    const unknown = { ...query, key, end, limit };
     result.addUnknown(unknown);
   }
 }

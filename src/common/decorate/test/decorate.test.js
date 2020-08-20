@@ -1,5 +1,5 @@
 import decorate from '../decorate';
-import { key, keyAfter, keyBefore } from '@graffy/common';
+import { encodeValue as key, keyAfter, keyBefore } from '@graffy/common';
 
 test('decorate', () => {
   const decorated = decorate(
@@ -14,20 +14,20 @@ test('decorate', () => {
         ]}
       ] },
       { key: 'posts', version: 2, children: [
-        { key: key('1984'), version: 2, children: [
+        { key: '\0' + key('1984'), version: 2, children: [
           { key: 'author', version: 2, path: ['users', '1'] },
           { key: 'body', value: 'Lorem ipsum', version: 2 },
           { key: 'options', value: { inStock: true }, version: 2 },
           { key: 'title', value: '1984', version: 2 },
         ] },
-        { key: keyAfter(key('1984')), end: keyBefore(key('2001')), version: 2},
-        { key: key('2001'), version: 2, children: [
+        { key: '\0' + keyAfter(key('1984')), end: '\0' + keyBefore(key('2001')), version: 2},
+        { key: '\0' + key('2001'), version: 2, children: [
           { key: 'author', version: 2, path: ['users', '2'] },
           { key: 'body', value: 'Hello world', version: 2 },
           { key: 'options', value: { borrowed: true }, version: 2 },
           { key: 'title', value: '2001', version: 2 },
         ] },
-        { key: keyAfter(key('2001')), end: '\uffff', version: 2 }
+        { key: '\0' + keyAfter(key('2001')), end: '\0\uffff', version: 2 }
       ] },
     ],
   );
