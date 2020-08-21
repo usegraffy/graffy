@@ -11,6 +11,7 @@ export default function mockBackend(options = {}) {
     write: (change) => {
       // change = setVersion(change, Date.now());
       merge(state, change);
+      // log('Sending change to watchers', change);
       watcher.write(change);
       return change;
     },

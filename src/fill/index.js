@@ -1,6 +1,6 @@
 import { merge, slice } from '@graffy/common';
 import subscribe from './subscribe';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 const MAX_RECURSIONS = 10;
 
@@ -14,7 +14,6 @@ export default function fill(_) {
       let budget = MAX_RECURSIONS;
 
       while (budget-- > 1) {
-        console.log(format(query), format(value));
         const { known, unknown } = slice(value, query);
         value = known;
         if (!unknown) break;

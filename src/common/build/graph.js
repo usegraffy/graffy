@@ -31,14 +31,14 @@ function makeNode(object, key, ver) {
   if (typeof _opt_ !== 'undefined') node.options = _opt_;
 
   if (object === null || _val_ === null) {
-    node.end = key;
+    node.end = node.key;
   } else if (typeof _val_ !== 'undefined') {
     node.value = _val_;
   } else if (_ref_) {
     node.path = makePath(_ref_);
   } else if (Array.isArray(object)) {
     const children = object
-      .map((obj) => makeNode(obj, undefined, ver))
+      .map((obj) => makeNode(obj, undefined, node.version))
       .filter(Boolean)
       .sort((a, b) => (a.key <= b.key ? -1 : 1));
 
@@ -47,7 +47,7 @@ function makeNode(object, key, ver) {
     }
   } else if (typeof object === 'object') {
     const children = Object.entries(rest)
-      .map(([key, obj]) => makeNode(obj, key, ver))
+      .map(([key, obj]) => makeNode(obj, key, node.version))
       .filter(Boolean)
       .sort((a, b) => (a.key <= b.key ? -1 : 1));
 

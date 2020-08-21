@@ -43,10 +43,7 @@ function makeNode(object, key, ver) {
     node.value = typeof object === 'number' ? object : 1;
   }
 
-  if (node.end && !node.children) {
-    console.log('Assigning a value to', [node.key, node.end]);
-    node.value = 1;
-  }
+  if (node.end && !node.children) node.value = 1;
 
   if (node.children?.length || typeof node.value !== 'undefined') {
     return freeze(node);

@@ -3,21 +3,21 @@ import { keyStep } from '@graffy/common';
 function escape(string) {
   if (string === '') return "''";
   // eslint-disable-next-line no-control-regex
-  return "'" + string.replace(/\uffff/g, '\\FF').replace(/\0/g, '\\00') + "'";
+  return string.replace(/\uffff/g, '␌').replace(/\0/g, '␀');
 }
 
-function interval(start, finish) {
-  if (start === finish) return `${start} ×`;
+function interval(key, end) {
+  if (key === end) return `${key} ×`;
 
-  const { key: key, step: kStep } = keyStep.call(null, start);
-  const { key: end, step: eStep } = keyStep(finish);
+  // const { key: key, step: kStep } = keyStep.call(null, start);
+  // const { key: end, step: eStep } = keyStep(finish);
 
   return [
+    // kStep === 1 ? '(' : '[',
     escape(key),
-    kStep === 1 ? '(' : '[',
-    '…',
-    eStep === -1 ? ')' : ']',
+    ' ⋯ ',
     escape(end),
+    // eStep === -1 ? ')' : ']',
   ].join('');
 }
 
