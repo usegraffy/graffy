@@ -35,52 +35,88 @@ export default function decorate(graph, links = []) {
 }
 
 function decorateChildren(graph, links) {
-  const isPage = graph.some((node) => isRange(node) && node.key !== node.end);
-  if (isPage) {
-    return decoratePage(graph, links);
-  } else {
-    return decorateBranch(graph, links);
-  }
-}
+  const isPage = graph.some((node) => node.key[0] === '\0');
+  const result = isPage ? [] : {};
 
-function decoratePage(graph, links) {
-  const result = [];
-  for (const node of graph) {
-    if (isRange(node)) continue;
-    if (isLink(node)) {
-      links.push([result, result.length, node.path]);
-      result.push(LINK_PLACEHOLDER); // Placeholder that will read replaced.
-      continue;
-    }
-    if (isBranch(node)) {
-      result.push(decorateChildren(node.children, links));
-      continue;
-    }
-    result.push(node.value);
-  }
-
-  Object.defineProperty(result, 'pageInfo', { value: pageInfo(graph) });
-  return result;
-}
-
-function decorateBranch(graph, links) {
-  const result = {};
   for (const node of graph) {
     const key = node.key;
-    if (isRange(node)) {
-      result[key] = null;
-      continue;
+    if (key[0] === '\0') {
+      if (isRange(node)) continue;
+      if (isLink(node)) {
+        links.push([result, result.length, node.path]);
+        result.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
+        continue;
+      }
+      if (isBranch(node)) {
+        result.push(decorateChildren(node.children, links));
+        continue;
+      }
+      result.push(node.value);
+    } else {
+      if (isRange(node)) {
+        result[key] = null;
+        continue;
+      }
+      if (isLink(node)) {
+        links.push([result, key, node.path]);
+        result[key] = LINK_PLACEHOLDER;
+        continue;
+      }
+      if (isBranch(node)) {
+        result[key] = decorateChildren(node.children, links);
+        continue;
+      }
+      if (node.value !== null) result[key] = node.value;
     }
-    if (isLink(node)) {
-      links.push([result, key, node.path]);
-      result[key] = LINK_PLACEHOLDER;
-      continue;
-    }
-    if (isBranch(node)) {
-      result[key] = decorateChildren(node.children, links);
-      continue;
-    }
-    if (node.value !== null) result[key] = node.value;
+  }
+
+  if (isPage) {
+    Object.defineProperty(result, 'pageInfo', { value: pageInfo(graph) });
   }
   return result;
 }
+
+//
+// function decoratePage(graph, links) {
+//   const result = [];
+//   for (const node of graph) {
+//     if (node.key[0] !== '\0') continue;
+//     if (isRange(node)) continue;
+//     if (isLink(node)) {
+//       links.push([result, result.length, node.path]);
+//       result.push(LINK_PLACEHOLDER); // Placeholder that will read replaced.
+//       console.log('link', links, result);
+//       continue;
+//     }
+//     if (isBranch(node)) {
+//       result.push(decorateChildren(node.children, links));
+//       continue;
+//     }
+//     result.push(node.value);
+//   }
+//
+//   Object.defineProperty(result, 'pageInfo', { value: pageInfo(graph) });
+//   return result;
+// }
+//
+// function decorateBranch(graph, links) {
+//   const result = {};
+//   for (const node of graph) {
+//     const key = node.key;
+//     if (isRange(node)) {
+//       result[key] = null;
+//       continue;
+//     }
+//     if (isLink(node)) {
+//       links.push([result, key, node.path]);
+//       result[key] = LINK_PLACEHOLDER;
+//       continue;
+//     }
+//     if (isBranch(node)) {
+//       result[key] = decorateChildren(node.children, links);
+//       continue;
+//     }
+//     if (node.value !== null) result[key] = node.value;
+//   }
+//   return result;
+// }

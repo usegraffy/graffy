@@ -26,7 +26,10 @@ describe('final', () => {
   });
 
   test('range', async () => {
-    const result = await store.read([{ first: 3 }, 1]);
-    expect(result).toEqual([42]);
+    store.write([{ _key_: ['a'], _ref_: 'foo' }]);
+    const result = await store.read([{ _key_: { first: 3 } }]);
+    const expectedResult = [42];
+    expectedResult.foo = 42;
+    expect(result).toEqual(expectedResult);
   });
 });

@@ -152,7 +152,7 @@ describe('read', () => {
         {},
       );
       expect(result).toEqual({
-        foo: { ['\0' + key('a')]: { bar: 42 }, ['\0' + key('b')]: { baz: 16 } },
+        foo: [{ bar: 42 }, { baz: 16 }],
       });
     });
   });

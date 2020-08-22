@@ -86,12 +86,11 @@ export function decode(node) {
   if (typeof node === 'string') return { id: node };
   const { key, end, limit } = node;
   if (key[0] !== '\0') {
-    throwIf(
-      'unencoded_range:' + key.length + ' ' + key.charCodeAt(0),
-      typeof end !== 'undefined' || limit,
-    );
+    throwIf('unencoded_range_key:' + key, end || limit);
     return { id: key };
   }
+
+  throwIf('unencoded_range_end', end && end[0] !== '\0');
 
   const args = {};
   if (limit) args[key < end ? 'first' : 'last'] = limit;

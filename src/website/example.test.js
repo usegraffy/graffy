@@ -15,6 +15,7 @@ beforeAll(() => {
         execArgv: ['--es-module-specifier-resolution=node'],
       });
       server.on('error', reject);
+      server.on('exit', reject);
       server.on('message', (message) => {
         if (message === 'ready') resolve();
       });
@@ -64,8 +65,8 @@ async function runExampleTests(url) {
 }
 
 const exampleUrl = `http://localhost:${PORT}/learn/10-Full-Example`;
-test.skip('exampleWs', () => runExampleTests(exampleUrl));
-test.skip('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
+test('exampleWs', () => runExampleTests(exampleUrl));
+test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
 
 afterAll(() => {
   return Promise.all([

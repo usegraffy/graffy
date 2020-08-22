@@ -7,7 +7,7 @@ jest.mock('./Socket', () => ({
   default: jest.fn(() => ({
     start: jest.fn(),
     stop: jest.fn(),
-    isAlive: jest.fn(),
+    isAlive: jest.fn(() => false),
   })),
 }));
 global.WebSocket = {}; // We don't need to actually mock this.
@@ -38,7 +38,7 @@ describe('wsClient', () => {
   });
 
   test('reconnect', async () => {
-    store.write('connection', { status: true });
+    await store.write('connection', { status: true });
     const results = MockSocket.mock.results;
     expect(results[results.length - 1].value.isAlive).toBeCalled();
   });

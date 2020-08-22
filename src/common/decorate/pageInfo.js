@@ -4,7 +4,11 @@ import { decodeArgs } from '../encode/index.js';
 export default function pageInfo(graph) {
   if (!graph || !graph.length) return {};
   const key = graph[0].key;
-  const lastNode = graph[graph.length - 1];
+  let lastNode;
+  for (let i = graph.length - 1; i >= 0; i--) {
+    lastNode = graph[i];
+    if (lastNode.key[0] === '\0') break;
+  }
   const end = isRange(lastNode) ? lastNode.end : lastNode.key;
 
   const page = decodeArgs({ key, end });
