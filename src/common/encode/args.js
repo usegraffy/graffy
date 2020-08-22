@@ -86,7 +86,7 @@ export function decode(node) {
   if (typeof node === 'string') return { id: node };
   const { key, end, limit } = node;
   if (key[0] !== '\0') {
-    throwIf('unencoded_range_key:' + key, end || limit);
+    throwIf('unencoded_range_key:' + key, typeof end !== 'undefined' || limit);
     return { id: key };
   }
 

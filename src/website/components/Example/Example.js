@@ -10,16 +10,14 @@ const PAGE_SIZE = 12;
 
 function getQuery(range) {
   return {
-    visitorsByTime: [
-      range,
-      {
-        id: true,
-        ts: true,
-        name: true,
-        avatar: true,
-        pageviews: [{ last: 3 }, true],
-      },
-    ],
+    visitors: {
+      _key_: range,
+      id: true,
+      ts: true,
+      name: true,
+      avatar: true,
+      pageviews: { _key_: { last: 3 } },
+    },
   };
 }
 
@@ -28,19 +26,19 @@ export default function Example() {
   const q = getQuery(range);
   const [data, loading] = useQuery(q);
 
-  if (!data || !data.visitorsByTime) {
+  if (!data || !data.visitors) {
     // We are still performing the initial load
     return <Spinner />;
   }
 
   // Extract page info, this is used in several places
-  let { start, end, hasNext, hasPrev } = data.visitorsByTime.pageInfo;
+  let { start, end, hasNext, hasPrev } = data.visitors.pageInfo;
 
-  const visitors = data.visitorsByTime;
+  const visitors = data.visitors;
 
   if (!loading && !hasPrev && hasNext && range.last) {
     // We have reached the beginning of the list while paginating backwards.
-    // Flip the query to the first 30.
+    // Flip the query to the first N.
     setRange({ first: PAGE_SIZE });
     return <Spinner />;
   }
@@ -54,17 +52,10 @@ export default function Example() {
         }}
       />*/}
       <Pagination
-        onPrev={
-          hasPrev &&
-          (() =>
-            setRange({ last: PAGE_SIZE, before: start, excludeBefore: true }))
-        }
+        onPrev={hasPrev && (() => setRange({ last: PAGE_SIZE, before: start }))}
         range={range}
         count={visitors.length}
-        onNext={
-          hasNext &&
-          (() => setRange({ first: PAGE_SIZE, after: end, excludeAfter: true }))
-        }
+        onNext={hasNext && (() => setRange({ first: PAGE_SIZE, after: end }))}
       />
       <VisitorList visitors={visitors} />
       {loading && <Spinner />}

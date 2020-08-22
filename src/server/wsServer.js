@@ -1,5 +1,9 @@
 import WebSocket from 'ws';
 import { serialize, deserialize } from '@graffy/common';
+import { format } from '@graffy/testing';
+import debug from 'debug';
+
+const log = debug('graffy:server:ws');
 
 const PING_INTERVAL = 30000;
 
@@ -26,6 +30,8 @@ export default function server(store) {
               const result = await store.call(op, payload, options);
               ws.send(serialize([id, null, result]));
             } catch (e) {
+              console.error(e);
+              log(op + 'error:' + e.message + ' ' + format(payload));
               ws.send(serialize([id, e.message]));
             }
             break;
@@ -42,6 +48,8 @@ export default function server(store) {
                 ws.send(serialize([id, null, value]));
               }
             } catch (e) {
+              console.error(e);
+              log(op + 'error:' + e.message + ' ' + format(payload));
               ws.send(serialize([id, e.message]));
             }
             break;

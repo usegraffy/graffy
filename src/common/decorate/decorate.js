@@ -7,6 +7,7 @@ export function descend(tree, path) {
   let node = tree;
   for (const key of path) {
     if (!node) return;
+    if (Array.isArray(node)) node = node.props;
     if (!(key in node)) return undefined;
     node = node[key];
   }
@@ -35,45 +36,51 @@ export default function decorate(graph, links = []) {
 }
 
 function decorateChildren(graph, links) {
-  const isPage = graph.some((node) => node.key[0] === '\0');
-  const result = isPage ? [] : {};
+  // const isPage = graph.some((node) => node.key[0] === '\0');
+  // const result = isPage ? [] : {};
+
+  const resArr = [];
+  const resObj = {};
 
   for (const node of graph) {
     const key = node.key;
     if (key[0] === '\0') {
       if (isRange(node)) continue;
       if (isLink(node)) {
-        links.push([result, result.length, node.path]);
-        result.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
+        links.push([resArr, resArr.length, node.path]);
+        resArr.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
         continue;
       }
       if (isBranch(node)) {
-        result.push(decorateChildren(node.children, links));
+        resArr.push(decorateChildren(node.children, links));
         continue;
       }
-      result.push(node.value);
+      resArr.push(node.value);
     } else {
       if (isRange(node)) {
-        result[key] = null;
+        resObj[key] = null;
         continue;
       }
       if (isLink(node)) {
-        links.push([result, key, node.path]);
-        result[key] = LINK_PLACEHOLDER;
+        links.push([resObj, key, node.path]);
+        resObj[key] = LINK_PLACEHOLDER;
         continue;
       }
       if (isBranch(node)) {
-        result[key] = decorateChildren(node.children, links);
+        resObj[key] = decorateChildren(node.children, links);
         continue;
       }
-      if (node.value !== null) result[key] = node.value;
+      if (node.value !== null) resObj[key] = node.value;
     }
   }
 
-  if (isPage) {
-    Object.defineProperty(result, 'pageInfo', { value: pageInfo(graph) });
+  if (resArr.length) {
+    Object.defineProperty(resArr, 'pageInfo', { value: pageInfo(graph) });
+    Object.defineProperty(resArr, 'props', { value: resObj });
+    return resArr;
+  } else {
+    return resObj;
   }
-  return result;
 }
 
 //

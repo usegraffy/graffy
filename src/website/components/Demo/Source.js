@@ -1,15 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { page, encodeValue, makeWatcher } from '@graffy/common';
+import { makeWatcher } from '@graffy/common';
 
 const watcher = makeWatcher();
 
 function finalize(value) {
   if (!value || typeof value !== 'object') return value;
-  const obj = {};
   if (Array.isArray(value)) {
-    value.forEach((v, i) => (obj[encodeValue(i)] = finalize(v)));
-    return page(obj);
+    return value.map((v, i) => ({ _key_: [i], ...v }));
   }
+  const obj = {};
   for (const i in value) obj[i] = finalize(value[i]);
   return obj;
 }

@@ -13,8 +13,8 @@ export default function Pagination({ range, count, onNext, onPrev }) {
       <span className="CurrPage">
         {range.first && `First ${range.first} `}
         {range.last && `Last ${range.last} `}
-        {range.after && `after ${getTime(range.after)} `}
-        {range.before && `before ${getTime(range.before)} `}
+        {range.after && `after ${getTime(range.after[0])} `}
+        {range.before && `before ${getTime(range.before[0])} `}
         {count !== (range.first || range.last) ? `(got ${count})` : ''}
       </span>
       <button className="NextPage" {...getButtonProps(onNext)}>
@@ -76,8 +76,8 @@ Pagination.propTypes = {
   range: PropTypes.shape({
     first: PropTypes.number,
     last: PropTypes.number,
-    after: PropTypes.number,
-    before: PropTypes.number,
+    after: PropTypes.arrayOf(PropTypes.number),
+    before: PropTypes.arrayOf(PropTypes.number),
   }),
   onNext: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,
   onPrev: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,

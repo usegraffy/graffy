@@ -1,7 +1,7 @@
 import faker from 'faker';
 import debug from 'debug';
 const log = debug('graffy:website:server');
-import { makeGraph, encodeValue as key } from '@graffy/common';
+import { makeGraph } from '@graffy/common';
 
 const TARGET = 30;
 const RATE = 5;
@@ -69,9 +69,7 @@ function visitorInfo() {
   return {
     name: faker.internet.userName(),
     avatar: faker.internet.avatar(),
-    pageviews: page({
-      [key(ts)]: faker.internet.url(),
-    }),
+    pageviews: [{ _key_: [ts], _val_: faker.internet.url() }],
   };
 }
 
@@ -91,8 +89,10 @@ function simulateEnter() {
   enter++;
   return makeGraph(
     {
-      visitors: { [addId]: { id: addId, ts, ...visitorInfo() } },
-      visitorsByTime: { [key(ts)]: link(['visitors', addId]) },
+      visitors: [
+        { _key_: addId, id: addId, ts, ...visitorInfo() },
+        { _key_: [ts], _ref_: ['visitors', addId] },
+      ],
     },
     ts,
   );
@@ -111,13 +111,7 @@ async function simulateLeave() {
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
   leave++;
-  return makeGraph(
-    {
-      visitors: { [delId]: null },
-      visitorsByTime: { [key(delTs)]: null },
-    },
-    ts,
-  );
+  return makeGraph({ visitors: [{ _key_: delId }, { _key_: [delTs] }] }, ts);
 }
 
 function simulateUpdate() {
@@ -129,7 +123,7 @@ function simulateUpdate() {
   const url = faker.internet.url();
   update++;
   return makeGraph(
-    { visitors: { [upId]: { pageviews: { [key(ts)]: url } } } },
+    { visitors: { [upId]: { pageviews: [{ _key_: [ts], _val_: url }] } } },
     ts,
   );
 }

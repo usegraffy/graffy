@@ -11,6 +11,8 @@ import { wrap, wrapValue } from '../path';
 import merge from './merge';
 import add from './add';
 
+import { format } from '@graffy/testing';
+
 class Result {
   constructor(root) {
     // When linked queries are added, they are forwarded to the root.
@@ -97,7 +99,9 @@ function sliceNode(graph, query, result) {
     result.addKnown(graph);
   } else if (isBranch(graph) || isBranch(query)) {
     // One side is a branch while the other is a leaf; throw error.
-    throw new Error('slice.leaf_branch_mismatch');
+    throw new Error(
+      'slice.leaf_branch_mismatch:' + format(graph) + '\n' + format(query),
+    );
   } else {
     result.addKnown(graph);
   }

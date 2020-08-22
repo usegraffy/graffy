@@ -13,7 +13,7 @@ store.use(provider);
 
 export default function Demo() {
   const [query, setQuery] = useState({
-    players: [{ first: 2 }, { name: true, score: true }],
+    players: { _key_: { first: 2 }, name: true, score: true },
   });
 
   const [expanded, setExpanded] = useState('result');
