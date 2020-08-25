@@ -71,9 +71,12 @@ describe('read', () => {
 
     test('all', async () => {
       const result = await g.read({
-        foo: { _key_: {}, bar: 1 },
+        foo: { _key_: { first: 100 }, bar: 1 },
       });
-      expect(provider).toBeCalledWith({ foo: [{}, { bar: true }] }, {});
+      expect(provider).toBeCalledWith(
+        { foo: [{ first: 100 }, { bar: true }] },
+        {},
+      );
       expect(result).toEqual({
         foo: [{ bar: 42 }, { bar: 41 }, { bar: 40 }, { bar: 39 }, { bar: 38 }],
       });

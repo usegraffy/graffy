@@ -13,7 +13,7 @@ it('should encode queries', () => {
           author: { name: 1 },
         },
         tags: { _key_: { first: 10 } },
-        reactions: { _key_: {} },
+        reactions: { _key_: { first: 100 } },
       },
       2,
     ),
@@ -31,7 +31,7 @@ it('should encode queries', () => {
         ] },
       ] },
       { key: 'reactions', version: 2, children: [
-        { key: '\0', end: '\0\uffff', version: 2, value: 1 }
+        { key: '\0', end: '\0\uffff', limit: 100, version: 2, value: 1 }
       ] },
       { key: 'tags', version: 2, children: [
         { key: '\0', end: '\0\uffff', limit: 10, version: 2, value: 1 }

@@ -29,7 +29,6 @@ describe('final', () => {
     store.write([{ _key_: ['a'], _ref_: 'foo' }]);
     const result = await store.read([{ _key_: { first: 3 } }]);
     const expectedResult = [42];
-    expectedResult.foo = 42;
     expect(result).toEqual(expectedResult);
   });
 });

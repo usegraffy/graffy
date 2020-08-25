@@ -2,6 +2,7 @@
 const { yarn } = require('./utils');
 
 module.exports = async function publish(name, version) {
+  const isPre = version.includes('alpha') || version.includes('beta');
   try {
     await yarn(
       name,
@@ -10,6 +11,7 @@ module.exports = async function publish(name, version) {
       'public',
       '--new-version',
       version,
+      ...(isPre ? ['--tag', 'pre'] : []),
       '--non-interactive',
       '--no-git-tag-version',
     );

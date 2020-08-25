@@ -5,10 +5,14 @@ function throwIf(message, condition) {
   if (condition) throw Error('arg_encoding.' + message);
 }
 
+function empty(object) {
+  for (const _ in object) return false;
+  return true;
+}
+
 export function encode(arg) {
   if (typeof arg === 'string') return { key: arg };
   const {
-    filter,
     first,
     last,
     order,
@@ -18,6 +22,7 @@ export function encode(arg) {
     until,
     cursor,
     id,
+    ...filter
   } = arg;
   if (id) return { key: id };
   const hasRangeArg = before || after || since || until || first || last;
@@ -37,14 +42,14 @@ export function encode(arg) {
   if (since) key = encodeValue(since);
   if (until) end = encodeValue(until);
 
-  if (!cursor) {
-    // No cursor means this is a range node.
+  if (hasRangeArg) {
+    // This is a range node.
     end = end || '\uffff';
     if (last) [key, end] = [end, key];
   }
 
-  if (order || filter) {
-    prefix += (filter ? encodeValue(filter) : '') + '.';
+  if (order || !empty(filter)) {
+    prefix += (!empty(filter) ? encodeValue(filter) : '') + '.';
     prefix += (order ? encodeValue(order) : '') + '.';
   }
 
@@ -96,7 +101,7 @@ export function decode(node) {
   if (limit) args[key < end ? 'first' : 'last'] = limit;
 
   const [filter, order, cursor] = decodeParts(key);
-  if (filter) args.filter = filter;
+  if (filter) Object.assign(args, filter);
   if (order) args.order = order;
 
   if (!end) {
