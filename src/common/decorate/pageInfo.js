@@ -14,6 +14,7 @@ export default function pageInfo(graph) {
   const page = decodeArgs({ key, end });
 
   return {
+    ...page,
     start: page.since || page.after,
     end: page.until || page.before,
     hasPrev: key !== '\0',

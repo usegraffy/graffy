@@ -1,4 +1,5 @@
 import { isRange, isBranch, isLink } from '../node';
+import { decodeArgs } from '../encode/index.js';
 import pageInfo from './pageInfo';
 
 const LINK_PLACEHOLDER = Symbol();
@@ -19,7 +20,7 @@ export default function decorate(graph, links = []) {
 
   let link;
   while ((link = links.shift())) {
-    const [from, key, path] = link;
+    const [from, key, path, args] = link;
     const node = descend(result, path);
     if (node === LINK_PLACEHOLDER) {
       // Try this link again later. This is to resolve multi-hop links.
@@ -30,6 +31,10 @@ export default function decorate(graph, links = []) {
       //   console.warn('Decorate: Link', path, 'is', node);
       // }
       from[key] = node;
+      if (typeof node === 'object' && node) {
+        Object.defineProperty(node, '_ref_', { value: path });
+        if (args) Object.defineProperty(node, '_key_', { value: args });
+      }
     }
   }
   return result;
@@ -46,14 +51,23 @@ function decorateChildren(graph, links) {
     const key = node.key;
     if (key[0] === '\0') {
       if (isRange(node)) continue;
+
+      const args = decodeArgs(node);
       if (isLink(node)) {
-        links.push([resArr, resArr.length, node.path]);
+        links.push([resArr, resArr.length, node.path, args]);
         resArr.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
         continue;
       }
       if (isBranch(node)) {
-        resArr.push(decorateChildren(node.children, links));
+        const child = decorateChildren(node.children, links);
+        Object.defineProperty(child, '_key_', { value: args });
+        resArr.push(child);
         continue;
+      }
+
+      if (typeof node.value === 'object') {
+        Object.defineProperty(node.value, '_key_', { value: args });
+        Object.defineProperty(node.value, '_val_', { value: node.value });
       }
       resArr.push(node.value);
     } else {

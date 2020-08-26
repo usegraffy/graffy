@@ -1,18 +1,15 @@
 import Graffy from '../Graffy';
 import GraffyFill from '@graffy/fill';
-import { encodeValue as key } from '@graffy/common';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
   store.use(GraffyFill());
 
-  const expectedBooksQuery = [
-    { first: 2 },
-    {
-      title: true,
-      author: { name: true },
-    },
-  ];
+  const expectedBooksQuery = {
+    title: true,
+    author: { name: true },
+  };
+  Object.defineProperty(expectedBooksQuery, '_key_', { value: { first: 2 } });
 
   const expectedUsersQuery = {
     clarke: { name: true },
@@ -54,6 +51,7 @@ test('Porcelain read', async () => {
       end: ['2001'],
       hasPrev: false,
       hasNext: true,
+      until: ['2001'],
     },
   });
 
@@ -61,6 +59,7 @@ test('Porcelain read', async () => {
     expectedBooksQuery,
     expect.any(Object),
   );
+  expect(onReadBooks.mock.calls[0][0]._key_).toEqual(expectedBooksQuery._key_);
   expect(onReadUsers).toHaveBeenCalledWith(
     expectedUsersQuery,
     expect.any(Object),
@@ -117,14 +116,6 @@ test('Porcelain subscription', async () => {
       author: { name: 'Arthur C Clarke' },
     },
   ];
-  Object.defineProperty(expectedResult, 'pageInfo', {
-    value: {
-      start: undefined,
-      end: ['2001'],
-      hasPrev: false,
-      hasNext: true,
-    },
-  });
 
   expect((await result.next()).value).toEqual(expectedResult);
 });

@@ -18,11 +18,13 @@ function decorateChildren(query) {
 function decoratePage(query) {
   const result = [];
   for (const node of query) {
-    const child = isBranch(node) ? decorateChildren(node.children) : true;
-    result.push(decodeArgs(node), child);
+    const args = decodeArgs(node);
+    const child = isBranch(node) ? decorateChildren(node.children) : {};
+    Object.defineProperty(child, '_key_', { value: args });
+    result.push(child);
   }
 
-  return result;
+  return result.length === 1 ? result[0] : result;
 }
 
 function decorateBranch(query) {
