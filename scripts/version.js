@@ -43,11 +43,11 @@ module.exports = async function version(str) {
       case 'minor':
         return `${major}.${minor + 1}.0`;
       case 'patch':
-        return `${major}.${minor}.${patch + 1}`;
+        return `${major}.${minor}.${patch + (pre ? 0 : 1)}`;
       case 'alpha':
       case 'beta':
-        return `${major}.${minor}.${patch + 1}-${str > pre ? str : pre}.${
-          str > pre ? 1 : number + 1
+        return `${major}.${minor}.${patch + (pre && str >= pre ? 0 : 1)}-${
+          str > pre ? `${str}.1` : `${pre}.${number + 1}`
         }`;
     }
   } catch (e) {
