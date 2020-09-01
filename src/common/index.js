@@ -5,3 +5,4 @@ export * from './graph';
 export * from './node';
 export * from './path';
 export * from './stream';
+export * from './util';

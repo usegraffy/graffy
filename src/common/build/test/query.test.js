@@ -40,10 +40,9 @@ it('should encode queries', () => {
   );
 });
 
-test('makeRange', () => {
-  const query = makeQuery({ foo: { _key_: { first: 3 } } });
-  console.log(query[0].children, format(query));
-});
+// test('makeRange', () => {
+//   const query = makeQuery({ foo: { _key_: { first: 3 } } });
+// });
 
 // import { query } from '../query';
 // import { encodeValue as key } from '../../encode';

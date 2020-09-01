@@ -1,14 +1,6 @@
 import { encode as encodeValue, decode as decodeValue } from './struct.js';
 import { keyStep, keyAfter, keyBefore } from '../graph/step.js';
-
-function throwIf(message, condition) {
-  if (condition) throw Error('arg_encoding.' + message);
-}
-
-function empty(object) {
-  for (const _ in object) return false;
-  return true;
-}
+import { throwIf, empty } from '../util.js';
 
 export function encode(arg) {
   if (typeof arg === 'string') return { key: arg };
@@ -85,6 +77,10 @@ function decodeParts(key) {
   return parts.length === 3
     ? [decodeValue(parts[0]), decodeValue(parts[1]), parts[2]]
     : [undefined, undefined, parts[0]];
+}
+
+export function isEncoded(key) {
+  return key[0] === '\0';
 }
 
 export function decode(node) {
