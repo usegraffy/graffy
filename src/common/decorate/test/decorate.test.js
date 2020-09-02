@@ -33,21 +33,23 @@ test('decorate', () => {
   );
   expect(decorated).toEqual({
     users: {
-      1: { name: 'George Orwell' },
-      2: { name: 'Arthur C Clarke' },
+      1: { _ref_: ['users', '1'], name: 'George Orwell' },
+      2: { _ref_: ['users', '2'], name: 'Arthur C Clarke' },
     },
     posts: [
       {
+        _key_: { cursor: '1984' },
         title: '1984',
         body: 'Lorem ipsum',
         options: { inStock: true },
-        author: { name: 'George Orwell' },
+        author: { _ref_: ['users', '1'], name: 'George Orwell' },
       },
       {
+        _key_: { cursor: '2001' },
         title: '2001',
         body: 'Hello world',
         options: { borrowed: true },
-        author: { name: 'Arthur C Clarke' },
+        author: { _ref_: ['users', '2'], name: 'Arthur C Clarke' },
       },
     ],
   });

@@ -37,12 +37,14 @@ test('Porcelain read', async () => {
 
   const expectedResult = [
     {
+      _key_: ['1984'],
       title: '1984',
-      author: { name: 'George Orwell' },
+      author: { _ref_: ['users', 'orwell'], name: 'George Orwell' },
     },
     {
+      _key_: ['2001'],
       title: '2001',
-      author: { name: 'Arthur C Clarke' },
+      author: { _ref_: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
   Object.defineProperty(expectedResult, 'pageInfo', {
@@ -108,12 +110,14 @@ test('Porcelain subscription', async () => {
   });
   const expectedResult = [
     {
+      _key_: ['1984'],
       title: '1984',
-      author: { name: 'George Orwell' },
+      author: { _ref_: ['users', 'orwell'], name: 'George Orwell' },
     },
     {
+      _key_: ['2001'],
       title: '2001',
-      author: { name: 'Arthur C Clarke' },
+      author: { _ref_: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
 

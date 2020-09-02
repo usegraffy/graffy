@@ -1,4 +1,5 @@
 import { isRange, isBranch, isLink } from '../node';
+import { empty } from '../util.js';
 import { decodeArgs } from '../encode/index.js';
 import pageInfo from './pageInfo';
 
@@ -32,8 +33,8 @@ export default function decorate(graph, links = []) {
       // }
       from[key] = node;
       if (typeof node === 'object' && node) {
-        Object.defineProperty(node, '_ref_', { value: path });
-        if (args) Object.defineProperty(node, '_key_', { value: args });
+        node._ref_ = path;
+        if (args) node._key_ = args;
       }
     }
   }
@@ -52,7 +53,10 @@ function decorateChildren(graph, links) {
     if (key[0] === '\0') {
       if (isRange(node)) continue;
 
-      const args = decodeArgs(node);
+      let args = decodeArgs(node);
+      const { cursor, ...rest } = args;
+      if (empty(rest) && Array.isArray(cursor)) args = cursor;
+
       if (isLink(node)) {
         links.push([resArr, resArr.length, node.path, args]);
         resArr.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
@@ -60,16 +64,19 @@ function decorateChildren(graph, links) {
       }
       if (isBranch(node)) {
         const child = decorateChildren(node.children, links);
-        Object.defineProperty(child, '_key_', { value: args });
+        child._key_ = args;
         resArr.push(child);
         continue;
       }
 
       if (typeof node.value === 'object') {
-        Object.defineProperty(node.value, '_key_', { value: args });
-        Object.defineProperty(node.value, '_val_', { value: node.value });
+        const child = Object.create(node.value);
+        child._key_ = args;
+        child._val_ = node.value;
+        resArr.push(child);
+      } else {
+        resArr.push(node.value);
       }
-      resArr.push(node.value);
     } else {
       if (isRange(node)) {
         resObj[key] = null;

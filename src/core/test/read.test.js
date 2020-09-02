@@ -76,26 +76,38 @@ describe('read', () => {
       expect(provider).toBeCalledWith({ foo: { bar: true } }, {});
       expect(provider.mock.calls[0][0].foo._key_).toEqual({ first: 100 });
       expect(result).toEqual({
-        foo: [{ bar: 42 }, { bar: 41 }, { bar: 40 }, { bar: 39 }, { bar: 38 }],
+        foo: [
+          { _key_: { cursor: 'a' }, bar: 42 },
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: { cursor: 'd' }, bar: 39 },
+          { _key_: { cursor: 'e' }, bar: 38 },
+        ],
       });
     });
 
     test('first', async () => {
       const result = await g.read({ foo: { _key_: { first: 2 }, bar: 1 } });
       expect(result).toEqual({
-        foo: [{ bar: 42 }, { bar: 41 }],
+        foo: [
+          { _key_: { cursor: 'a' }, bar: 42 },
+          { _key_: { cursor: 'b' }, bar: 41 },
+        ],
       });
     });
     test('last', async () => {
       const result = await g.read({ foo: { _key_: { last: 1 }, bar: 1 } });
-      expect(result).toEqual({ foo: [{ bar: 38 }] });
+      expect(result).toEqual({ foo: [{ _key_: { cursor: 'e' }, bar: 38 }] });
     });
     test('first-since', async () => {
       const result = await g.read({
         foo: { _key_: { first: 2, since: 'b' }, bar: 1 },
       });
       expect(result).toEqual({
-        foo: [{ bar: 41 }, { bar: 40 }],
+        foo: [
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+        ],
       });
     });
     test('last-until', async () => {
@@ -103,7 +115,11 @@ describe('read', () => {
         foo: { _key_: { last: 3, until: 'd' }, bar: 1 },
       });
       expect(result).toEqual({
-        foo: [{ bar: 41 }, { bar: 40 }, { bar: 39 }],
+        foo: [
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: { cursor: 'd' }, bar: 39 },
+        ],
       });
     });
     test('first-until-since', async () => {
@@ -111,7 +127,10 @@ describe('read', () => {
         foo: { _key_: { since: 'b', until: 'g', first: 2 }, bar: 1 },
       });
       expect(result).toEqual({
-        foo: [{ bar: 41 }, { bar: 40 }],
+        foo: [
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+        ],
       });
     });
     test('last-until-since', async () => {
@@ -119,7 +138,11 @@ describe('read', () => {
         foo: { _key_: { since: 'a', until: 'd', last: 3 }, bar: 1 },
       });
       expect(result).toEqual({
-        foo: [{ bar: 41 }, { bar: 40 }, { bar: 39 }],
+        foo: [
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: { cursor: 'd' }, bar: 39 },
+        ],
       });
     });
     test('first-until-since-filled', async () => {
@@ -127,7 +150,10 @@ describe('read', () => {
         foo: { _key_: { since: 'b', until: 'c', first: 4 }, bar: 1 },
       });
       expect(result).toEqual({
-        foo: [{ bar: 41 }, { bar: 40 }],
+        foo: [
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+        ],
       });
     });
     test('last-until-since-filled', async () => {
@@ -135,7 +161,11 @@ describe('read', () => {
         foo: { _key_: { since: 'b', until: 'd', last: 5 }, bar: 1 },
       });
       expect(result).toEqual({
-        foo: [{ bar: 41 }, { bar: 40 }, { bar: 39 }],
+        foo: [
+          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: { cursor: 'd' }, bar: 39 },
+        ],
       });
     });
 
@@ -153,7 +183,10 @@ describe('read', () => {
         {},
       );
       expect(result).toEqual({
-        foo: [{ bar: 42 }, { baz: 16 }],
+        foo: [
+          { _key_: { cursor: 'a' }, bar: 42 },
+          { _key_: { cursor: 'b' }, baz: 16 },
+        ],
       });
     });
   });
@@ -175,8 +208,8 @@ describe('read', () => {
       // Update this test after decorate starts to remove
       // unrequested branches.
       expect(await g.read({ foo: { x: { baz: 1 } } })).toEqual({
-        bar: { baz: 3 },
-        foo: { x: { baz: 3 } },
+        bar: { _ref_: ['bar'], baz: 3 },
+        foo: { x: { _ref_: ['bar'], baz: 3 } },
       });
     });
   });

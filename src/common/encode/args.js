@@ -101,7 +101,7 @@ export function decode(node) {
   if (order) args.order = order;
 
   if (!end) {
-    if (typeof cursor !== 'undefined') args.cursor = cursor;
+    if (typeof cursor !== 'undefined') args.cursor = decodeValue(cursor);
     return args;
   }
 
