@@ -42,6 +42,23 @@ export function unwrap(graph, path) {
   return node.children || node.value;
 }
 
+export function wrapObject(object, path) {
+  if (!Array.isArray(path)) throw Error('wrapObject.path_not_array ' + path);
+  for (let i = path.length - 1; i >= 0; i--) {
+    object = { [path[i]]: object };
+  }
+  return object;
+}
+
+export function unwrapObject(object, path) {
+  if (!Array.isArray(path)) throw Error('unwrapObject.path_not_array ' + path);
+  for (let i = 0; i < path.length; i++) {
+    if (!object || typeof object !== 'object') return;
+    object = object[path[i]];
+  }
+  return object;
+}
+
 export function remove(children, path) {
   if (!Array.isArray(path)) throw Error('del.path_not_array ' + path);
   if (!children) return null; // This path does not exist.

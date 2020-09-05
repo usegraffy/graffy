@@ -1,4 +1,5 @@
 import { selectByArgs, selectByIds, upsertToId } from './sql';
+import { linkResult } from './link';
 import { isEncoded, decodeArgs, makeGraph, decorate } from '@graffy/common';
 
 export default ({
@@ -26,17 +27,30 @@ export default ({
   async function read(query) {
     const ops = [];
     const ids = [];
+    const idSubQueries = [];
 
     for (const node of query.children) {
       if (isEncoded(node.key)) {
         const args = decodeArgs(node);
-        ops.push(selectByArgs(args, options));
+        ops.push(
+          selectByArgs(args, options).then((res) =>
+            linkResult(res, node.children, links),
+          ),
+        );
       } else {
         ids.push(node.key);
+        idSubQueries.push(node.children);
       }
     }
 
-    if (ids.length) ops.push(selectByIds(ids, options));
+    if (ids.length)
+      ops.push(
+        selectByIds(ids, options).then((res) =>
+          res.map(
+            (object, i) => linkResult([object], idSubQueries[i], links)[0],
+          ),
+        ),
+      );
 
     // Each promise resolves to an array of objects.
     return makeGraph((await Promise.all(ops)).flat(1));

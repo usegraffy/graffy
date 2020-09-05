@@ -1,5 +1,5 @@
 {
-  "name": "@graffy/postgres",
+  "name": "@graffy/pgdoc",
   "version": "1.0.0",
   "type": "module"
 }
