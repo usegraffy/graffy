@@ -113,10 +113,10 @@ module.exports = async function build(name, version) {
         author: 'aravind (https://github.com/aravindet)',
         version,
         main: './cjs/index.js',
-        exports: {
-          import: './esm/index.js',
-          require: './cjs/index.js',
-        },
+        // exports: {
+        //   import: './esm/index.js',
+        //   require: './cjs/index.js',
+        // },
         module: './esm/index.js',
         repository: {
           type: 'git',

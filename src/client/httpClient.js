@@ -6,7 +6,7 @@ function getOptionsParam(options) {
   return encodeURIComponent(serialize(options));
 }
 
-export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
+export default (baseUrl, { getOptions = () => {}, watch } = {}) => (store) => {
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(getOptions('read', options));
@@ -20,6 +20,12 @@ export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
   });
 
   store.on('watch', (query, options) => {
+    if (watch === 'none') throw Error('client.no_watch');
+    if (watch === 'hang') {
+      return makeStream((push) => {
+        push(undefined);
+      });
+    }
     if (!EventSource) throw Error('client.sse.unavailable');
     const optionsParam = getOptionsParam(getOptions('watch', options));
     const url = `${baseUrl}?q=${encodeUrl(query)}&${optionsParam}`;
