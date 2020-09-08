@@ -1,5 +1,8 @@
 import url from 'url';
 import { decodeUrl, serialize, deserialize } from '@graffy/common';
+import debug from 'debug';
+
+const log = debug('graffy:server:http');
 
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');
@@ -34,6 +37,7 @@ export default function server(store) {
               res.write(`data: ${serialize(value)}\n\n`);
             }
           } catch (e) {
+            log(e);
             res.write(`event: graffyerror\ndata: ${e.message}\n\n`);
           }
           res.end();
@@ -46,6 +50,7 @@ export default function server(store) {
           res.end(serialize(value));
         }
       } catch (e) {
+        log(e);
         res.writeHead(400);
         res.end(`${e.message}`);
         return;

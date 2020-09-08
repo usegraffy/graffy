@@ -17,21 +17,19 @@ import { getInsertCols, getInsertVals, getUpdateSet } from './util.js';
 */
 
 export async function upsertToId(object, options) {
-  const { table } = options;
-
-  if (!object.id) {
+  if (!object.id || !object.id.length) {
     throw Error('postgres.write_no_id: ' + JSON.stringify(object));
   }
 
   const updateQuery = sql`
-    UPDATE ${sql.table(table)} SET ${getUpdateSet(object, options)}
-    WHERE "id" = ${object.id}`;
+    UPDATE "object" SET ${getUpdateSet(object, options)}
+    WHERE "id" && ${object.id}`;
 
   const { rowCount } = await pool.query(updateQuery);
   if (rowCount) return;
 
   const query = sql`
-    INSERT INTO ${sql.table(table)} (${getInsertCols(options)})
+    INSERT INTO "object" (${getInsertCols(options)})
     VALUES ${getInsertVals(object, options)}`;
 
   await pool.query(query);

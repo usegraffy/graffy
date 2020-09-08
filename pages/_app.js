@@ -4,7 +4,7 @@ import React from 'react';
 import App from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
-import { Navigation } from '@graffy/website';
+import Navigation from '@graffy/website/components/Navigation';
 
 class GraffyDocApp extends App {
   constructor() {

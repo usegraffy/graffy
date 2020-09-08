@@ -2,25 +2,15 @@ import { selectByArgs, selectByIds, upsertToId } from './sql';
 import { linkResult } from './link';
 import { isEncoded, decodeArgs, makeGraph, decorate } from '@graffy/common';
 
-export default ({
-  table,
-  columns = ['id', 'type', 'name', 'createTime', 'updateTime'],
-  dataColumn = 'data',
-  indexColumn = 'tags',
-  indexProps = [],
-  links = [],
-} = {}) => (store) => {
+export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
   store.on('read', read);
   store.on('write', write);
   store.on('watch', watch);
 
   const options = {
     prefix: store.path,
-    table: table || store.path[store.path.length - 1] || 'default',
-    columns,
-    dataColumn,
-    indexColumn,
-    indexProps,
+    collection: collection || store.path[store.path.length - 1] || 'default',
+    indexes,
     links,
   };
 
@@ -29,7 +19,9 @@ export default ({
     const ids = [];
     const idSubQueries = [];
 
-    for (const node of query.children) {
+    console.log('db:read', query);
+
+    for (const node of query) {
       if (isEncoded(node.key)) {
         const args = decodeArgs(node);
         ops.push(
@@ -43,7 +35,7 @@ export default ({
       }
     }
 
-    if (ids.length)
+    if (ids.length) {
       ops.push(
         selectByIds(ids, options).then((res) =>
           res.map(
@@ -51,6 +43,7 @@ export default ({
           ),
         ),
       );
+    }
 
     // Each promise resolves to an array of objects.
     return makeGraph((await Promise.all(ops)).flat(1));
@@ -59,7 +52,7 @@ export default ({
   async function write(change) {
     const ops = [];
 
-    for (const node of change.children) {
+    for (const node of change) {
       if (isEncoded(node.key)) {
         throw Error('pg_write.write_arg_unimplemented');
       } else {

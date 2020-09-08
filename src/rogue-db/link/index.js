@@ -26,7 +26,6 @@ export function linkResult(objects, query, linkSpecs) {
         mergeObject(object, wrapObject(link, prop));
       }
     }
-
-    return objects;
   }
+  return objects;
 }

@@ -15,7 +15,8 @@
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
     "next": "NEXTJS=1 next",
     "build": "NEXTJS=1 next build",
-    "start": "node --es-module-specifier-resolution=node src/website/server.js"
+    "start": "node --es-module-specifier-resolution=node src/website/server.js",
+    "rogue": "node --es-module-specifier-resolution=node src/rogue-admin/server.js"
   },
   "workspaces": [
     "src/*",

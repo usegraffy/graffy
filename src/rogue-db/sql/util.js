@@ -41,6 +41,12 @@ function getFilterCond(params) {
             return sql`${lhs} IN ${rhs}`;
           case '$nin':
             return sql`${lhs} NOT IN ${rhs}`;
+          case '$cts':
+            return sql`${lhs} @> ${rhs}`;
+          case '$ctd':
+            return sql`${lhs} <@ ${rhs}`;
+          case '$ovp':
+            return sql`${lhs} && ${rhs}`;
         }
       }),
       sql` AND `,
@@ -125,16 +131,15 @@ function jsonUpdate(column, object) {
 
 export function getSelectCols(_options) {
   return sql`data || jsonb_build_object(
-    'id', "id",
+    'id', jsonb_build_object( '_val_', "id"),
     'type', "type",
-    'name', "name",
     'createTime', "createTime",
     'updateTime', "updateTime"
   )`;
 }
 
 export function getInsertCols(_options) {
-  return sql`"id", "type", "name", "createTime", "updateTime", "data"`;
+  return sql`"id", "type", "createTime", "updateTime", "data"`;
 }
 
 export function getUpdateSet(object, _options) {

@@ -1,4 +1,4 @@
-import { Demo } from '@graffy/website';
+import Demo from '@graffy/website/components/Demo';
 
 # Bring your APIs a**live**
 
