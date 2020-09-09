@@ -1,4 +1,5 @@
 import { getIndex, isRange, isBranch } from '../node';
+import { encodeArgs } from '../encode';
 
 export const PATH_SEPARATOR = '.';
 
@@ -13,7 +14,7 @@ export function makePath(path) {
 }
 
 export function wrapValue(value, path, version = 0) {
-  const node = { key: path[path.length - 1], value, version };
+  const node = { ...encodeArgs(path[path.length - 1]), value, version };
   return wrap([node], path.slice(0, -1), version);
 }
 
@@ -22,7 +23,7 @@ export function wrap(graph, path, version = 0) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
   let children = graph;
   for (let i = path.length - 1; i >= 0; i--) {
-    children = [{ key: path[i], version, children }];
+    children = [{ ...encodeArgs(path[i]), version, children }];
   }
   return children;
 }
@@ -32,7 +33,7 @@ export function unwrap(graph, path) {
   if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
   let node = { children };
   for (let i = 0; i < path.length; i++) {
-    const key = path[i];
+    const { key } = encodeArgs(path[i]);
     children = node.children;
     if (!children) return null; // This path does not exist.
     node = children[getIndex(children, key)];
