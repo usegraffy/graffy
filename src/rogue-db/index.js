@@ -1,6 +1,12 @@
 import { selectByArgs, selectByIds, upsertToId } from './sql';
 import { linkResult } from './link';
-import { isEncoded, decodeArgs, makeGraph, decorate } from '@graffy/common';
+import {
+  isEncoded,
+  decodeArgs,
+  makeGraph,
+  decorate,
+  finalize,
+} from '@graffy/common';
 
 export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
   store.on('read', read);
@@ -18,8 +24,6 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
     const ops = [];
     const ids = [];
     const idSubQueries = [];
-
-    console.log('db:read', query);
 
     for (const node of query) {
       if (isEncoded(node.key)) {
@@ -45,8 +49,11 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
       );
     }
 
+    const res = (await Promise.all(ops)).flat(1);
+    console.log(res);
+
     // Each promise resolves to an array of objects.
-    return makeGraph((await Promise.all(ops)).flat(1));
+    return finalize(makeGraph(res), query);
   }
 
   async function write(change) {

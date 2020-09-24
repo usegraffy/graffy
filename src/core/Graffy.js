@@ -98,7 +98,7 @@ export default class Graffy {
     provider(new Graffy(path, this.core));
   }
 
-  call(type, unwrappedPayload, options) {
+  call(type, unwrappedPayload, options = {}) {
     const payload = wrap(unwrappedPayload, this.path);
     log(format(unwrappedPayload), format(payload));
     const result = this.core.call(type, payload, options);

@@ -1,30 +1,27 @@
-import gql from 'graphql-tag';
-import toQuery from './toQuery';
+import gql from './gql';
 
 test('toQuery', () => {
   expect(
-    toQuery(
-      gql`
-        {
-          foo: user(id: $userId) {
-            id
-            name
-            isViewerFriend
-            profilePicture(size: 50) {
-              ...PictureFragment
-            }
+    gql`
+      {
+        foo: user(id: $userId) {
+          id
+          name
+          isViewerFriend
+          profilePicture(size: 50) {
+            ...PictureFragment
           }
         }
+      }
 
-        fragment PictureFragment on Picture {
-          uri
-          width
-          height
-        }
-      `,
-      { userId: 123 },
-      3,
-    ),
+      fragment PictureFragment on Picture {
+        uri
+        width
+        height
+      }
+    `,
+    { userId: 123 },
+    3,
   ).toEqual([
     // prettier-ignore
     { key: 'user', version: 3, children: [

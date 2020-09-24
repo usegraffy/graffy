@@ -1,6 +1,10 @@
+import { parse } from 'graphql/language/parser';
+import { empty } from '@graffy/common';
+
 const MAX_PAGE_SIZE = 1024;
 
-export default function toQuery(ast, vars = {}, version = 0) {
+export default function toQuery(ast, vars = {}) {
+  if (typeof ast === 'string') ast = parse(ast);
   if (!ast || ast.kind !== 'Document') {
     throw Error('graphql.invalid ' + JSON.stringify(ast));
   }
@@ -27,71 +31,44 @@ export default function toQuery(ast, vars = {}, version = 0) {
     }
   }
 
-  return fieldToNode(query).children;
+  const gfyQuery = fieldToNode(query);
+  return gfyQuery;
 
-  function fieldToNode({ alias, name, arguments: args, selectionSet }) {
-    let node = { version };
-    if (alias) node.alias = alias.value;
+  function fieldToNode({ /* alias, */ name, arguments: args, selectionSet }) {
+    let node = {};
+    // if (alias) node.alias = alias.value;
+
     if (selectionSet) {
-      node.children = [];
       for (const field of selectionSet.selections) {
         let fragment;
         switch (field.kind) {
           case 'FragmentSpread':
             fragment = fragments[field.name.value];
             if (!fragment) throw Error(`gql.no_fragment ${field.name.value}`);
-            node.children.push(
-              ...fragment.selectionSet.selections.map(fieldToNode),
-            );
+            fragment.selectionSet.selections.forEach((field) => {
+              node[field.name.value] = fieldToNode(field);
+            });
             break;
           case 'Field':
-            node.children.push(fieldToNode(field));
+            node[field.name.value] = fieldToNode(field);
             break;
           default:
             unsupported(field.kind);
         }
       }
-    } else {
-      node.num = 1;
     }
-    if (args && args.length) {
-      addArgsToNode(node, args);
-      node = { key: name.value, version, children: [node] };
-    } else {
-      if (name) node.key = name.value;
-    }
-    return node;
+    if (args && args.length) node._key_ = getArgs(args);
+    return empty(node) ? 1 : node;
   }
 
-  function addArgsToNode(node, gqlArgs) {
-    let filter;
-    let page;
+  function getArgs(gqlArgs) {
+    const args = {};
     for (const { name: n, value: v } of gqlArgs) {
       const name = n.value;
       const value = v.kind === 'Variable' ? vars[v.name.value] : v.value;
-      switch (name) {
-        case 'after':
-        case 'before':
-        case 'first':
-        case 'last':
-          page = page || {};
-          page[name] = value;
-          break;
-        default:
-          if (typeof filter !== 'undefined') {
-            unsupported('Multiple non-pagination parameters');
-          }
-          filter = value;
-      }
+      args[name] = value;
     }
-    const prefix = filter ? JSON.stringify(filter) : ''; // TODO: Make this better.
-    if (page) {
-      node.key = prefix + (page.after || '');
-      node.end = prefix + (page.before || '\uffff');
-      node.count = page.first || -page.last || MAX_PAGE_SIZE;
-    } else {
-      node.key = prefix;
-    }
+    return args;
   }
 }
 

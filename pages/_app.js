@@ -6,6 +6,8 @@ import Head from 'next/head';
 import Router from 'next/router';
 import Navigation from '@graffy/website/components/Navigation';
 
+import 'graphiql/graphiql.css';
+
 class GraffyDocApp extends App {
   constructor() {
     super();

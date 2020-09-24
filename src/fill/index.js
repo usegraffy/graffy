@@ -1,6 +1,9 @@
 import { merge, slice } from '@graffy/common';
 import subscribe from './subscribe';
-// import { format } from '@graffy/testing';
+import { format } from '@graffy/testing';
+import debug from 'debug';
+
+const log = debug('graffy:fill');
 
 const MAX_RECURSIONS = 10;
 
@@ -23,7 +26,10 @@ export default function fill(_) {
         merge(value, res);
       }
 
-      if (!budget) throw new Error('fill.max_recursion');
+      if (!budget) {
+        log('fill.max_recursion', format(value), format(query));
+        throw new Error('fill.max_recursion');
+      }
       // console.log('Read', debug(query), 'returned', debug(value));
       return value;
     });

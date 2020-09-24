@@ -54,6 +54,7 @@
     "faker": "^4.1.0",
     "global": "^4.4.0",
     "globby": "^11.0.1",
+    "graphiql": "^1.0.5",
     "graphql": "^15.2.0",
     "graphql-tag": "^2.10.3",
     "jest": "^26.1.0",

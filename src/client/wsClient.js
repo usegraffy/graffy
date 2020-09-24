@@ -4,7 +4,11 @@ import Socket from './Socket';
 
 export default (
   url,
-  { getOptions = () => {}, noWatch = false, connInfoPath = 'connection' } = {},
+  {
+    getOptions = () => ({}),
+    noWatch = false,
+    connInfoPath = 'connection',
+  } = {},
 ) => (store) => {
   if (!WebSocket) throw Error('client.websocket.unavailable');
   connInfoPath = makePath(connInfoPath);
@@ -25,7 +29,7 @@ export default (
   function once(op, payload, options) {
     return new Promise((resolve, reject) => {
       const id = socket.start(
-        [op, payload, getOptions(op, options)],
+        [op, payload, getOptions(op, options) || {}],
         (error, result) => {
           socket.stop(id);
           error ? reject(Error('server.' + error)) : resolve(result);
@@ -49,7 +53,7 @@ export default (
     const op = 'watch';
     return makeStream((push, end) => {
       const id = socket.start(
-        [op, query, getOptions(op, options)],
+        [op, query, getOptions(op, options) || {}],
         (error, result) => {
           if (error) {
             socket.stop(id);

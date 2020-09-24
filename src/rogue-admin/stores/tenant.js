@@ -1,17 +1,24 @@
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
+import memory from '@graffy/memory';
 import db from '@graffy/rogue-db';
+
+import debug from 'debug';
+const log = debug('graffy:rogue:tenantStore');
 
 import globalStore from './global.js';
 
 const cache = {};
 
 export function createTenantStore(config) {
+  log('Create tenant store', config);
   const store = new Graffy();
   store.use(fill());
-  for (const { prefix, type, ...providerConfig } of config) {
+  store.use('__schema', memory());
+  for (const prefix in config) {
+    const { type, ...providerConfig } = config[prefix];
     switch (type) {
-      case db:
+      case 'db':
         store.use(prefix, db(providerConfig));
         break;
       default:
@@ -22,16 +29,11 @@ export function createTenantStore(config) {
 }
 
 export default async function getTenantStore(id) {
-  if (!cache[id])
+  log('Get tenant store', id);
+  if (!cache[id]) {
     cache[id] = createTenantStore(
-      await globalStore.read(['tenant', id, 'providers'], {
-        _key_: { first: 200 },
-        prefix: true,
-        type: true,
-        collection: true,
-        indexes: true,
-        links: true,
-      }),
+      (await globalStore.read(['tenant', id], { providers: 1 })).providers,
     );
+  }
   return cache[id];
 }

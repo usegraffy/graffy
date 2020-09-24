@@ -6,11 +6,13 @@
 
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
+import logger from '@graffy/logger';
 import globalStore from './global.js';
 import getTenantStore from './tenant.js';
 
 const store = new Graffy();
 store.use(fill());
+store.use(logger());
 
 store.core.on('read', ['tenant'], (...args) => {
   return globalStore.call('read', ...args);
@@ -22,8 +24,18 @@ store.core.on('watch', ['tenant'], (...args) =>
   globalStore.call('watch', ...args),
 );
 
-store.on('read', (...args) => getTenantStore(...args).call('read', ...args));
-store.on('write', (...args) => getTenantStore(...args).call('write', ...args));
-store.on('watch', (...args) => getTenantStore(...args).call('watch', ...args));
+store.on('read', async (query, options) => {
+  return (await getTenantStore(options.tenantId)).call('read', query, options);
+});
+store.on('write', async (change, options) => {
+  return (await getTenantStore(options.tenantId)).call(
+    'write',
+    change,
+    options,
+  );
+});
+store.on('watch', async function* (query, options) {
+  yield* (await getTenantStore(options.tenantId)).call('watch', query, options);
+});
 
 export default store;
