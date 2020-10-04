@@ -1,4 +1,4 @@
-import { empty, makePath } from '@graffy/common';
+import { empty, makePath, unwrapObject } from '@graffy/common';
 import sql from 'sqlate';
 
 export const concatSql = (frags, delim) =>
@@ -7,7 +7,7 @@ export const concatSql = (frags, delim) =>
     : sql``;
 
 const getLookupSql = (name) =>
-  ['id', 'type', 'name', 'createTime', 'updateTime', 'isDeleted'].includes(name)
+  ['id', 'type', 'createTime', 'updateTime', 'isDeleted'].includes(name)
     ? sql.column(name)
     : sql`"tags" #>> ${'{' + makePath(name).join(',') + '}'}`;
 
@@ -127,6 +127,16 @@ function jsonUpdate(column, object) {
   return sql`${column} || ${JSON.stringify(object)}::jsonb`;
 }
 
+function getTags(data, indexes) {
+  const tags = {};
+  for (const path of indexes) {
+    const value = unwrapObject(data, path);
+    if (typeof value === 'undefined') continue;
+    tags[path.join('.')] = value;
+  }
+  return tags;
+}
+
 // TODO: Update these functions to use columns from options
 
 export function getSelectCols(_options) {
@@ -139,23 +149,25 @@ export function getSelectCols(_options) {
 }
 
 export function getInsertCols(_options) {
-  return sql`"id", "type", "createTime", "updateTime", "data"`;
+  return sql`"id", "type", "createTime", "updateTime", "data", "tags"`;
 }
 
-export function getUpdateSet(object, _options) {
+export function getUpdateSet(object, options) {
   const { id, type, name, createTime, updateTime, ...data } = object;
+  const tags = getTags(data, options.indexes);
 
   return sql.csv(
     [
       type && sql`"type" = ${type}`,
-      name && sql`"name" = ${name}`,
       sql`"updateTime" = ${Date.now()}`,
       !empty(data) && sql`"data" = ${jsonUpdate(sql.column('data'), data)}`,
+      !empty(tags) && sql`"tags" = ${jsonUpdate(sql.column('tags'), tags)}`,
     ].filter(Boolean),
   );
 }
 
-export function getInsertVals(object, _options) {
-  const { id, type, name, createTime, updateTime, ...data } = object;
-  return sql.tuple([id, type, name, Date.now(), Date.now(), data]);
+export function getInsertVals(object, options) {
+  const { id, type, createTime, updateTime, ...data } = object;
+  const tags = getTags(data, options.indexes);
+  return sql.tuple([id, type, Date.now(), Date.now(), data, tags]);
 }

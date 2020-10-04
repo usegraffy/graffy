@@ -50,7 +50,6 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
     }
 
     const res = (await Promise.all(ops)).flat(1);
-    console.log(res);
 
     // Each promise resolves to an array of objects.
     return finalize(makeGraph(res), query);
@@ -64,7 +63,7 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
         throw Error('pg_write.write_arg_unimplemented');
       } else {
         ops.push(
-          upsertToId({ id: node.key, ...decorate(node.children) }, options),
+          upsertToId({ id: [node.key], ...decorate(node.children) }, options),
         );
       }
     }

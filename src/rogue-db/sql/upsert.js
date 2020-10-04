@@ -25,12 +25,16 @@ export async function upsertToId(object, options) {
     UPDATE "object" SET ${getUpdateSet(object, options)}
     WHERE "id" && ${object.id}`;
 
+  // console.log('update', updateQuery.toString('$'), updateQuery.parameters);
+
   const { rowCount } = await pool.query(updateQuery);
   if (rowCount) return;
 
   const query = sql`
     INSERT INTO "object" (${getInsertCols(options)})
     VALUES ${getInsertVals(object, options)}`;
+
+  // console.log('insert', query.toString('$'), query.parameters);
 
   await pool.query(query);
 }

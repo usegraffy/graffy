@@ -4,8 +4,8 @@ test('example', async () => {
   await expect(
     async () =>
       await upsertToId(
-        { id: 'post21', type: 'post', name: 'hello' },
-        { table: 'object' },
+        { id: ['post22'], type: 'post', name: 'hello', email: 'world' },
+        { collection: 'object', indexes: [['email']] },
       ),
   ).not.toThrow();
 });
