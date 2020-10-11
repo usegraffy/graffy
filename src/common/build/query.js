@@ -51,7 +51,7 @@ function makeNode(object, key, ver) {
 }
 
 export default function query(obj, version = 0) {
-  return makeNode(obj, ROOT_KEY, version).children;
+  return makeNode(obj, ROOT_KEY, version)?.children || [];
 }
 
 /*

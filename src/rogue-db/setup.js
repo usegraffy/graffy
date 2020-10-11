@@ -7,7 +7,7 @@ async function insert(type, number, builder = () => {}) {
   for (let i = 0; i < number; i++) {
     const { links = {}, tags = {}, data = {} } = builder(i) || {};
     const now = Date.now();
-    console.log('Inserting ', type, i);
+    // console.log('Inserting ', type, i);
     await pool.query(sql`INSERT INTO "object"(
       "id", "type", "links", "tags", "data", "createTime", "updateTime"
     ) VALUES (
@@ -22,8 +22,8 @@ async function insert(type, number, builder = () => {}) {
   }
 }
 
-async function populate() {
-  console.log('Creating tables');
+export async function populate() {
+  // console.log('Creating tables');
 
   await pool.query(sql`
     DROP TABLE IF EXISTS "object";
@@ -70,4 +70,4 @@ async function populate() {
   pool.end();
 }
 
-populate();
+// populate();

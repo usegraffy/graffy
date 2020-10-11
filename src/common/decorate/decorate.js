@@ -73,6 +73,7 @@ function decorateChildren(graph, links) {
         const child = Object.create(node.value);
         child._key_ = args;
         child._val_ = node.value;
+        // TODO: defineProperty toJSON to return { _val_: child.slice(0) }
         resArr.push(child);
       } else {
         resArr.push(node.value);

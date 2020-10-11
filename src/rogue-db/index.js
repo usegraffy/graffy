@@ -1,14 +1,29 @@
-import { selectByArgs, selectByIds, upsertToId } from './sql';
+import {
+  selectByArgs,
+  selectByIds,
+  upsertToId,
+  selectUpdatedSince,
+} from './sql';
 import { linkResult } from './link';
+import { filterObject } from './filter';
 import {
   isEncoded,
   decodeArgs,
   makeGraph,
   decorate,
   finalize,
+  slice,
 } from '@graffy/common';
+import { makeStream } from '@graffy/stream';
 
-export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
+import { format } from '@graffy/testing';
+
+export default ({
+  collection,
+  indexes = [],
+  links = [],
+  pollInterval = 1000,
+} = {}) => (store) => {
   store.on('read', read);
   store.on('write', write);
   store.on('watch', watch);
@@ -20,7 +35,7 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
     links,
   };
 
-  async function read(query) {
+  async function dbRead(query, options) {
     const ops = [];
     const ids = [];
     const idSubQueries = [];
@@ -49,9 +64,38 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
       );
     }
 
-    const res = (await Promise.all(ops)).flat(1);
+    return (await Promise.all(ops)).flat(1);
+  }
 
-    // Each promise resolves to an array of objects.
+  const watchers = new Set();
+  let timestamp = Date.now();
+
+  async function poll() {
+    if (!watchers.size) return;
+    const res = await selectUpdatedSince(timestamp, options);
+
+    for (const object of res) {
+      for (const { query, push } of watchers) {
+        const payload = [];
+
+        for (const node of query) {
+          if (isEncoded(node.key)) {
+            const args = decodeArgs(node);
+            if (filterObject(args, object)) payload.push(object);
+          } else {
+            if (object.id._val_.includes(node.key)) payload.push(object);
+          }
+        }
+
+        push(slice(makeGraph(payload), query).known);
+      }
+    }
+  }
+
+  setInterval(poll, pollInterval);
+
+  async function read(query) {
+    const res = await dbRead(query, options);
     return finalize(makeGraph(res), query);
   }
 
@@ -72,7 +116,15 @@ export default ({ collection, indexes = [], links = [] } = {}) => (store) => {
     return change;
   }
 
-  function watch(_query) {
-    throw Error('pg_watch.unimplemented');
+  function watch(query) {
+    return makeStream((push) => {
+      const watcher = { query, push };
+      dbRead(query, options).then(
+        (init) => push(finalize(makeGraph(init), query)),
+        watchers.add(watcher),
+      );
+
+      return () => watchers.delete(watcher);
+    });
   }
 };

@@ -33,7 +33,23 @@ export async function selectByIds(ids, options) {
   const query = sql`
     SELECT ${getSelectCols(options)} || jsonb_build_object('_key_', "id"[1])
     FROM "object"
-    WHERE id && ${ids}`;
+    WHERE id && ${ids} AND "type" = ${options.collection}`;
+
+  log(query.toString('$'));
+  log(query.parameters);
+
+  query.rowMode = 'array';
+  const result = (await pool.query(query)).rows.flat(1);
+  log(result);
+  return result;
+}
+
+export async function selectUpdatedSince(timestamp, options) {
+  const query = sql`
+    SELECT ${getSelectCols(options)} || jsonb_build_object('_key_', "id"[1])
+    FROM "object"
+    WHERE "type" = ${options.collection} AND "updateTime" > ${timestamp}
+  `;
 
   log(query.toString('$'));
   log(query.parameters);

@@ -1,4 +1,5 @@
 import { empty, makePath, unwrapObject } from '@graffy/common';
+import { getSql } from '../filter';
 import sql from 'sqlate';
 
 export const concatSql = (frags, delim) =>
@@ -10,49 +11,6 @@ const getLookupSql = (name) =>
   ['id', 'type', 'createTime', 'updateTime', 'isDeleted'].includes(name)
     ? sql.column(name)
     : sql`"tags" #>> ${'{' + makePath(name).join(',') + '}'}`;
-
-/*
-  Converts a small subset of Mongo-style params to an SQL where clause.
-*/
-function getFilterCond(params) {
-  return Object.keys(params).map((name) => {
-    const value = params[name];
-    const lhs = getLookupSql(name);
-    if (typeof value !== 'object') return sql`${lhs} = ${value}`;
-    if (value === null) return sql`${lhs} IS NULL`;
-
-    return concatSql(
-      Object.keys(value).map((operator) => {
-        const rhs = value[operator];
-        switch (operator) {
-          case '$eq':
-            return sql`${lhs} = ${rhs}`;
-          case '$ne':
-            return sql`${lhs} <> ${rhs}`;
-          case '$lt':
-            return sql`${lhs} < ${rhs}`;
-          case '$lte':
-            return sql`${lhs} <= ${rhs}`;
-          case '$gt':
-            return sql`${lhs} > ${rhs}`;
-          case '$gte':
-            return sql`${lhs} >= ${rhs}`;
-          case '$in':
-            return sql`${lhs} IN ${rhs}`;
-          case '$nin':
-            return sql`${lhs} NOT IN ${rhs}`;
-          case '$cts':
-            return sql`${lhs} @> ${rhs}`;
-          case '$ctd':
-            return sql`${lhs} <@ ${rhs}`;
-          case '$ovp':
-            return sql`${lhs} && ${rhs}`;
-        }
-      }),
-      sql` AND `,
-    );
-  });
-}
 
 function getBoundCond(orderCols, bound, kind) {
   if (!Array.isArray(bound)) {
@@ -100,7 +58,7 @@ export function getArgSql({
   const orderCols = (order || ['createTime', 'id']).map(getLookupSql);
   const where = [];
 
-  if (!empty(filter)) where.push(...getFilterCond(filter));
+  if (!empty(filter)) where.push(...getSql(filter, getLookupSql));
   if (after) where.push(getBoundCond(orderCols, after, 'after'));
   if (before) where.push(getBoundCond(orderCols, before, 'before'));
   if (since) where.push(getBoundCond(orderCols, since, 'since'));

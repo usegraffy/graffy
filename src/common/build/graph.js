@@ -92,5 +92,5 @@ export default function graph(rootObject, version = Date.now()) {
   if (typeof rootObject === 'undefined' || rootObject === null) {
     return rootObject;
   }
-  return makeNode(rootObject, ROOT_KEY, version).children;
+  return makeNode(rootObject, ROOT_KEY, version)?.children || [];
 }
