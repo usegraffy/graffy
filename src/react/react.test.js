@@ -20,7 +20,7 @@ describe('useQuery', () => {
     };
   });
 
-  it('should transition loading as "true -> false" cycle on data fetch', async () => {
+  test('loading', async () => {
     const value = 'abcde';
     await g.write('/demo', { value });
     const { result, waitForValueToChange } = renderHook(
@@ -29,9 +29,12 @@ describe('useQuery', () => {
         wrapper,
       },
     );
-    expect(result.current).toEqual([null, true, null]);
-    await waitForValueToChange(() => result.current[1]);
-    expect(result.current).toEqual([{ demo: { value } }, false, null]);
+    expect(result.current).toMatchObject({ loading: true });
+    await waitForValueToChange(() => result.current.loading);
+    expect(result.current).toMatchObject({
+      data: { demo: { value } },
+      loading: false,
+    });
     expect(result.error).toBeFalsy();
   });
 });

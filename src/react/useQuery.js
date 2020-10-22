@@ -6,33 +6,34 @@ const { useRef, useState, useEffect, useContext } = React;
 
 const consumeSubscription = async (subscription, setState) => {
   try {
-    for await (const val of subscription) {
+    for await (const data of subscription) {
       if (subscription.closed) {
         // console.warn('Ignoring update after subscription has closed.');
         break;
       }
 
-      setState([val, null, null]);
+      setState({ loading: false, data });
     }
-  } catch (e) {
+  } catch (error) {
     // console.error('Error reading stream in useQuery', e);
-    setState([null, false, e]);
+    setState({ loading: false, error });
   }
 };
 
 const retrieveResult = async (promise, setState) => {
   try {
-    setState([await promise, false, null]);
-  } catch (e) {
+    const data = await promise;
+    setState({ loading: false, data });
+  } catch (error) {
     // console.error('Error fetching result in useQuery', e);
-    setState([null, false, e]);
+    setState({ loading: false, error });
   }
 };
 
 export default function useQuery(query, { once, ...options } = {}) {
   const queryRef = useRef(null);
 
-  const [state, setState] = useState([null, true, null]);
+  const [state, setState] = useState({});
   const store = useContext(GraffyContext);
 
   const queryHasChanged = !isEqual(queryRef.current, query);
@@ -42,7 +43,7 @@ export default function useQuery(query, { once, ...options } = {}) {
   }
 
   useEffect(() => {
-    if (state[1] !== true) setState([state[0], true, state[2]]);
+    if (state.loading !== true) setState({ ...state, loading: true });
     if (once) {
       retrieveResult(store.read(query, options), setState);
     } else {
@@ -56,5 +57,5 @@ export default function useQuery(query, { once, ...options } = {}) {
     }
   }, [queryHasChanged ? query : queryRef.current]);
 
-  return queryHasChanged ? [state[0], true, state[2]] : state;
+  return queryHasChanged ? { ...state, loading: true } : state;
 }
