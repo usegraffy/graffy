@@ -1,4 +1,4 @@
-import { encodeUrl, serialize, deserialize } from '@graffy/common';
+import { encodeUrl, serialize, deserialize, makePath } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 function getOptionsParam(options) {
@@ -6,7 +6,18 @@ function getOptionsParam(options) {
   return encodeURIComponent(serialize(options));
 }
 
-export default (baseUrl, { getOptions = () => {}, watch } = {}) => (store) => {
+export default (
+  baseUrl,
+  { getOptions = () => {}, watch, connInfoPath = '/connection' } = {},
+) => (store) => {
+  connInfoPath = makePath(connInfoPath);
+
+  store.onWrite(connInfoPath, ({ url }) => {
+    baseUrl = url;
+    return { url };
+  });
+  store.onRead(connInfoPath, () => ({ url: baseUrl }));
+
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(getOptions('read', options));

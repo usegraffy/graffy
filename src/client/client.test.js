@@ -1,5 +1,5 @@
 import Graffy from '@graffy/core';
-import client from './index.js';
+import client from './';
 import MockSocket from './Socket'; // The mock is below, but gets hoisted.
 
 jest.mock('./Socket', () => ({
@@ -10,7 +10,7 @@ jest.mock('./Socket', () => ({
     isAlive: jest.fn(),
   })),
 }));
-global.WebSocket = {}; // We don't need to actually mock this.
+global.WebSocket = {}; // removing this will result in failed test cases
 
 describe('wsClient', () => {
   let store;
@@ -41,5 +41,28 @@ describe('wsClient', () => {
     store.write('/connection', { status: true });
     const results = MockSocket.mock.results;
     expect(results[results.length - 1].value.isAlive).toBeCalled();
+  });
+});
+
+describe('httpClient', () => {
+  let store;
+  const connectionUrl = 'http://example';
+  beforeEach(() => {
+    store = new Graffy();
+    store.use(client(connectionUrl));
+  });
+
+  test('readUrl', async () => {
+    expect(await store.read('/connection', { url: true })).toEqual({
+      url: connectionUrl,
+    });
+  });
+
+  test('writeUrl', async () => {
+    const newUrl = 'http://foobar';
+    await store.write({ connection: { url: newUrl } });
+    expect(await store.read('/connection', { url: true })).toEqual({
+      url: newUrl,
+    });
   });
 });
