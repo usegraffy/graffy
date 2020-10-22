@@ -7,12 +7,10 @@ function getOptionsParam(options) {
 }
 
 export default (
-  initialUrl,
+  baseUrl,
   { getOptions = () => {}, watch, connInfoPath = '/connection' } = {},
 ) => (store) => {
-  let baseUrl = initialUrl;
   connInfoPath = makePath(connInfoPath);
-  store.write(connInfoPath, { url: baseUrl });
 
   store.onWrite(connInfoPath, ({ url }) => {
     baseUrl = url;
