@@ -18,7 +18,7 @@ describe('useQuery', () => {
     g.use(backend.middleware);
     await g.write('/demo', { value });
 
-    wrapper = function ({ children }) {
+    wrapper = function _Wrapper({ children }) {
       return <GraffyProvider store={g}>{children}</GraffyProvider>;
     };
   });
