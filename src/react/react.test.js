@@ -15,9 +15,9 @@ describe('useQuery', () => {
     backend = mockBackend();
     backend.read = jest.fn(backend.read);
     g.use(backend.middleware);
-    wrapper = ({ children }) => (
-      <GraffyProvider store={g}>{children}</GraffyProvider>
-    );
+    wrapper = function ({ children }) {
+      return <GraffyProvider store={g}>{children}</GraffyProvider>;
+    };
   });
 
   it('should transition loading as "true -> false" cycle on data fetch', async () => {
