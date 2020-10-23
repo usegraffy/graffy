@@ -64,7 +64,7 @@ export default (
   store.on('write', (change, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(getOptions('write', options));
-    const url = `${baseUrl}?${optionsParam}`;
+    const url = `${baseUrl}?opts=${optionsParam}`;
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
