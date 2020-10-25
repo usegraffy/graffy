@@ -1,5 +1,6 @@
 import Graffy from '@graffy/core';
-import client from './index.js';
+import { encodeUrl } from '@graffy/common';
+import client from './';
 import MockSocket from './Socket'; // The mock is below, but gets hoisted.
 
 jest.mock('./Socket', () => ({
@@ -10,7 +11,8 @@ jest.mock('./Socket', () => ({
     isAlive: jest.fn(() => false),
   })),
 }));
-global.WebSocket = {}; // We don't need to actually mock this.
+global.WebSocket = {}; // removing this will result in failed test cases
+global.fetch = jest.fn().mockResolvedValue({ status: 200, json: jest.fn() });
 
 describe('wsClient', () => {
   let store;
@@ -41,5 +43,53 @@ describe('wsClient', () => {
     await store.write('connection', { status: true });
     const results = MockSocket.mock.results;
     expect(results[results.length - 1].value.isAlive).toBeCalled();
+  });
+});
+
+describe('httpClient', () => {
+  let store;
+  const connectionUrl = 'http://example';
+  const value = '12345';
+
+  beforeEach(() => {
+    fetch.mockClear();
+    store = new Graffy();
+    store.use(client(connectionUrl, { getOptions: () => ({ value }) }));
+  });
+
+  test('readUrl', async () => {
+    expect(await store.read('/connection', { url: true })).toEqual({
+      url: connectionUrl,
+    });
+  });
+
+  test('writeUrl', async () => {
+    const newUrl = 'http://foobar';
+    await store.write({ connection: { url: newUrl } });
+    expect(await store.read('/connection', { url: true })).toEqual({
+      url: newUrl,
+    });
+  });
+
+  test('store read', async () => {
+    await store.read({ demo: 1 });
+    expect(fetch).toHaveBeenCalledWith(
+      `${connectionUrl}?q=${encodeUrl([
+        { key: 'demo', version: 0, value: 1 },
+      ])}&opts=${encodeUrl({ value })}`,
+    );
+  });
+
+  test('store write', async () => {
+    await store.write({ demo: 1 });
+    const result = fetch.mock.calls;
+    expect(result[0][0]).toBe(`${connectionUrl}?opts=${encodeUrl({ value })}`);
+    const requestInit = result[0][1];
+    expect(requestInit.method).toBe('POST');
+    expect(requestInit.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(requestInit.body).toEqual(expect.any(String));
+    expect(JSON.parse(requestInit.body)).toEqual([
+      { key: 'demo', version: expect.any(Number), value: 1 },
+    ]);
   });
 });

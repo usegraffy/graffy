@@ -1,4 +1,4 @@
-import { encodeUrl, serialize, deserialize } from '@graffy/common';
+import { encodeUrl, serialize, deserialize, makePath } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 function getOptionsParam(options) {
@@ -6,7 +6,18 @@ function getOptionsParam(options) {
   return encodeURIComponent(serialize(options));
 }
 
-export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
+export default (
+  baseUrl,
+  { getOptions = () => {}, watch, connInfoPath = '/connection' } = {},
+) => (store) => {
+  connInfoPath = makePath(connInfoPath);
+
+  store.onWrite(connInfoPath, ({ url }) => {
+    baseUrl = url;
+    return { url };
+  });
+  store.onRead(connInfoPath, () => ({ url: baseUrl }));
+
   store.on('read', (query, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(getOptions('read', options));
@@ -20,6 +31,12 @@ export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
   });
 
   store.on('watch', (query, options) => {
+    if (watch === 'none') throw Error('client.no_watch');
+    if (watch === 'hang') {
+      return makeStream((push) => {
+        push(undefined);
+      });
+    }
     if (!EventSource) throw Error('client.sse.unavailable');
     const optionsParam = getOptionsParam(getOptions('watch', options));
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
@@ -47,7 +64,7 @@ export default (baseUrl, { getOptions = () => {} } = {}) => (store) => {
   store.on('write', (change, options) => {
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(getOptions('write', options));
-    const url = `${baseUrl}?${optionsParam}`;
+    const url = `${baseUrl}?opts=${optionsParam}`;
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -24,7 +24,7 @@ function getQuery(range) {
 export default function Example() {
   const [range, setRange] = useState({ first: PAGE_SIZE });
   const q = getQuery(range);
-  const [data, loading] = useQuery(q);
+  const { data, loading } = useQuery(q);
 
   if (!data || !data.visitors) {
     // We are still performing the initial load

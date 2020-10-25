@@ -31,14 +31,16 @@ module.exports = function (esm) {
       [
         '@babel/preset-env',
         {
-          targets: [
-            'maintained node versions',
-            ...browsersWith(
-              esm
-                ? ['async-iterations-and-generators', 'es6-module']
-                : ['async-iterations-and-generators'],
-            ),
-          ],
+          targets: esm
+            ? [
+                'maintained node versions',
+                ...browsersWith(
+                  esm
+                    ? ['async-iterations-and-generators', 'es6-module']
+                    : ['async-iterations-and-generators'],
+                ),
+              ]
+            : ['defaults'],
           ...(esm ? { modules: false } : {}),
           loose: true,
         },
@@ -48,7 +50,19 @@ module.exports = function (esm) {
     plugins: [
       [
         '@babel/plugin-transform-runtime',
-        { corejs: false, regenerator: false, helpers: true, useESModules: esm },
+        esm
+          ? {
+              corejs: false,
+              regenerator: false,
+              helpers: true,
+              useESModules: true,
+            }
+          : {
+              corejs: 3,
+              regenerator: true,
+              helpers: true,
+              useESModules: true,
+            },
       ],
       ...(esm ? [] : ['babel-plugin-add-module-exports']),
     ],
