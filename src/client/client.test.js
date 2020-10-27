@@ -46,15 +46,20 @@ describe('wsClient', () => {
   });
 });
 
-describe('httpClient', () => {
-  let store;
+describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
+  let store, getOptions;
   const connectionUrl = 'http://example';
   const value = '12345';
 
   beforeEach(() => {
     fetch.mockClear();
+    if (description.startsWith('async')) {
+      getOptions = jest.fn().mockResolvedValue({ value });
+    } else {
+      getOptions = jest.fn().mockReturnValue({ value });
+    }
     store = new Graffy();
-    store.use(client(connectionUrl, { getOptions: () => ({ value }) }));
+    store.use(client(connectionUrl, { getOptions }));
   });
 
   test('readUrl', async () => {
@@ -73,6 +78,7 @@ describe('httpClient', () => {
 
   test('store read', async () => {
     await store.read({ demo: 1 });
+    expect(getOptions).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledWith(
       `${connectionUrl}?q=${encodeUrl([
         { key: 'demo', version: 0, value: 1 },
@@ -82,11 +88,14 @@ describe('httpClient', () => {
 
   test('store write', async () => {
     await store.write({ demo: 1 });
+    expect(getOptions).toHaveBeenCalled();
     const result = fetch.mock.calls;
     expect(result[0][0]).toBe(`${connectionUrl}?opts=${encodeUrl({ value })}`);
     const requestInit = result[0][1];
     expect(requestInit.method).toBe('POST');
-    expect(requestInit.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(requestInit.headers).toEqual({
+      'Content-Type': 'application/json',
+    });
     expect(requestInit.body).toEqual(expect.any(String));
     expect(JSON.parse(requestInit.body)).toEqual([
       { key: 'demo', version: expect.any(Number), value: 1 },
