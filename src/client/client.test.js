@@ -11,14 +11,19 @@ jest.mock('./Socket', () => ({
     isAlive: jest.fn(),
   })),
 }));
-global.WebSocket = {}; // removing this will result in failed test cases
-global.fetch = jest.fn().mockResolvedValue({ status: 200, json: jest.fn() });
 
 describe('wsClient', () => {
+  global.WebSocket = {};
+
   let store;
+
   beforeEach(() => {
     store = new Graffy();
     store.use(client('ws://example'));
+  });
+
+  afterAll(() => {
+    jest.mockRestore();
   });
 
   test('readStatus', async () => {
@@ -46,7 +51,34 @@ describe('wsClient', () => {
   });
 });
 
+describe('httpClient connInfoPath', () => {
+  let store;
+  const connectionUrl = 'http://example';
+
+  beforeEach(() => {
+    store = new Graffy();
+    store.use(client(connectionUrl));
+  });
+
+  test('readUrl', async () => {
+    expect(await store.read('/connection', { url: true })).toEqual({
+      url: connectionUrl,
+    });
+  });
+
+  test('writeUrl', async () => {
+    const newUrl = 'http://foobar';
+    await store.write({ connection: { url: newUrl } });
+    expect(await store.read('/connection', { url: true })).toEqual({
+      url: newUrl,
+    });
+  });
+});
+
+// async refers to the getOptions implementation
 describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
+  global.fetch = jest.fn().mockResolvedValue({ status: 200, json: jest.fn() });
+
   let store, getOptions;
   const connectionUrl = 'http://example';
   const value = '12345';
@@ -62,18 +94,8 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     store.use(client(connectionUrl, { getOptions }));
   });
 
-  test('readUrl', async () => {
-    expect(await store.read('/connection', { url: true })).toEqual({
-      url: connectionUrl,
-    });
-  });
-
-  test('writeUrl', async () => {
-    const newUrl = 'http://foobar';
-    await store.write({ connection: { url: newUrl } });
-    expect(await store.read('/connection', { url: true })).toEqual({
-      url: newUrl,
-    });
+  afterAll(() => {
+    jest.mockRestore();
   });
 
   test('store read', async () => {
