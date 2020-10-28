@@ -30,10 +30,10 @@ export default (
     });
   });
 
-  store.on('watch', async (query, options) => {
+  store.on('watch', async function* (query, options) {
     if (watch === 'none') throw Error('client.no_watch');
     if (watch === 'hang') {
-      return makeStream((push) => {
+      yield* makeStream((push) => {
         push(undefined);
       });
     }
@@ -42,7 +42,7 @@ export default (
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
     const source = new EventSource(url);
 
-    return makeStream((push, end) => {
+    yield* makeStream((push, end) => {
       source.onmessage = ({ data }) => {
         push(deserialize(data));
       };
