@@ -1,9 +1,10 @@
 import React from 'react';
-import Graffy from '@graffy/core';
-import { useQuery } from './';
-import { mockBackend } from '@graffy/testing';
-import { GraffyProvider } from './GraffyContext';
 import { act, renderHook } from '@testing-library/react-hooks';
+import Graffy from '@graffy/core';
+import { makeQuery } from '@graffy/common';
+import { mockBackend } from '@graffy/testing';
+import { useQuery } from './';
+import { GraffyProvider } from './GraffyContext';
 
 describe('useQuery', () => {
   let g;
@@ -23,20 +24,34 @@ describe('useQuery', () => {
     };
   });
 
+  const expectLifeCycle = async ({ result, waitForValueToChange }, data) => {
+    const query = makeQuery(data);
+
+    expect(result.current).toStrictEqual({
+      loading: true,
+      reload: expect.any(Function),
+    });
+    await waitForValueToChange(() => result.current.loading);
+    expect(result.current).toStrictEqual({
+      loading: false,
+      error: null,
+      reload: expect.any(Function),
+      data,
+    });
+    expect(result.error).toBeFalsy();
+    expect(backend.read).toHaveBeenCalledWith(query, {}, expect.any(Function));
+  };
+
   test('loading', async () => {
+    const data = { demo: { value } };
     const { result, waitForValueToChange } = renderHook(
       () => useQuery({ demo: { value: 1 } }, { once: true }),
       {
         wrapper,
       },
     );
-    expect(result.current).toMatchObject({ loading: true });
-    await waitForValueToChange(() => result.current.loading);
-    expect(result.current).toMatchObject({
-      data: { demo: { value } },
-      loading: false,
-    });
-    expect(result.error).toBeFalsy();
+
+    await expectLifeCycle({ result, waitForValueToChange }, data);
   });
 
   test('reload', async () => {
@@ -48,10 +63,7 @@ describe('useQuery', () => {
       },
     );
     // normal lifecycle
-    expect(result.current).toMatchObject({ loading: true });
-    await waitForValueToChange(() => result.current.loading);
-    expect(result.current).toMatchObject({ loading: false, data });
-    expect(result.error).toBeFalsy();
+    await expectLifeCycle({ result, waitForValueToChange }, data);
 
     // update store
     const newValue = '12345';
@@ -63,10 +75,6 @@ describe('useQuery', () => {
       result.current.reload();
     });
 
-    // same lifecycle should follow with updated data
-    expect(result.current).toMatchObject({ loading: true });
-    await waitForValueToChange(() => result.current.loading);
-    expect(result.current).toMatchObject({ loading: false, data });
-    expect(result.error).toBeFalsy();
+    await expectLifeCycle({ result, waitForValueToChange }, data);
   });
 });
