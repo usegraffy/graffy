@@ -61,7 +61,7 @@ module.exports = function (esm) {
               corejs: 3,
               regenerator: true,
               helpers: true,
-              useESModules: true,
+              useESModules: false,
             },
       ],
       ...(esm ? [] : ['babel-plugin-add-module-exports']),
