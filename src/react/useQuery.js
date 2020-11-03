@@ -51,7 +51,14 @@ const retrieveResult = async (promise, setState) => {
 };
 
 export default function useQuery(query, { once, ...options } = {}) {
+  const store = useContext(GraffyContext);
   const queryRef = useRef(null);
+
+  const queryHasChanged = !isEqual(queryRef.current, query);
+  if (queryHasChanged) {
+    // console.log('Query changed', debug(queryRef.current), debug(query));
+    queryRef.current = query;
+  }
 
   const fetchData = () => {
     if (state.loading !== true) setState({ ...state, loading: true });
@@ -70,13 +77,6 @@ export default function useQuery(query, { once, ...options } = {}) {
 
   const reload = fetchData;
   const [state, setState] = useState({ reload, loading: false });
-  const store = useContext(GraffyContext);
-
-  const queryHasChanged = !isEqual(queryRef.current, query);
-  if (queryHasChanged) {
-    // console.log('Query changed', debug(queryRef.current), debug(query));
-    queryRef.current = query;
-  }
 
   useEffect(fetchData, [queryRef.current, store]);
 
