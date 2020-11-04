@@ -56,16 +56,15 @@ export default function useQuery(query, { once, ...options } = {}) {
 
   const queryHasChanged = !isEqual(queryRef.current, query);
   if (queryHasChanged) {
-    // console.log('Query changed', debug(queryRef.current), debug(query));
     queryRef.current = query;
   }
 
   const fetchData = () => {
     if (state.loading !== true) setState({ ...state, loading: true });
     if (once) {
-      retrieveResult(store.read(queryRef.current, options), setState);
+      retrieveResult(store.read(query, options), setState);
     } else {
-      const subscription = store.watch(queryRef.current, options);
+      const subscription = store.watch(query, options);
       consumeSubscription(subscription, setState);
 
       return () => {
@@ -76,9 +75,9 @@ export default function useQuery(query, { once, ...options } = {}) {
   };
 
   const reload = fetchData;
-  const [state, setState] = useState({ reload, loading: false });
+  const [state, setState] = useState({ loading: false });
 
   useEffect(fetchData, [queryRef.current, store]);
 
-  return state;
+  return once ? { ...state, reload } : state;
 }

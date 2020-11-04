@@ -24,20 +24,16 @@ describe('useQuery', () => {
     };
   });
 
-  const expectLifeCycle = async ({ result, waitForValueToChange }, data) => {
-    const query = makeQuery(data);
+  const expectLifeCycle = async (
+    { result, waitForValueToChange },
+    beforeLoading,
+    afterLoading,
+  ) => {
+    const query = makeQuery(afterLoading.data);
 
-    expect(result.current).toStrictEqual({
-      loading: true,
-      reload: expect.any(Function),
-    });
+    expect(result.current).toStrictEqual({ ...beforeLoading, loading: true });
     await waitForValueToChange(() => result.current.loading);
-    expect(result.current).toStrictEqual({
-      loading: false,
-      error: null,
-      reload: expect.any(Function),
-      data,
-    });
+    expect(result.current).toStrictEqual({ ...afterLoading, loading: false });
     expect(result.error).toBeFalsy();
     expect(backend.read).toHaveBeenCalledWith(query, {}, expect.any(Function));
   };
@@ -51,7 +47,12 @@ describe('useQuery', () => {
       },
     );
 
-    await expectLifeCycle({ result, waitForValueToChange }, data);
+    const reload = expect.any(Function);
+    await expectLifeCycle(
+      { result, waitForValueToChange },
+      { reload },
+      { data, error: null, reload },
+    );
   });
 
   test('reload', async () => {
@@ -62,19 +63,29 @@ describe('useQuery', () => {
         wrapper,
       },
     );
+    const reload = expect.any(Function);
+
     // normal lifecycle
-    await expectLifeCycle({ result, waitForValueToChange }, data);
+    await expectLifeCycle(
+      { result, waitForValueToChange },
+      { reload },
+      { data, error: null, reload },
+    );
 
     // update store
     const newValue = '12345';
     await g.write('/demo', { value: newValue });
-    data.demo.value = newValue;
+    const newData = { demo: { value: newValue } };
 
     // call reload
     act(() => {
       result.current.reload();
     });
 
-    await expectLifeCycle({ result, waitForValueToChange }, data);
+    await expectLifeCycle(
+      { result, waitForValueToChange },
+      { data, error: null, reload },
+      { data: newData, error: null, reload },
+    );
   });
 });
