@@ -1,7 +1,8 @@
 import {
   decorate,
   decorateQuery,
-  descend,
+  wrapObject,
+  unwrapObject,
   makeGraph,
   makePath,
   makeQuery,
@@ -100,6 +101,7 @@ export default class Graffy {
 
   call(type, unwrappedPayload, options = {}) {
     const payload = wrap(unwrappedPayload, this.path);
+    // console.log(unwrappedPayload);
     log(format(unwrappedPayload), format(payload));
     const result = this.core.call(type, payload, options);
     const unwrapResult = (value) => {
@@ -115,22 +117,26 @@ export default class Graffy {
 
   async read(...args) {
     const [path, porcelainQuery, options] = validateArgs(...args);
-    const query = wrap(makeQuery(porcelainQuery), path);
+    const rootQuery = wrapObject(porcelainQuery, path);
+    const query = makeQuery(rootQuery);
     const result = await this.call('read', query, options || {});
-    return descend(decorate(result), path);
+    return unwrapObject(decorate(result, rootQuery), path);
   }
 
   watch(...args) {
     const [path, porcelainQuery, options] = validateArgs(...args);
-    const query = wrap(makeQuery(porcelainQuery), path);
+    const rootQuery = wrapObject(porcelainQuery, path);
+    const query = makeQuery(rootQuery);
     const stream = this.call('watch', query, options || {});
-    return mapStream(stream, (value) => descend(decorate(value), path));
+    return mapStream(stream, (value) =>
+      unwrapObject(decorate(value, rootQuery), path),
+    );
   }
 
   async write(...args) {
     const [path, porcelainChange, options] = validateArgs(...args);
     const change = wrap(makeGraph(porcelainChange), path);
     const writtenChange = await this.call('write', change, options || {});
-    return descend(decorate(writtenChange), path);
+    return unwrapObject(decorate(writtenChange), path);
   }
 }

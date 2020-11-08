@@ -2,6 +2,7 @@ import { isBranch, isRange, getIndex, getLastIndex } from '../node';
 import { keyAfter, keyBefore } from './step';
 
 export default function merge(current, changes) {
+  if (!current) console.trace('Merging', current, changes);
   let index = 0;
   for (const change of changes) {
     index = isRange(change)
@@ -44,6 +45,7 @@ function mergeRanges(base, node) {
 }
 
 export function insertNode(current, change, start = 0) {
+  if (!current) throw new Error('Current' + current);
   const key = change.key;
   const index = getIndex(current, key, start);
   const node = current[index];

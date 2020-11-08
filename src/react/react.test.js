@@ -16,7 +16,7 @@ describe('useQuery', () => {
     backend = mockBackend();
     backend.read = jest.fn(backend.read);
     g.use(backend.middleware);
-    await g.write('/demo', { value });
+    await g.write('demo', { value });
 
     wrapper = function _Wrapper({ children }) {
       return <GraffyProvider store={g}>{children}</GraffyProvider>;
@@ -55,7 +55,7 @@ describe('useQuery', () => {
 
     // update store
     const newValue = '12345';
-    await g.write('/demo', { value: newValue });
+    await g.write('demo', { value: newValue });
     data.demo.value = newValue;
 
     // call reload

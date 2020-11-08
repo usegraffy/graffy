@@ -65,8 +65,8 @@ async function runExampleTests(url) {
 }
 
 const exampleUrl = `http://localhost:${PORT}/learn/10-Full-Example`;
-test('exampleWs', () => runExampleTests(exampleUrl));
-test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
+test.skip('exampleWs', () => runExampleTests(exampleUrl));
+test.skip('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
 
 afterAll(() => {
   return Promise.all([

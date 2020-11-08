@@ -2,9 +2,9 @@
 
 # Graffy [![Build Status](https://img.shields.io/travis/usegraffy/graffy?style=flat-square)](https://travis-ci.org/usegraffy/graffy) [![NPM version](https://img.shields.io/npm/v/@graffy/core?style=flat-square)](https://www.npmjs.com/org/graffy)
 
-Graffy is a [live query](pages/why/02-Live-Queries) library for the browser and Node.js. Graffy-powered servers fulfill each query with its initial result followed by a stream of relevant incremental updates. This is different (and better!) than GraphQL subscriptions, PouchDB sync, etc.
+Graffy is a toolkit for graph-centric APIs. It has capabilities comparable to GraphQL and Firebase.
 
-> `npm install @graffy/core`
+## Why?
 
 Graffy supports complex, expressive live queries - with multiple levels of resource expansion and pagination - based on a novel application of [set theory and CRDTs](pages/advanced/01-Theory).
 

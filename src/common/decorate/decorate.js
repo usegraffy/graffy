@@ -2,10 +2,10 @@ import { isRange, isBranch, isLink } from '../node';
 import { empty } from '../util.js';
 import { decodeArgs } from '../encode/index.js';
 import pageInfo from './pageInfo';
-
+import { format } from '@graffy/testing';
 const LINK_PLACEHOLDER = Symbol();
 
-export function descend(tree, path) {
+function descend(tree, path) {
   let node = tree;
   for (const key of path) {
     if (!node) return;
@@ -16,13 +16,14 @@ export function descend(tree, path) {
   return node;
 }
 
-export default function decorate(graph, links = []) {
-  const result = graph && decorateChildren(graph, links);
+export default function decorate(graph, query, links = []) {
+  const result = graph && decorateChildren(graph, query, links);
 
   let link;
   while ((link = links.shift())) {
     const [from, key, path, args] = link;
     const node = descend(result, path);
+    // console.log('resolving link', link, 'found', node, 'in', result);
     if (node === LINK_PLACEHOLDER) {
       // Try this link again later. This is to resolve multi-hop links.
       // TODO: Cycle detection.
@@ -31,6 +32,7 @@ export default function decorate(graph, links = []) {
       // if (typeof node === 'undefined' || node === null) {
       //   console.warn('Decorate: Link', path, 'is', node);
       // }
+      // console.log('Replacing placeholder at', key, 'with', node);
       from[key] = node;
       if (typeof node === 'object' && node) {
         node._ref_ = path;
@@ -41,16 +43,31 @@ export default function decorate(graph, links = []) {
   return result;
 }
 
-function decorateChildren(graph, links) {
+function decorateChildren(graph, query, links) {
   // const isPage = graph.some((node) => node.key[0] === '\0');
   // const result = isPage ? [] : {};
+
+  const isArr =
+    Array.isArray(query) ||
+    (query &&
+      query._key_ &&
+      (query._key_.first ||
+        query._key_.last ||
+        query._key_.after ||
+        query._key_.before ||
+        query._key_.since ||
+        query._key_.until));
 
   const resArr = [];
   const resObj = {};
 
+  // console.log('query', query, isArr);
+
   for (const node of graph) {
+    // console.log('node', node);
+
     const key = node.key;
-    if (key[0] === '\0') {
+    if (isArr || key[0] === '\0') {
       if (isRange(node)) continue;
 
       let args = decodeArgs(node);
@@ -63,7 +80,8 @@ function decorateChildren(graph, links) {
         continue;
       }
       if (isBranch(node)) {
-        const child = decorateChildren(node.children, links);
+        // TODO: Find which query branch this falls under?
+        const child = decorateChildren(node.children, query?.[0], links);
         child._key_ = args;
         resArr.push(child);
         continue;
@@ -89,7 +107,7 @@ function decorateChildren(graph, links) {
         continue;
       }
       if (isBranch(node)) {
-        resObj[key] = decorateChildren(node.children, links);
+        resObj[key] = decorateChildren(node.children, query?.[key], links);
         continue;
       }
       if (node.value !== null) resObj[key] = node.value;
@@ -104,48 +122,3 @@ function decorateChildren(graph, links) {
     return resObj;
   }
 }
-
-//
-// function decoratePage(graph, links) {
-//   const result = [];
-//   for (const node of graph) {
-//     if (node.key[0] !== '\0') continue;
-//     if (isRange(node)) continue;
-//     if (isLink(node)) {
-//       links.push([result, result.length, node.path]);
-//       result.push(LINK_PLACEHOLDER); // Placeholder that will read replaced.
-//       console.log('link', links, result);
-//       continue;
-//     }
-//     if (isBranch(node)) {
-//       result.push(decorateChildren(node.children, links));
-//       continue;
-//     }
-//     result.push(node.value);
-//   }
-//
-//   Object.defineProperty(result, 'pageInfo', { value: pageInfo(graph) });
-//   return result;
-// }
-//
-// function decorateBranch(graph, links) {
-//   const result = {};
-//   for (const node of graph) {
-//     const key = node.key;
-//     if (isRange(node)) {
-//       result[key] = null;
-//       continue;
-//     }
-//     if (isLink(node)) {
-//       links.push([result, key, node.path]);
-//       result[key] = LINK_PLACEHOLDER;
-//       continue;
-//     }
-//     if (isBranch(node)) {
-//       result[key] = decorateChildren(node.children, links);
-//       continue;
-//     }
-//     if (node.value !== null) result[key] = node.value;
-//   }
-//   return result;
-// }

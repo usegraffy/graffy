@@ -27,3 +27,7 @@ export function mergeObject(base, change) {
 
   return base;
 }
+
+export function isArgObject(arg) {
+  return typeof arg === 'object' && arg && !Array.isArray(arg);
+}

@@ -7,8 +7,14 @@ describe('rogue-db integration', () => {
 
   beforeEach(async () => {
     await populate();
+    jest.useFakeTimers();
     store = new Graffy();
     store.use('user', rogueDb({ collection: 'user' }));
+  });
+
+  afterEach(async () => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   test('scenario 1', async () => {
@@ -28,6 +34,7 @@ describe('rogue-db integration', () => {
       id: 1,
       i: 1,
     });
+    jest.runOnlyPendingTimers();
 
     expect((await stream1.next()).value).toEqual({ i: 1, id: ['user1'] });
 
@@ -37,7 +44,7 @@ describe('rogue-db integration', () => {
 
     expect(response1).toEqual({ i: 2 });
 
-    console.log('Completed write');
+    jest.runOnlyPendingTimers();
 
     expect((await stream1.next()).value).toEqual({ i: 2, id: ['user1'] });
   });

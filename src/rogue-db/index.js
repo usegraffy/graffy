@@ -7,7 +7,7 @@ import {
 import { linkResult } from './link';
 import { filterObject } from './filter';
 import {
-  isEncoded,
+  isArgObject,
   decodeArgs,
   makeGraph,
   decorate,
@@ -41,8 +41,8 @@ export default ({
     const idSubQueries = [];
 
     for (const node of query) {
-      if (isEncoded(node.key)) {
-        const args = decodeArgs(node);
+      const args = decodeArgs(node);
+      if (isArgObject(args)) {
         ops.push(
           selectByArgs(args, options).then((res) =>
             linkResult(res, node.children, links),
@@ -79,8 +79,8 @@ export default ({
         const payload = [];
 
         for (const node of query) {
-          if (isEncoded(node.key)) {
-            const args = decodeArgs(node);
+          const args = decodeArgs(node);
+          if (isArgObject(args)) {
             if (filterObject(args, object)) payload.push(object);
           } else {
             if (object.id._val_.includes(node.key)) payload.push(object);
@@ -103,7 +103,8 @@ export default ({
     const ops = [];
 
     for (const node of change) {
-      if (isEncoded(node.key)) {
+      const args = decodeArgs(node);
+      if (isArgObject(args)) {
         throw Error('pg_write.write_arg_unimplemented');
       } else {
         ops.push(

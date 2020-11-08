@@ -1,9 +1,7 @@
-import { keyStep } from '@graffy/common';
-
 function escape(string) {
   if (string === '') return "''";
   // eslint-disable-next-line no-control-regex
-  return string.replace(/\uffff/g, '␌').replace(/\0/g, '␀');
+  return string.replace(/\uffff/g, '𝖋𝖋').replace(/\0/g, '𝖔𝖔');
 }
 
 function interval(key, end) {
@@ -23,6 +21,7 @@ function interval(key, end) {
 
 let lastPrintedVersion;
 export default function format(graph, indent = '') {
+  if (graph?.length && !graph[0]) console.log(graph);
   if (!graph) return graph;
   if (indent === '') lastPrintedVersion = null;
   // eslint-disable-next-line no-param-reassign
@@ -48,4 +47,8 @@ export default function format(graph, indent = '') {
       )
       .join('\n')
   );
+}
+
+export function inspect() {
+  return format(this);
 }

@@ -18,6 +18,10 @@ export default function fill(_) {
 
       while (budget-- > 1) {
         const { known, unknown } = slice(value, query);
+        if (!known) {
+          console.log('Value from provider does not match query.');
+          console.log(format(value), format(query));
+        }
         value = known;
         if (!unknown) break;
         // console.log(unknown[0]);

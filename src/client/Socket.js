@@ -154,8 +154,8 @@ export default function Socket(url, { onUnhandled, onStatusChange } = {}) {
     }
   }
 
-  // connect();
-  // aliveTimer = setTimeout(isAlive, INTERVAL);
+  connect();
+  aliveTimer = setTimeout(isAlive, INTERVAL);
 
   return {
     start,

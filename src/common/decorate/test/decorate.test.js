@@ -38,14 +38,14 @@ test('decorate', () => {
     },
     posts: [
       {
-        _key_: { cursor: '1984' },
+        _key_: '1984',
         title: '1984',
         body: 'Lorem ipsum',
         options: { inStock: true },
         author: { _ref_: ['users', '1'], name: 'George Orwell' },
       },
       {
-        _key_: { cursor: '2001' },
+        _key_: '2001',
         title: '2001',
         body: 'Hello world',
         options: { borrowed: true },
@@ -59,3 +59,9 @@ test('decorate', () => {
 });
 
 // TODO: Test multi-hop links and loops.
+
+test('arrayCursor.decode', () => {
+  expect(
+    decorate([{ key: '\x000VI-Ck--------', value: 25, version: 0 }]),
+  ).toEqual([25]);
+});

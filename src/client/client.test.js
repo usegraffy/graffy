@@ -61,7 +61,7 @@ describe('httpClient connInfoPath', () => {
   });
 
   test('readUrl', async () => {
-    expect(await store.read('/connection', { url: true })).toEqual({
+    expect(await store.read('connection', { url: true })).toEqual({
       url: connectionUrl,
     });
   });
@@ -69,7 +69,7 @@ describe('httpClient connInfoPath', () => {
   test('writeUrl', async () => {
     const newUrl = 'http://foobar';
     await store.write({ connection: { url: newUrl } });
-    expect(await store.read('/connection', { url: true })).toEqual({
+    expect(await store.read('connection', { url: true })).toEqual({
       url: newUrl,
     });
   });

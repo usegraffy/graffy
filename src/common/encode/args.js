@@ -1,22 +1,21 @@
 import { encode as encodeValue, decode as decodeValue } from './struct.js';
 import { keyStep, keyAfter, keyBefore } from '../graph/step.js';
-import { throwIf, empty } from '../util.js';
+import { throwIf, empty, isArgObject } from '../util.js';
+
+function joinEncode(value, prefix) {
+  if (!prefix && typeof value === 'string') {
+    return value;
+  } else {
+    return (prefix || '\0') + encodeValue(value);
+  }
+}
 
 export function encode(arg) {
-  if (typeof arg === 'string') return { key: arg };
-  const {
-    first,
-    last,
-    order,
-    after,
-    before,
-    since,
-    until,
-    cursor,
-    id,
-    ...filter
-  } = arg;
-  if (id) return { key: id };
+  if (!isArgObject(arg)) {
+    arg = { cursor: arg };
+  }
+
+  const { first, last, after, before, since, until, cursor, ...filter } = arg;
   const hasRangeArg = before || after || since || until || first || last;
 
   throwIf('first_and_last', first && last);
@@ -24,29 +23,24 @@ export function encode(arg) {
   throwIf('before_and_until', before && until);
   throwIf('cursor_and_range_arg', cursor && hasRangeArg);
 
-  let key = '';
-  let end;
-  let prefix = '\0';
+  let key, end;
+  const prefix = empty(filter) ? '' : '\0' + encodeValue(filter) + '.';
 
-  if (cursor) key = encodeValue(cursor);
-  if (after) key = keyAfter(encodeValue(after));
-  if (before) end = keyBefore(encodeValue(before));
-  if (since) key = encodeValue(since);
-  if (until) end = encodeValue(until);
+  if (cursor) key = joinEncode(cursor, prefix);
+  if (after) key = keyAfter(joinEncode(after, prefix));
+  if (before) end = keyBefore(joinEncode(before, prefix));
+  if (since) key = joinEncode(since, prefix);
+  if (until) end = joinEncode(until, prefix);
 
   if (hasRangeArg) {
-    // This is a range node.
-    end = end || '\uffff';
-    if (last) [key, end] = [end, key];
+    key = key || prefix;
+    end = end || joinEncode('\uffff', prefix);
   }
 
-  if (order || !empty(filter)) {
-    prefix += (!empty(filter) ? encodeValue(filter) : '') + '.';
-    prefix += (order ? encodeValue(order) : '') + '.';
-  }
+  if (last) [key, end] = [end, key];
 
-  const node = { key: prefix + key };
-  if (typeof end !== 'undefined') node.end = prefix + end;
+  const node = { key };
+  if (typeof end !== 'undefined') node.end = end;
   if (first || last) node.limit = first || last;
 
   return node;
@@ -69,55 +63,49 @@ export function encode(arg) {
   cursor
 
   .filter.
-  id
 */
 
-function decodeParts(key) {
-  const parts = key.slice(1).split('.');
-  return parts.length === 3
-    ? [decodeValue(parts[0]), decodeValue(parts[1]), parts[2]]
-    : [undefined, undefined, parts[0]];
-}
-
-export function isEncoded(key) {
-  return key[0] === '\0';
+function splitEncoded(encodedKey) {
+  if (encodedKey[0] === '\0') {
+    const parts = encodedKey.slice(1).split('.');
+    const [prefix, cursor] = [undefined, ...parts].slice(-2);
+    const { key, step } = keyStep(cursor);
+    const value = decodeValue(key);
+    return { prefix, cursor, value, step };
+  } else {
+    return { cursor: encodedKey, value: encodedKey, step: 0 };
+  }
 }
 
 export function decode(node) {
-  if (typeof node === 'string') return { id: node };
+  if (typeof node === 'string') return node;
   const { key, end, limit } = node;
-  if (key[0] !== '\0') {
-    throwIf('unencoded_range_key:' + key, typeof end !== 'undefined' || limit);
-    return { id: key };
-  }
-
-  throwIf('unencoded_range_end', end && end[0] !== '\0');
+  if (key[0] !== '\0' && typeof end === 'undefined') return key;
 
   const args = {};
   if (limit) args[key < end ? 'first' : 'last'] = limit;
 
-  const [filter, order, cursor] = decodeParts(key);
-  if (filter) Object.assign(args, filter);
-  if (order) args.order = order;
+  const kParts = splitEncoded(key);
+  if (kParts.prefix) Object.assign(args, decodeValue(kParts.prefix));
 
-  if (!end) {
-    if (typeof cursor !== 'undefined') args.cursor = decodeValue(cursor);
+  if (typeof end === 'undefined') {
+    if (empty(args) && !isArgObject(kParts.value)) return kParts.value;
     return args;
   }
 
-  const [endFilter, endOrder, endCursor] = decodeParts(end);
-  throwIf('prefix_mismatch', endFilter !== filter || endOrder !== order);
-  const [lower, upper] =
-    endCursor > cursor ? [cursor, endCursor] : [endCursor, cursor];
+  const eParts = splitEncoded(end);
 
-  if (lower !== '') {
-    const { key, step } = keyStep(lower);
-    args[step === 1 ? 'after' : 'since'] = decodeValue(key);
+  throwIf('prefix_mismatch', eParts.prefix !== kParts.prefix);
+
+  const [lower, upper] =
+    eParts.cursor > kParts.cursor ? [kParts, eParts] : [eParts, kParts];
+
+  if (lower.cursor !== '') {
+    args[lower.step === 1 ? 'after' : 'since'] = lower.value;
   }
 
-  if (upper !== '\uffff') {
-    const { key, step } = keyStep(upper);
-    args[step === -1 ? 'before' : 'until'] = decodeValue(key);
+  if (upper.cursor !== '\uffff') {
+    args[upper.step === -1 ? 'before' : 'until'] = upper.value;
   }
 
   return args;

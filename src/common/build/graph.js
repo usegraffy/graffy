@@ -15,11 +15,7 @@ function makeNode(object, key, ver, linked = []) {
   }
 
   key = key || _key_;
-
-  const node =
-    key === ROOT_KEY
-      ? {}
-      : encodeArgs(Array.isArray(key) ? { cursor: key } : key);
+  const node = key === ROOT_KEY ? {} : encodeArgs(key);
 
   node.version = ver;
 

@@ -8,7 +8,7 @@ function getOptionsParam(options) {
 
 export default (
   baseUrl,
-  { getOptions = async () => {}, watch, connInfoPath = '/connection' } = {},
+  { getOptions = async () => {}, watch, connInfoPath = 'connection' } = {},
 ) => (store) => {
   connInfoPath = makePath(connInfoPath);
 

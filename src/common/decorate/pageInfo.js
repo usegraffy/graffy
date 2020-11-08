@@ -17,7 +17,7 @@ export default function pageInfo(graph) {
     ...page,
     start: page.since || page.after,
     end: page.until || page.before,
-    hasPrev: key !== '\0',
-    hasNext: end !== '\0\uffff',
+    hasPrev: key !== '',
+    hasNext: end !== '\uffff',
   };
 }

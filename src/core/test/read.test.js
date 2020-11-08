@@ -57,13 +57,13 @@ describe('read', () => {
     beforeEach(() => {
       provider = jest.fn(() => {
         return {
-          foo: {
-            ['\0' + key('a')]: { baz: 15, bar: 42 },
-            ['\0' + key('b')]: { baz: 16, bar: 41 },
-            ['\0' + key('c')]: { baz: 17, bar: 40 },
-            ['\0' + key('d')]: { baz: 18, bar: 39 },
-            ['\0' + key('e')]: { baz: 19, bar: 38 },
-          },
+          foo: [
+            { _key_: 'a', baz: 15, bar: 42 },
+            { _key_: 'b', baz: 16, bar: 41 },
+            { _key_: 'c', baz: 17, bar: 40 },
+            { _key_: 'd', baz: 18, bar: 39 },
+            { _key_: 'e', baz: 19, bar: 38 },
+          ],
         };
       });
       g.onRead(provider);
@@ -77,11 +77,11 @@ describe('read', () => {
       expect(provider.mock.calls[0][0].foo._key_).toEqual({ first: 100 });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'a' }, bar: 42 },
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
-          { _key_: { cursor: 'd' }, bar: 39 },
-          { _key_: { cursor: 'e' }, bar: 38 },
+          { _key_: 'a', bar: 42 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
+          { _key_: 'd', bar: 39 },
+          { _key_: 'e', bar: 38 },
         ],
       });
     });
@@ -90,14 +90,14 @@ describe('read', () => {
       const result = await g.read({ foo: { _key_: { first: 2 }, bar: 1 } });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'a' }, bar: 42 },
-          { _key_: { cursor: 'b' }, bar: 41 },
+          { _key_: 'a', bar: 42 },
+          { _key_: 'b', bar: 41 },
         ],
       });
     });
     test('last', async () => {
       const result = await g.read({ foo: { _key_: { last: 1 }, bar: 1 } });
-      expect(result).toEqual({ foo: [{ _key_: { cursor: 'e' }, bar: 38 }] });
+      expect(result).toEqual({ foo: [{ _key_: 'e', bar: 38 }] });
     });
     test('first-since', async () => {
       const result = await g.read({
@@ -105,8 +105,8 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
         ],
       });
     });
@@ -116,9 +116,9 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
-          { _key_: { cursor: 'd' }, bar: 39 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
+          { _key_: 'd', bar: 39 },
         ],
       });
     });
@@ -128,8 +128,8 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
         ],
       });
     });
@@ -139,9 +139,9 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
-          { _key_: { cursor: 'd' }, bar: 39 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
+          { _key_: 'd', bar: 39 },
         ],
       });
     });
@@ -151,8 +151,8 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
         ],
       });
     });
@@ -162,30 +162,9 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { _key_: { cursor: 'b' }, bar: 41 },
-          { _key_: { cursor: 'c' }, bar: 40 },
-          { _key_: { cursor: 'd' }, bar: 39 },
-        ],
-      });
-    });
-
-    test('multi', async () => {
-      const result = await g.read({
-        foo: { ['\0' + key('a')]: { bar: 1 }, ['\0' + key('b')]: { baz: 1 } },
-      });
-      expect(provider).toBeCalledWith(
-        {
-          foo: {
-            ['\0' + key('a')]: { bar: true },
-            ['\0' + key('b')]: { baz: true },
-          },
-        },
-        {},
-      );
-      expect(result).toEqual({
-        foo: [
-          { _key_: { cursor: 'a' }, bar: 42 },
-          { _key_: { cursor: 'b' }, baz: 16 },
+          { _key_: 'b', bar: 41 },
+          { _key_: 'c', bar: 40 },
+          { _key_: 'd', bar: 39 },
         ],
       });
     });
