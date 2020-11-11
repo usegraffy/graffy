@@ -50,7 +50,7 @@ const retrieveResult = async (promise, setState) => {
   }
 };
 
-export default function useQuery(query, { once, ...options } = {}) {
+export default function useQuery(query, { once, ...other } = {}) {
   const store = useContext(GraffyContext);
   const queryRef = useRef(null);
 
@@ -59,7 +59,7 @@ export default function useQuery(query, { once, ...options } = {}) {
     queryRef.current = query;
   }
 
-  const fetchData = () => {
+  const fetchData = (options = other) => {
     if (state.loading !== true) setState({ ...state, loading: true });
     if (once) {
       retrieveResult(store.read(query, options), setState);
