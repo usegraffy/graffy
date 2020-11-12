@@ -75,7 +75,7 @@ export default function useQuery(query, { once, ...other } = {}) {
   };
 
   const refetch = fetchData.bind(null, { ...other, skipCache: true });
-  const [state, setState] = useState({ loading: false });
+  const [state, setState] = useState({ loading: true });
 
   useEffect(fetchData, [queryRef.current, store]);
 
