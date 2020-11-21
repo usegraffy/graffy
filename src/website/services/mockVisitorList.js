@@ -4,7 +4,7 @@ const log = debug('graffy:website:server');
 import { makeGraph } from '@graffy/common';
 
 const TARGET = 30;
-const RATE = 1;
+const RATE = 5;
 
 const freeIds = new Set();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

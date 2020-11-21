@@ -34,11 +34,11 @@ export default function Example() {
   }
 
   // Extract page info, this is used in several places
-  let { start, end, hasNext, hasPrev } = data.visitors.pageInfo;
+  let { nextPage, prevPage } = data.visitors;
 
   const visitors = data.visitors;
 
-  if (!loading && !hasPrev && hasNext && range.last) {
+  if (!loading && !prevPage && nextPage && range.last) {
     // We have reached the beginning of the list while paginating backwards.
     // Flip the query to the first N.
     setRange({ first: PAGE_SIZE });
@@ -54,10 +54,10 @@ export default function Example() {
         }}
       />*/}
       <Pagination
-        onPrev={hasPrev && (() => setRange({ last: PAGE_SIZE, before: start }))}
         range={range}
         count={visitors.length}
-        onNext={hasNext && (() => setRange({ first: PAGE_SIZE, after: end }))}
+        onPrev={prevPage && (() => setRange(prevPage))}
+        onNext={nextPage && (() => setRange(nextPage))}
       />
       <VisitorList visitors={visitors} />
       {loading && <Spinner />}

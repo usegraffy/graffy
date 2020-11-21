@@ -51,12 +51,13 @@ async function runExampleTests(url) {
   await page.waitForSelector('.Spinner', { hidden: true });
   expect((await page.$$('.Visitor')).length).toBe(12);
   label = await (await page.$('.CurrPage')).evaluate((el) => el.textContent);
-  expect(label).toMatch(/Last.*before/);
+  expect(label).toMatch(/Last.*until/);
 
   // Go back to first page. The page label should flip around.
   await (await page.$('.PrevPage')).click();
   await page.waitForSelector('.Spinner', { hidden: true });
-  await page.waitFor(100); // wait for all results to render
+  await (await page.$('.PrevPage')).click();
+  await page.waitForSelector('.Spinner', { hidden: true });
   expect((await page.$$('.Visitor')).length).toBe(12);
   label = await (await page.$('.CurrPage')).evaluate((el) => el.textContent);
   expect(label).toMatch(/First/);
@@ -66,8 +67,8 @@ async function runExampleTests(url) {
 }
 
 const exampleUrl = `http://localhost:${PORT}/learn/10-Full-Example`;
-test.skip('exampleWs', () => runExampleTests(exampleUrl));
-test.skip('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
+test('exampleWs', () => runExampleTests(exampleUrl));
+test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
 
 afterAll(() => {
   return Promise.all([

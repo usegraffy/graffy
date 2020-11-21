@@ -47,15 +47,6 @@ test('Porcelain read', async () => {
       author: { _ref_: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
-  Object.defineProperty(expectedResult, 'pageInfo', {
-    value: {
-      start: undefined,
-      end: ['2001'],
-      hasPrev: false,
-      hasNext: true,
-      until: ['2001'],
-    },
-  });
 
   expect(onReadBooks).toHaveBeenCalledWith(
     expectedBooksQuery,
@@ -66,7 +57,6 @@ test('Porcelain read', async () => {
     expectedUsersQuery,
     expect.any(Object),
   );
-  expect(result.pageInfo).toEqual(expectedResult.pageInfo);
   expect(result).toEqual(expectedResult);
 });
 

@@ -15,6 +15,8 @@ export default function Pagination({ range, count, onNext, onPrev }) {
         {range.last && `Last ${range.last} `}
         {range.after && `after ${getTime(range.after[0])} `}
         {range.before && `before ${getTime(range.before[0])} `}
+        {range.since && `since ${getTime(range.since[0])} `}
+        {range.until && `until ${getTime(range.until[0])} `}
         {count !== (range.first || range.last) ? `(got ${count})` : ''}
       </span>
       <button className="NextPage" {...getButtonProps(onNext)}>

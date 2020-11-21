@@ -70,10 +70,11 @@ function splitEncoded(encodedKey) {
     const parts = encodedKey.slice(1).split('.');
     const [prefix, cursor] = [undefined, ...parts].slice(-2);
     const { key, step } = keyStep(cursor);
-    const value = key === '' || key === '\uffff' ? undefined : decodeValue(key);
+    const value = key === '' || key === '\uffff' ? key : decodeValue(key);
     return { prefix, cursor, value, step };
   } else {
-    return { cursor: encodedKey, value: encodedKey, step: 0 };
+    const { key, step } = keyStep(encodedKey);
+    return { cursor: encodedKey, value: key, step };
   }
 }
 

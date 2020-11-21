@@ -120,12 +120,34 @@ function isPaginated({ _key_: key } = {}) {
   );
 }
 
+function isMinKey(key) {
+  return key === '' || (key[0] === '\0' && key[key.length - 1] === '.');
+}
+
+function isMaxKey(key) {
+  return (
+    key === '\uffff' ||
+    (key[0] === '\0' &&
+      key[key.length - 2] === '.' &&
+      key[key.length - 1] === '\uffff')
+  );
+}
+
+function prefix(key) {
+  if (key[0] === '\0') {
+    const parts = key.split('.');
+    return parts[parts.length - 2] ? parts[parts.length - 2] + '.' : '';
+  }
+
+  return '';
+}
+
 function makeArray(graph, query, links, object) {
   const resArr = [];
 
-  if (query) {
+  if (query && isPaginated(query)) {
     const queryNode = makeQuery(query)[0];
-    if (isRange(queryNode)) graph = getRangeNodes(graph, queryNode);
+    graph = getRangeNodes(graph, queryNode);
   }
 
   for (const node of graph) {
@@ -150,7 +172,36 @@ function makeArray(graph, query, links, object) {
     resArr.push(child);
   }
 
-  Object.defineProperty(resArr, 'pageInfo', { value: pageInfo(graph) });
+  // Add next and previous page links
+
+  const firstNode = graph[0];
+  const lastNode = graph[graph.length - 1];
+  const firstKey = firstNode.key;
+  const lastKey = lastNode.end || lastNode.key;
+
+  const limit = query?._key_?.first || query?._key_?.last || resArr.length || 1;
+
+  if (!isMinKey(firstKey)) {
+    Object.defineProperty(resArr, 'prevPage', {
+      value: decodeArgs({
+        key: keyBefore(firstKey),
+        end: prefix(firstKey),
+        limit,
+      }),
+    });
+  }
+
+  if (!isMaxKey(lastKey)) {
+    Object.defineProperty(resArr, 'nextPage', {
+      value: decodeArgs({
+        key: keyAfter(lastKey),
+        end: prefix(lastKey) + '\uffff',
+        limit,
+      }),
+    });
+  }
+
+  // Object.defineProperty(resArr, 'pageInfo', { value: pageInfo(graph) });
   Object.defineProperty(resArr, 'props', { value: object });
   return resArr;
 }
