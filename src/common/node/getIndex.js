@@ -1,17 +1,11 @@
-export function getIndex(children, key, first = 0, last = children.length) {
-  if (first >= last) return shiftIntoRange(children, key, first);
-  const ix = ((first + last) / 2) | 0;
-  if (children[ix] && key > children[ix].key) {
-    return getIndex(children, key, ix + 1, last);
-  } else if (children[ix - 1] && key <= children[ix - 1].key) {
-    return getIndex(children, key, first, ix - 1);
-  } else {
-    return shiftIntoRange(children, key, ix);
-  }
-}
+import find from './find';
 
-function shiftIntoRange(children, key, ix) {
-  return children[ix - 1] && children[ix - 1].end >= key ? ix - 1 : ix;
+export function getIndex(children, target) {
+  return find(children, ({ key, end }) => {
+    if (key === target || (end && key < target && end >= target)) return 0;
+    if (key < target) return -1;
+    return 1;
+  });
 }
 
 export function getLastIndex(children, end, first, last) {

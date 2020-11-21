@@ -10,9 +10,9 @@ function makeNode(object, key, ver, linked = []) {
   if (!key && !_key_) {
     throw Error(`makeNode.no_key ${key} ${JSON.stringify(_key_)}`);
   }
-  if (key && _key_) {
-    throw Error(`makeNode.key_mismatch ${key} ${JSON.stringify(_key_)}`);
-  }
+  // if (key && _key_) {
+  //   throw Error(`makeNode.key_mismatch ${key} ${JSON.stringify(_key_)}`);
+  // }
 
   key = key || _key_;
   const node = key === ROOT_KEY ? {} : encodeArgs(key);
@@ -41,15 +41,19 @@ function makeNode(object, key, ver, linked = []) {
       node.children = children;
     }
   } else if (typeof object === 'object') {
-    const children = Object.entries(rest)
-      .map(([key, obj]) => makeNode(obj, key, node.version, linked))
-      .filter(Boolean)
-      .sort((a, b) => (a.key <= b.key ? -1 : 1));
+    if (_key_ && key !== _key_) {
+      node.children = [makeNode(object, undefined, ver)];
+    } else {
+      const children = Object.entries(rest)
+        .map(([key, obj]) => makeNode(obj, key, node.version, linked))
+        .filter(Boolean)
+        .sort((a, b) => (a.key <= b.key ? -1 : 1));
 
-    if (children.length) {
-      node.children = children;
-    } else if (!node.end) {
-      node.end = node.key;
+      if (children.length) {
+        node.children = children;
+      } else if (!node.end) {
+        node.end = node.key;
+      }
     }
   } else {
     node.value = object;

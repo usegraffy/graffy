@@ -4,7 +4,7 @@ const log = debug('graffy:website:server');
 import { makeGraph } from '@graffy/common';
 
 const TARGET = 30;
-const RATE = 5;
+const RATE = 1;
 
 const freeIds = new Set();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,7 +21,7 @@ export default function (s) {
 
   while (id < TARGET) {
     store.call('write', simulateEnter());
-    ts -= Math.floor(1 + Math.random() * 100);
+    ts -= Math.floor(1 + Math.random() * 10000);
   }
 
   (async function () {
@@ -73,6 +73,10 @@ function visitorInfo() {
   };
 }
 
+function index(ts) {
+  return { order: ['ts'], cursor: [ts] };
+}
+
 function simulateEnter() {
   let addId;
   if (freeIds.size) {
@@ -91,7 +95,7 @@ function simulateEnter() {
     {
       visitors: [
         { _key_: addId, id: addId, ts, ...visitorInfo() },
-        { _key_: [ts], _ref_: ['visitors', addId] },
+        { _key_: index(ts), _ref_: ['visitors', addId] },
       ],
     },
     ts,
@@ -111,7 +115,10 @@ async function simulateLeave() {
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
   leave++;
-  return makeGraph({ visitors: [{ _key_: delId }, { _key_: [delTs] }] }, ts);
+  return makeGraph(
+    { visitors: [{ _key_: delId }, { _key_: index(delTs) }] },
+    ts,
+  );
 }
 
 function simulateUpdate() {

@@ -11,13 +11,17 @@ export default function pageInfo(graph) {
   }
   const end = isRange(lastNode) ? lastNode.end : lastNode.key;
 
-  const page = decodeArgs({ key, end });
+  try {
+    const page = decodeArgs({ key, end });
 
-  return {
-    ...page,
-    start: page.since || page.after,
-    end: page.until || page.before,
-    hasPrev: key !== '',
-    hasNext: end !== '\uffff',
-  };
+    return {
+      ...page,
+      start: page.since || page.after,
+      end: page.until || page.before,
+      hasPrev: key !== '',
+      hasNext: end !== '\uffff',
+    };
+  } catch (_) {
+    return {};
+  }
 }

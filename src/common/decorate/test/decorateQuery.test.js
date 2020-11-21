@@ -23,9 +23,12 @@ it('should decorate queries', () => {
 
   expect(decorated).toEqual({
     postCount: true,
-    posts: { title: true, body: true, author: { name: true } },
-    tags: {},
+    posts: {
+      _key_: { first: 10, since: '1984' },
+      title: true,
+      body: true,
+      author: { name: true },
+    },
+    tags: { _key_: { first: 10 } },
   });
-  expect(decorated.posts._key_).toEqual({ first: 10, since: '1984' });
-  expect(decorated.tags._key_).toEqual({ first: 10 });
 });

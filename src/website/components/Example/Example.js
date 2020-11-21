@@ -11,7 +11,7 @@ const PAGE_SIZE = 12;
 function getQuery(range) {
   return {
     visitors: {
-      _key_: range,
+      _key_: { order: ['ts'], ...range },
       id: true,
       ts: true,
       name: true,
@@ -25,6 +25,8 @@ export default function Example() {
   const [range, setRange] = useState({ first: PAGE_SIZE });
   const q = getQuery(range);
   const { data, loading } = useQuery(q);
+
+  console.log('data', data, loading);
 
   if (!data || !data.visitors) {
     // We are still performing the initial load

@@ -20,7 +20,8 @@ function decoratePage(query) {
   for (const node of query) {
     const args = decodeArgs(node);
     const child = isBranch(node) ? decorateChildren(node.children) : {};
-    Object.defineProperty(child, '_key_', { value: args });
+    child._key_ = args;
+    // Object.defineProperty(child, '_key_', { value: args });
     result.push(child);
   }
 

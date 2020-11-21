@@ -3,6 +3,9 @@ import { empty } from '../util.js';
 import { decodeArgs } from '../encode/index.js';
 import pageInfo from './pageInfo';
 import { format } from '@graffy/testing';
+import { getIndex, getLastIndex } from '../node';
+import { keyAfter, keyBefore } from '../graph';
+import { makeQuery } from '../build';
 const LINK_PLACEHOLDER = Symbol();
 
 function descend(tree, path) {
@@ -44,81 +47,133 @@ export default function decorate(graph, query, links = []) {
 }
 
 function decorateChildren(graph, query, links) {
-  // const isPage = graph.some((node) => node.key[0] === '\0');
-  // const result = isPage ? [] : {};
-
-  const isArr =
-    Array.isArray(query) ||
-    (query &&
-      query._key_ &&
-      (query._key_.first ||
-        query._key_.last ||
-        query._key_.after ||
-        query._key_.before ||
-        query._key_.since ||
-        query._key_.until));
-
-  const resArr = [];
   const resObj = {};
 
-  // console.log('query', query, isArr);
+  let hasEncoded = false;
+  let hasRanges = false;
+  // First, we construct the result object
+  for (const node of graph) {
+    const key = node.key;
+
+    if (key[0] === '\0') hasEncoded = true;
+
+    if (isRange(node)) {
+      if (key === node.end) {
+        resObj[key] = null;
+      } else {
+        hasRanges = true;
+      }
+      continue;
+    }
+    if (isLink(node)) {
+      links.push([resObj, key, node.path]);
+      resObj[key] = LINK_PLACEHOLDER;
+      continue;
+    }
+    if (isBranch(node)) {
+      resObj[key] = decorateChildren(node.children, query?.[key], links);
+      continue;
+    }
+
+    if (typeof node.value === 'object' && node.value) {
+      // The API must appear to return the value directly, but when
+      // JSON-stringified it returned object should be wrapped in a _val_.
+      const child = Object.create(node.value);
+      child._val_ = node.value;
+      resObj[key] = child;
+    } else if (node.value !== null) {
+      // Let undefined be added to the object.
+      resObj[key] = node.value;
+    }
+  }
+
+  /*
+    We return an array, not an object, as the decorated value in three
+    situations:
+
+    1. The query had pagination parameters
+    2. The result had ranges of unknown
+    3. The result has encoded values, which must be decoded into an _key_
+  */
+
+  if (query) {
+    if (Array.isArray(query)) {
+      if (query.length !== 1) throw Error('decorate.multi_page');
+      return makeArray(graph, query[0], links, resObj);
+    } else if (isPaginated(query)) {
+      return makeArray(graph, query, links, resObj);
+    }
+    return resObj;
+  }
+
+  if (hasRanges || hasEncoded) {
+    return makeArray(graph, null, links, resObj);
+  }
+
+  return resObj;
+}
+
+function isPaginated({ _key_: key } = {}) {
+  return (
+    key &&
+    (key.first || key.last || key.after || key.before || key.since || key.until)
+  );
+}
+
+function makeArray(graph, query, links, object) {
+  const resArr = [];
+
+  if (query) {
+    const queryNode = makeQuery(query)[0];
+    if (isRange(queryNode)) graph = getRangeNodes(graph, queryNode);
+  }
 
   for (const node of graph) {
     // console.log('node', node);
 
     const key = node.key;
-    if (isArr || key[0] === '\0') {
-      if (isRange(node)) continue;
+    const child = object[key];
 
-      let args = decodeArgs(node);
-      const { cursor, ...rest } = args;
-      if (empty(rest) && Array.isArray(cursor)) args = cursor;
+    if (typeof child === 'undefined' || child === null) continue;
 
-      if (isLink(node)) {
-        links.push([resArr, resArr.length, node.path, args]);
-        resArr.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
-        continue;
-      }
-      if (isBranch(node)) {
-        // TODO: Find which query branch this falls under?
-        const child = decorateChildren(node.children, query?.[0], links);
-        child._key_ = args;
-        resArr.push(child);
-        continue;
-      }
+    let args = decodeArgs(node);
+    const { cursor, ...rest } = args;
+    if (empty(rest) && Array.isArray(cursor)) args = cursor;
 
-      if (typeof node.value === 'object') {
-        const child = Object.create(node.value);
-        child._key_ = args;
-        child._val_ = node.value;
-        // TODO: defineProperty toJSON to return { _val_: child.slice(0) }
-        resArr.push(child);
-      } else {
-        resArr.push(node.value);
-      }
-    } else {
-      if (isRange(node)) {
-        resObj[key] = null;
-        continue;
-      }
-      if (isLink(node)) {
-        links.push([resObj, key, node.path]);
-        resObj[key] = LINK_PLACEHOLDER;
-        continue;
-      }
-      if (isBranch(node)) {
-        resObj[key] = decorateChildren(node.children, query?.[key], links);
-        continue;
-      }
-      if (node.value !== null) resObj[key] = node.value;
+    if (child === LINK_PLACEHOLDER) {
+      links.push([resArr, resArr.length, node.path, args]);
+      resArr.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
+      continue;
+    }
+
+    if (typeof child === 'object' && child) child._key_ = args;
+    resArr.push(child);
+  }
+
+  Object.defineProperty(resArr, 'pageInfo', { value: pageInfo(graph) });
+  Object.defineProperty(resArr, 'props', { value: object });
+  return resArr;
+}
+
+export function getRangeNodes(graph, { key, end, limit = Infinity }) {
+  const result = [];
+
+  if (key < end) {
+    for (let i = getIndex(graph, key); key <= end && limit > 0; i++) {
+      const node = graph[i];
+      if (!node || key < node.key) break;
+      result.push(node);
+      if (!isRange(node)) limit--;
+      key = keyAfter(node.end || node.key);
+    }
+  } else {
+    for (let i = getLastIndex(graph, key) - 1; key >= end && limit > 0; i--) {
+      const node = graph[i];
+      if (!node || key > (node.end || node.key)) break;
+      result.unshift(node);
+      if (!isRange(node)) limit--;
+      key = keyBefore(node.key);
     }
   }
-
-  if (resArr.length) {
-    Object.defineProperty(resArr, 'pageInfo', { value: pageInfo(graph) });
-    Object.defineProperty(resArr, 'props', { value: resObj });
-    return resArr;
-  } else {
-    return resObj;
-  }
+  return result;
 }

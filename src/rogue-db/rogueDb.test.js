@@ -36,7 +36,10 @@ describe('rogue-db integration', () => {
     });
     jest.runOnlyPendingTimers();
 
-    expect((await stream1.next()).value).toEqual({ i: 1, id: ['user1'] });
+    expect((await stream1.next()).value).toEqual({
+      i: 1,
+      id: { _val_: ['user1'] },
+    });
 
     const response1 = await store.write('user.user1', {
       i: 2,
@@ -46,6 +49,9 @@ describe('rogue-db integration', () => {
 
     jest.runOnlyPendingTimers();
 
-    expect((await stream1.next()).value).toEqual({ i: 2, id: ['user1'] });
+    expect((await stream1.next()).value).toEqual({
+      i: 2,
+      id: { _val_: ['user1'] },
+    });
   });
 });

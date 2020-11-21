@@ -1,8 +1,6 @@
 export function keyStep(key) {
   if (key === '') return { key, step: 1 };
-  if (key === '\0') return { key, step: 1 };
   if (key === '\uffff') return { key, step: -1 };
-  if (key === '\0\uffff') return { key, step: -1 };
   const l = key.length - 1;
   switch (key.charCodeAt(l)) {
     case 0:

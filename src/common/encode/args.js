@@ -34,7 +34,7 @@ export function encode(arg) {
 
   if (hasRangeArg) {
     key = key || prefix;
-    end = end || joinEncode('\uffff', prefix);
+    end = end || prefix + '\uffff';
   }
 
   if (last) [key, end] = [end, key];
@@ -70,7 +70,7 @@ function splitEncoded(encodedKey) {
     const parts = encodedKey.slice(1).split('.');
     const [prefix, cursor] = [undefined, ...parts].slice(-2);
     const { key, step } = keyStep(cursor);
-    const value = decodeValue(key);
+    const value = key === '' || key === '\uffff' ? undefined : decodeValue(key);
     return { prefix, cursor, value, step };
   } else {
     return { cursor: encodedKey, value: encodedKey, step: 0 };
@@ -90,6 +90,7 @@ export function decode(node) {
 
   if (typeof end === 'undefined') {
     if (empty(args) && !isArgObject(kParts.value)) return kParts.value;
+    if (typeof kParts.value !== 'undefined') args.cursor = kParts.value;
     return args;
   }
 

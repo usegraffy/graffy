@@ -2,8 +2,10 @@ export default function find(items, compare, first = 0, last = items.length) {
   let currentFirst = first;
   let currentLast = last;
   while (currentFirst < currentLast) {
+    // console.log(currentFirst, currentLast);
     const ix = ((currentFirst + currentLast) / 2) | 0;
     const d = compare(items[ix]);
+    // console.log(ix, items[ix], d);
 
     if (d < 0) {
       currentFirst = ix + 1;

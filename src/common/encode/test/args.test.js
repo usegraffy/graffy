@@ -35,3 +35,17 @@ describe('decode', () => {
     ).toEqual({ before: ['a'], foo: 42 });
   });
 });
+
+test('cursor', () => {
+  const original = { order: ['id'], cursor: [123] };
+  const encoded = encode(original);
+  const decoded = decode(encoded);
+  expect(decoded).toEqual(original);
+});
+
+test('firstNRange', () => {
+  const original = { order: ['id'], first: 10 };
+  const encoded = encode(original);
+  const decoded = decode(encoded);
+  expect(decoded).toEqual(original);
+});

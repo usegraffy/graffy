@@ -20,7 +20,7 @@ beforeAll(() => {
         if (message === 'ready') resolve();
       });
     }),
-    puppeteer.launch({ headless: true }).then((b) => {
+    puppeteer.launch({ headless: true /*, slowMo: 500 */ }).then((b) => {
       browser = b;
     }),
   ]);
@@ -56,7 +56,7 @@ async function runExampleTests(url) {
   // Go back to first page. The page label should flip around.
   await (await page.$('.PrevPage')).click();
   await page.waitForSelector('.Spinner', { hidden: true });
-  await page.waitFor(500); // wait for all results to render
+  await page.waitFor(100); // wait for all results to render
   expect((await page.$$('.Visitor')).length).toBe(12);
   label = await (await page.$('.CurrPage')).evaluate((el) => el.textContent);
   expect(label).toMatch(/First/);
