@@ -108,7 +108,10 @@ export default ({
         throw Error('pg_write.write_arg_unimplemented');
       } else {
         ops.push(
-          upsertToId({ id: [node.key], ...decodeGraph(node.children) }, options),
+          upsertToId(
+            { id: [node.key], ...decodeGraph(node.children) },
+            options,
+          ),
         );
       }
     }
