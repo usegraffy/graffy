@@ -1,8 +1,9 @@
 import {
-  decorate as decodeGraph,
-  decorateQuery as decodeQuery,
-} from './decorate';
-import { makeGraph as encodeGraph, makeQuery as encodeQuery } from './build';
+  decodeGraph,
+  decodeQuery,
+  encodeGraph,
+  encodeQuery,
+} from '../index.js';
 
 test('cursor', () => {
   const original = [

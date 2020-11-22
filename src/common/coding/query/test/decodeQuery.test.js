@@ -1,8 +1,8 @@
-import decorateQuery from '../decorateQuery';
-import { encodeValue as key } from '../../encode';
+import decodeQuery from '../decode';
+import { encodeValue as key } from '../../index.js';
 
-it('should decorate queries', () => {
-  const decorated = decorateQuery(
+it('should decodeGraph queries', () => {
+  const decodeGraphd = decodeQuery(
     /* prettier-ignore */
     [
           { key: 'postCount', value: 1, version: 2 },
@@ -21,7 +21,7 @@ it('should decorate queries', () => {
         ],
   );
 
-  expect(decorated).toEqual({
+  expect(decodeGraphd).toEqual({
     postCount: true,
     posts: {
       _key_: { first: 10, since: '1984' },

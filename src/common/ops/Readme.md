@@ -71,7 +71,7 @@ Notes:
 ];
 ```
 
-## Decorated Query
+## decodeGraphd Query
 
 The aim is to be as close to the response structure as possible.
 
@@ -100,7 +100,7 @@ query({
 
 `first` and `last` create QueryRanges.
 
-## Decorated Graph
+## decodeGraphd Graph
 
 QueryRanges result in arrays, QueryBranches result in objects.
 

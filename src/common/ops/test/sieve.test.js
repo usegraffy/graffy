@@ -1,17 +1,17 @@
 import sieve from '../sieve';
-import { makeGraph } from '../../build';
+import { encodeGraph } from '../../coding';
 
 test('empty', () => {
   const g = [];
-  const change = sieve(g, makeGraph({ foo: 42 }, 0));
+  const change = sieve(g, encodeGraph({ foo: 42 }, 0));
   expect(change).toEqual([]);
   expect(g).toEqual([]);
 });
 
 test('full', () => {
   const g = [{ key: '', end: '\uffff', version: 0 }];
-  const change = sieve(g, makeGraph({ foo: 42 }, 0));
-  expect(change).toEqual(makeGraph({ foo: 42 }, 0));
+  const change = sieve(g, encodeGraph({ foo: 42 }, 0));
+  expect(change).toEqual(encodeGraph({ foo: 42 }, 0));
   expect(g).toEqual([
     { key: '', end: 'fon\uffff', version: 0 },
     { key: 'foo', value: 42, version: 0 },
@@ -21,8 +21,8 @@ test('full', () => {
 
 test('full-add-branch', () => {
   const g = [{ key: '', end: '\uffff', version: 0 }];
-  const change = sieve(g, makeGraph({ foo: { bar: 42 } }, 0));
-  expect(change).toEqual(makeGraph({ foo: { bar: 42 } }, 0));
+  const change = sieve(g, encodeGraph({ foo: { bar: 42 } }, 0));
+  expect(change).toEqual(encodeGraph({ foo: { bar: 42 } }, 0));
   expect(g).toEqual([
     { key: '', end: 'fon\uffff', version: 0 },
     {
@@ -39,10 +39,10 @@ test('full-add-branch', () => {
 });
 
 test('ignore-unchanged', () => {
-  const g = makeGraph({ foo: { bar: 42 } }, 0);
-  const change = sieve(g, makeGraph({ foo: { bar: 42 } }, 1));
+  const g = encodeGraph({ foo: { bar: 42 } }, 0);
+  const change = sieve(g, encodeGraph({ foo: { bar: 42 } }, 1));
   expect(change).toEqual([]);
-  expect(g).toEqual(makeGraph({ foo: { bar: 42 } }, 1));
+  expect(g).toEqual(encodeGraph({ foo: { bar: 42 } }, 1));
 });
 
 test('empty knowledge', () => {

@@ -1,7 +1,7 @@
 // index.test.js
 
 import Graffy from '@graffy/core';
-import { makeGraph, makeQuery } from '@graffy/common';
+import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import live from './index.js';
 
@@ -14,7 +14,7 @@ beforeEach(() => {
   g.use(backend.middleware);
 
   backend.write(
-    makeGraph(
+    encodeGraph(
       {
         bar: {
           1: { x: 1 },
@@ -50,13 +50,13 @@ beforeEach(() => {
 test('indexes', async () => {
   const subscription = g.call(
     'watch',
-    makeQuery({
+    encodeQuery({
       foo: { _key_: { first: 3 }, x: true },
     }),
   );
 
   expect((await subscription.next()).value).toEqual(
-    makeGraph(
+    encodeGraph(
       {
         bar: {
           1: { x: 1 },
@@ -77,7 +77,7 @@ test('indexes', async () => {
   );
 
   backend.write(
-    makeGraph(
+    encodeGraph(
       {
         bar: { 2: null },
         foo: [{ _key_: ['b'] }],
@@ -90,7 +90,7 @@ test('indexes', async () => {
     {
       key: 'bar',
       version: 1,
-      children: makeGraph(
+      children: encodeGraph(
         {
           1: { x: 1 },
           3: { x: 3 },
@@ -103,7 +103,7 @@ test('indexes', async () => {
       key: 'foo',
       version: 1,
       children: [
-        ...makeGraph(
+        ...encodeGraph(
           [
             { _key_: { before: ['a'] } },
             { _key_: ['a'], _ref_: ['bar', '1'] },

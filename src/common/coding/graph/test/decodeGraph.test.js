@@ -1,8 +1,8 @@
-import decorate from '../decorate';
+import decodeGraph from '../decode.js';
 import { encodeValue as key, keyAfter, keyBefore } from '@graffy/common';
 
-test('decorate', () => {
-  const decorated = decorate(
+test('decodeGraph', () => {
+  const decodeGraphd = decodeGraph(
     /* prettier-ignore */
     [
       { key: 'users', version: 2, children: [
@@ -31,7 +31,7 @@ test('decorate', () => {
       ] },
     ],
   );
-  expect(decorated).toEqual({
+  expect(decodeGraphd).toEqual({
     users: {
       1: { _ref_: ['users', '1'], name: 'George Orwell' },
       2: { _ref_: ['users', '2'], name: 'Arthur C Clarke' },
@@ -54,22 +54,22 @@ test('decorate', () => {
     ],
   });
 
-  expect(decorated.posts[0].author).toBe(decorated.users['1']);
-  expect(decorated.posts[1].author).toBe(decorated.users['2']);
+  expect(decodeGraphd.posts[0].author).toBe(decodeGraphd.users['1']);
+  expect(decodeGraphd.posts[1].author).toBe(decodeGraphd.users['2']);
 });
 
 // TODO: Test multi-hop links and loops.
 
 test('arrayCursor.decode', () => {
   expect(
-    decorate([{ key: '\x000VI-Ck--------', value: 25, version: 0 }]),
+    decodeGraph([{ key: '\x000VI-Ck--------', value: 25, version: 0 }]),
   ).toEqual([25]);
 });
 
 describe('pagination', () => {
   test('backward_mid', () => {
     expect(
-      decorate(
+      decodeGraph(
         [
           { key: 'foo', value: '123', version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
@@ -81,7 +81,7 @@ describe('pagination', () => {
 
   test('forward_end', () => {
     expect(
-      decorate(
+      decodeGraph(
         [
           { key: 'foo', value: '123', version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
@@ -93,7 +93,7 @@ describe('pagination', () => {
 
   test('backward_start', () => {
     expect(
-      decorate(
+      decodeGraph(
         [
           { key: '', end: 'fon\uffff', version: 1 },
           { key: 'foo', value: '123', version: 1 },
@@ -105,7 +105,7 @@ describe('pagination', () => {
 
   test('forward_end', () => {
     expect(
-      decorate(
+      decodeGraph(
         [
           { key: '', end: 'fon\uffff', version: 1 },
           { key: 'foo', value: '123', version: 1 },

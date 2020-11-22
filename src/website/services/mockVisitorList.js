@@ -1,7 +1,7 @@
 import faker from 'faker';
 import debug from 'debug';
 const log = debug('graffy:website:server');
-import { makeGraph } from '@graffy/common';
+import { encodeGraph } from '@graffy/common';
 
 const TARGET = 30;
 const RATE = 5;
@@ -91,7 +91,7 @@ function simulateEnter() {
   addId = '' + addId;
 
   enter++;
-  return makeGraph(
+  return encodeGraph(
     {
       visitors: [
         { _key_: addId, id: addId, ts, ...visitorInfo() },
@@ -115,7 +115,7 @@ async function simulateLeave() {
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
   leave++;
-  return makeGraph(
+  return encodeGraph(
     { visitors: [{ _key_: delId }, { _key_: index(delTs) }] },
     ts,
   );
@@ -129,7 +129,7 @@ function simulateUpdate() {
   upId = '' + upId;
   const url = faker.internet.url();
   update++;
-  return makeGraph(
+  return encodeGraph(
     { visitors: { [upId]: { pageviews: [{ _key_: [ts], _val_: url }] } } },
     ts,
   );

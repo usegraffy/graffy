@@ -1,5 +1,5 @@
 import { getIndex, isRange, isBranch } from '../node';
-import { encodeArgs } from '../encode';
+import { encodeArgs } from '../coding';
 
 export const PATH_SEPARATOR = '.';
 

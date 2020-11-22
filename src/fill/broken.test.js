@@ -1,5 +1,5 @@
 import Graffy from '@graffy/core';
-import { makeGraph } from '@graffy/common';
+import { encodeGraph } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
 
@@ -12,7 +12,7 @@ describe('nonlive', () => {
     store.use(fill());
     backend = mockBackend();
     store.use(backend.middleware);
-    backend.write(makeGraph({ foo: { _ref_: 'bar' } }, 0));
+    backend.write(encodeGraph({ foo: { _ref_: 'bar' } }, 0));
   });
 
   test('read broken link', async () => {
@@ -35,7 +35,7 @@ describe('live', () => {
     store.use(fill());
     backend = mockBackend({ liveQuery: true });
     store.use(backend.middleware);
-    backend.write(makeGraph({ foo: { _ref_: 'bar' } }, 0));
+    backend.write(encodeGraph({ foo: { _ref_: 'bar' } }, 0));
   });
 
   test('watch broken link', async () => {

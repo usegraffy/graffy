@@ -1,8 +1,8 @@
-import makeQuery from '../query.js';
+import encodeQuery from '../encode.js';
 
 it('should encode queries', () => {
   expect(
-    makeQuery(
+    encodeQuery(
       {
         postCount: 1,
         posts: {

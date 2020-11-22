@@ -1,7 +1,7 @@
-import { encodeArgs } from '../encode/index.js';
-import { makePath, wrap } from '../path/index.js';
-import { empty } from '../util.js';
-import { merge } from '../graph/index.js';
+import { encodeArgs } from '../index.js';
+import { makePath, wrap } from '../../path/index.js';
+import { empty } from '../../util.js';
+import { merge } from '../../ops/index.js';
 
 export const ROOT_KEY = Symbol();
 

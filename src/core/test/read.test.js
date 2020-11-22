@@ -178,7 +178,7 @@ describe('read', () => {
     });
 
     test('friendly', async () => {
-      // Update this test after decorate starts to remove
+      // Update this test after decodeGraph starts to remove
       // unrequested branches.
       expect(await g.read({ foo: { x: { baz: 1 } } })).toEqual({
         bar: { _ref_: ['bar'], baz: 3 },

@@ -1,4 +1,4 @@
-import { slice, merge, setVersion } from '../graph';
+import { slice, merge, setVersion } from '../../ops';
 
 export default function finalize(graph, query, version = Date.now()) {
   const empty = [{ key: '', end: '\uffff', version: 0 }];

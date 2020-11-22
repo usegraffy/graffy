@@ -1,9 +1,7 @@
-import { isRange, isBranch, isLink } from '../node';
-import { empty } from '../util.js';
-import { decodeArgs } from '../encode/index.js';
-import { getIndex, getLastIndex } from '../node';
-import { keyAfter, keyBefore } from '../graph';
-import { makeQuery } from '../build';
+import { isRange, isBranch, isLink, getIndex, getLastIndex } from '../../node';
+import { empty } from '../../util.js';
+import { keyAfter, keyBefore } from '../../ops';
+import { decodeArgs, encodeQuery } from '../index.js';
 const LINK_PLACEHOLDER = Symbol();
 
 function descend(tree, path) {
@@ -17,8 +15,8 @@ function descend(tree, path) {
   return node;
 }
 
-export default function decorate(graph, query, links = []) {
-  const result = graph && decorateChildren(graph, query, links);
+export default function decodeGraph(graph, query, links = []) {
+  const result = graph && decodeChildren(graph, query, links);
 
   let link;
   while ((link = links.shift())) {
@@ -41,7 +39,7 @@ export default function decorate(graph, query, links = []) {
   return result;
 }
 
-function decorateChildren(graph, query, links) {
+function decodeChildren(graph, query, links) {
   const resObj = {};
 
   let hasEncoded = false;
@@ -60,7 +58,7 @@ function decorateChildren(graph, query, links) {
       continue;
     }
     if (isBranch(node)) {
-      resObj[key] = decorateChildren(node.children, query?.[key], links);
+      resObj[key] = decodeChildren(node.children, query?.[key], links);
       continue;
     }
 
@@ -76,7 +74,7 @@ function decorateChildren(graph, query, links) {
   }
 
   /*
-    We return an array, not an object, as the decorated value in three
+    We return an array, not an object, as the decodeGraphd value in three
     situations:
 
     1. The query had pagination parameters
@@ -86,7 +84,7 @@ function decorateChildren(graph, query, links) {
 
   if (query) {
     if (Array.isArray(query)) {
-      if (query.length !== 1) throw Error('decorate.multi_page');
+      if (query.length !== 1) throw Error('decodeGraph.multi_page');
       return makeArray(graph, query[0], links, resObj);
     } else if (isPaginated(query)) {
       return makeArray(graph, query, links, resObj);
@@ -134,7 +132,7 @@ function makeArray(graph, query, links, object) {
   const resArr = [];
 
   if (query && isPaginated(query)) {
-    const queryNode = makeQuery(query)[0];
+    const queryNode = encodeQuery(query)[0];
     graph = getRangeNodes(graph, queryNode);
   }
 

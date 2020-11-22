@@ -1,4 +1,4 @@
-import { encodeArgs } from '../encode/index.js';
+import { encodeArgs } from '../index.js';
 export const ROOT_KEY = Symbol();
 
 // We freeze constructed queries to guard against bugs that might mutate them.
@@ -53,52 +53,3 @@ function makeNode(object, key, ver) {
 export default function query(obj, version = 0) {
   return makeNode(obj, ROOT_KEY, version)?.children || [];
 }
-
-/*
-
-import { encodeArgs } from '../encode';
-
-// We freeze constructed queries to guard against bugs that might mutate them.
-// TODO: Don't freeze in production builds, as a perf optimization.
-const freeze = (obj) => Object.freeze(obj);
-
-function makeQuery(value, version) {
-  if (Array.isArray(value)) {
-    if (value.length === 1) value.unshift({});
-    try {
-      encodeArgs(value[0]);
-    } catch (e) {
-      console.error(e);
-      console.log(value[0]);
-    }
-    return freeze({
-      children: freeze([
-        freeze({
-          ...encodeArgs(value[0]),
-          ...makeQuery(value[1], version),
-        }),
-      ]),
-      version,
-    });
-  } else if (typeof value === 'object' && value) {
-    return freeze({
-      version,
-      children: freeze(
-        Object.keys(value)
-          .sort()
-          .map((key) => freeze({ key, ...makeQuery(value[key], version) })),
-      ),
-    });
-  } else {
-    return freeze({
-      version,
-      value: typeof value === 'number' ? value : 1,
-    });
-  }
-}
-
-export function query(obj, version = 0) {
-  return makeQuery(obj, version).children;
-}
-
-*/

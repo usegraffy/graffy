@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
 import Graffy from '@graffy/core';
-import { makeQuery } from '@graffy/common';
+import { encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import { useQuery } from './';
 import { GraffyProvider } from './GraffyContext';
@@ -29,7 +29,7 @@ describe('useQuery', () => {
     beforeLoading,
     afterLoading,
   ) => {
-    const query = makeQuery(afterLoading.data);
+    const query = encodeQuery(afterLoading.data);
 
     expect(result.current).toStrictEqual({ ...beforeLoading, loading: true });
     await waitForValueToChange(() => result.current.loading);

@@ -1,5 +1,5 @@
 import { encode as encodeValue, decode as decodeValue } from './struct.js';
-import { keyStep, keyAfter, keyBefore } from '../graph/step.js';
+import { keyStep, keyAfter, keyBefore } from '../ops/step.js';
 import { throwIf, empty, isArgObject } from '../util.js';
 
 function joinEncode(value, prefix) {
