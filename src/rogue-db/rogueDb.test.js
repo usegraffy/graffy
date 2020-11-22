@@ -2,7 +2,9 @@ import Graffy from '@graffy/core';
 import rogueDb from './index.js';
 import { populate } from './setup';
 
-describe('rogue-db integration', () => {
+jest.mock('./sql/pool.js');
+
+describe.skip('rogue-db integration', () => {
   let store;
 
   beforeEach(async () => {

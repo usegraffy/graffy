@@ -26,8 +26,6 @@ export default function Example() {
   const q = getQuery(range);
   const { data, loading } = useQuery(q);
 
-  console.log('data', data, loading);
-
   if (!data || !data.visitors) {
     // We are still performing the initial load
     return <Spinner />;

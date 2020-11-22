@@ -1,6 +1,6 @@
 import Graffy from '@graffy/core';
 import { makeGraph, makeQuery } from '@graffy/common';
-import { mockBackend, format } from '@graffy/testing';
+import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
 
 const expectNext = async (subscription, expected, version = 0) => {
@@ -415,7 +415,6 @@ describe('values', () => {
         { _key_: { after: ['e'] }, _ver_: 0 },
       ],
     });
-    console.log('here 4');
 
     expect(backend.read).toHaveBeenCalledTimes(1);
   });

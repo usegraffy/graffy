@@ -17,10 +17,7 @@ if (process.browser) {
     : `${location.origin.replace('http', 'ws')}/api`;
   store.use(
     client(url, {
-      getOptions: () => {
-        console.log('GetOptions', tenantId);
-        return { tenantId };
-      },
+      getOptions: () => ({ tenantId }),
     }),
   );
 }

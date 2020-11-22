@@ -16,7 +16,7 @@ import {
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 export default ({
   collection,

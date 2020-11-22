@@ -1,8 +1,6 @@
 import { isRange, isBranch, isLink } from '../node';
 import { empty } from '../util.js';
 import { decodeArgs } from '../encode/index.js';
-import pageInfo from './pageInfo';
-import { format } from '@graffy/testing';
 import { getIndex, getLastIndex } from '../node';
 import { keyAfter, keyBefore } from '../graph';
 import { makeQuery } from '../build';
@@ -32,9 +30,6 @@ export default function decorate(graph, query, links = []) {
       // TODO: Cycle detection.
       links.push(link);
     } else {
-      // if (typeof node === 'undefined' || node === null) {
-      //   console.warn('Decorate: Link', path, 'is', node);
-      // }
       // console.log('Replacing placeholder at', key, 'with', node);
       from[key] = node;
       if (typeof node === 'object' && node) {
@@ -50,19 +45,13 @@ function decorateChildren(graph, query, links) {
   const resObj = {};
 
   let hasEncoded = false;
-  let hasRanges = false;
   // First, we construct the result object
   for (const node of graph) {
     const key = node.key;
-
-    if (key[0] === '\0') hasEncoded = true;
+    if (!hasEncoded && key[0] === '\0') hasEncoded = true;
 
     if (isRange(node)) {
-      if (key === node.end) {
-        resObj[key] = null;
-      } else {
-        hasRanges = true;
-      }
+      if (key === node.end) resObj[key] = null;
       continue;
     }
     if (isLink(node)) {
@@ -81,8 +70,7 @@ function decorateChildren(graph, query, links) {
       const child = Object.create(node.value);
       child._val_ = node.value;
       resObj[key] = child;
-    } else if (node.value !== null) {
-      // Let undefined be added to the object.
+    } else {
       resObj[key] = node.value;
     }
   }
@@ -106,7 +94,7 @@ function decorateChildren(graph, query, links) {
     return resObj;
   }
 
-  if (hasRanges || hasEncoded) {
+  if (hasEncoded) {
     return makeArray(graph, null, links, resObj);
   }
 

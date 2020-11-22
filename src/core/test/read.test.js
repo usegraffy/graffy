@@ -1,7 +1,5 @@
 import Graffy from '../Graffy';
 import fill from '@graffy/fill';
-import { encodeValue as key } from '@graffy/common';
-// import { merge } from '@graffy/common';
 
 describe('read', () => {
   let g;
@@ -178,13 +176,6 @@ describe('read', () => {
       g.onRead('foo', () => ({ x: { _ref_: ['bar'] } }));
       g.onRead('bar', () => ({ baz: 3 }));
     });
-
-    // test('raw', async () => {
-    //   expect(await g.read({ foo: {x: { baz: 1} } })).toEqual({
-    //     foo: { x: link(['bar'])},
-    //     bar: { baz: 3 },
-    //   });
-    // });
 
     test('friendly', async () => {
       // Update this test after decorate starts to remove

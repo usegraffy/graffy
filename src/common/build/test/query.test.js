@@ -1,5 +1,4 @@
 import makeQuery from '../query.js';
-import { encodeValue as key } from '../../encode/index.js';
 
 it('should encode queries', () => {
   expect(

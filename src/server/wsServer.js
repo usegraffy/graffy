@@ -30,7 +30,6 @@ export default function server(store) {
               const result = await store.call(op, payload, options);
               ws.send(serialize([id, null, result]));
             } catch (e) {
-              console.error(e);
               log(op + 'error:' + e.message + ' ' + format(payload));
               ws.send(serialize([id, e.message]));
             }
@@ -48,7 +47,6 @@ export default function server(store) {
                 ws.send(serialize([id, null, value]));
               }
             } catch (e) {
-              console.error(e);
               log(op + 'error:' + e.message + ' ' + format(payload));
               ws.send(serialize([id, e.message]));
             }

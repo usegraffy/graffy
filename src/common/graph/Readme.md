@@ -23,7 +23,7 @@ QueryRange    :=  { key, end, , version, (value | children) }
 Notes:
 
 - Ranges are specified by `key` and `end`, where `key <= end`.
-- In QueryRanges, a positive  specifies the first N items while a negative  specifies the last N items.
+- In QueryRanges, a positive specifies the first N items while a negative specifies the last N items.
 - Children are sorted by `key`.
 - In Graphs, Ranges may not overlap with each other or with the keys of other nodes. In Queries they may.
 

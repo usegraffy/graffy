@@ -41,7 +41,7 @@ export async function populate() {
     );
   `);
 
-  await insert('tenant', 3, (i) => ({
+  await insert('tenant', 3, (_i) => ({
     data: {
       providers: {
         _val_: {
