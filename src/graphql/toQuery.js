@@ -1,8 +1,6 @@
 import { parse } from 'graphql/language/parser';
 import { empty } from '@graffy/common';
 
-const MAX_PAGE_SIZE = 1024;
-
 export default function toQuery(ast, vars = {}) {
   if (typeof ast === 'string') ast = parse(ast);
   if (!ast || ast.kind !== 'Document') {
@@ -34,7 +32,7 @@ export default function toQuery(ast, vars = {}) {
   const gfyQuery = fieldToNode(query);
   return gfyQuery;
 
-  function fieldToNode({ /* alias, */ name, arguments: args, selectionSet }) {
+  function fieldToNode({ /* alias, name, */ arguments: args, selectionSet }) {
     let node = {};
     // if (alias) node.alias = alias.value;
 

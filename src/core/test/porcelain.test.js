@@ -6,10 +6,10 @@ test('Porcelain read', async () => {
   store.use(GraffyFill());
 
   const expectedBooksQuery = {
+    _key_: { first: 2 },
     title: true,
     author: { name: true },
   };
-  Object.defineProperty(expectedBooksQuery, '_key_', { value: { first: 2 } });
 
   const expectedUsersQuery = {
     clarke: { name: true },
@@ -47,15 +47,6 @@ test('Porcelain read', async () => {
       author: { _ref_: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
-  Object.defineProperty(expectedResult, 'pageInfo', {
-    value: {
-      start: undefined,
-      end: ['2001'],
-      hasPrev: false,
-      hasNext: true,
-      until: ['2001'],
-    },
-  });
 
   expect(onReadBooks).toHaveBeenCalledWith(
     expectedBooksQuery,
@@ -66,7 +57,6 @@ test('Porcelain read', async () => {
     expectedUsersQuery,
     expect.any(Object),
   );
-  expect(result.pageInfo).toEqual(expectedResult.pageInfo);
   expect(result).toEqual(expectedResult);
 });
 
@@ -129,8 +119,8 @@ test('write array value', async () => {
   store.use(GraffyFill());
 
   const provider = jest.fn((change) => {
-    expect(change).toEqual({ foo: ['hello', 'world'] });
-    return { foo: { _ref_: ['hello', 'world'] } };
+    expect(change).toEqual({ foo: { _val_: ['hello', 'world'] } });
+    return { foo: { _val_: ['hello', 'world'] } };
   });
   store.onWrite(provider);
 
@@ -149,5 +139,5 @@ test('read array value', async () => {
 
   const result = await store.read({ foo: 1 });
   expect(provider).toBeCalled();
-  expect(result).toEqual({ foo: ['hello', 'world'] });
+  expect(result).toEqual({ foo: { _val_: ['hello', 'world'] } });
 });

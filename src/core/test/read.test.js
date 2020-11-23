@@ -1,7 +1,5 @@
 import Graffy from '../Graffy';
 import fill from '@graffy/fill';
-import { encodeValue as key } from '@graffy/common';
-// import { merge } from '@graffy/common';
 
 describe('read', () => {
   let g;
@@ -73,7 +71,10 @@ describe('read', () => {
       const result = await g.read({
         foo: { _key_: { first: 100 }, bar: 1 },
       });
-      expect(provider).toBeCalledWith({ foo: { bar: true } }, {});
+      expect(provider).toBeCalledWith(
+        { foo: { _key_: { first: 100 }, bar: true } },
+        {},
+      );
       expect(provider.mock.calls[0][0].foo._key_).toEqual({ first: 100 });
       expect(result).toEqual({
         foo: [
@@ -176,15 +177,8 @@ describe('read', () => {
       g.onRead('bar', () => ({ baz: 3 }));
     });
 
-    // test('raw', async () => {
-    //   expect(await g.read({ foo: {x: { baz: 1} } })).toEqual({
-    //     foo: { x: link(['bar'])},
-    //     bar: { baz: 3 },
-    //   });
-    // });
-
     test('friendly', async () => {
-      // Update this test after decorate starts to remove
+      // Update this test after decodeGraph starts to remove
       // unrequested branches.
       expect(await g.read({ foo: { x: { baz: 1 } } })).toEqual({
         bar: { _ref_: ['bar'], baz: 3 },

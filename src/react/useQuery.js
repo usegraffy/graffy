@@ -2,7 +2,7 @@ import React from 'react';
 import isEqual from 'lodash/isEqual';
 import GraffyContext from './GraffyContext';
 
-const { useRef, useState, useEffect, useContext, useCallback } = React;
+const { useRef, useState, useEffect, useContext } = React;
 
 const consumeSubscription = async (subscription, setState) => {
   try {
@@ -51,7 +51,13 @@ const retrieveResult = async (promise, setState) => {
 };
 
 export default function useQuery(query, { once, ...options } = {}) {
+  const store = useContext(GraffyContext);
   const queryRef = useRef(null);
+
+  const queryHasChanged = !isEqual(queryRef.current, query);
+  if (queryHasChanged) {
+    queryRef.current = query;
+  }
 
   const fetchData = () => {
     if (state.loading !== true) setState({ ...state, loading: true });
@@ -68,17 +74,10 @@ export default function useQuery(query, { once, ...options } = {}) {
     }
   };
 
-  const reload = useCallback(fetchData, []);
-  const [state, setState] = useState({ reload });
-  const store = useContext(GraffyContext);
+  const reload = fetchData;
+  const [state, setState] = useState({ loading: false });
 
-  const queryHasChanged = !isEqual(queryRef.current, query);
-  if (queryHasChanged) {
-    // console.log('Query changed', debug(queryRef.current), debug(query));
-    queryRef.current = query;
-  }
+  useEffect(fetchData, [queryRef.current, store]);
 
-  useEffect(fetchData, [queryHasChanged ? query : queryRef.current]);
-
-  return queryHasChanged ? { ...state, loading: true } : state;
+  return once ? { ...state, reload } : state;
 }

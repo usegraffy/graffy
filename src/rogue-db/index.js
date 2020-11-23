@@ -9,14 +9,14 @@ import { filterObject } from './filter';
 import {
   isArgObject,
   decodeArgs,
-  makeGraph,
-  decorate,
+  encodeGraph,
+  decodeGraph,
   finalize,
   slice,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 export default ({
   collection,
@@ -87,7 +87,7 @@ export default ({
           }
         }
 
-        push(slice(makeGraph(payload), query).known);
+        push(slice(encodeGraph(payload), query).known);
       }
     }
   }
@@ -96,7 +96,7 @@ export default ({
 
   async function read(query) {
     const res = await dbRead(query, options);
-    return finalize(makeGraph(res), query);
+    return finalize(encodeGraph(res), query);
   }
 
   async function write(change) {
@@ -108,7 +108,10 @@ export default ({
         throw Error('pg_write.write_arg_unimplemented');
       } else {
         ops.push(
-          upsertToId({ id: [node.key], ...decorate(node.children) }, options),
+          upsertToId(
+            { id: [node.key], ...decodeGraph(node.children) },
+            options,
+          ),
         );
       }
     }
@@ -121,7 +124,7 @@ export default ({
     return makeStream((push) => {
       const watcher = { query, push };
       dbRead(query, options).then(
-        (init) => push(finalize(makeGraph(init), query)),
+        (init) => push(finalize(encodeGraph(init), query)),
         watchers.add(watcher),
       );
 

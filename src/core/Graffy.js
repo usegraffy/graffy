@@ -1,11 +1,11 @@
 import {
-  decorate,
-  decorateQuery,
+  decodeGraph,
+  decodeQuery,
   wrapObject,
   unwrapObject,
-  makeGraph,
+  encodeGraph,
   makePath,
-  makeQuery,
+  encodeQuery,
   finalize,
   unwrap,
   wrap,
@@ -60,7 +60,7 @@ export default class Graffy {
     const [path, handle] = validateArgs(...args);
     this.on('read', path, async function porcelainRead(query, options) {
       return finalize(
-        makeGraph(await handle(decorateQuery(query), options)),
+        encodeGraph(await handle(decodeQuery(query), options)),
         query,
       );
     });
@@ -70,13 +70,13 @@ export default class Graffy {
     const [path, handle] = validateArgs(...args);
     this.on('watch', path, function porcelainWatch(query, options) {
       return makeStream((push, end) => {
-        const subscription = handle(decorateQuery(query), options);
+        const subscription = handle(decodeQuery(query), options);
         (async function () {
           try {
             let firstValue = (await subscription.next()).value;
-            push(firstValue && finalize(makeGraph(firstValue), query));
+            push(firstValue && finalize(encodeGraph(firstValue), query));
             for await (const value of subscription) {
-              push(value && makeGraph(value));
+              push(value && encodeGraph(value));
             }
           } catch (e) {
             end(e);
@@ -90,7 +90,7 @@ export default class Graffy {
   onWrite(...args) {
     const [path, handle] = validateArgs(...args);
     this.on('write', path, async function porcelainWrite(change, options) {
-      return makeGraph(await handle(decorate(change), options));
+      return encodeGraph(await handle(decodeGraph(change), options));
     });
   }
 
@@ -118,25 +118,25 @@ export default class Graffy {
   async read(...args) {
     const [path, porcelainQuery, options] = validateArgs(...args);
     const rootQuery = wrapObject(porcelainQuery, path);
-    const query = makeQuery(rootQuery);
+    const query = encodeQuery(rootQuery);
     const result = await this.call('read', query, options || {});
-    return unwrapObject(decorate(result, rootQuery), path);
+    return unwrapObject(decodeGraph(result, rootQuery), path);
   }
 
   watch(...args) {
     const [path, porcelainQuery, options] = validateArgs(...args);
     const rootQuery = wrapObject(porcelainQuery, path);
-    const query = makeQuery(rootQuery);
+    const query = encodeQuery(rootQuery);
     const stream = this.call('watch', query, options || {});
     return mapStream(stream, (value) =>
-      unwrapObject(decorate(value, rootQuery), path),
+      unwrapObject(decodeGraph(value, rootQuery), path),
     );
   }
 
   async write(...args) {
     const [path, porcelainChange, options] = validateArgs(...args);
-    const change = wrap(makeGraph(porcelainChange), path);
+    const change = wrap(encodeGraph(porcelainChange), path);
     const writtenChange = await this.call('write', change, options || {});
-    return unwrapObject(decorate(writtenChange), path);
+    return unwrapObject(decodeGraph(writtenChange), path);
   }
 }

@@ -1,0 +1,216 @@
+import { isRange, isBranch, isLink, getIndex, getLastIndex } from '../../node';
+import { empty } from '../../util.js';
+import { keyAfter, keyBefore } from '../../ops';
+import { decodeArgs, encodeQuery } from '../index.js';
+const LINK_PLACEHOLDER = Symbol();
+
+function descend(tree, path) {
+  let node = tree;
+  for (const key of path) {
+    if (!node) return;
+    if (Array.isArray(node)) node = node.props;
+    if (!(key in node)) return undefined;
+    node = node[key];
+  }
+  return node;
+}
+
+export default function decodeGraph(graph, query, links = []) {
+  const result = graph && decodeChildren(graph, query, links);
+
+  let link;
+  while ((link = links.shift())) {
+    const [from, key, path, args] = link;
+    const node = descend(result, path);
+    // console.log('resolving link', link, 'found', node, 'in', result);
+    if (node === LINK_PLACEHOLDER) {
+      // Try this link again later. This is to resolve multi-hop links.
+      // TODO: Cycle detection.
+      links.push(link);
+    } else {
+      // console.log('Replacing placeholder at', key, 'with', node);
+      from[key] = node;
+      if (typeof node === 'object' && node) {
+        node._ref_ = path;
+        if (args) node._key_ = args;
+      }
+    }
+  }
+  return result;
+}
+
+function decodeChildren(graph, query, links) {
+  const resObj = {};
+
+  let hasEncoded = false;
+  // First, we construct the result object
+  for (const node of graph) {
+    const key = node.key;
+    if (!hasEncoded && key[0] === '\0') hasEncoded = true;
+
+    if (isRange(node)) {
+      if (key === node.end) resObj[key] = null;
+      continue;
+    }
+    if (isLink(node)) {
+      links.push([resObj, key, node.path]);
+      resObj[key] = LINK_PLACEHOLDER;
+      continue;
+    }
+    if (isBranch(node)) {
+      resObj[key] = decodeChildren(node.children, query?.[key], links);
+      continue;
+    }
+
+    if (typeof node.value === 'object' && node.value) {
+      // The API must appear to return the value directly, but when
+      // JSON-stringified it returned object should be wrapped in a _val_.
+      const child = Object.create(node.value);
+      child._val_ = node.value;
+      resObj[key] = child;
+    } else {
+      resObj[key] = node.value;
+    }
+  }
+
+  /*
+    We return an array, not an object, as the decodeGraphd value in three
+    situations:
+
+    1. The query had pagination parameters
+    2. The result had ranges of unknown
+    3. The result has encoded values, which must be decoded into an _key_
+  */
+
+  if (query) {
+    if (Array.isArray(query)) {
+      if (query.length !== 1) throw Error('decodeGraph.multi_page');
+      return makeArray(graph, query[0], links, resObj);
+    } else if (isPaginated(query)) {
+      return makeArray(graph, query, links, resObj);
+    }
+    return resObj;
+  }
+
+  if (hasEncoded) {
+    return makeArray(graph, null, links, resObj);
+  }
+
+  return resObj;
+}
+
+function isPaginated({ _key_: key } = {}) {
+  return (
+    key &&
+    (key.first || key.last || key.after || key.before || key.since || key.until)
+  );
+}
+
+function isMinKey(key) {
+  return key === '' || (key[0] === '\0' && key[key.length - 1] === '.');
+}
+
+function isMaxKey(key) {
+  return (
+    key === '\uffff' ||
+    (key[0] === '\0' &&
+      key[key.length - 2] === '.' &&
+      key[key.length - 1] === '\uffff')
+  );
+}
+
+function prefix(key) {
+  if (key[0] === '\0') {
+    const parts = key.split('.');
+    return parts[parts.length - 2] ? parts[parts.length - 2] + '.' : '';
+  }
+
+  return '';
+}
+
+function makeArray(graph, query, links, object) {
+  const resArr = [];
+
+  if (query && isPaginated(query)) {
+    const queryNode = encodeQuery(query)[0];
+    graph = getRangeNodes(graph, queryNode);
+  }
+
+  for (const node of graph) {
+    // console.log('node', node);
+
+    const key = node.key;
+    const child = object[key];
+
+    if (typeof child === 'undefined' || child === null) continue;
+
+    let args = decodeArgs(node);
+    const { cursor, ...rest } = args;
+    if (empty(rest) && Array.isArray(cursor)) args = cursor;
+
+    if (child === LINK_PLACEHOLDER) {
+      links.push([resArr, resArr.length, node.path, args]);
+      resArr.push(LINK_PLACEHOLDER); // Placeholder that will be replaced.
+      continue;
+    }
+
+    if (typeof child === 'object' && child) child._key_ = args;
+    resArr.push(child);
+  }
+
+  // Add next and previous page links
+
+  const firstNode = graph[0];
+  const lastNode = graph[graph.length - 1];
+  const firstKey = firstNode.key;
+  const lastKey = lastNode.end || lastNode.key;
+
+  const limit = query?._key_?.first || query?._key_?.last || resArr.length || 1;
+
+  if (!isMinKey(firstKey)) {
+    Object.defineProperty(resArr, 'prevPage', {
+      value: decodeArgs({
+        key: keyBefore(firstKey),
+        end: prefix(firstKey),
+        limit,
+      }),
+    });
+  }
+
+  if (!isMaxKey(lastKey)) {
+    Object.defineProperty(resArr, 'nextPage', {
+      value: decodeArgs({
+        key: keyAfter(lastKey),
+        end: prefix(lastKey) + '\uffff',
+        limit,
+      }),
+    });
+  }
+
+  // Object.defineProperty(resArr, 'pageInfo', { value: pageInfo(graph) });
+  Object.defineProperty(resArr, 'props', { value: object });
+  return resArr;
+}
+
+export function getRangeNodes(graph, { key, end, limit = Infinity }) {
+  const result = [];
+
+  if (key < end) {
+    for (let i = getIndex(graph, key); key <= end && limit > 0; i++) {
+      const node = graph[i];
+      if (!node || key < node.key) break;
+      result.push(node);
+      if (!isRange(node)) limit--;
+      key = keyAfter(node.end || node.key);
+    }
+  } else {
+    for (let i = getLastIndex(graph, key) - 1; key >= end && limit > 0; i--) {
+      const node = graph[i];
+      if (!node || key > (node.end || node.key)) break;
+      result.unshift(node);
+      if (!isRange(node)) limit--;
+      key = keyBefore(node.key);
+    }
+  }
+  return result;
+}

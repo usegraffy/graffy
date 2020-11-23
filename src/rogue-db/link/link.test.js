@@ -1,4 +1,4 @@
-import { makeGraph } from '@graffy/common';
+import { encodeGraph } from '@graffy/common';
 import { linkResult } from './index.js';
 
 test('outward', () => {
@@ -12,7 +12,7 @@ test('outward', () => {
 test('inward', () => {
   const object = { ids: ['user1'] };
   const links = [{ prop: ['posts'], target: ['posts'], back: ['author'] }];
-  const query = makeGraph({
+  const query = encodeGraph({
     posts: [
       {
         _key_: { first: 10 },

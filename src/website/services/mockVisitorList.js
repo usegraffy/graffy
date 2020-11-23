@@ -1,9 +1,10 @@
 import faker from 'faker';
 import debug from 'debug';
 const log = debug('graffy:website:server');
-import { makeGraph } from '@graffy/common';
+import { encodeGraph } from '@graffy/common';
 
 const TARGET = 30;
+const VARIANCE = 5; // Allow TARGET +/- VARIANCE.
 const RATE = 5;
 
 const freeIds = new Set();
@@ -21,7 +22,7 @@ export default function (s) {
 
   while (id < TARGET) {
     store.call('write', simulateEnter());
-    ts -= Math.floor(1 + Math.random() * 100);
+    ts -= Math.floor(1 + Math.random() * 10000);
   }
 
   (async function () {
@@ -45,7 +46,7 @@ export default function (s) {
       if (process.stdout.isTTY) {
         process.stdout.cursorTo(0);
         process.stdout.write(line);
-        await sleep(10000);
+        await sleep(500);
       } else {
         log(line);
         await sleep(10000);
@@ -55,22 +56,24 @@ export default function (s) {
 }
 
 function simulate() {
-  const change =
-    Math.random() < 0.9
-      ? simulateUpdate()
-      : Math.random() < (id - freeIds.size) / 2 / TARGET
-      ? simulateLeave()
-      : simulateEnter();
+  if (Math.random() < 0.9) return simulateUpdate();
 
-  return change;
+  const excess = id - freeIds.size - TARGET;
+  const threshold = (excess / VARIANCE + 1) / 2;
+
+  return Math.random() < threshold ? simulateLeave() : simulateEnter();
 }
 
 function visitorInfo() {
   return {
     name: faker.internet.userName(),
-    avatar: faker.internet.avatar(),
-    pageviews: [{ _key_: [ts], _val_: faker.internet.url() }],
+    avatar: faker.image.avatar(),
+    pageviews: [{ _key_: [ts], _val_: faker.system.directoryPath() }],
   };
+}
+
+function index(ts) {
+  return { order: ['ts'], cursor: [ts] };
 }
 
 function simulateEnter() {
@@ -87,11 +90,11 @@ function simulateEnter() {
   addId = '' + addId;
 
   enter++;
-  return makeGraph(
+  return encodeGraph(
     {
       visitors: [
         { _key_: addId, id: addId, ts, ...visitorInfo() },
-        { _key_: [ts], _ref_: ['visitors', addId] },
+        { _key_: index(ts), _ref_: ['visitors', addId] },
       ],
     },
     ts,
@@ -111,7 +114,10 @@ async function simulateLeave() {
   // console.log('Unwrap', debug(state), ['visitors', delId, 'ts'], delTs);
 
   leave++;
-  return makeGraph({ visitors: [{ _key_: delId }, { _key_: [delTs] }] }, ts);
+  return encodeGraph(
+    { visitors: [{ _key_: delId }, { _key_: index(delTs) }] },
+    ts,
+  );
 }
 
 function simulateUpdate() {
@@ -120,9 +126,9 @@ function simulateUpdate() {
     upId = Math.floor(Math.random() * id);
   } while (freeIds.has(upId));
   upId = '' + upId;
-  const url = faker.internet.url();
+  const url = faker.system.directoryPath();
   update++;
-  return makeGraph(
+  return encodeGraph(
     { visitors: { [upId]: { pageviews: [{ _key_: [ts], _val_: url }] } } },
     ts,
   );

@@ -36,6 +36,7 @@ export default (
       yield* makeStream((push) => {
         push(undefined);
       });
+      return;
     }
     if (!EventSource) throw Error('client.sse.unavailable');
     const optionsParam = getOptionsParam(await getOptions('watch', options));
