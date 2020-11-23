@@ -26,7 +26,7 @@ export default function Example() {
   const q = getQuery(range);
   const { data, loading } = useQuery(q);
 
-  if (!data || !data.visitors) {
+  if (loading || !data || !data.visitors) {
     // We are still performing the initial load
     return <Spinner />;
   }
@@ -45,12 +45,6 @@ export default function Example() {
 
   return (
     <div className="Example">
-      {/*<Query
-        query={q}
-        onChange={(value) => {
-          console.log(value);
-        }}
-      />*/}
       <Pagination
         range={range}
         count={visitors.length}
@@ -58,7 +52,6 @@ export default function Example() {
         onNext={nextPage && (() => setRange(nextPage))}
       />
       <VisitorList visitors={visitors} />
-      {loading && <Spinner />}
       <style jsx>{`
         .Example {
           text-align: left;

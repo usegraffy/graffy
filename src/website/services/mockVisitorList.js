@@ -4,6 +4,7 @@ const log = debug('graffy:website:server');
 import { encodeGraph } from '@graffy/common';
 
 const TARGET = 30;
+const VARIANCE = 5; // Allow TARGET +/- VARIANCE.
 const RATE = 5;
 
 const freeIds = new Set();
@@ -45,7 +46,7 @@ export default function (s) {
       if (process.stdout.isTTY) {
         process.stdout.cursorTo(0);
         process.stdout.write(line);
-        await sleep(10000);
+        await sleep(500);
       } else {
         log(line);
         await sleep(10000);
@@ -55,21 +56,19 @@ export default function (s) {
 }
 
 function simulate() {
-  const change =
-    Math.random() < 0.9
-      ? simulateUpdate()
-      : Math.random() < (id - freeIds.size) / 2 / TARGET
-      ? simulateLeave()
-      : simulateEnter();
+  if (Math.random() < 0.9) return simulateUpdate();
 
-  return change;
+  const excess = id - freeIds.size - TARGET;
+  const threshold = (excess / VARIANCE + 1) / 2;
+
+  return Math.random() < threshold ? simulateLeave() : simulateEnter();
 }
 
 function visitorInfo() {
   return {
     name: faker.internet.userName(),
-    avatar: faker.internet.avatar(),
-    pageviews: [{ _key_: [ts], _val_: faker.internet.url() }],
+    avatar: faker.image.avatar(),
+    pageviews: [{ _key_: [ts], _val_: faker.system.directoryPath() }],
   };
 }
 
@@ -127,7 +126,7 @@ function simulateUpdate() {
     upId = Math.floor(Math.random() * id);
   } while (freeIds.has(upId));
   upId = '' + upId;
-  const url = faker.internet.url();
+  const url = faker.system.directoryPath();
   update++;
   return encodeGraph(
     { visitors: { [upId]: { pageviews: [{ _key_: [ts], _val_: url }] } } },
