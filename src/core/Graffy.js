@@ -47,51 +47,61 @@ export default class Graffy {
   }
 
   on(type, ...args) {
-    const [rawPath, rawHandler] = validateArgs(...args);
-    const path = this.path.concat(rawPath);
-    const handler = path.length
-      ? (type === 'watch' ? shiftGen : shiftFn)(rawHandler, path)
-      : rawHandler;
-
+    const [path, handler] = validateArgs(...args);
     this.core.on(type, path, handler);
   }
 
   onRead(...args) {
-    const [path, handle] = validateArgs(...args);
-    this.on('read', path, async function porcelainRead(query, options) {
-      return finalize(
-        encodeGraph(await handle(decodeQuery(query), options)),
-        query,
-      );
-    });
+    const [pathArg, handle] = validateArgs(...args);
+    const path = this.path.concat(pathArg);
+    this.on(
+      'read',
+      path,
+      shiftFn(async function porcelainRead(query, options) {
+        return finalize(
+          encodeGraph(await handle(decodeQuery(query), options)),
+          query,
+        );
+      }, path),
+    );
   }
 
   onWatch(...args) {
-    const [path, handle] = validateArgs(...args);
-    this.on('watch', path, function porcelainWatch(query, options) {
-      return makeStream((push, end) => {
-        const subscription = handle(decodeQuery(query), options);
-        (async function () {
-          try {
-            let firstValue = (await subscription.next()).value;
-            push(firstValue && finalize(encodeGraph(firstValue), query));
-            for await (const value of subscription) {
-              push(value && encodeGraph(value));
+    const [pathArg, handle] = validateArgs(...args);
+    const path = this.path.concat(pathArg);
+    this.on(
+      'watch',
+      path,
+      shiftGen(function porcelainWatch(query, options) {
+        return makeStream((push, end) => {
+          const subscription = handle(decodeQuery(query), options);
+          (async function () {
+            try {
+              let firstValue = (await subscription.next()).value;
+              push(firstValue && finalize(encodeGraph(firstValue), query));
+              for await (const value of subscription) {
+                push(value && encodeGraph(value));
+              }
+            } catch (e) {
+              end(e);
             }
-          } catch (e) {
-            end(e);
-          }
-        })();
-        return () => subscription.return();
-      });
-    });
+          })();
+          return () => subscription.return();
+        });
+      }, path),
+    );
   }
 
   onWrite(...args) {
-    const [path, handle] = validateArgs(...args);
-    this.on('write', path, async function porcelainWrite(change, options) {
-      return encodeGraph(await handle(decodeGraph(change), options));
-    });
+    const [pathArg, handle] = validateArgs(...args);
+    const path = this.path.concat(pathArg);
+    this.on(
+      'write',
+      path,
+      shiftFn(async function porcelainWrite(change, options) {
+        return encodeGraph(await handle(decodeGraph(change), options));
+      }, path),
+    );
   }
 
   use(...args) {
