@@ -99,24 +99,13 @@ export default class Graffy {
     provider(new Graffy(path, this.core));
   }
 
-  call(type, unwrappedPayload, options = {}) {
-    const payload = wrap(unwrappedPayload, this.path);
-    // console.log(unwrappedPayload);
-    log(format(unwrappedPayload), format(payload));
-    const result = this.core.call(type, payload, options);
-    const unwrapResult = (value) => {
-      return value && unwrap(value, this.path);
-    };
-
-    if (!this.path.length) return result;
-
-    return type === 'watch'
-      ? mapStream(result, unwrapResult)
-      : result.then(unwrapResult);
+  call(type, payload, options = {}) {
+    return this.core.call(type, payload, options);
   }
 
   async read(...args) {
-    const [path, porcelainQuery, options] = validateArgs(...args);
+    const [pathArg, porcelainQuery, options] = validateArgs(...args);
+    const path = this.path.concat(pathArg);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
     const result = await this.call('read', query, options || {});
@@ -124,7 +113,8 @@ export default class Graffy {
   }
 
   watch(...args) {
-    const [path, porcelainQuery, options] = validateArgs(...args);
+    const [pathArg, porcelainQuery, options] = validateArgs(...args);
+    const path = this.path.concat(pathArg);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
     const stream = this.call('watch', query, options || {});
@@ -134,7 +124,8 @@ export default class Graffy {
   }
 
   async write(...args) {
-    const [path, porcelainChange, options] = validateArgs(...args);
+    const [pathArg, porcelainChange, options] = validateArgs(...args);
+    const path = this.path.concat(pathArg);
     const change = wrap(encodeGraph(porcelainChange), path);
     const writtenChange = await this.call('write', change, options || {});
     return unwrapObject(decodeGraph(writtenChange), path);
