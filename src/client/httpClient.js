@@ -6,7 +6,7 @@ function getOptionsParam(options) {
   return encodeURIComponent(serialize(options));
 }
 
-export default (
+const httpClient = (
   baseUrl,
   { getOptions = async () => {}, watch, connInfoPath = 'connection' } = {},
 ) => (store) => {
@@ -78,3 +78,5 @@ export default (
     });
   });
 };
+
+export default httpClient;

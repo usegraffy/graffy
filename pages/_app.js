@@ -24,6 +24,10 @@ class GraffyDocApp extends App {
       <div className="App">
         <Head>
           <title>Graffy</title>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+          />
         </Head>
         <header {...headerProps}>
           <div className="logo">

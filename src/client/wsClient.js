@@ -2,7 +2,7 @@ import { makeStream } from '@graffy/stream';
 import { makePath, makeWatcher } from '@graffy/common';
 import Socket from './Socket';
 
-export default (
+const wsClient = (
   url,
   { getOptions = () => {}, watch, connInfoPath = 'connection' } = {},
 ) => (store) => {
@@ -66,3 +66,5 @@ export default (
     });
   });
 };
+
+export default wsClient;
