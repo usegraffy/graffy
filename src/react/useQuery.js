@@ -50,7 +50,7 @@ const retrieveResult = async (promise, setState) => {
   }
 };
 
-export default function useQuery(query, { once, ...options } = {}) {
+export default function useQuery(query, { once, ...other } = {}) {
   const store = useContext(GraffyContext);
   const queryRef = useRef(null);
 
@@ -59,7 +59,7 @@ export default function useQuery(query, { once, ...options } = {}) {
     queryRef.current = query;
   }
 
-  const fetchData = () => {
+  const fetchData = (options = other) => {
     if (state.loading !== true) setState({ ...state, loading: true });
     if (once) {
       retrieveResult(store.read(query, options), setState);
@@ -74,10 +74,10 @@ export default function useQuery(query, { once, ...options } = {}) {
     }
   };
 
-  const reload = fetchData;
-  const [state, setState] = useState({ loading: false });
+  const refetch = fetchData.bind(null, { ...other, skipCache: true });
+  const [state, setState] = useState({ loading: true });
 
   useEffect(fetchData, [queryRef.current, store]);
 
-  return once ? { ...state, reload } : state;
+  return once ? { ...state, refetch } : state;
 }

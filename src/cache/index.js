@@ -18,7 +18,7 @@ export default function ({ maxAge = DEFAULT_MAX_AGE } = {}) {
     const optimisticChanges = new Set();
     const watcher = makeWatcher();
 
-    function addToCache(result) {
+    function addToCache(result = []) {
       const now = Date.now();
       let state;
       if (!layers.length || now - layers[0][0] > maxAge / NUM_LAYERS) {
