@@ -471,9 +471,9 @@ describe('values', () => {
       encodeGraph(
         {
           users: {
-            '1': { name: 'alice' },
-            '2': { name: 'bob' },
-            '3': { name: 'carol' },
+            1: { name: 'alice' },
+            2: { name: 'bob' },
+            3: { name: 'carol' },
           },
           usersByAge: [
             { _key_: { before: ['4'] } },
@@ -495,8 +495,8 @@ describe('values', () => {
     );
     await expectNext(subscription, {
       users: {
-        '2': { name: 'bob' },
-        '3': { name: 'carol' },
+        2: { name: 'bob' },
+        3: { name: 'carol' },
       },
       usersByAge: [
         { _key_: ['5'], _ref_: ['users', '2'] },
@@ -508,7 +508,7 @@ describe('values', () => {
     backend.write(
       encodeGraph(
         {
-          users: { '2': null },
+          users: { 2: null },
           usersByAge: [{ _key_: ['5'] }],
         },
         1,

@@ -64,6 +64,7 @@ We'll write this as a Graffy module, `GraffyChat.js`. First, we will set up the 
 We'll also add some dummy users.
 
 ```js
+
 ```
 
 First, we'll handle read requests.
