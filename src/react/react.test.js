@@ -47,15 +47,15 @@ describe('useQuery', () => {
       },
     );
 
-    const reload = expect.any(Function);
+    const refetch = expect.any(Function);
     await expectLifeCycle(
       { result, waitForValueToChange },
-      { reload },
-      { data, error: null, reload },
+      { refetch },
+      { data, error: null, refetch },
     );
   });
 
-  test('reload', async () => {
+  test('refetch', async () => {
     const data = { demo: { value } };
     const { result, waitForValueToChange } = renderHook(
       () => useQuery({ demo: { value: 1 } }, { once: true }),
@@ -63,13 +63,13 @@ describe('useQuery', () => {
         wrapper,
       },
     );
-    const reload = expect.any(Function);
+    const refetch = expect.any(Function);
 
     // normal lifecycle
     await expectLifeCycle(
       { result, waitForValueToChange },
-      { reload },
-      { data, error: null, reload },
+      { refetch },
+      { data, error: null, refetch },
     );
 
     // update store
@@ -77,15 +77,15 @@ describe('useQuery', () => {
     await g.write('demo', { value: newValue });
     const newData = { demo: { value: newValue } };
 
-    // call reload
+    // call refetch
     act(() => {
-      result.current.reload();
+      result.current.refetch();
     });
 
     await expectLifeCycle(
       { result, waitForValueToChange },
-      { data, error: null, reload },
-      { data: newData, error: null, reload },
+      { data, error: null, refetch },
+      { data: newData, error: null, refetch },
     );
   });
 });

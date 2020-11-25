@@ -11,7 +11,7 @@ Adds a Graffy store to a React subtree. The useQuery hook in that subtree will u
 - Arguments: [query](20-Types#Queries), options
 - Returns: {[result](20-Types#Graphs), loading, error}
 
-The `once` option is used to choose between `.watch()` (if false) and `.read()` (if true). Other options are passed to graffy.read() or graffy.write() unchanged. Additionally, if true, an additional parameter `reload` (which is a function) is returned which can be used to trigger the query again.
+The `once` option is used to choose between `.watch()` (if false) and `.read()` (if true). Other options are passed to graffy.read() or graffy.write() unchanged. Additionally, if true, an additional parameter `refetch` (which is a function) is returned which can be used to trigger the query again.
 
 `loading` is a boolean, and `error` an error object.
 
