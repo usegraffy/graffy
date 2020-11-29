@@ -1,4 +1,4 @@
-export default function find(items, compare, first = 0, last = items.length) {
+export function find(items, compare, first = 0, last = items.length) {
   let currentFirst = first;
   let currentLast = last;
   while (currentFirst < currentLast) {
@@ -19,16 +19,15 @@ export default function find(items, compare, first = 0, last = items.length) {
   return currentFirst;
 }
 
-// export function findFirst(items, compare, first = 0, last = items.length) {
-//   let ix = find(items, compare, first, last);
-//   while (ix >= first && !compare(items[ix])) ix--;
-//   return ix + 1;
-// }
-//
-// export function findLast(items, compare, first = 0, last = items.length) {
-//   let ix = find(items, compare, first, last);
-//   while (ix <= last && !compare(items[ix])) ix++;
-//   return ix;
-// }
-//
-// export function findRange() {}
+export function findFirst(children, target) {
+  return find(children, ({ key, end }) => {
+    if (key === target || (end && key < target && end >= target)) return 0;
+    if (key < target) return -1;
+    return 1;
+  });
+}
+
+export function findLast(children, end, first, last) {
+  const ix = findFirst(children, end, first, last);
+  return children[ix] && children[ix].key <= end ? ix + 1 : ix;
+}

@@ -1,4 +1,4 @@
-import { isBranch, isRange, getIndex, getLastIndex } from '../node';
+import { isBranch, isRange, findFirst, findLast } from '../node';
 import { keyAfter, keyBefore } from './step';
 
 export default function sieve(current, changes, result = []) {
@@ -13,8 +13,8 @@ export default function sieve(current, changes, result = []) {
 
 export function insertRange(current, change, result, start = 0) {
   const { key, end } = change;
-  const keyIx = getIndex(current, key, start);
-  const endIx = getLastIndex(current, end, keyIx);
+  const keyIx = findFirst(current, key, start);
+  const endIx = findLast(current, end, keyIx);
 
   if (
     keyIx === endIx &&
@@ -99,7 +99,7 @@ function mergeRanges(base, node) {
 
 export function insertNode(current, change, result, start = 0) {
   const key = change.key;
-  const index = getIndex(current, key, start);
+  const index = findFirst(current, key, start);
   const node = current[index];
 
   if (node && node.key <= key) {

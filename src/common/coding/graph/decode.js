@@ -1,4 +1,4 @@
-import { isRange, isBranch, isLink, getIndex, getLastIndex } from '../../node';
+import { isRange, isBranch, isLink, findFirst, findLast } from '../../node';
 import { empty } from '../../util.js';
 import { keyAfter, keyBefore } from '../../ops';
 import { decodeArgs, encodeQuery } from '../index.js';
@@ -196,7 +196,7 @@ export function getRangeNodes(graph, { key, end, limit = Infinity }) {
   const result = [];
 
   if (key < end) {
-    for (let i = getIndex(graph, key); key <= end && limit > 0; i++) {
+    for (let i = findFirst(graph, key); key <= end && limit > 0; i++) {
       const node = graph[i];
       if (!node || key < node.key) break;
       result.push(node);
@@ -204,7 +204,7 @@ export function getRangeNodes(graph, { key, end, limit = Infinity }) {
       key = keyAfter(node.end || node.key);
     }
   } else {
-    for (let i = getLastIndex(graph, key) - 1; key >= end && limit > 0; i--) {
+    for (let i = findLast(graph, key) - 1; key >= end && limit > 0; i--) {
       const node = graph[i];
       if (!node || key > (node.end || node.key)) break;
       result.unshift(node);

@@ -3,8 +3,8 @@ import {
   isRange,
   isLink,
   isOlder,
-  getIndex,
-  getLastIndex,
+  findFirst,
+  findLast,
 } from '../node';
 import { keyAfter, keyBefore } from './step';
 import { wrap, wrapValue } from '../path';
@@ -46,7 +46,7 @@ export default function slice(graph, query, root) {
         sliceRange(graph, queryNode, result);
       } else {
         const key = queryNode.key;
-        index = getIndex(graph, key, index);
+        index = findFirst(graph, key, index);
         // console.log('Index', graph, key, index);
         sliceNode(graph[index], queryNode, result);
       }
@@ -112,7 +112,7 @@ export function sliceRange(graph, query, result) {
   const step = key < end ? 1 : -1;
 
   if (key < end) {
-    for (let i = getIndex(graph, key); key <= end && limit > 0; i++) {
+    for (let i = findFirst(graph, key); key <= end && limit > 0; i++) {
       const node = graph[i];
       if (!node || key < node.key || isOlder(node, version)) break;
       if (isRange(node)) {
@@ -124,7 +124,7 @@ export function sliceRange(graph, query, result) {
       key = keyAfter(node.end || node.key);
     }
   } else {
-    for (let i = getLastIndex(graph, key) - 1; key >= end && limit > 0; i--) {
+    for (let i = findLast(graph, key) - 1; key >= end && limit > 0; i--) {
       const node = graph[i];
       if (!node || key > (node.end || node.key) || isOlder(node, version))
         break;

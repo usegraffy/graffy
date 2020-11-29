@@ -1,4 +1,4 @@
-import { getIndex, isRange, isBranch } from '../node';
+import { findFirst, isRange, isBranch } from '../node';
 import { encodeArgs } from '../coding';
 
 export const PATH_SEPARATOR = '.';
@@ -36,7 +36,7 @@ export function unwrap(graph, path) {
     const { key } = encodeArgs(path[i]);
     children = node.children;
     if (!children) return null; // This path does not exist.
-    node = children[getIndex(children, key)];
+    node = children[findFirst(children, key)];
     if (!node || node.key > key) return undefined; // We lack knowledge.
     if (isRange(node)) return null; // This is known to be null.
   }
@@ -66,7 +66,7 @@ export function remove(children, path) {
   if (!path.length) return []; // Remove everything.
 
   const key = path[0];
-  const ix = getIndex(children, key);
+  const ix = findFirst(children, key);
   const node = children[ix];
   if (!node || node.key > key || isRange(node)) return children;
 
