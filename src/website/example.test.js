@@ -6,7 +6,6 @@ jest.setTimeout(60000);
 
 describe('integration', () => {
   let server;
-  let browser;
   beforeAll(() => {
     return Promise.all([
       new Promise((resolve, reject) => {
@@ -21,13 +20,15 @@ describe('integration', () => {
           if (message === 'ready') resolve();
         });
       }),
-      puppeteer.launch({ headless: true /*, slowMo: 200 */ }).then((b) => {
-        browser = b;
-      }),
     ]);
   });
 
   async function runExampleTests(url) {
+    const browser = await puppeteer.launch({
+      headless: true,
+      // slowMo: 200,
+    });
+
     const page = await browser.newPage();
     let label;
 
@@ -64,21 +65,19 @@ describe('integration', () => {
     expect(label).toMatch(/First/);
     expect(label).not.toMatch(/after/);
 
-    page.close();
+    browser.close();
   }
 
   const exampleUrl = `http://localhost:${PORT}/learn/10-Full-Example`;
   test('exampleWs', () => runExampleTests(exampleUrl));
-  test.skip('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
+  test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
 
-  afterAll(() => {
-    return Promise.all([
+  afterAll(
+    () =>
       new Promise((resolve, reject) => {
         server.kill();
         server.on('exit', resolve);
         server.on('error', reject);
       }),
-      browser.close(),
-    ]);
-  });
+  );
 });
