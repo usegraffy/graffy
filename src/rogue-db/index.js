@@ -15,6 +15,7 @@ import {
   slice,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
+import { dbRead, dbWrite } from './dbOps';
 
 // import { format } from '@graffy/testing';
 
@@ -34,38 +35,6 @@ export default ({
     indexes,
     links,
   };
-
-  async function dbRead(query, options) {
-    const ops = [];
-    const ids = [];
-    const idSubQueries = [];
-
-    for (const node of query) {
-      const args = decodeArgs(node);
-      if (isArgObject(args)) {
-        ops.push(
-          selectByArgs(args, options).then((res) =>
-            linkResult(res, node.children, links),
-          ),
-        );
-      } else {
-        ids.push(node.key);
-        idSubQueries.push(node.children);
-      }
-    }
-
-    if (ids.length) {
-      ops.push(
-        selectByIds(ids, options).then((res) =>
-          res.map(
-            (object, i) => linkResult([object], idSubQueries[i], links)[0],
-          ),
-        ),
-      );
-    }
-
-    return (await Promise.all(ops)).flat(1);
-  }
 
   const watchers = new Set();
   let timestamp = Date.now();
@@ -100,33 +69,17 @@ export default ({
   }
 
   async function write(change) {
-    const ops = [];
-
-    for (const node of change) {
-      const args = decodeArgs(node);
-      if (isArgObject(args)) {
-        throw Error('pg_write.write_arg_unimplemented');
-      } else {
-        ops.push(
-          upsertToId(
-            { id: [node.key], ...decodeGraph(node.children) },
-            options,
-          ),
-        );
-      }
-    }
-
-    await Promise.all(ops);
+    await dbWrite(change, options);
     return change;
   }
 
   function watch(query) {
     return makeStream((push) => {
       const watcher = { query, push };
-      dbRead(query, options).then(
-        (init) => push(finalize(encodeGraph(init), query)),
-        watchers.add(watcher),
-      );
+      dbRead(query, options).then((init) => {
+        push(finalize(encodeGraph(init), query));
+        watchers.add(watcher);
+      });
 
       return () => watchers.delete(watcher);
     });
