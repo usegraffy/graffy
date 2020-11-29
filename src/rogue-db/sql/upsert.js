@@ -1,6 +1,11 @@
 import sql from 'sqlate';
 import pool from './pool.js';
-import { getInsertCols, getInsertVals, getUpdateSet } from './util.js';
+import {
+  getInsertCols,
+  getInsertVals,
+  getUpdateSet,
+  getArgSql,
+} from './util.js';
 
 /*
   We are not doing insert-on-conflict-do-update here, but instead doing an
@@ -24,6 +29,27 @@ export async function upsertToId(object, options) {
   const updateQuery = sql`
     UPDATE "object" SET ${getUpdateSet(object, options)}
     WHERE "id" && ${object.id}`;
+
+  // console.log('update', updateQuery.toString('$'), updateQuery.parameters);
+
+  const { rowCount } = await pool.query(updateQuery);
+  if (rowCount) return;
+
+  const query = sql`
+    INSERT INTO "object" (${getInsertCols(options)})
+    VALUES ${getInsertVals(object, options)}`;
+
+  // console.log('insert', query.toString('$'), query.parameters);
+
+  await pool.query(query);
+}
+
+export async function upsertToArgs(args, object, options) {
+  const { where } = getArgSql(args);
+
+  const updateQuery = sql`
+    UPDATE "object" SET ${getUpdateSet(object, options)}
+    WHERE ${where} LIMIT 1`;
 
   // console.log('update', updateQuery.toString('$'), updateQuery.parameters);
 
