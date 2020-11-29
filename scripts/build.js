@@ -11,10 +11,10 @@ const {
 } = require('@babel/core');
 
 const {
-  dependencies: extraDeps,
-  devDependencies: depVersions,
-  peerDependencies: peerDepVersions,
-} = require('../package.json');
+  extraDeps,
+  depVersions,
+  peerDepVersions /*, use */,
+} = require('./deps.js');
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 const depAstNodes = [
@@ -57,6 +57,7 @@ module.exports = async function build(name, version) {
       .forEach((imp) => {
         if (imp[0] === '.') return;
         const dep = imp.match(depPattern)[0];
+        // use(dep);
         if (peerDepVersions[dep]) {
           peerDependencies = peerDependencies || {};
           peerDependencies[dep] = peerDepVersions[dep];
