@@ -7,16 +7,11 @@ import {
   makePath,
   encodeQuery,
   finalize,
-  unwrap,
   wrap,
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
-import debug from 'debug';
-import { format } from '@graffy/testing';
-
-const log = debug('graffy:porcelain');
 
 function validateArgs(first, ...args) {
   let path;
