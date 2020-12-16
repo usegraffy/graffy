@@ -1,6 +1,19 @@
-import { empty, makePath, unwrapObject } from '@graffy/common';
+import { empty, makePath } from '@graffy/common';
 import { getSql } from '../filter';
 import sql from 'sqlate';
+
+import debug from 'debug';
+const log = debug('graffy:stdDb:util');
+
+export async function readSql(sql, client) {
+  log(sql.toString('$'));
+  log(sql.parameters);
+
+  sql.rowMode = 'array';
+  const result = (await client.query(sql)).rows;
+  log(result);
+  return result;
+}
 
 export const concatSql = (frags, delim) =>
   frags.length
@@ -43,19 +56,11 @@ function getBoundCond(orderCols, bound, kind) {
   }
 }
 
-export function getArgSql({
-  first,
-  last,
-  after,
-  before,
-  since,
-  until,
-  order,
-  cursor: _,
-  id,
-  ...filter
-}) {
-  const orderCols = (order || ['createTime', 'id']).map(getLookupSql);
+export function getArgSql(
+  { first, last, after, before, since, until, order, cursor: _, id, ...filter },
+  options,
+) {
+  const orderCols = (order || [options.idCol]).map(getLookupSql);
   const where = [];
 
   if (!empty(filter)) where.push(...getSql(filter, getLookupSql));
@@ -79,53 +84,4 @@ export function getArgSql({
     ),
     limit: first || last,
   };
-}
-
-function jsonUpdate(column, object) {
-  return sql`${column} || ${JSON.stringify(object)}::jsonb`;
-}
-
-function getTags(data, indexes) {
-  const tags = {};
-  for (const path of indexes) {
-    const value = unwrapObject(data, path);
-    if (typeof value === 'undefined') continue;
-    tags[path.join('.')] = value;
-  }
-  return tags;
-}
-
-// TODO: Update these functions to use columns from options
-
-export function getSelectCols(_options) {
-  return sql`data || jsonb_build_object(
-    'id', jsonb_build_object( '_val_', "id"),
-    'type', "type",
-    'createTime', "createTime",
-    'updateTime', "updateTime"
-  )`;
-}
-
-export function getInsertCols(_options) {
-  return sql`"id", "type", "createTime", "updateTime", "data", "tags"`;
-}
-
-export function getUpdateSet(object, options) {
-  const { id, type, name, createTime, updateTime, ...data } = object;
-  const tags = getTags(data, options.indexes);
-
-  return sql.csv(
-    [
-      type && sql`"type" = ${type}`,
-      sql`"updateTime" = ${Date.now()}`,
-      !empty(data) && sql`"data" = ${jsonUpdate(sql.column('data'), data)}`,
-      !empty(tags) && sql`"tags" = ${jsonUpdate(sql.column('tags'), tags)}`,
-    ].filter(Boolean),
-  );
-}
-
-export function getInsertVals(object, options) {
-  const { id, type, createTime, updateTime, ...data } = object;
-  const tags = getTags(data, options.indexes);
-  return sql.tuple([id, type, Date.now(), Date.now(), data, tags]);
 }

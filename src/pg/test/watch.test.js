@@ -1,17 +1,15 @@
 import Graffy from '@graffy/core';
-import rogueDb from './index.js';
+import stdDb from '../index.js';
 import { populate } from './setup';
 
-jest.mock('./sql/pool.js');
-
-describe.skip('rogue-db integration', () => {
+describe('rogue-db integration', () => {
   let store;
 
   beforeEach(async () => {
     await populate();
     jest.useFakeTimers();
     store = new Graffy();
-    store.use('user', rogueDb({ collection: 'user' }));
+    store.use('user', stdDb({ table: 'users' }));
   });
 
   afterEach(async () => {
@@ -25,6 +23,8 @@ describe.skip('rogue-db integration', () => {
       type: 1,
       i: 1,
     });
+
+    console.log('result1', result1);
 
     expect(result1).toEqual({
       i: 0,

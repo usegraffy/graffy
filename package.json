@@ -10,7 +10,7 @@
   "scripts": {
     "lint": "eslint scripts src pages",
     "utest": "jest --testPathIgnorePatterns=example",
-    "test": "jest",
+    "test": "NODE_ENV=testing jest",
     "package": "./scripts/package",
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
     "next": "NEXTJS=1 next",

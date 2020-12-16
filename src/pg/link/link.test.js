@@ -5,7 +5,11 @@ test('outward', () => {
   const object = { ids: ['post1'], authorId: 'user1' };
   const links = { author: { prop: ['authorId'], target: ['users'] } };
   expect(linkResult([object], [], links)).toEqual([
-    { ids: ['post1'], author: { _ref_: ['users', 'user1'] } },
+    {
+      ids: ['post1'],
+      authorId: 'user1',
+      author: { _ref_: ['users', 'user1'] },
+    },
   ]);
 });
 

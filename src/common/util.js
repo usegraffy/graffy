@@ -8,24 +8,45 @@ export function empty(object) {
 }
 
 export function mergeObject(base, change) {
-  if (typeof change !== 'object' || typeof base !== 'object' || !base) {
+  if (
+    typeof change !== 'object' ||
+    typeof base !== 'object' ||
+    !base ||
+    !change
+  ) {
     return change;
   }
 
   for (const prop in change) {
-    if (change[prop] === null) {
-      delete base[prop];
-      continue;
-    }
-
     if (prop in base) {
-      base[prop] = mergeObject(base[prop], change[prop]);
+      const value = mergeObject(base[prop], change[prop]);
+      if (value === null) {
+        delete base[prop];
+      } else {
+        base[prop] = value;
+      }
     } else {
       base[prop] = change[prop];
     }
   }
 
-  return base;
+  return empty(base) ? null : base;
+}
+
+export function cloneObject(object) {
+  if (typeof object !== 'object' || !object) {
+    return object;
+  }
+
+  const clone = {};
+
+  for (const prop in object) {
+    const value = cloneObject(object[prop]);
+    if (value === null) continue;
+    clone[prop] = value;
+  }
+
+  return empty(clone) ? null : clone;
 }
 
 export function isArgObject(arg) {

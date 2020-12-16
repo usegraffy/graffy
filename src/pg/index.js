@@ -1,5 +1,6 @@
 import { selectUpdatedSince } from './sql';
 import { filterObject } from './filter';
+import makeOptions from './options';
 import {
   isArgObject,
   decodeArgs,
@@ -8,33 +9,24 @@ import {
   slice,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
-import { dbRead, dbWrite } from './dbOps';
+import dbRead from './dbRead';
+import dbWrite from './dbWrite';
 
 // import { format } from '@graffy/testing';
 
-export default ({
-  collection,
-  indexes = [],
-  links = [],
-  pollInterval = 1000,
-} = {}) => (store) => {
+export default (opts = {}) => (store) => {
   store.on('read', read);
   store.on('write', write);
   store.on('watch', watch);
 
-  const options = {
-    prefix: store.path,
-    collection: collection || store.path[store.path.length - 1] || 'default',
-    indexes,
-    links,
-  };
+  const pgOptions = makeOptions(store.path, opts);
 
   const watchers = new Set();
   let timestamp = Date.now();
 
   async function poll() {
     if (!watchers.size) return;
-    const res = await selectUpdatedSince(timestamp, options);
+    const res = await selectUpdatedSince(timestamp, pgOptions);
 
     for (const object of res) {
       for (const { query, push } of watchers) {
@@ -54,22 +46,22 @@ export default ({
     }
   }
 
-  setInterval(poll, pollInterval);
+  setInterval(poll, pgOptions.pollInterval);
 
   async function read(query) {
-    const res = await dbRead(query, options);
+    const res = await dbRead(query, pgOptions);
     return finalize(encodeGraph(res), query);
   }
 
   async function write(change) {
-    await dbWrite(change, options);
+    await dbWrite(change, pgOptions);
     return change;
   }
 
   function watch(query) {
     return makeStream((push) => {
       const watcher = { query, push };
-      dbRead(query, options).then((init) => {
+      dbRead(query, pgOptions).then((init) => {
         push(finalize(encodeGraph(init), query));
         watchers.add(watcher);
       });
