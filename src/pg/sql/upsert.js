@@ -1,22 +1,24 @@
-import sql from 'sqlate';
-import { concatSql } from './util.js';
+import sql, { raw, join } from 'sql-template-tag';
 import {
-  empty,
   makePath,
   wrapObject,
   unwrapObject,
   cloneObject,
   mergeObject,
+  isEmpty,
 } from '@graffy/common';
 
 export function update(object, options) {
-  if (!object[options.idCol]) {
+  const { idCol, table } = options;
+  if (!object[idCol]) {
     throw Error('pg.write_no_id: ' + JSON.stringify(object));
   }
 
+  const row = objectToRow(object, options);
+
   return sql`
-    UPDATE  ${sql.table(options.table)} SET ${getUpdateSet(object, options)}
-    WHERE "id" = ${object.id}`;
+    UPDATE "${raw(table)}" SET ${getUpdateSet(row, options)}
+    WHERE "${raw(idCol)}" = ${row[idCol]}`;
 }
 
 export function insert(object, options) {
@@ -24,18 +26,16 @@ export function insert(object, options) {
     throw Error('pg.write_no_id: ' + JSON.stringify(object));
   }
 
+  const row = objectToRow(object, options);
+
   return sql`
-    INSERT INTO ${sql.table(options.table)} (${getInsertCols(options)})
-    VALUES ${getInsertVals(object, options)}`;
+    INSERT INTO "${raw(options.table)}" (${getInsertCols(row, options)})
+    VALUES (${getInsertVals(row, options)})`;
 }
 
-function getUpdateSet(object, { props, defCol }) {
-  const defVal = defCol ? cloneObject(object) : {};
-  const ginVal = {};
-  const tsvVal = {};
-  const trgmVal = {};
-
-  const sqls = [];
+function objectToRow(object, { props, defCol }) {
+  const row = {};
+  const defVal = defCol ? clean(object, false) : {};
 
   for (const prop in props) {
     const { data, gin, tsv, trgm } = props[prop];
@@ -43,50 +43,83 @@ function getUpdateSet(object, { props, defCol }) {
     const value = unwrapObject(object, path);
 
     if (data) {
-      sqls.push(sql`${sql.column(data)}=${value}`);
+      row[data] = clean(value, false);
       // Delete this path from the default object
       if (defCol) mergeObject(defVal, wrapObject(null, path));
     }
 
     if (gin) {
       for (const col of gin) {
-        ginVal[col] = ginVal[col] || {};
-        ginVal[col][prop] = value;
+        row[col] = row[col] || {};
+        row[col][prop] = clean(value, true);
       }
     }
 
     if (tsv) {
       for (const col of tsv) {
-        tsvVal[col] = tsvVal[col] || [];
-        tsvVal[col].push(value);
+        row[col] = row[col] || [];
+        row[col].push(value);
       }
     }
 
     if (trgm) {
       for (const col of trgm) {
-        trgmVal[col] = trgmVal[col] || [];
-        trgmVal[col].push(value);
+        row[col] = row[col] || [];
+        row[col].push(value);
       }
     }
   }
 
-  if (!empty(defVal)) {
-    sqls.push(sql`${sql.column(defCol)} = ${defVal}`);
+  if (defCol) row[defCol] = defVal;
+
+  return row;
+}
+
+function clean(object, forLookup) {
+  if (typeof object !== 'object' || !object) {
+    return object;
   }
 
-  if (!empty(ginVal)) {
-    for (const col in ginVal) {
-      sqls.push(sql`${sql.column(col)} = ${ginVal[col]}`);
+  const clone = {};
+
+  for (const prop in object) {
+    switch (prop) {
+      case '_key_':
+      case '_rng_':
+      case '_ref_':
+        continue;
+      case '_val_':
+        if (forLookup) return object[prop];
+        clone[prop] = object[prop];
+        continue;
     }
+    const value = clean(object[prop]);
+    if (value === null) continue;
+    clone[prop] = value;
   }
 
-  return sql.csv(sqls);
+  return isEmpty(clone) ? null : clone;
 }
 
-function getInsertCols(options) {
-  return concatSql(Object.keys(options.columns).map((col) => sql.column(col)));
+function getUpdateSet(row, options) {
+  return join(
+    Object.entries(row)
+      .filter(([name]) => name !== options.idCol)
+      .map(([name, value]) => sql`"${raw(name)}" = ${value}`)
+      .concat(sql`"${raw(options.verCol)}" = ${Date.now()}`),
+    ', ',
+  );
 }
 
-function getInsertVals(object, options) {
-  return sql.tuple(values);
+function getInsertCols(row, options) {
+  return join(
+    Object.keys(row)
+      .map((col) => raw(`"${col}"`))
+      .concat(raw(options.verCol)),
+    ', ',
+  );
+}
+
+function getInsertVals(row, _options) {
+  return join(Object.values(row).concat(Date.now()), ', ');
 }

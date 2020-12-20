@@ -1,7 +1,7 @@
 function setOnce(slotName, acc, prop, name) {
   if (acc[prop]) {
     throw Error(
-      `stddb.options.duplicate: Both ${acc[prop]} and ${name} map to ${slotName}`,
+      `pg.options.duplicate: Both ${acc[prop]} and ${name} map to ${slotName}`,
     );
   }
   acc[prop] = name;
@@ -18,19 +18,22 @@ function pushValue(acc, prop, value) {
   props: { <propname>: { ['data'|'gin'|'tsv'|'trgm']: <columnName> } }
 */
 
-export default function (prefix, { table, columns = {}, links = {}, ...rest }) {
+const defaults = {
+  id: { role: 'primary' },
+  data: { role: 'default' },
+  version: { role: 'version' },
+};
+
+export default function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';
 
-  const {
-    cols,
-    idCol = 'id',
-    defCol = 'data',
-    verCol = 'version',
-    props,
-    args,
-  } = Object.entries(columns).reduce(
+  const columnOptions = Object.entries(columns).reduce(
     (acc, [name, { role, prop, props, arg }]) => {
-      if (role === 'primary') setOnce(`${table} primary`, acc, 'idCol', name);
+      if (role === 'primary') {
+        prop = prop || name;
+        setOnce(`${table} primary`, acc, 'idCol', name);
+        setOnce(`${table} primary`, acc.args, prop, { role, name });
+      }
       if (role === 'default') setOnce(`${table} default`, acc, 'defCol', name);
       if (role === 'version') setOnce(`${table} version`, acc, 'verCol', name);
 
@@ -38,7 +41,7 @@ export default function (prefix, { table, columns = {}, links = {}, ...rest }) {
         prop = prop || name;
         acc.props[prop] = acc.props[prop] || {};
         setOnce(`${table}/${prop}:${role}`, acc.props[prop], 'data', name);
-        acc.cols[name] = { role, prop };
+        acc.columns[name] = { role, prop };
       }
 
       if (role === 'gin' || role === 'trgm' || role === 'tsv') {
@@ -58,20 +61,10 @@ export default function (prefix, { table, columns = {}, links = {}, ...rest }) {
 
       return acc;
     },
-    { cols: {}, props: {}, args: {} },
+    { columns: {}, props: {}, args: {} },
   );
 
-  return {
-    ...rest,
-    prefix,
-    table,
-    columns,
-    links,
-    cols,
-    props,
-    args,
-    idCol,
-    defCol,
-    verCol,
-  };
+  if (!columnOptions.idCol) throw Error(`pg.no_primary_column: ${table}`);
+
+  return { ...rest, prefix, table, ...columnOptions };
 }

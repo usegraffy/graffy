@@ -1,5 +1,5 @@
 import pg from 'pg';
-import sql from 'sqlate';
+import sql from 'sql-template-tag';
 
 export async function populate() {
   // console.log('Creating tables');
@@ -39,7 +39,7 @@ export async function populate() {
       providers: {
         user: {
           type: 'db',
-          table: 'user',
+          table: 'users',
           columns: {
             id: { role: 'primary' },
             tags: { role: 'gin' },
@@ -50,7 +50,7 @@ export async function populate() {
         },
         post: {
           type: 'db',
-          table: 'post',
+          table: 'posts',
           columns: {
             id: { role: 'primary' },
             tags: { role: 'gin' },
@@ -64,8 +64,8 @@ export async function populate() {
   }));
   await insert('user', 5, (i) => ({ data: { i } }));
   await insert('post', 5, (i) => ({
-    data: { i },
-    links: { author: 'user' + (4 - i) },
+    data: { i, author: 'user' + (4 - i) },
+    tags: { author: 'user' + (4 - i) },
   }));
 
   await pool.end();

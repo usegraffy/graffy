@@ -1,6 +1,6 @@
 import { encode as encodeValue, decode as decodeValue } from './struct.js';
 import { keyStep, keyAfter, keyBefore } from '../ops/step.js';
-import { throwIf, empty, isArgObject } from '../util.js';
+import { throwIf, isEmpty, isArgObject } from '../util.js';
 
 function joinEncode(value, prefix) {
   if (!prefix && typeof value === 'string') {
@@ -24,7 +24,7 @@ export function encode(arg) {
   throwIf('cursor_and_range_arg', cursor && hasRangeArg);
 
   let key, end;
-  const prefix = empty(filter) ? '' : '\0' + encodeValue(filter) + '.';
+  const prefix = isEmpty(filter) ? '' : '\0' + encodeValue(filter) + '.';
 
   if (cursor) key = joinEncode(cursor, prefix);
   if (after) key = keyAfter(joinEncode(after, prefix));
@@ -90,7 +90,7 @@ export function decode(node) {
   if (kParts.prefix) Object.assign(args, decodeValue(kParts.prefix));
 
   if (typeof end === 'undefined') {
-    if (empty(args) && !isArgObject(kParts.value)) return kParts.value;
+    if (isEmpty(args) && !isArgObject(kParts.value)) return kParts.value;
     if (typeof kParts.value !== 'undefined') args.cursor = kParts.value;
     return args;
   }

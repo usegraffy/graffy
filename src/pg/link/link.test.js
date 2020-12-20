@@ -3,7 +3,7 @@ import { linkResult } from './index.js';
 
 test('outward', () => {
   const object = { ids: ['post1'], authorId: 'user1' };
-  const links = { author: { prop: ['authorId'], target: ['users'] } };
+  const links = { author: { prop: 'authorId', target: 'users' } };
   expect(linkResult([object], [], links)).toEqual([
     {
       ids: ['post1'],
@@ -15,7 +15,7 @@ test('outward', () => {
 
 test('inward', () => {
   const object = { ids: ['user1'] };
-  const links = { posts: { target: ['posts'], backProp: ['author'] } };
+  const links = { posts: { target: 'posts', back: 'authorId' } };
   const query = encodeGraph({
     posts: [
       {

@@ -1,6 +1,6 @@
 import { encodeArgs } from '../index.js';
 import { makePath, wrap } from '../../path/index.js';
-import { empty } from '../../util.js';
+import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
 
 export const ROOT_KEY = Symbol();
@@ -29,7 +29,7 @@ function makeNode(object, key, ver, linked = []) {
     node.value = _val_;
   } else if (_ref_) {
     node.path = makePath(_ref_);
-    if (!empty(rest))
+    if (!isEmpty(rest))
       linked.push(wrap(makeNode(rest, key, node.version, linked), node.path));
   } else if (Array.isArray(object)) {
     const children = object

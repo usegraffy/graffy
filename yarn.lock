@@ -7986,10 +7986,10 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
 
-sqlate@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/sqlate/-/sqlate-2.1.0.tgz#61fd22a649a752b865fa54e8286db73a473dccc3"
-  integrity sha512-zzrJymZqxrm3tZli6bl5aoWzXabIKIGaX9ZpraSBtalEizeY0BqhlsPpIT+YnzIYELG9ifjLXdBYwcnIbh9hfg==
+sql-template-tag@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/sql-template-tag/-/sql-template-tag-4.0.0.tgz#34327287b56c6278cbff0e7de77ce82a8f263bd0"
+  integrity sha512-S82ZPaT3a8rw7dDfOQyrVR82fQPA0qqihq/qkKIZrm4IfkP8RpyT6SyF+syp2Pmf8pzPh63H3yTIMuBRsL95kQ==
 
 sshpk@^1.7.0:
   version "1.16.1"

@@ -1,15 +1,30 @@
 import Graffy from '@graffy/core';
-import stdDb from '../index.js';
+import pg from '../index.js';
 import { populate } from './setup';
 
-describe('rogue-db integration', () => {
+import debug from 'debug';
+const log = debug('graffy:pg:test');
+
+describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
     await populate();
     jest.useFakeTimers();
     store = new Graffy();
-    store.use('user', stdDb({ table: 'users' }));
+    store.use(
+      'user',
+      pg({
+        table: 'users',
+        columns: {
+          id: { role: 'primary' },
+          tags: { role: 'gin' },
+          data: { role: 'default' },
+          version: { role: 'version' },
+        },
+        links: { posts: { target: 'post', back: 'author' } },
+      }),
+    );
   });
 
   afterEach(async () => {
@@ -18,19 +33,9 @@ describe('rogue-db integration', () => {
   });
 
   test('scenario 1', async () => {
-    const result1 = await store.read('user.user0', {
-      updateTime: 1,
-      type: 1,
-      i: 1,
-    });
+    const result1 = await store.read('user.user0', { i: 1 });
 
-    console.log('result1', result1);
-
-    expect(result1).toEqual({
-      i: 0,
-      type: 'user',
-      updateTime: expect.any(Number),
-    });
+    expect(result1).toEqual({ i: 0 });
 
     const stream1 = await store.watch('user.user1', {
       id: 1,
@@ -40,7 +45,7 @@ describe('rogue-db integration', () => {
 
     expect((await stream1.next()).value).toEqual({
       i: 1,
-      id: { _val_: ['user1'] },
+      id: 'user1',
     });
 
     const response1 = await store.write('user.user1', {
@@ -49,11 +54,15 @@ describe('rogue-db integration', () => {
 
     expect(response1).toEqual({ i: 2 });
 
+    log('Before timer');
+
     jest.runOnlyPendingTimers();
+
+    log('After timer');
 
     expect((await stream1.next()).value).toEqual({
       i: 2,
-      id: { _val_: ['user1'] },
+      id: 'user1',
     });
   });
 });

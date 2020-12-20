@@ -3,7 +3,7 @@ import { linkResult } from './link';
 import { acquirePool, releasePool } from './pool';
 import { isArgObject, decodeArgs } from '@graffy/common';
 import debug from 'debug';
-const log = debug('graffy:stdDb:dbRead');
+const log = debug('graffy:pg:dbRead');
 
 export default async function dbRead(query, pgOptions) {
   const sqls = [];

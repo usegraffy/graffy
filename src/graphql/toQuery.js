@@ -1,5 +1,5 @@
 import { parse } from 'graphql/language/parser';
-import { empty } from '@graffy/common';
+import { isEmpty } from '@graffy/common';
 
 export default function toQuery(ast, vars = {}) {
   if (typeof ast === 'string') ast = parse(ast);
@@ -56,7 +56,7 @@ export default function toQuery(ast, vars = {}) {
       }
     }
     if (args && args.length) node._key_ = getArgs(args);
-    return empty(node) ? 1 : node;
+    return isEmpty(node) ? 1 : node;
   }
 
   function getArgs(gqlArgs) {

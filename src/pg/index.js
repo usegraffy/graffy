@@ -1,4 +1,4 @@
-import { selectUpdatedSince } from './sql';
+import { selectUpdatedSince, readSql } from './sql';
 import { filterObject } from './filter';
 import makeOptions from './options';
 import {
@@ -7,12 +7,17 @@ import {
   encodeGraph,
   finalize,
   slice,
+  wrap,
+  unwrap,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 import dbRead from './dbRead';
 import dbWrite from './dbWrite';
+import { acquirePool, releasePool } from './pool';
 
-// import { format } from '@graffy/testing';
+import debug from 'debug';
+const log = debug('graffy:pg:index');
+import { format } from '@graffy/testing';
 
 export default (opts = {}) => (store) => {
   store.on('read', read);
@@ -26,9 +31,11 @@ export default (opts = {}) => (store) => {
 
   async function poll() {
     if (!watchers.size) return;
-    const res = await selectUpdatedSince(timestamp, pgOptions);
+    const pool = acquirePool();
+    const res = await readSql(selectUpdatedSince(timestamp, pgOptions), pool);
+    releasePool();
 
-    for (const object of res) {
+    for (const [object] of res) {
       for (const { query, push } of watchers) {
         const payload = [];
 
@@ -37,11 +44,11 @@ export default (opts = {}) => (store) => {
           if (isArgObject(args)) {
             if (filterObject(args, object)) payload.push(object);
           } else {
-            if (object.id._val_.includes(node.key)) payload.push(object);
+            if (object.id === node.key) payload.push(object);
           }
         }
 
-        push(slice(encodeGraph(payload), query).known);
+        push(wrap(slice(encodeGraph(payload), query).known, store.path));
       }
     }
   }
@@ -49,20 +56,25 @@ export default (opts = {}) => (store) => {
   setInterval(poll, pgOptions.pollInterval);
 
   async function read(query) {
+    query = unwrap(query, store.path);
+    log(format(query));
     const res = await dbRead(query, pgOptions);
-    return finalize(encodeGraph(res), query);
+    return wrap(finalize(encodeGraph(res), query), store.path);
   }
 
   async function write(change) {
+    change = unwrap(change, store.path);
     await dbWrite(change, pgOptions);
-    return change;
+    return wrap(change, store.path);
   }
 
   function watch(query) {
+    query = unwrap(query, store.path);
+
     return makeStream((push) => {
       const watcher = { query, push };
       dbRead(query, pgOptions).then((init) => {
-        push(finalize(encodeGraph(init), query));
+        push(wrap(finalize(encodeGraph(init), query), store.path));
         watchers.add(watcher);
       });
 

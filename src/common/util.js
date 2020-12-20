@@ -2,7 +2,7 @@ export function throwIf(message, condition) {
   if (condition) throw Error('arg_encoding.' + message);
 }
 
-export function empty(object) {
+export function isEmpty(object) {
   for (const _ in object) return false;
   return true;
 }
@@ -30,7 +30,7 @@ export function mergeObject(base, change) {
     }
   }
 
-  return empty(base) ? null : base;
+  return isEmpty(base) ? null : base;
 }
 
 export function cloneObject(object) {
@@ -46,7 +46,7 @@ export function cloneObject(object) {
     clone[prop] = value;
   }
 
-  return empty(clone) ? null : clone;
+  return isEmpty(clone) ? null : clone;
 }
 
 export function isArgObject(arg) {
