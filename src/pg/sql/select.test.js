@@ -12,6 +12,7 @@ test('example', async () => {
         columns: {
           id: { role: 'primary' },
           data: { role: 'default' },
+          version: { role: 'version' },
           type: { role: 'simple', prop: 'userType' },
           tags: { role: 'gin', props: ['email', 'phone'] },
           trgm: { role: 'trgm', props: ['name'] },

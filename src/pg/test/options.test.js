@@ -4,11 +4,12 @@ test('no_options', () => {
   expect(makeOptions(['blog', 'users'], {})).toEqual({
     prefix: ['blog', 'users'],
     table: 'users',
-    columns: {},
-    props: {},
-    args: {},
+    columns: { id: { prop: 'id', role: 'primary' } },
+    props: { id: { data: 'id' } },
+    args: { id: { name: 'id', role: 'primary' } },
     links: {},
     idCol: 'id',
+    idProp: 'id',
     verCol: 'version',
     defCol: 'data',
   });
@@ -23,6 +24,7 @@ test('sink', () => {
         type: { role: 'simple', prop: 'userType' },
         config: { role: 'default' },
         tags: { role: 'gin', props: ['locale', 'timezone'] },
+        version: { role: 'version' },
       },
     }),
   ).toEqual({
@@ -39,10 +41,12 @@ test('sink', () => {
       timezone: { gin: ['tags'] },
     },
     args: {
+      uid: { name: 'uid', role: 'primary' },
       locale: { name: 'tags', role: 'gin' },
       timezone: { name: 'tags', role: 'gin' },
     },
     links: {},
+    idProp: 'uid',
     idCol: 'uid',
     verCol: 'version',
     defCol: 'config',

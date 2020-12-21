@@ -16,7 +16,7 @@ export default async function dbRead(query, pgOptions) {
 
     if (isArgObject(args)) {
       sqls.push(selectByArgs(args, pgOptions));
-      transforms.push((res) => linkResult(res, node.children, pgOptions.links));
+      transforms.push((res) => linkResult(res, node.children, pgOptions));
     } else {
       ids.push(node.key);
       idSubQueries.push(node.children);
@@ -27,8 +27,7 @@ export default async function dbRead(query, pgOptions) {
     sqls.push(selectByIds(ids, pgOptions));
     transforms.push((res) =>
       res.map(
-        (object, i) =>
-          linkResult([object], idSubQueries[i], pgOptions.links)[0],
+        (object, i) => linkResult([object], idSubQueries[i], pgOptions)[0],
       ),
     );
   }

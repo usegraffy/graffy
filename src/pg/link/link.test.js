@@ -2,11 +2,12 @@ import { encodeGraph } from '@graffy/common';
 import { linkResult } from './index.js';
 
 test('outward', () => {
-  const object = { ids: ['post1'], authorId: 'user1' };
+  const object = { id: 'post1', authorId: 'user1' };
   const links = { author: { prop: 'authorId', target: 'users' } };
-  expect(linkResult([object], [], links)).toEqual([
+  const idProp = 'id';
+  expect(linkResult([object], [], { links, idProp })).toEqual([
     {
-      ids: ['post1'],
+      id: 'post1',
       authorId: 'user1',
       author: { _ref_: ['users', 'user1'] },
     },
@@ -14,8 +15,10 @@ test('outward', () => {
 });
 
 test('inward', () => {
-  const object = { ids: ['user1'] };
+  const object = { id: 'user1' };
   const links = { posts: { target: 'posts', back: 'authorId' } };
+  const idProp = 'id';
+
   const query = encodeGraph({
     posts: [
       {
@@ -23,13 +26,13 @@ test('inward', () => {
       },
     ],
   });
-  expect(linkResult([object], query, links)).toEqual([
+  expect(linkResult([object], query, { links, idProp })).toEqual([
     {
-      ids: ['user1'],
+      id: 'user1',
       posts: [
         {
           _key_: { first: 10 },
-          _ref_: ['posts', { author: { $in: ['user1'] }, first: 10 }],
+          _ref_: ['posts', { authorId: 'user1', first: 10 }],
         },
       ],
     },

@@ -1,4 +1,4 @@
-import { insert, update } from './upsert.js';
+import { insert } from './upsert.js';
 import makeOptions from '../options.js';
 
 import sql from 'sql-template-tag';
@@ -11,6 +11,7 @@ const options = makeOptions(['post$'], {
     type: { role: 'simple' },
     data: { role: 'default' },
     gin: { role: 'gin', props: ['email'] },
+    version: { role: 'version' },
   },
 });
 
@@ -20,10 +21,11 @@ test('insert', async () => {
       { id: 'post22', type: 'post', name: 'hello', email: 'world' },
       options,
     ),
-    sql`INSERT INTO "post" ("id", "type", "gin", "data")
+    sql`INSERT INTO "post" ("id", "type", "gin", "data", "version")
       VALUES (${'post22'}, ${'post'},
         ${{ email: 'world' }},
-        ${{ name: 'hello', email: 'world' }})
+        ${{ name: 'hello', email: 'world' }},
+        ${expect.any(Number)})
     `,
   );
 });

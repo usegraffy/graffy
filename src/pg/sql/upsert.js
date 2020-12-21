@@ -3,7 +3,6 @@ import {
   makePath,
   wrapObject,
   unwrapObject,
-  cloneObject,
   mergeObject,
   isEmpty,
 } from '@graffy/common';
@@ -115,7 +114,7 @@ function getInsertCols(row, options) {
   return join(
     Object.keys(row)
       .map((col) => raw(`"${col}"`))
-      .concat(raw(options.verCol)),
+      .concat(raw(`"${options.verCol}"`)),
     ', ',
   );
 }

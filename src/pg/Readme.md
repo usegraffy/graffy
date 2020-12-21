@@ -4,9 +4,9 @@ The standard Postgres module for Graffy. Each instance this module mounts a Post
 
 ## Usage
 ```js
-import stdDb from '@graffy/stddb'
+import pg from '@graffy/pg'
 
-graffyStore.use(stdDb(options));
+graffyStore.use(pg(options));
 ```
 
 Connection parameters should be set in environment variables. Uses the [pg](https://github.com/brianc/node-postgres) library.

@@ -25,7 +25,7 @@ export default async function dbWrite(change, pgOptions) {
 
     if (isRange(node)) throw Error('pg_write.write_range_unsupported');
 
-    const object = linkChange(decodeGraph(node.children), pgOptions.links);
+    const object = linkChange(decodeGraph(node.children), pgOptions);
     const args = decodeArgs(node);
 
     if (isArgObject(args)) {

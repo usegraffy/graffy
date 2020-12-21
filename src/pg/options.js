@@ -31,8 +31,9 @@ export default function (prefix, { table, columns = defaults, ...rest }) {
     (acc, [name, { role, prop, props, arg }]) => {
       if (role === 'primary') {
         prop = prop || name;
-        setOnce(`${table} primary`, acc, 'idCol', name);
-        setOnce(`${table} primary`, acc.args, prop, { role, name });
+        setOnce(`${table} idCol`, acc, 'idCol', name);
+        setOnce(`${table} idProp`, acc, 'idProp', prop);
+        setOnce(`${table} idArg`, acc.args, prop, { role, name });
       }
       if (role === 'default') setOnce(`${table} default`, acc, 'defCol', name);
       if (role === 'version') setOnce(`${table} version`, acc, 'verCol', name);
@@ -65,6 +66,8 @@ export default function (prefix, { table, columns = defaults, ...rest }) {
   );
 
   if (!columnOptions.idCol) throw Error(`pg.no_primary_column: ${table}`);
+  if (!columnOptions.verCol) throw Error(`pg.no_version_column: ${table}`);
+  if (!columnOptions.links) columnOptions.links = {};
 
   return { ...rest, prefix, table, ...columnOptions };
 }

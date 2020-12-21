@@ -7,7 +7,7 @@ import {
   makePath,
 } from '@graffy/common';
 
-export function linkResult(objects, query, linkSpecs) {
+export function linkResult(objects, query, { links: linkSpecs, idProp }) {
   for (let linkProp in linkSpecs) {
     const { target, prop, back } = linkSpecs[linkProp];
     const targetPath = makePath(target);
@@ -21,7 +21,7 @@ export function linkResult(objects, query, linkSpecs) {
       for (const object of objects) {
         const links = args.map((arg) => ({
           _key_: arg,
-          _ref_: [...targetPath, { ...arg, [back]: { $in: object.ids } }],
+          _ref_: [...targetPath, { ...arg, [back]: object[idProp] }],
         }));
         mergeObject(object, wrapObject(links, linkPath));
       }
@@ -36,7 +36,7 @@ export function linkResult(objects, query, linkSpecs) {
   return objects;
 }
 
-export function linkChange(object, linkSpecs) {
+export function linkChange(object, { links: linkSpecs }) {
   for (let linkProp in linkSpecs) {
     const { target, prop, back } = linkSpecs[linkProp];
     if (back) continue;
