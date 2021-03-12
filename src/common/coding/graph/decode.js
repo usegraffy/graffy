@@ -1,5 +1,5 @@
 import { isRange, isBranch, isLink, findFirst, findLast } from '../../node';
-import { empty } from '../../util.js';
+import { isEmpty } from '../../util.js';
 import { keyAfter, keyBefore } from '../../ops';
 import { decodeArgs, encodeQuery } from '../index.js';
 const LINK_PLACEHOLDER = Symbol();
@@ -146,7 +146,7 @@ function makeArray(graph, query, links, object) {
 
     let args = decodeArgs(node);
     const { cursor, ...rest } = args;
-    if (empty(rest) && Array.isArray(cursor)) args = cursor;
+    if (isEmpty(rest) && Array.isArray(cursor)) args = cursor;
 
     if (child === LINK_PLACEHOLDER) {
       links.push([resArr, resArr.length, node.path, args]);

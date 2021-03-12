@@ -1,5 +1,4 @@
-import sql from 'sqlate';
-import { concatSql } from './sql/util.js';
+import sql, { join } from 'sql-template-tag';
 import { unwrapObject, makePath } from '@graffy/common';
 
 export function getSql(params, getLookupSql) {
@@ -9,7 +8,7 @@ export function getSql(params, getLookupSql) {
     if (typeof value !== 'object') return sql`${lhs} = ${value}`;
     if (value === null) return sql`${lhs} IS NULL`;
 
-    return concatSql(
+    return join(
       Object.keys(value).map((operator) => {
         const rhs = value[operator];
         switch (operator) {
@@ -37,7 +36,7 @@ export function getSql(params, getLookupSql) {
             return sql`${lhs} && ${rhs}`;
         }
       }),
-      sql` AND `,
+      ` AND `,
     );
   });
 }

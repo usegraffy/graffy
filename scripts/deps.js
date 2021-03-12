@@ -13,6 +13,7 @@ function use(dep) {
 function printUnused() {
   [extraDeps, depVersions, peerDepVersions].map((deps) => {
     for (const dep in deps) {
+      // eslint-disable-next-line no-console
       if (!used[dep]) console.log(dep);
     }
   });

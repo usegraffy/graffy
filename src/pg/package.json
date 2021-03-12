@@ -1,5 +1,5 @@
 {
-  "name": "@graffy/rogue-db",
+  "name": "@graffy/pg",
   "version": "1.0.0",
   "type": "module"
 }
