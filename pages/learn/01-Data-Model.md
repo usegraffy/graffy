@@ -1,6 +1,6 @@
 # Data model
 
-Graffy lets you think of all your data as a single global filesystem, parts of which are synced with clients.
+Graffy lets you think of all your data as a single global tree – like a filesystem. Parts of which are fetched by or synced with clients.
 
 Every scalar value (string, number) is a "file" in this virtual tree, each with its own unique path. Some values are "symbolic links" pointing to other paths in the filesystem - making the data model a graph rather than a tree.
 
@@ -33,7 +33,7 @@ The `author` property on each post is a link to the corresponding user. `link()`
 
 ## Queries
 
-Graffy queries specify all the nodes (down to leaf nodes) they want to read, in a tree that mirrors the expected result. This works just like GraphQL:
+Graffy queries specify all the nodes (down to leaf nodes) they want to read, in a tree that mirrors the expected result.
 
 ```js
 // Query

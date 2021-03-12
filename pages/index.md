@@ -1,75 +1,99 @@
 import Demo from '@graffy/website/components/Demo';
 
-# Bring your APIs a**live**
+# Sweet APIs!
 
-Graffy is a [live query](why/02-Live-Queries) library for the browser and Node.js. Graffy-powered servers fulfill each query with its initial result followed by a stream of relevant incremental updates. This is different ([and better!](why/03-vs-GraphQL)) than GraphQL subscriptions.
+Serve and consume your app’s data over deliciously fast, intuitive and expressive APIs.
 
-> `npm install @graffy/core`
+Graffy runs on your JavaScript clients and Node.js or Deno servers, and supports:
 
-Graffy supports complex, expressive live queries - with multiple levels of resource expansion and pagination, and is based on a novel application of [set theory and CRDTs](advanced/01-Theory) to the problem of efficiently synchronizing subsets of a graph across devices.
+1. **Live queries**<br />
+  Clients can say “give me this data now, and then let me know any time it changes.”
+1. **Data source agnostic**<br />
+  Supports PostgreSQL out of the box; custom providers are super easy to write.
+1. **Resource expansion**<br />
+  Fetch everything in one round trip, even if related objects are in different databases.
+1. **Cursor-based pagination**<br />
+  The most scalable and efficient way to deal with long lists of things.
+1. **Optimistic writes**<br />
+  Boost perceived performance by updating UI immediately, without waiting for a server response.
+1. **Client-side state management**<br />
+  Use a single library to seamlessly manage both client-side state and server-side data.
+1. **Super-powered caching**<br />
+  Keeping track of pagination and resource expansion helps serve even more requests from the cache.
+
+All these things are _composable_ and work seamlessly together.
+
+# Basics
+
+You use Graffy to build and access *stores* — an abstraction over some underlying data source, such as a database, a remote server, or just some objects in memory.
+
+```jsx
+const store = new Graffy();
+```
+
+All the useful functionality — things like database access, making upstream queries, caching, authentication, etc. are provided by [*modules*](/reference/modules). The Graffy project maintains several useful ones, and it’s easy to write your own. This is how you *use* a module:
+
+```jsx
+store.use('users', graffyPostgres(options));
+```
+
+There are two *consumer* APIs, *read* and *write*. Read accepts a [*query*](/reference/structs#query) — a JSON object representing a data requirement — and returns a stream (JavaScript AsyncIterable) of [*graphs*](/reference/structs#graph) — JSON objects containing the results and any subsequent updates to it.
+
+```jsx
+const stream = store.read(query);
+for await (const value of stream) { process(value); }
+```
+
+Write accepts a graph (conventionally called *change*) and returns a Promise that resolves when the change has been committed.
+
+```jsx
+await store.write(change);
+```
+
+There are two corresponding *provider* APIs, *onRead* and *onWrite*, that let you register functions to fulfill read and write requests in your custom modules. Your provider functions should accept queries or changes, and return AsyncIterables or Promises — the reverse of the corresponding consumer APIs.
+
+Graffy stores can be deployed to a server for clients to access over HTTP or WebSockets. They also have an elegant JavaScript API for use *within* client or server code. On the server this is useful to manage caching and to abstract away implementation details of the storage layer.
+
+```jsx
+const app = express();
+app.use(graffyServer(store));
+```
+
+On the client, Graffy provides caching (with optional persistence and rapid “optimistic” updates), manages real-time data streams from the server and provides a unified API for local and remote data. Graffy also has an idiomatic API for React and React Native users.
+
+```jsx
+const { data, loading, error } = useQuery(query);
+```
+
+
+## Example
+
+Let’s say you’re building a review app for books with years in the title, and you want to fetch the two oldest books in your database.
+
+```js
+const result = await store.read('books', {
+  _key_: { order: ['published'], first: 2 },
+
+  title: 1,
+  author: {
+    name: 1
+  }
+})
+```
+and the result:
+```js
+[
+  {
+    title: '1984',
+    author: { name: 'George Orwell' },
+  },
+  {
+    title: '2001: A space odyssey',
+    author: { name: 'Arthur C Clarke' },
+  },
+]
+```
 
 Give Graffy a try! Change the data or query below.
 
 <Demo />
-
-## Intuitive [data model](learn/01-Data-Model)
-
-Graffy lets you think of all your data as a single global filesystem, parts of which are synced with clients.
-
-Every scalar value (string, number) is a "file" in this virtual tree, each with its own unique path. Some values are "symbolic links" pointing to other paths in the filesystem - making the data model a graph rather than a tree.
-
-Different parts of the graph can live on different databases and backend systems, just as (in Unix-like systems) different parts of the filesystem can live on different physical devices. Graffy lets you "mount" a _provider_ at any path in your data model.
-
-For example, here's how a Graffy data model for a blog might look.
-
-```js
-┬ /
-├─┬ users/
-│ ├─┬ 1/
-│ │ ├── name: 'Alice'
-│ │ └── avatar: 👧
-│ ├─┬ 2/
-│ │ ├── name: 'Bob'
-│ │ └── avatar: 👨
-│ ╵
-└─┬ posts/
-  ├─┬  1/
-  │ ├── title: 'Hello, World'
-  │ └── author ➔ /users/2
-  ├─┬  2/
-  │ ├── title: 'Lorem Ipsum'
-  │ └── author ➔ /users/1
-  ╵
-```
-
-## Expressive queries
-
-The Graffy query language has similar capabilities as GraphQL. In fact, Graffy will soon support writing queries using GraphQL syntax!
-
-Graffy clients specify exactly the data they need - to each field - and they get just that. This has a lot of benefits, such as efficiency and observability. Queries can also "follow the graph" and fetch multiple linked resources in one round trip.
-
-Graffy also has built-in, efficient pagination, avoiding the `edges`, `node` and `pageInfo` boilerplate of GraphQL.
-
-For example, here is a query that might be used to render the latest 10 posts from the blog above:
-
-```js
-{
-  posts: [ { last: 10 }, {
-    title: true,
-    author: {
-      name: true,
-      avatar: true
-    }
-  } ]
-})
-```
-
-## Highly modular
-
-Graffy providers can be _composed_ - i.e. providers can delegate to each other. This works just like the familiar middleware model used by Express or Koa, and allows authentication, validation, custom caches and resource limiting to be implemented easily and distributed as modules.
-
-In fact, the core of Graffy is just a simple middleware framework; most of the functionality is provided by built-in modules like [@graffy/fill](https://www.npmjs.com/package/@graffy/fill) and [@graffy/cache](https://www.npmjs.com/package/@graffy/cache).
-
-## Efficient bulk reads
-
-Graffy's provider model can also perform efficient bulk reads from underlying data stores (for example by constructing optimized SQL queries with range operations, joins etc.). This is particularly hard, if not impossible, to do with GraphQL resolvers - making hacks like [dataloader](https://github.com/graphql/dataloader) necessary.

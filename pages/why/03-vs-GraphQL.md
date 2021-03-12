@@ -22,15 +22,15 @@ See a real-life comparison of the difference this makes on the client at the bot
 
 Graffy providers can perform much more efficient bulk reads from underlying data stores, with much less code and complexity, than GraphQL resolvers.
 
-Consider an example where we need to fetch a list of, say 30 posts, and also the user who wrote each post. A naive REST client might need to fetch the list of posts first, read the 30 author IDs and fetch each of them individually. This is called the N+1 problem, and GraphQL has famously solved it.
+Consider an example where we need to fetch a list of, say 30 posts, and also the user who wrote each post. A naive REST client might need to fetch the list of posts first, read the 30 author IDs and fetch each of them individually. This is called the N+1 problem, and GraphQL has famously “solved” it.
 
 Or has it? A straightforward GraphQL implementation for this model, with a `Post` resolver and a `User` resolver, will actually end up recreating the N+1 problem at the database layer; the User resolver will be called 30 times.
 
-This is why GraphQL recommends a separate timer-based hack, [dataloader](https://github.com/graphql/dataloader), to collect all those database queries together. This adds a lot of complexity, and is also fairly limited: in our example, the most efficient query might use a JOIN between the `posts` and `users` tables, but this isn't really possible with GraphQL.
+This is why GraphQL recommends a separate timer-based hack, [dataloader](https://github.com/graphql/dataloader), to collect all those database queries together. This adds a lot of complexity, and is also fairly limited: in our example, the most efficient query might use a JOIN between the `posts` and `users` tables, but this isn't really possible with any GraphQL server library without changing the data model.
 
 In contrast, Graffy providers are passed subqueries that they can inspect instead of being called repeatedly. The `user` provider is invoked only once - with 30 user IDs as argument.
 
-We could even go further: the posts provider might check that the query includes the `author` field, and could construct a query with a JOIN. This would then avoid invoking the user provider entirely.
+We could even go further: the posts provider might check that the query includes the `author` field, and could construct a query with a JOIN. This would then avoid invoking the user provider entirely, improving performance at the cost of coupling the two providers.
 
 ## Modularity
 
