@@ -16,7 +16,7 @@ const publish = require('./publish.js');
 const link = require('./link.js');
 const interlink = require('./interlink.js');
 const tag = require('./tag.js');
-const { src, dst } = require('./utils.js');
+const { src, dst, npx } = require('./utils.js');
 
 // const { printUnused } = require('./deps.js');
 
@@ -41,6 +41,9 @@ const { src, dst } = require('./utils.js');
 
   if (argv.link) await Promise.all(dirs.map((dir) => interlink(dir)));
   if (argv.publish) tag(ver);
+  console.log('Generating typescript definition files...');
+  npx('typescript');
+
   console.log('Done.');
   // printUnused();
 })();
