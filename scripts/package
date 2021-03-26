@@ -27,11 +27,17 @@ const { src, dst, npx } = require('./utils.js');
   await rimraf(dst());
   await mkdir(dst());
 
+  console.log('Generating typescript definition files...');
+  await npx('tsc');
+  await npx('tsc', '-p', 'tsconfig-cjs.json');
+
   let dirs = await globby('*', { cwd: src(), onlyDirectories: true });
   dirs = (
     await Promise.all(
       dirs.map(async (dir) => {
         if (!(await build(dir, ver))) return;
+        await npx('merge-dirs', dst('types', 'esm', dir), dst(dir, 'esm'), '--overwrite');
+        await npx('merge-dirs', dst('types', 'cjs', dir), dst(dir, 'cjs'), '--overwrite');
         if (argv.publish) await publish(dir, ver);
         if (argv.link) await link(dir);
         return dir;
@@ -41,8 +47,7 @@ const { src, dst, npx } = require('./utils.js');
 
   if (argv.link) await Promise.all(dirs.map((dir) => interlink(dir)));
   if (argv.publish) tag(ver);
-  console.log('Generating typescript definition files...');
-  npx('typescript');
+  rimraf(dst('types'));
 
   console.log('Done.');
   // printUnused();

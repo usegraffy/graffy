@@ -62,6 +62,7 @@
     "jest": "^26.1.0",
     "lodash": "^4.17.19",
     "merge-async-iterators": "^0.2.1",
+    "merge-dirs": "^0.2.1",
     "nanoid": "^3.1.10",
     "next": "10.0.3",
     "pg": "^8.3.3",
