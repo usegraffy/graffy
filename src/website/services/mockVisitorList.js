@@ -1,4 +1,5 @@
 import faker from 'faker';
+import fakataaar from 'fakataaar';
 import debug from 'debug';
 const log = debug('graffy:website:server');
 import { encodeGraph } from '@graffy/common';
@@ -67,7 +68,9 @@ function simulate() {
 function visitorInfo() {
   return {
     name: faker.internet.userName(),
-    avatar: faker.image.avatar(),
+    avatar:
+      'data:image/svg+xml;base64,' +
+      Buffer.from(fakataaar()).toString('base64'),
     pageviews: [{ _key_: [ts], _val_: faker.system.directoryPath() }],
   };
 }
