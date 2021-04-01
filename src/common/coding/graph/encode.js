@@ -25,6 +25,8 @@ function makeNode(object, key, ver, linked = []) {
 
   if (object === null || _val_ === null) {
     node.end = node.key;
+  } else if (_val_ === true) {
+    node.value = rest;
   } else if (typeof _val_ !== 'undefined') {
     node.value = _val_;
   } else if (_ref_) {
