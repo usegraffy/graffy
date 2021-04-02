@@ -119,6 +119,7 @@ module.exports = async function build(name, version) {
         //   require: './cjs/index.js',
         // },
         module: './esm/index.js',
+        types: './types/index.d.ts',
         repository: {
           type: 'git',
           url: 'git+https://github.com/usegraffy/graffy.git',
