@@ -44,9 +44,7 @@ export default function Visitor({ avatar, name, ts, pageviews }) {
           flex: 0 0 auto;
           width: 3em;
           height: 3em;
-          background-color: #eee;
           border-radius: 100%;
-          border: 2px solid #999;
           overflow: hidden;
         }
 
@@ -93,16 +91,6 @@ export default function Visitor({ avatar, name, ts, pageviews }) {
 
         .Visitor-page:last-child::before {
           background: #999;
-        }
-
-        .Visitor-page::after {
-          content: '';
-          position: absolute;
-          border-left: 2px solid #999;
-          width: 1px;
-          left: 0;
-          top: -0.1em;
-          bottom: 12px;
         }
       `}</style>
     </div>
