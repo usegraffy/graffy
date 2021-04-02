@@ -8,7 +8,8 @@ const dst = (...args) => join(base, 'dist', ...args);
 const yarnPath = process.env.npm_execpath;
 const yarn = (name, ...args) => execFile(yarnPath, args, { cwd: dst(name) });
 const git = (...args) => execFile('git', args, { cwd: base });
+const npx = (...args) => execFile('npx', args, { cwd: base });
 
 const ownPattern = /^@graffy\//;
 
-module.exports = { src, dst, yarn, git, ownPattern };
+module.exports = { src, dst, yarn, git, npx, ownPattern };
