@@ -79,7 +79,7 @@ describe('changes', () => {
   test('link', async () => {
     backend.write(
       encodeGraph(
-        { foo: { _ref_: ['bar', 'a'] }, bar: { a: { x: 3 }, b: { x: 5 } } },
+        { foo: { $ref: ['bar', 'a'] }, bar: { a: { x: 3 }, b: { x: 5 } } },
         0,
       ),
     );
@@ -88,12 +88,12 @@ describe('changes', () => {
     });
 
     await expectNext(subscription, {
-      foo: { _ref_: ['bar', 'a'] },
+      foo: { $ref: ['bar', 'a'] },
       bar: { a: { x: 3 } },
     });
-    backend.write(encodeGraph({ foo: { _ref_: ['bar', 'b'] } }, 0));
+    backend.write(encodeGraph({ foo: { $ref: ['bar', 'b'] } }, 0));
     await expectNext(subscription, {
-      foo: { _ref_: ['bar', 'b'] },
+      foo: { $ref: ['bar', 'b'] },
       bar: { b: { x: 5 } },
     });
     backend.write(encodeGraph({ bar: { a: { x: 7 } } })); // Should not be sent!
@@ -106,17 +106,17 @@ describe('changes', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: { before: ['a'] } },
-            { _key_: ['a'], _val_: 1 },
-            { _key_: { after: ['a'], before: ['b'] } },
-            { _key_: ['b'], _val_: 2 },
-            { _key_: { after: ['b'], before: ['c'] } },
-            { _key_: ['c'], _val_: 3 },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
-            { _key_: { after: ['d'], before: ['e'] } },
-            { _key_: ['e'], _val_: 5 },
-            { _key_: { after: ['e'] } },
+            { $key: { before: ['a'] } },
+            { $key: ['a'], $val: 1 },
+            { $key: { after: ['a'], before: ['b'] } },
+            { $key: ['b'], $val: 2 },
+            { $key: { after: ['b'], before: ['c'] } },
+            { $key: ['c'], $val: 3 },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
+            { $key: { after: ['d'], before: ['e'] } },
+            { $key: ['e'], $val: 5 },
+            { $key: { after: ['e'] } },
           ],
         },
         0,
@@ -125,27 +125,27 @@ describe('changes', () => {
 
     const subscription = g.call(
       'watch',
-      encodeQuery({ foo: { _key_: { first: 3 } } }),
+      encodeQuery({ foo: { $key: { first: 3 } } }),
       { raw: true },
     );
     await expectNext(subscription, {
       foo: [
-        { _key_: { before: ['a'] } },
-        { _key_: ['a'], _val_: 1 },
-        { _key_: { after: ['a'], before: ['b'] } },
-        { _key_: ['b'], _val_: 2 },
-        { _key_: { after: ['b'], before: ['c'] } },
-        { _key_: ['c'], _val_: 3 },
+        { $key: { before: ['a'] } },
+        { $key: ['a'], $val: 1 },
+        { $key: { after: ['a'], before: ['b'] } },
+        { $key: ['b'], $val: 2 },
+        { $key: { after: ['b'], before: ['c'] } },
+        { $key: ['c'], $val: 3 },
       ],
     });
-    backend.write(encodeGraph({ foo: [{ _key_: ['b'], _val_: null }] }, 1));
+    backend.write(encodeGraph({ foo: [{ $key: ['b'], $val: null }] }, 1));
     await expectNext(
       subscription,
       // prettier-ignore
-      { _ver_: 1, foo: [
-          { _key_: { since: ['b'], until: ['b'] } },
-          { _key_: { after: ['c'], before: ['d'] }, _ver_: 0 },
-          { _key_: ['d'], _val_: 4, _ver_: 0 }
+      { $ver: 1, foo: [
+          { $key: { since: ['b'], until: ['b'] } },
+          { $key: { after: ['c'], before: ['d'] }, $ver: 0 },
+          { $key: ['d'], $val: 4, $ver: 0 }
         ] },
     );
   });
@@ -155,15 +155,15 @@ describe('changes', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: { before: ['a'] } },
-            { _key_: ['a'], _val_: 1 },
-            { _key_: { after: ['a'], before: ['c'] } },
-            { _key_: ['c'], _val_: 3 },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
-            { _key_: { after: ['d'], before: ['e'] } },
-            { _key_: ['e'], _val_: 5 },
-            { _key_: { after: ['e'] } },
+            { $key: { before: ['a'] } },
+            { $key: ['a'], $val: 1 },
+            { $key: { after: ['a'], before: ['c'] } },
+            { $key: ['c'], $val: 3 },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
+            { $key: { after: ['d'], before: ['e'] } },
+            { $key: ['e'], $val: 5 },
+            { $key: { after: ['e'] } },
           ],
         },
         0,
@@ -172,23 +172,23 @@ describe('changes', () => {
 
     const subscription = g.call(
       'watch',
-      encodeQuery({ foo: { _key_: { first: 3 } } }, 0),
+      encodeQuery({ foo: { $key: { first: 3 } } }, 0),
       {
         raw: true,
       },
     );
     await expectNext(subscription, {
       foo: [
-        { _key_: { before: ['a'] } },
-        { _key_: ['a'], _val_: 1 },
-        { _key_: { after: ['a'], before: ['c'] } },
-        { _key_: ['c'], _val_: 3 },
-        { _key_: { after: ['c'], before: ['d'] } },
-        { _key_: ['d'], _val_: 4 },
+        { $key: { before: ['a'] } },
+        { $key: ['a'], $val: 1 },
+        { $key: { after: ['a'], before: ['c'] } },
+        { $key: ['c'], $val: 3 },
+        { $key: { after: ['c'], before: ['d'] } },
+        { $key: ['d'], $val: 4 },
       ],
     });
-    backend.write(encodeGraph({ foo: [{ _key_: ['b'], _val_: 2 }] }, 0));
-    await expectNext(subscription, { foo: [{ _key_: ['b'], _val_: 2 }] });
+    backend.write(encodeGraph({ foo: [{ $key: ['b'], $val: 2 }] }, 0));
+    await expectNext(subscription, { foo: [{ $key: ['b'], $val: 2 }] });
   });
 });
 
@@ -214,16 +214,16 @@ describe('values', () => {
 
   test('link', async () => {
     backend.write(encodeGraph({ bar: { a: { x: 5 }, b: { x: 6 } } }, 0));
-    backend.write(encodeGraph({ foo: { _ref_: ['bar', 'a'] } }, 0));
+    backend.write(encodeGraph({ foo: { $ref: ['bar', 'a'] } }, 0));
 
     const subscription = g.call('watch', encodeQuery({ foo: { x: 1 } }, 0));
     await expectNext(subscription, {
-      foo: { _ref_: ['bar', 'a'] },
+      foo: { $ref: ['bar', 'a'] },
       bar: { a: { x: 5 } },
     });
-    backend.write(encodeGraph({ foo: { _ref_: ['bar', 'b'] } }, 0));
+    backend.write(encodeGraph({ foo: { $ref: ['bar', 'b'] } }, 0));
     await expectNext(subscription, {
-      foo: { _ref_: ['bar', 'b'] },
+      foo: { $ref: ['bar', 'b'] },
       bar: { b: { x: 6 } },
     });
     backend.write(encodeGraph({ bar: { a: { x: 7 } } }, 0));
@@ -231,7 +231,7 @@ describe('values', () => {
     // await subscription.next(); // TODO: Remove this!
     backend.write(encodeGraph({ bar: { b: { x: 3 } } }, 0));
     await expectNext(subscription, {
-      foo: { _ref_: ['bar', 'b'] },
+      foo: { $ref: ['bar', 'b'] },
       bar: { b: { x: 3 } },
     });
   });
@@ -241,16 +241,16 @@ describe('values', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: { before: ['a'] } },
-            { _key_: ['a'], _val_: 1 },
-            { _key_: { after: ['a'], before: ['b'] } },
-            { _key_: ['b'], _val_: 2 },
-            { _key_: { after: ['b'], before: ['c'] } },
-            { _key_: ['c'], _val_: 3 },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
-            { _key_: { after: ['d'], before: ['e'] } },
-            { _key_: ['e'], _val_: 5 },
+            { $key: { before: ['a'] } },
+            { $key: ['a'], $val: 1 },
+            { $key: { after: ['a'], before: ['b'] } },
+            { $key: ['b'], $val: 2 },
+            { $key: { after: ['b'], before: ['c'] } },
+            { $key: ['c'], $val: 3 },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
+            { $key: { after: ['d'], before: ['e'] } },
+            { $key: ['e'], $val: 5 },
           ],
         },
         0,
@@ -259,34 +259,34 @@ describe('values', () => {
 
     const subscription = g.call(
       'watch',
-      encodeQuery({ foo: { _key_: { first: 3 } } }, 0),
+      encodeQuery({ foo: { $key: { first: 3 } } }, 0),
     );
     await expectNext(subscription, {
       foo: [
-        { _key_: { before: ['a'] } },
-        { _key_: ['a'], _val_: 1 },
-        { _key_: { after: ['a'], before: ['b'] } },
-        { _key_: ['b'], _val_: 2 },
-        { _key_: { after: ['b'], before: ['c'] } },
-        { _key_: ['c'], _val_: 3 },
+        { $key: { before: ['a'] } },
+        { $key: ['a'], $val: 1 },
+        { $key: { after: ['a'], before: ['b'] } },
+        { $key: ['b'], $val: 2 },
+        { $key: { after: ['b'], before: ['c'] } },
+        { $key: ['c'], $val: 3 },
       ],
     });
-    backend.write(encodeGraph({ foo: [{ _key_: ['b'], _val_: null }] }, 1));
+    backend.write(encodeGraph({ foo: [{ $key: ['b'], $val: null }] }, 1));
     // TODO: In a future version, update versions throughout the tree in
     // live queries
     await expectNext(
       subscription,
       {
-        _ver_: 1,
+        $ver: 1,
         foo: [
-          { _key_: { before: ['a'] }, _ver_: 0 },
-          { _key_: ['a'], _val_: 1, _ver_: 0 },
-          { _key_: { after: ['a'], before: ['b'] }, _ver_: 0 },
-          { _key_: ['b'], _val_: null, _ver_: 1 },
-          { _key_: { after: ['b'], before: ['c'] }, _ver_: 0 },
-          { _key_: ['c'], _val_: 3, _ver_: 0 },
-          { _key_: { after: ['c'], before: ['d'] }, _ver_: 0 },
-          { _key_: ['d'], _val_: 4, _ver_: 0 },
+          { $key: { before: ['a'] }, $ver: 0 },
+          { $key: ['a'], $val: 1, $ver: 0 },
+          { $key: { after: ['a'], before: ['b'] }, $ver: 0 },
+          { $key: ['b'], $val: null, $ver: 1 },
+          { $key: { after: ['b'], before: ['c'] }, $ver: 0 },
+          { $key: ['c'], $val: 3, $ver: 0 },
+          { $key: { after: ['c'], before: ['d'] }, $ver: 0 },
+          { $key: ['d'], $val: 4, $ver: 0 },
         ],
       },
       0,
@@ -298,16 +298,16 @@ describe('values', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: { before: ['a'] } },
-            { _key_: ['a'], _val_: 1 },
-            { _key_: { after: ['a'], before: ['b'] } },
-            { _key_: ['b'], _val_: 2 },
-            { _key_: { after: ['b'], before: ['c'] } },
-            { _key_: ['c'], _val_: 3 },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
-            { _key_: { after: ['d'], before: ['e'] } },
-            { _key_: ['e'], _val_: 5 },
+            { $key: { before: ['a'] } },
+            { $key: ['a'], $val: 1 },
+            { $key: { after: ['a'], before: ['b'] } },
+            { $key: ['b'], $val: 2 },
+            { $key: { after: ['b'], before: ['c'] } },
+            { $key: ['c'], $val: 3 },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
+            { $key: { after: ['d'], before: ['e'] } },
+            { $key: ['e'], $val: 5 },
           ],
         },
         0,
@@ -315,16 +315,16 @@ describe('values', () => {
     );
     const subscription = g.call(
       'watch',
-      encodeQuery({ foo: { _key_: { first: 3 } } }, 0),
+      encodeQuery({ foo: { $key: { first: 3 } } }, 0),
     );
     await expectNext(subscription, {
       foo: [
-        { _key_: { before: ['a'] } },
-        { _key_: ['a'], _val_: 1 },
-        { _key_: { after: ['a'], before: ['b'] } },
-        { _key_: ['b'], _val_: 2 },
-        { _key_: { after: ['b'], before: ['c'] } },
-        { _key_: ['c'], _val_: 3 },
+        { $key: { before: ['a'] } },
+        { $key: ['a'], $val: 1 },
+        { $key: { after: ['a'], before: ['b'] } },
+        { $key: ['b'], $val: 2 },
+        { $key: { after: ['b'], before: ['c'] } },
+        { $key: ['c'], $val: 3 },
       ],
     });
     expect(backend.read).toHaveBeenCalledTimes(1);
@@ -333,9 +333,9 @@ describe('values', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: ['b'] },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
+            { $key: ['b'] },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
           ],
         },
         1,
@@ -346,16 +346,16 @@ describe('values', () => {
       subscription,
       // prettier-ignore
       {
-        _ver_: 1,
+        $ver: 1,
         foo: [
-          { _key_: { before: ['a'] }, _ver_: 0 },
-          { _key_: ['a'], _val_: 1, _ver_: 0 },
-          { _key_: { after: ['a'], before: ['b'] }, _ver_: 0 },
-          { _key_: ['b'], _val_: null, _ver_: 1 },
-          { _key_: { after: ['b'], before: ['c'] }, _ver_: 0 },
-          { _key_: ['c'], _val_: 3, _ver_: 0 },
-          { _key_: { after: ['c'], before: ['d'] }, _ver_: 1 },
-          { _key_: ['d'], _val_: 4, _ver_: 1 },
+          { $key: { before: ['a'] }, $ver: 0 },
+          { $key: ['a'], $val: 1, $ver: 0 },
+          { $key: { after: ['a'], before: ['b'] }, $ver: 0 },
+          { $key: ['b'], $val: null, $ver: 1 },
+          { $key: { after: ['b'], before: ['c'] }, $ver: 0 },
+          { $key: ['c'], $val: 3, $ver: 0 },
+          { $key: { after: ['c'], before: ['d'] }, $ver: 1 },
+          { $key: ['d'], $val: 4, $ver: 1 },
         ],
       },
     );
@@ -367,12 +367,12 @@ describe('values', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: ['c'], _val_: 3 },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
-            { _key_: { after: ['d'], before: ['e'] } },
-            { _key_: ['e'], _val_: 5 },
-            { _key_: { after: ['e'] } },
+            { $key: ['c'], $val: 3 },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
+            { $key: { after: ['d'], before: ['e'] } },
+            { $key: ['e'], $val: 5 },
+            { $key: { after: ['e'] } },
           ],
         },
         0,
@@ -380,16 +380,16 @@ describe('values', () => {
     );
     const subscription = g.call(
       'watch',
-      encodeQuery({ foo: { _key_: { last: 3 } } }),
+      encodeQuery({ foo: { $key: { last: 3 } } }),
     );
     await expectNext(subscription, {
       foo: [
-        { _key_: ['c'], _val_: 3 },
-        { _key_: { after: ['c'], before: ['d'] } },
-        { _key_: ['d'], _val_: 4 },
-        { _key_: { after: ['d'], before: ['e'] } },
-        { _key_: ['e'], _val_: 5 },
-        { _key_: { after: ['e'] } },
+        { $key: ['c'], $val: 3 },
+        { $key: { after: ['c'], before: ['d'] } },
+        { $key: ['d'], $val: 4 },
+        { $key: { after: ['d'], before: ['e'] } },
+        { $key: ['e'], $val: 5 },
+        { $key: { after: ['e'] } },
       ],
     });
 
@@ -397,22 +397,22 @@ describe('values', () => {
       // prettier-ignore
       encodeGraph({
         foo: [
-          { _key_: ['b'], _val_: 2 },
-          { _key_: { after: ['b'], until: ['c'] } },
+          { $key: ['b'], $val: 2 },
+          { $key: { after: ['b'], until: ['c'] } },
         ]
       }, 1),
     );
 
     await expectNext(subscription, {
-      _ver_: 1,
+      $ver: 1,
       foo: [
-        { _key_: ['b'], _val_: 2 },
-        { _key_: { after: ['b'], until: ['c'] } },
-        { _key_: { after: ['c'], before: ['d'] }, _ver_: 0 },
-        { _key_: ['d'], _val_: 4, _ver_: 0 },
-        { _key_: { after: ['d'], before: ['e'] }, _ver_: 0 },
-        { _key_: ['e'], _val_: 5, _ver_: 0 },
-        { _key_: { after: ['e'] }, _ver_: 0 },
+        { $key: ['b'], $val: 2 },
+        { $key: { after: ['b'], until: ['c'] } },
+        { $key: { after: ['c'], before: ['d'] }, $ver: 0 },
+        { $key: ['d'], $val: 4, $ver: 0 },
+        { $key: { after: ['d'], before: ['e'] }, $ver: 0 },
+        { $key: ['e'], $val: 5, $ver: 0 },
+        { $key: { after: ['e'] }, $ver: 0 },
       ],
     });
 
@@ -424,15 +424,15 @@ describe('values', () => {
       encodeGraph(
         {
           foo: [
-            { _key_: { before: ['a'] } },
-            { _key_: ['a'], _val_: 1 },
-            { _key_: { after: ['a'], before: ['c'] } },
-            { _key_: ['c'], _val_: 3 },
-            { _key_: { after: ['c'], before: ['d'] } },
-            { _key_: ['d'], _val_: 4 },
-            { _key_: { after: ['d'], before: ['e'] } },
-            { _key_: ['e'], _val_: 5 },
-            { _key_: { after: ['e'] } },
+            { $key: { before: ['a'] } },
+            { $key: ['a'], $val: 1 },
+            { $key: { after: ['a'], before: ['c'] } },
+            { $key: ['c'], $val: 3 },
+            { $key: { after: ['c'], before: ['d'] } },
+            { $key: ['d'], $val: 4 },
+            { $key: { after: ['d'], before: ['e'] } },
+            { $key: ['e'], $val: 5 },
+            { $key: { after: ['e'] } },
           ],
         },
         0,
@@ -441,27 +441,27 @@ describe('values', () => {
 
     const subscription = g.call(
       'watch',
-      encodeQuery({ foo: { _key_: { first: 3 } } }, 0),
+      encodeQuery({ foo: { $key: { first: 3 } } }, 0),
     );
     await expectNext(subscription, {
       foo: [
-        { _key_: { before: ['a'] } },
-        { _key_: ['a'], _val_: 1 },
-        { _key_: { after: ['a'], before: ['c'] } },
-        { _key_: ['c'], _val_: 3 },
-        { _key_: { after: ['c'], before: ['d'] } },
-        { _key_: ['d'], _val_: 4 },
+        { $key: { before: ['a'] } },
+        { $key: ['a'], $val: 1 },
+        { $key: { after: ['a'], before: ['c'] } },
+        { $key: ['c'], $val: 3 },
+        { $key: { after: ['c'], before: ['d'] } },
+        { $key: ['d'], $val: 4 },
       ],
     });
-    backend.write(encodeGraph({ foo: [{ _key_: ['b'], _val_: 2 }] }, 0));
+    backend.write(encodeGraph({ foo: [{ $key: ['b'], $val: 2 }] }, 0));
     await expectNext(subscription, {
       foo: [
-        { _key_: { before: ['a'] } },
-        { _key_: ['a'], _val_: 1 },
-        { _key_: { after: ['a'], before: ['b'] } },
-        { _key_: ['b'], _val_: 2 },
-        { _key_: { after: ['b'], before: ['c'] } },
-        { _key_: ['c'], _val_: 3 },
+        { $key: { before: ['a'] } },
+        { $key: ['a'], $val: 1 },
+        { $key: { after: ['a'], before: ['b'] } },
+        { $key: ['b'], $val: 2 },
+        { $key: { after: ['b'], before: ['c'] } },
+        { $key: ['c'], $val: 3 },
       ],
     });
   });
@@ -476,13 +476,13 @@ describe('values', () => {
             3: { name: 'carol' },
           },
           usersByAge: [
-            { _key_: { before: ['4'] } },
-            { _key_: ['4'], _ref_: ['users', '1'] },
-            { _key_: { after: ['4'], before: ['5'] } },
-            { _key_: ['5'], _ref_: ['users', '2'] },
-            { _key_: { after: ['5'], before: ['7'] } },
-            { _key_: ['7'], _ref_: ['users', '3'] },
-            { _key_: { after: ['7'] } },
+            { $key: { before: ['4'] } },
+            { $key: ['4'], $ref: ['users', '1'] },
+            { $key: { after: ['4'], before: ['5'] } },
+            { $key: ['5'], $ref: ['users', '2'] },
+            { $key: { after: ['5'], before: ['7'] } },
+            { $key: ['7'], $ref: ['users', '3'] },
+            { $key: { after: ['7'] } },
           ],
         },
         0,
@@ -491,7 +491,7 @@ describe('values', () => {
 
     const subscription = g.call(
       'watch',
-      encodeQuery({ usersByAge: { _key_: { last: 2 }, name: 1 } }, 0),
+      encodeQuery({ usersByAge: { $key: { last: 2 }, name: 1 } }, 0),
     );
     await expectNext(subscription, {
       users: {
@@ -499,17 +499,17 @@ describe('values', () => {
         3: { name: 'carol' },
       },
       usersByAge: [
-        { _key_: ['5'], _ref_: ['users', '2'] },
-        { _key_: { after: ['5'], before: ['7'] } },
-        { _key_: ['7'], _ref_: ['users', '3'] },
-        { _key_: { after: ['7'] } },
+        { $key: ['5'], $ref: ['users', '2'] },
+        { $key: { after: ['5'], before: ['7'] } },
+        { $key: ['7'], $ref: ['users', '3'] },
+        { $key: { after: ['7'] } },
       ],
     });
     backend.write(
       encodeGraph(
         {
           users: { 2: null },
-          usersByAge: [{ _key_: ['5'] }],
+          usersByAge: [{ $key: ['5'] }],
         },
         1,
       ),
@@ -522,12 +522,12 @@ describe('values', () => {
           '3': { name: 'carol' },
         }, 0)},
         { key: 'usersByAge', version: 1, children: encodeGraph([
-          { _key_: ['4'], _ref_: ['users', '1'] },
-          { _key_: { after: ['4'], before: ['5'] } },
-          { _key_: ['5'], _ver_: 1 },
-          { _key_: { after: ['5'], before: ['7'] } },
-          { _key_: ['7'], _ref_: ['users', '3'] },
-          { _key_: { after: ['7'] } },
+          { $key: ['4'], $ref: ['users', '1'] },
+          { $key: { after: ['4'], before: ['5'] } },
+          { $key: ['5'], $ver: 1 },
+          { $key: { after: ['5'], before: ['7'] } },
+          { $key: ['7'], $ref: ['users', '3'] },
+          { $key: { after: ['7'] } },
         ], 0)}
       ],
     );

@@ -55,7 +55,7 @@ export default function toQuery(ast, vars = {}) {
         }
       }
     }
-    if (args && args.length) node._key_ = getArgs(args);
+    if (args && args.length) node.$key = getArgs(args);
     return isEmpty(node) ? 1 : node;
   }
 

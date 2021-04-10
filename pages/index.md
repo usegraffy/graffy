@@ -72,7 +72,7 @@ Let’s say you’re building a review app for books with years in the title, an
 
 ```js
 const result = await store.read('books', {
-  _key_: { order: ['published'], first: 2 },
+  $key: { order: ['published'], first: 2 },
 
   title: 1,
   author: {

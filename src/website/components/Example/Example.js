@@ -11,12 +11,12 @@ const PAGE_SIZE = 12;
 function getQuery(range) {
   return {
     visitors: {
-      _key_: { order: ['ts'], ...range },
+      $key: { order: ['ts'], ...range },
       id: true,
       ts: true,
       name: true,
       avatar: true,
-      pageviews: { _key_: { last: 3 } },
+      pageviews: { $key: { last: 3 } },
     },
   };
 }

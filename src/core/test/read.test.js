@@ -56,11 +56,11 @@ describe('read', () => {
       provider = jest.fn(() => {
         return {
           foo: [
-            { _key_: 'a', baz: 15, bar: 42 },
-            { _key_: 'b', baz: 16, bar: 41 },
-            { _key_: 'c', baz: 17, bar: 40 },
-            { _key_: 'd', baz: 18, bar: 39 },
-            { _key_: 'e', baz: 19, bar: 38 },
+            { $key: 'a', baz: 15, bar: 42 },
+            { $key: 'b', baz: 16, bar: 41 },
+            { $key: 'c', baz: 17, bar: 40 },
+            { $key: 'd', baz: 18, bar: 39 },
+            { $key: 'e', baz: 19, bar: 38 },
           ],
         };
       });
@@ -69,103 +69,103 @@ describe('read', () => {
 
     test('all', async () => {
       const result = await g.read({
-        foo: { _key_: { first: 100 }, bar: 1 },
+        foo: { $key: { first: 100 }, bar: 1 },
       });
       expect(provider).toBeCalledWith(
-        { foo: { _key_: { first: 100 }, bar: true } },
+        { foo: { $key: { first: 100 }, bar: true } },
         {},
       );
-      expect(provider.mock.calls[0][0].foo._key_).toEqual({ first: 100 });
+      expect(provider.mock.calls[0][0].foo.$key).toEqual({ first: 100 });
       expect(result).toEqual({
         foo: [
-          { _key_: 'a', bar: 42 },
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
-          { _key_: 'd', bar: 39 },
-          { _key_: 'e', bar: 38 },
+          { $key: 'a', bar: 42 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
+          { $key: 'd', bar: 39 },
+          { $key: 'e', bar: 38 },
         ],
       });
     });
 
     test('first', async () => {
-      const result = await g.read({ foo: { _key_: { first: 2 }, bar: 1 } });
+      const result = await g.read({ foo: { $key: { first: 2 }, bar: 1 } });
       expect(result).toEqual({
         foo: [
-          { _key_: 'a', bar: 42 },
-          { _key_: 'b', bar: 41 },
+          { $key: 'a', bar: 42 },
+          { $key: 'b', bar: 41 },
         ],
       });
     });
     test('last', async () => {
-      const result = await g.read({ foo: { _key_: { last: 1 }, bar: 1 } });
-      expect(result).toEqual({ foo: [{ _key_: 'e', bar: 38 }] });
+      const result = await g.read({ foo: { $key: { last: 1 }, bar: 1 } });
+      expect(result).toEqual({ foo: [{ $key: 'e', bar: 38 }] });
     });
     test('first-since', async () => {
       const result = await g.read({
-        foo: { _key_: { first: 2, since: 'b' }, bar: 1 },
+        foo: { $key: { first: 2, since: 'b' }, bar: 1 },
       });
       expect(result).toEqual({
         foo: [
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
         ],
       });
     });
     test('last-until', async () => {
       const result = await g.read({
-        foo: { _key_: { last: 3, until: 'd' }, bar: 1 },
+        foo: { $key: { last: 3, until: 'd' }, bar: 1 },
       });
       expect(result).toEqual({
         foo: [
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
-          { _key_: 'd', bar: 39 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
+          { $key: 'd', bar: 39 },
         ],
       });
     });
     test('first-until-since', async () => {
       const result = await g.read({
-        foo: { _key_: { since: 'b', until: 'g', first: 2 }, bar: 1 },
+        foo: { $key: { since: 'b', until: 'g', first: 2 }, bar: 1 },
       });
       expect(result).toEqual({
         foo: [
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
         ],
       });
     });
     test('last-until-since', async () => {
       const result = await g.read({
-        foo: { _key_: { since: 'a', until: 'd', last: 3 }, bar: 1 },
+        foo: { $key: { since: 'a', until: 'd', last: 3 }, bar: 1 },
       });
       expect(result).toEqual({
         foo: [
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
-          { _key_: 'd', bar: 39 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
+          { $key: 'd', bar: 39 },
         ],
       });
     });
     test('first-until-since-filled', async () => {
       const result = await g.read({
-        foo: { _key_: { since: 'b', until: 'c', first: 4 }, bar: 1 },
+        foo: { $key: { since: 'b', until: 'c', first: 4 }, bar: 1 },
       });
       expect(result).toEqual({
         foo: [
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
         ],
       });
     });
     test('last-until-since-filled', async () => {
       const result = await g.read({
-        foo: { _key_: { since: 'b', until: 'd', last: 5 }, bar: 1 },
+        foo: { $key: { since: 'b', until: 'd', last: 5 }, bar: 1 },
       });
       expect(result).toEqual({
         foo: [
-          { _key_: 'b', bar: 41 },
-          { _key_: 'c', bar: 40 },
-          { _key_: 'd', bar: 39 },
+          { $key: 'b', bar: 41 },
+          { $key: 'c', bar: 40 },
+          { $key: 'd', bar: 39 },
         ],
       });
     });
@@ -173,7 +173,7 @@ describe('read', () => {
 
   describe('link', () => {
     beforeEach(() => {
-      g.onRead('foo', () => ({ x: { _ref_: ['bar'] } }));
+      g.onRead('foo', () => ({ x: { $ref: ['bar'] } }));
       g.onRead('bar', () => ({ baz: 3 }));
     });
 
@@ -181,8 +181,8 @@ describe('read', () => {
       // Update this test after decodeGraph starts to remove
       // unrequested branches.
       expect(await g.read({ foo: { x: { baz: 1 } } })).toEqual({
-        bar: { _ref_: ['bar'], baz: 3 },
-        foo: { x: { _ref_: ['bar'], baz: 3 } },
+        bar: { $ref: ['bar'], baz: 3 },
+        foo: { x: { $ref: ['bar'], baz: 3 } },
       });
     });
   });

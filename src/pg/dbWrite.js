@@ -52,10 +52,10 @@ export default async function dbWrite(change, pgOptions) {
 
   function writeObject(current, object) {
     if (current) {
-      const updated = object._rng_ ? object : mergeObject(current, object);
+      const updated = object.$rng ? object : mergeObject(current, object);
       return writeSql(update(updated, pgOptions), client);
     } else {
-      if (!object[pgOptions.idCol] || !object._rng_) {
+      if (!object[pgOptions.idCol] || !object.$rng) {
         throw Error('pg_insert.not_full_object');
       }
       return writeSql(insert(object, pgOptions), client);

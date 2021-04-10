@@ -6,13 +6,13 @@ it('should encode queries', () => {
       {
         postCount: 1,
         posts: {
-          _key_: { first: 10, since: '1984' },
+          $key: { first: 10, since: '1984' },
           title: 1,
           body: 1,
           author: { name: 1 },
         },
-        tags: { _key_: { first: 10 } },
-        reactions: { _key_: { last: 100 } },
+        tags: { $key: { first: 10 } },
+        reactions: { $key: { last: 100 } },
       },
       2,
     ),

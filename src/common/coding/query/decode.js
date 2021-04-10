@@ -20,8 +20,8 @@ function decodeGraphPage(query) {
   for (const node of query) {
     const args = decodeArgs(node);
     const child = isBranch(node) ? decodeChildren(node.children) : {};
-    child._key_ = args;
-    // Object.defineProperty(child, '_key_', { value: args });
+    child.$key = args;
+    // Object.defineProperty(child, '$key', { value: args });
     result.push(child);
   }
 

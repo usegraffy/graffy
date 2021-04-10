@@ -71,7 +71,7 @@ function visitorInfo() {
     avatar:
       'data:image/svg+xml;base64,' +
       Buffer.from(fakataaar()).toString('base64'),
-    pageviews: [{ _key_: [ts], _val_: faker.system.directoryPath() }],
+    pageviews: [{ $key: [ts], $val: faker.system.directoryPath() }],
   };
 }
 
@@ -96,8 +96,8 @@ function simulateEnter() {
   return encodeGraph(
     {
       visitors: [
-        { _key_: addId, id: addId, ts, ...visitorInfo() },
-        { _key_: index(ts), _ref_: ['visitors', addId] },
+        { $key: addId, id: addId, ts, ...visitorInfo() },
+        { $key: index(ts), $ref: ['visitors', addId] },
       ],
     },
     ts,
@@ -118,7 +118,7 @@ async function simulateLeave() {
 
   leave++;
   return encodeGraph(
-    { visitors: [{ _key_: delId }, { _key_: index(delTs) }] },
+    { visitors: [{ $key: delId }, { $key: index(delTs) }] },
     ts,
   );
 }
@@ -132,7 +132,7 @@ function simulateUpdate() {
   const url = faker.system.directoryPath();
   update++;
   return encodeGraph(
-    { visitors: { [upId]: { pageviews: [{ _key_: [ts], _val_: url }] } } },
+    { visitors: { [upId]: { pageviews: [{ $key: [ts], $val: url }] } } },
     ts,
   );
 }

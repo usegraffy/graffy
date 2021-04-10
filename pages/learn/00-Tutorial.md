@@ -138,7 +138,7 @@ Restart the server and visit http://localhost:5000/api/explore to try out the fo
 2. **Watch** the last 3 messages:
     ```js
     { message: {
-      _key_: { order: ['time', 'id'], last: 3 },
+      $key: { order: ['time', 'id'], last: 3 },
       text: 1,
       time: 1,
       author: { name: 1 }

@@ -2,8 +2,8 @@ import encodeGraph from '../encode.js';
 
 test('simple', () => {
   const users = [
-    { _key_: '1', name: 'Alice', settings: { _val_: ['hi'] } },
-    { _key_: '2', name: 'Bob', manager: { _ref_: 'users.1' }, foo: null },
+    { $key: '1', name: 'Alice', settings: { $val: ['hi'] } },
+    { $key: '2', name: 'Bob', manager: { $ref: 'users.1' }, foo: null },
   ];
 
   const posts = [];
@@ -63,7 +63,7 @@ test('point_in_range_deletion', () => {
     encodeGraph(
       [
         {
-          _key_: { cursor: ['foo'] },
+          $key: { cursor: ['foo'] },
         },
       ],
       version,
@@ -72,7 +72,7 @@ test('point_in_range_deletion', () => {
 });
 
 test('range', () => {
-  expect(encodeGraph([{ _key_: { before: ['a'] } }], 0)).toEqual([
+  expect(encodeGraph([{ $key: { before: ['a'] } }], 0)).toEqual([
     {
       key: '',
       end: '\x000VKV\uffff',
@@ -82,13 +82,13 @@ test('range', () => {
 });
 
 test('arrayCursor.encode', () => {
-  expect(encodeGraph([{ _key_: [23], _val_: 25 }], 0)).toEqual([
+  expect(encodeGraph([{ $key: [23], $val: 25 }], 0)).toEqual([
     { key: '\x000VI-Ck--------', value: 25, version: 0 },
   ]);
 });
 
 test('bounded_range', () => {
-  const result = encodeGraph([{ _key_: { after: ['a'], before: ['b'] } }], 0);
+  const result = encodeGraph([{ $key: { after: ['a'], before: ['b'] } }], 0);
   expect(result).toEqual([
     { key: '\x000VKW\0', end: '\x000VKW\uffff', version: 0 },
   ]);

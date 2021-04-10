@@ -20,15 +20,15 @@ export function linkResult(objects, query, { links: linkSpecs, idProp }) {
 
       for (const object of objects) {
         const links = args.map((arg) => ({
-          _key_: arg,
-          _ref_: [...targetPath, { ...arg, [back]: object[idProp] }],
+          $key: arg,
+          $ref: [...targetPath, { ...arg, [back]: object[idProp] }],
         }));
         mergeObject(object, wrapObject(links, linkPath));
       }
     } else {
       const idPath = makePath(prop);
       for (const object of objects) {
-        const link = { _ref_: [...targetPath, unwrapObject(object, idPath)] };
+        const link = { $ref: [...targetPath, unwrapObject(object, idPath)] };
         mergeObject(object, wrapObject(link, linkPath));
       }
     }
@@ -51,20 +51,20 @@ export function linkChange(object, { links: linkSpecs }) {
       // If the prop of this link is alread present, do nothing more.
       if (unwrapObject(object, idPath) !== undefined) continue;
 
-      if (!link._ref_) {
+      if (!link.$ref) {
         throw Error(
           `pg_write.missing_ref: ${linkPath.join('.')} ${JSON.stringify(link)}`,
         );
       }
 
-      const ref = makePath(link._ref_);
+      const ref = makePath(link.$ref);
       if (
         ref.length !== targetPath.length + 1 ||
         targetPath.some((tkey, i) => ref[i] !== tkey)
       ) {
         throw Error(
           `pg_write.incompatible_ref: ${linkPath.join('.')} ${
-            link._ref_
+            link.$ref
           } ${targetPath.join('.')}`,
         );
       }

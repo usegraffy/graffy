@@ -31,8 +31,8 @@ export default function decodeGraph(graph, query, links = []) {
       // console.log('Replacing placeholder at', key, 'with', node);
       from[key] = node;
       if (typeof node === 'object' && node) {
-        node._ref_ = path;
-        if (args) node._key_ = args;
+        node.$ref = path;
+        if (args) node.$key = args;
       }
     }
   }
@@ -64,9 +64,9 @@ function decodeChildren(graph, query, links) {
 
     if (typeof node.value === 'object' && node.value) {
       // The API must appear to return the value directly, but when
-      // JSON-stringified it returned object should be wrapped in a _val_.
+      // JSON-stringified it returned object should be wrapped in a $val.
       const child = Object.create(node.value);
-      child._val_ = node.value;
+      child.$val = node.value;
       resObj[key] = child;
     } else {
       resObj[key] = node.value;
@@ -79,7 +79,7 @@ function decodeChildren(graph, query, links) {
 
     1. The query had pagination parameters
     2. The result had ranges of unknown
-    3. The result has encoded values, which must be decoded into an _key_
+    3. The result has encoded values, which must be decoded into an $key
   */
 
   if (query) {
@@ -99,7 +99,7 @@ function decodeChildren(graph, query, links) {
   return resObj;
 }
 
-function isPaginated({ _key_: key } = {}) {
+function isPaginated({ $key: key } = {}) {
   return (
     key &&
     (key.first || key.last || key.after || key.before || key.since || key.until)
@@ -154,7 +154,7 @@ function makeArray(graph, query, links, object) {
       continue;
     }
 
-    if (typeof child === 'object' && child) child._key_ = args;
+    if (typeof child === 'object' && child) child.$key = args;
     resArr.push(child);
   }
 
@@ -165,7 +165,7 @@ function makeArray(graph, query, links, object) {
   const firstKey = firstNode.key;
   const lastKey = lastNode.end || lastNode.key;
 
-  const limit = query?._key_?.first || query?._key_?.last || resArr.length || 1;
+  const limit = query?.$key?.first || query?.$key?.last || resArr.length || 1;
 
   if (!isMinKey(firstKey)) {
     Object.defineProperty(resArr, 'prevPage', {

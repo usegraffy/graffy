@@ -7,12 +7,12 @@ const freeze = (obj) => Object.freeze(obj);
 
 function makeNode(object, key, ver) {
   if (!object) return;
-  const { _key_, _opt_, ...rest } = object;
+  const { $key, $opt, ...rest } = object;
 
-  if (!key && !_key_) {
-    throw Error(`makeNode.no_key ${key} ${JSON.stringify(_key_)}`);
+  if (!key && !$key) {
+    throw Error(`makeNode.no_key ${key} ${JSON.stringify($key)}`);
   }
-  key = key || _key_;
+  key = key || $key;
 
   const node =
     key === ROOT_KEY
@@ -29,7 +29,7 @@ function makeNode(object, key, ver) {
 
     if (children.length) node.children = children;
   } else if (typeof object === 'object') {
-    if (_key_ && key !== _key_) {
+    if ($key && key !== $key) {
       node.children = [makeNode(object, undefined, ver)];
     } else {
       const children = Object.keys(rest)

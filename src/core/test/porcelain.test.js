@@ -6,7 +6,7 @@ test('Porcelain read', async () => {
   store.use(GraffyFill());
 
   const expectedBooksQuery = {
-    _key_: { first: 2 },
+    $key: { first: 2 },
     title: true,
     author: { name: true },
   };
@@ -17,8 +17,8 @@ test('Porcelain read', async () => {
   };
 
   const onReadBooks = jest.fn(() => [
-    { _key_: ['1984'], title: '1984', author: { _ref_: 'users.orwell' } },
-    { _key_: ['2001'], title: '2001', author: { _ref_: 'users.clarke' } },
+    { $key: ['1984'], title: '1984', author: { $ref: 'users.orwell' } },
+    { $key: ['2001'], title: '2001', author: { $ref: 'users.clarke' } },
   ]);
 
   const onReadUsers = jest.fn(() => ({
@@ -30,21 +30,21 @@ test('Porcelain read', async () => {
   store.onRead('users', onReadUsers);
 
   const result = await store.read('books', {
-    _key_: { first: 2 },
+    $key: { first: 2 },
     title: true,
     author: { name: true },
   });
 
   const expectedResult = [
     {
-      _key_: ['1984'],
+      $key: ['1984'],
       title: '1984',
-      author: { _ref_: ['users', 'orwell'], name: 'George Orwell' },
+      author: { $ref: ['users', 'orwell'], name: 'George Orwell' },
     },
     {
-      _key_: ['2001'],
+      $key: ['2001'],
       title: '2001',
-      author: { _ref_: ['users', 'clarke'], name: 'Arthur C Clarke' },
+      author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
 
@@ -52,7 +52,7 @@ test('Porcelain read', async () => {
     expectedBooksQuery,
     expect.any(Object),
   );
-  expect(onReadBooks.mock.calls[0][0]._key_).toEqual(expectedBooksQuery._key_);
+  expect(onReadBooks.mock.calls[0][0].$key).toEqual(expectedBooksQuery.$key);
   expect(onReadUsers).toHaveBeenCalledWith(
     expectedUsersQuery,
     expect.any(Object),
@@ -69,14 +69,14 @@ test('Porcelain subscription', async () => {
   const onWatchBooks = async function* onWatchBooks() {
     yield [
       {
-        _key_: ['1984'],
+        $key: ['1984'],
         title: '1984',
-        author: { _ref_: 'users.orwell' },
+        author: { $ref: 'users.orwell' },
       },
       {
-        _key_: ['2001'],
+        $key: ['2001'],
         title: '2001',
-        author: { _ref_: 'users.clarke' },
+        author: { $ref: 'users.clarke' },
       },
     ];
     await forever;
@@ -94,20 +94,20 @@ test('Porcelain subscription', async () => {
   store.onWatch('users', onWatchUsers);
 
   const result = store.watch('books', {
-    _key_: { first: 2 },
+    $key: { first: 2 },
     title: true,
     author: { name: true },
   });
   const expectedResult = [
     {
-      _key_: ['1984'],
+      $key: ['1984'],
       title: '1984',
-      author: { _ref_: ['users', 'orwell'], name: 'George Orwell' },
+      author: { $ref: ['users', 'orwell'], name: 'George Orwell' },
     },
     {
-      _key_: ['2001'],
+      $key: ['2001'],
       title: '2001',
-      author: { _ref_: ['users', 'clarke'], name: 'Arthur C Clarke' },
+      author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
 
@@ -119,12 +119,12 @@ test('write array value', async () => {
   store.use(GraffyFill());
 
   const provider = jest.fn((change) => {
-    expect(change).toEqual({ foo: { _val_: ['hello', 'world'] } });
-    return { foo: { _val_: ['hello', 'world'] } };
+    expect(change).toEqual({ foo: { $val: ['hello', 'world'] } });
+    return { foo: { $val: ['hello', 'world'] } };
   });
   store.onWrite(provider);
 
-  await store.write({ foo: { _val_: ['hello', 'world'] } });
+  await store.write({ foo: { $val: ['hello', 'world'] } });
   expect(provider).toBeCalled();
 });
 
@@ -133,11 +133,11 @@ test('read array value', async () => {
   store.use(GraffyFill());
 
   const provider = jest.fn(() => {
-    return { foo: { _val_: ['hello', 'world'] } };
+    return { foo: { $val: ['hello', 'world'] } };
   });
   store.onRead(provider);
 
   const result = await store.read({ foo: 1 });
   expect(provider).toBeCalled();
-  expect(result).toEqual({ foo: { _val_: ['hello', 'world'] } });
+  expect(result).toEqual({ foo: { $val: ['hello', 'world'] } });
 });

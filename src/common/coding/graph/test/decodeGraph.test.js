@@ -33,23 +33,23 @@ test('decodeGraph', () => {
   );
   expect(decodeGraphd).toEqual({
     users: {
-      1: { _ref_: ['users', '1'], name: 'George Orwell' },
-      2: { _ref_: ['users', '2'], name: 'Arthur C Clarke' },
+      1: { $ref: ['users', '1'], name: 'George Orwell' },
+      2: { $ref: ['users', '2'], name: 'Arthur C Clarke' },
     },
     posts: [
       {
-        _key_: '1984',
+        $key: '1984',
         title: '1984',
         body: 'Lorem ipsum',
-        options: { _val_: { inStock: true } },
-        author: { _ref_: ['users', '1'], name: 'George Orwell' },
+        options: { $val: { inStock: true } },
+        author: { $ref: ['users', '1'], name: 'George Orwell' },
       },
       {
-        _key_: '2001',
+        $key: '2001',
         title: '2001',
         body: 'Hello world',
-        options: { _val_: { borrowed: true } },
-        author: { _ref_: ['users', '2'], name: 'Arthur C Clarke' },
+        options: { $val: { borrowed: true } },
+        author: { $ref: ['users', '2'], name: 'Arthur C Clarke' },
       },
     ],
   });
@@ -74,7 +74,7 @@ describe('pagination', () => {
           { key: 'foo', value: '123', version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
         ],
-        [{ _key_: { first: 10, since: 'foo' }, name: 1 }],
+        [{ $key: { first: 10, since: 'foo' }, name: 1 }],
       ).prevPage,
     ).toEqual({ last: 10, before: 'foo' });
   });
@@ -86,7 +86,7 @@ describe('pagination', () => {
           { key: 'foo', value: '123', version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
         ],
-        [{ _key_: { first: 10, since: 'foo' }, name: 1 }],
+        [{ $key: { first: 10, since: 'foo' }, name: 1 }],
       ).nextPage,
     ).toBe(undefined);
   });
@@ -98,7 +98,7 @@ describe('pagination', () => {
           { key: '', end: 'fon\uffff', version: 1 },
           { key: 'foo', value: '123', version: 1 },
         ],
-        [{ _key_: { last: 10, until: 'foo' }, name: 1 }],
+        [{ $key: { last: 10, until: 'foo' }, name: 1 }],
       ).prevPage,
     ).toBe(undefined);
   });
@@ -110,7 +110,7 @@ describe('pagination', () => {
           { key: '', end: 'fon\uffff', version: 1 },
           { key: 'foo', value: '123', version: 1 },
         ],
-        [{ _key_: { last: 10, until: 'foo' }, name: 1 }],
+        [{ $key: { last: 10, until: 'foo' }, name: 1 }],
       ).nextPage,
     ).toEqual({ first: 10, after: 'foo' });
   });

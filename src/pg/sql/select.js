@@ -17,8 +17,8 @@ export function selectByArgs(args, options, { forUpdate } = {}) {
   return sql`
     SELECT
     ${getSelectCols(options)} || jsonb_build_object(
-      '_key_', ${key},
-      '_ref_', array[${join(prefix)}, "${raw(options.idCol)}"]
+      '$key', ${key},
+      '$ref', array[${join(prefix)}, "${raw(options.idCol)}"]
     )
     FROM "${raw(table)}"
     ${where.length ? sql`WHERE ${join(where, ` AND `)}` : empty}
@@ -32,7 +32,7 @@ export function selectByIds(ids, options, { forUpdate } = {}) {
   return sql`
     SELECT
     ${getSelectCols(options)} || jsonb_build_object(
-      '_key_', "${raw(options.idCol)}"
+      '$key', "${raw(options.idCol)}"
     )
     FROM "${raw(table)}"
     WHERE "${raw(idCol)}" IN (${join(ids)})
@@ -44,7 +44,7 @@ export function selectUpdatedSince(version, options) {
   const { table, verCol } = options;
   return sql`
     SELECT ${getSelectCols(options)} || jsonb_build_object(
-      '_key_', "${raw(options.idCol)}"
+      '$key', "${raw(options.idCol)}"
     )
     FROM "${raw(table)}"
     WHERE "${raw(verCol)}" > ${version}

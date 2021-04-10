@@ -83,11 +83,11 @@ function clean(object, forLookup) {
 
   for (const prop in object) {
     switch (prop) {
-      case '_key_':
-      case '_rng_':
-      case '_ref_':
+      case '$key':
+      case '$rng':
+      case '$ref':
         continue;
-      case '_val_':
+      case '$val':
         if (forLookup) return object[prop];
         clone[prop] = object[prop];
         continue;
