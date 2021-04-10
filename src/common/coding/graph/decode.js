@@ -102,7 +102,12 @@ function decodeChildren(graph, query, links) {
 function isPaginated({ $key: key } = {}) {
   return (
     key &&
-    (key.first || key.last || key.after || key.before || key.since || key.until)
+    (key.$first ||
+      key.$last ||
+      key.$after ||
+      key.$before ||
+      key.$since ||
+      key.$until)
   );
 }
 
@@ -165,7 +170,7 @@ function makeArray(graph, query, links, object) {
   const firstKey = firstNode.key;
   const lastKey = lastNode.end || lastNode.key;
 
-  const limit = query?.$key?.first || query?.$key?.last || resArr.length || 1;
+  const limit = query?.$key?.$first || query?.$key?.$last || resArr.length || 1;
 
   if (!isMinKey(firstKey)) {
     Object.defineProperty(resArr, 'prevPage', {

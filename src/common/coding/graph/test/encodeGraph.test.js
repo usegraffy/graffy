@@ -63,7 +63,7 @@ test('point_in_range_deletion', () => {
     encodeGraph(
       [
         {
-          $key: { cursor: ['foo'] },
+          $key: { $cursor: ['foo'] },
         },
       ],
       version,
@@ -72,7 +72,7 @@ test('point_in_range_deletion', () => {
 });
 
 test('range', () => {
-  expect(encodeGraph([{ $key: { before: ['a'] } }], 0)).toEqual([
+  expect(encodeGraph([{ $key: { $before: ['a'] } }], 0)).toEqual([
     {
       key: '',
       end: '\x000VKV\uffff',
@@ -88,7 +88,7 @@ test('arrayCursor.encode', () => {
 });
 
 test('bounded_range', () => {
-  const result = encodeGraph([{ $key: { after: ['a'], before: ['b'] } }], 0);
+  const result = encodeGraph([{ $key: { $after: ['a'], $before: ['b'] } }], 0);
   expect(result).toEqual([
     { key: '\x000VKW\0', end: '\x000VKW\uffff', version: 0 },
   ]);

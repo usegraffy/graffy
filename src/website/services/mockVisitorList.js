@@ -76,7 +76,7 @@ function visitorInfo() {
 }
 
 function index(ts) {
-  return { order: ['ts'], cursor: [ts] };
+  return { $order: ['ts'], $cursor: [ts] };
 }
 
 function simulateEnter() {

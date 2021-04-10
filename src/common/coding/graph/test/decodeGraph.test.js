@@ -74,9 +74,9 @@ describe('pagination', () => {
           { key: 'foo', value: '123', version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
         ],
-        [{ $key: { first: 10, since: 'foo' }, name: 1 }],
+        [{ $key: { $first: 10, $since: 'foo' }, name: 1 }],
       ).prevPage,
-    ).toEqual({ last: 10, before: 'foo' });
+    ).toEqual({ $last: 10, $before: 'foo' });
   });
 
   test('forward_end', () => {
@@ -86,7 +86,7 @@ describe('pagination', () => {
           { key: 'foo', value: '123', version: 1 },
           { key: 'foo\0', end: '\uffff', version: 1 },
         ],
-        [{ $key: { first: 10, since: 'foo' }, name: 1 }],
+        [{ $key: { $first: 10, $since: 'foo' }, name: 1 }],
       ).nextPage,
     ).toBe(undefined);
   });
@@ -98,7 +98,7 @@ describe('pagination', () => {
           { key: '', end: 'fon\uffff', version: 1 },
           { key: 'foo', value: '123', version: 1 },
         ],
-        [{ $key: { last: 10, until: 'foo' }, name: 1 }],
+        [{ $key: { $last: 10, $until: 'foo' }, name: 1 }],
       ).prevPage,
     ).toBe(undefined);
   });
@@ -110,8 +110,8 @@ describe('pagination', () => {
           { key: '', end: 'fon\uffff', version: 1 },
           { key: 'foo', value: '123', version: 1 },
         ],
-        [{ $key: { last: 10, until: 'foo' }, name: 1 }],
+        [{ $key: { $last: 10, $until: 'foo' }, name: 1 }],
       ).nextPage,
-    ).toEqual({ first: 10, after: 'foo' });
+    ).toEqual({ $first: 10, $after: 'foo' });
   });
 });

@@ -12,36 +12,45 @@ function joinEncode(value, prefix) {
 
 export function encode(arg) {
   if (!isArgObject(arg)) {
-    arg = { cursor: arg };
+    arg = { $cursor: arg };
   }
 
-  const { first, last, after, before, since, until, cursor, ...filter } = arg;
-  const hasRangeArg = before || after || since || until || first || last;
+  const {
+    $first,
+    $last,
+    $after,
+    $before,
+    $since,
+    $until,
+    $cursor,
+    ...filter
+  } = arg;
+  const hasRangeArg = $before || $after || $since || $until || $first || $last;
 
-  throwIf('first_and_last', first && last);
-  throwIf('after_and_since', after && since);
-  throwIf('before_and_until', before && until);
-  throwIf('cursor_and_range_arg', cursor && hasRangeArg);
+  throwIf('first_and_$last', $first && $last);
+  throwIf('after_and_$since', $after && $since);
+  throwIf('before_and_$until', $before && $until);
+  throwIf('cursor_and_range_arg', $cursor && hasRangeArg);
 
   let key, end;
   const prefix = isEmpty(filter) ? '' : '\0' + encodeValue(filter) + '.';
 
-  if (cursor) key = joinEncode(cursor, prefix);
-  if (after) key = keyAfter(joinEncode(after, prefix));
-  if (before) end = keyBefore(joinEncode(before, prefix));
-  if (since) key = joinEncode(since, prefix);
-  if (until) end = joinEncode(until, prefix);
+  if ($cursor) key = joinEncode($cursor, prefix);
+  if ($after) key = keyAfter(joinEncode($after, prefix));
+  if ($before) end = keyBefore(joinEncode($before, prefix));
+  if ($since) key = joinEncode($since, prefix);
+  if ($until) end = joinEncode($until, prefix);
 
   if (hasRangeArg) {
     key = key || prefix;
     end = end || prefix + '\uffff';
   }
 
-  if (last) [key, end] = [end, key];
+  if ($last) [key, end] = [end, key];
 
   const node = { key };
   if (typeof end !== 'undefined') node.end = end;
-  if (first || last) node.limit = first || last;
+  if ($first || $last) node.limit = $first || $last;
 
   return node;
 }
@@ -50,16 +59,16 @@ export function encode(arg) {
 
   Key and End might take one of these forms:
 
-  order.filter.since -> order.filter.until
+  order.filter.$since -> order.filter.$until
   order.filter.cursor
 
-  order..since -> order..until
+  order..$since -> order..$until
   order..cursor
 
-  .filter.since -> .filter.until
+  .filter.$since -> .filter.$until
   .filter.cursor
 
-  since -> until
+  $since -> $until
   cursor
 
   .filter.
@@ -84,14 +93,14 @@ export function decode(node) {
   if (key[0] !== '\0' && typeof end === 'undefined') return key;
 
   const args = {};
-  if (limit) args[key < end ? 'first' : 'last'] = limit;
+  if (limit) args[key < end ? '$first' : '$last'] = limit;
 
   const kParts = splitEncoded(key);
   if (kParts.prefix) Object.assign(args, decodeValue(kParts.prefix));
 
   if (typeof end === 'undefined') {
     if (isEmpty(args) && !isArgObject(kParts.value)) return kParts.value;
-    if (typeof kParts.value !== 'undefined') args.cursor = kParts.value;
+    if (typeof kParts.value !== 'undefined') args.$cursor = kParts.value;
     return args;
   }
 
@@ -103,11 +112,11 @@ export function decode(node) {
     eParts.cursor > kParts.cursor ? [kParts, eParts] : [eParts, kParts];
 
   if (lower.cursor !== '') {
-    args[lower.step === 1 ? 'after' : 'since'] = lower.value;
+    args[lower.step === 1 ? '$after' : '$since'] = lower.value;
   }
 
   if (upper.cursor !== '\uffff') {
-    args[upper.step === -1 ? 'before' : 'until'] = upper.value;
+    args[upper.step === -1 ? '$before' : '$until'] = upper.value;
   }
 
   return args;

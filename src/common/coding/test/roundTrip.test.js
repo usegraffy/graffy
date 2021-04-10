@@ -8,7 +8,7 @@ import {
 test('cursor', () => {
   const original = [
     {
-      $key: { order: ['id'], cursor: [123] },
+      $key: { $order: ['id'], $cursor: [123] },
       name: 'Alice',
     },
   ];
@@ -19,7 +19,7 @@ test('cursor', () => {
 
 test('firstN', () => {
   const original = {
-    $key: { order: ['id'], first: 3 },
+    $key: { $order: ['id'], $first: 3 },
     name: true,
   };
   const encoded = encodeQuery(original);

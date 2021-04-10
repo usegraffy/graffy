@@ -7,7 +7,7 @@ import expectSql from './expectSql.js';
 test('example', async () => {
   expectSql(
     await selectByArgs(
-      { first: 10 },
+      { $first: 10 },
       makeOptions(['user'], {
         columns: {
           id: { role: 'primary' },

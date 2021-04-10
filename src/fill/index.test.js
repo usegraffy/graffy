@@ -24,17 +24,17 @@ beforeEach(() => {
           5: { x: 5 },
         },
         foo: [
-          { $key: { before: ['a'] } },
+          { $key: { $before: ['a'] } },
           { $key: ['a'], $ref: ['bar', '1'] },
-          { $key: { after: ['a'], before: ['b'] } },
+          { $key: { $after: ['a'], $before: ['b'] } },
           { $key: ['b'], $ref: ['bar', '2'] },
-          { $key: { after: ['b'], before: ['c'] } },
+          { $key: { $after: ['b'], $before: ['c'] } },
           { $key: ['c'], $ref: ['bar', '3'] },
-          { $key: { after: ['c'], before: ['d'] } },
+          { $key: { $after: ['c'], $before: ['d'] } },
           { $key: ['d'], $ref: ['bar', '4'] },
-          { $key: { after: ['d'], before: ['e'] } },
+          { $key: { $after: ['d'], $before: ['e'] } },
           { $key: ['e'], $ref: ['bar', '5'] },
-          { $key: { after: ['e'] } },
+          { $key: { $after: ['e'] } },
         ],
       },
       0,
@@ -51,7 +51,7 @@ test('indexes', async () => {
   const subscription = g.call(
     'watch',
     encodeQuery({
-      foo: { $key: { first: 3 }, x: true },
+      foo: { $key: { $first: 3 }, x: true },
     }),
   );
 
@@ -64,11 +64,11 @@ test('indexes', async () => {
           3: { x: 3 },
         },
         foo: [
-          { $key: { before: ['a'] } },
+          { $key: { $before: ['a'] } },
           { $key: ['a'], $ref: ['bar', '1'] },
-          { $key: { after: ['a'], before: ['b'] } },
+          { $key: { $after: ['a'], $before: ['b'] } },
           { $key: ['b'], $ref: ['bar', '2'] },
-          { $key: { after: ['b'], before: ['c'] } },
+          { $key: { $after: ['b'], $before: ['c'] } },
           { $key: ['c'], $ref: ['bar', '3'] },
         ],
       },
@@ -105,17 +105,17 @@ test('indexes', async () => {
       children: [
         ...encodeGraph(
           [
-            { $key: { before: ['a'] } },
+            { $key: { $before: ['a'] } },
             { $key: ['a'], $ref: ['bar', '1'] },
-            { $key: { after: ['a'], before: ['b'] } },
+            { $key: { $after: ['a'], $before: ['b'] } },
             // While there are no entries in the range
-            // { after: ['a'], before: ['b'] },
+            // { $after: ['a'], $before: ['b'] },
             // our knowledge of the lack of 'b' is more recent
             // our knowledge of other values in this range.
-            { $key: { since: ['b'], until: ['b'] }, $ver: 1 },
-            { $key: { after: ['b'], before: ['c'] } },
+            { $key: { $since: ['b'], $until: ['b'] }, $ver: 1 },
+            { $key: { $after: ['b'], $before: ['c'] } },
             { $key: ['c'], $ref: ['bar', '3'] },
-            { $key: { after: ['c'], before: ['d'] } },
+            { $key: { $after: ['c'], $before: ['d'] } },
             { $key: ['d'], $ref: ['bar', '4'] },
           ],
           0,

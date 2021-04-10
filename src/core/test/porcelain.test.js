@@ -6,7 +6,7 @@ test('Porcelain read', async () => {
   store.use(GraffyFill());
 
   const expectedBooksQuery = {
-    $key: { first: 2 },
+    $key: { $first: 2 },
     title: true,
     author: { name: true },
   };
@@ -30,7 +30,7 @@ test('Porcelain read', async () => {
   store.onRead('users', onReadUsers);
 
   const result = await store.read('books', {
-    $key: { first: 2 },
+    $key: { $first: 2 },
     title: true,
     author: { name: true },
   });
@@ -94,7 +94,7 @@ test('Porcelain subscription', async () => {
   store.onWatch('users', onWatchUsers);
 
   const result = store.watch('books', {
-    $key: { first: 2 },
+    $key: { $first: 2 },
     title: true,
     author: { name: true },
   });

@@ -17,7 +17,7 @@ function makeNode(object, key, ver) {
   const node =
     key === ROOT_KEY
       ? {}
-      : encodeArgs(Array.isArray(key) ? { cursor: key } : key);
+      : encodeArgs(Array.isArray(key) ? { $cursor: key } : key);
 
   node.version = ver;
 

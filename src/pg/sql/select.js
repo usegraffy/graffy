@@ -91,29 +91,40 @@ function getBoundCond(orderCols, bound, kind) {
   if (orderCols.length > 1 && bound.length > 1) {
     const subCond = getBoundCond(orderCols.slice(1), bound.slice(1), kind);
     switch (kind) {
-      case 'after':
-      case 'since':
+      case '$after':
+      case '$since':
         return sql`${lhs} > ${rhs} OR ${lhs} = ${rhs} AND (${subCond})`;
-      case 'before':
-      case 'until':
+      case '$before':
+      case '$until':
         return sql`${lhs} < ${rhs} OR ${lhs} = ${rhs} AND (${subCond})`;
     }
   } else {
     switch (kind) {
-      case 'after':
+      case '$after':
         return sql`${lhs} > ${rhs}`;
-      case 'since':
+      case '$since':
         return sql`${lhs} >= ${rhs}`;
-      case 'before':
+      case '$before':
         return sql`${lhs} < ${rhs}`;
-      case 'until':
+      case '$until':
         return sql`${lhs} <= ${rhs}`;
     }
   }
 }
 
 function getArgSql(
-  { first, last, after, before, since, until, order, cursor: _, id, ...filter },
+  {
+    $first,
+    $last,
+    $after,
+    $before,
+    $since,
+    $until,
+    $order,
+    $cursor: _,
+    id,
+    ...filter
+  },
   options,
 ) {
   const { args } = options;
@@ -134,28 +145,28 @@ function getArgSql(
     throw Error('pg.unknown_arg:' + prop);
   };
 
-  const orderCols = (order || [options.idCol]).map(lookup);
+  const orderCols = ($order || [options.idCol]).map(lookup);
   const where = [];
 
   if (!isEmpty(filter)) where.push(...getSql(filter, lookup));
-  if (after) where.push(getBoundCond(orderCols, after, 'after'));
-  if (before) where.push(getBoundCond(orderCols, before, 'before'));
-  if (since) where.push(getBoundCond(orderCols, since, 'since'));
-  if (until) where.push(getBoundCond(orderCols, until, 'until'));
+  if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
+  if ($before) where.push(getBoundCond(orderCols, $before, '$before'));
+  if ($since) where.push(getBoundCond(orderCols, $since, '$since'));
+  if ($until) where.push(getBoundCond(orderCols, $until, '$until'));
 
   const cursor = sql`jsonb_build_array(${join(orderCols)})`;
   const key = isEmpty(filter)
     ? cursor
     : sql`${JSON.stringify(
         filter,
-      )}::jsonb || jsonb_build_object('cursor', ${cursor})`;
+      )}::jsonb || jsonb_build_object('$cursor', ${cursor})`;
 
   return {
     key,
     where,
     order: join(
-      orderCols.map((col) => sql`${col} ${last ? sql`DESC` : sql`ASC`}`),
+      orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
     ),
-    limit: first || last,
+    limit: $first || $last,
   };
 }

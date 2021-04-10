@@ -11,13 +11,13 @@ export default function Pagination({ range, count, onNext, onPrev }) {
         &lt;
       </button>
       <span className="CurrPage">
-        {range.first && `First ${range.first} `}
-        {range.last && `Last ${range.last} `}
-        {range.after && `after ${getTime(range.after[0])} `}
-        {range.before && `before ${getTime(range.before[0])} `}
-        {range.since && `since ${getTime(range.since[0])} `}
-        {range.until && `until ${getTime(range.until[0])} `}
-        {count !== (range.first || range.last) ? `(got ${count})` : ''}
+        {range.$first && `First ${range.$first} `}
+        {range.$last && `Last ${range.$last} `}
+        {range.$after && `after ${getTime(range.$after[0])} `}
+        {range.$before && `before ${getTime(range.$before[0])} `}
+        {range.$since && `since ${getTime(range.$since[0])} `}
+        {range.$until && `until ${getTime(range.$until[0])} `}
+        {count !== (range.$first || range.$last) ? `(got ${count})` : ''}
       </span>
       <button className="NextPage" {...getButtonProps(onNext)}>
         &gt;
@@ -76,10 +76,10 @@ export default function Pagination({ range, count, onNext, onPrev }) {
 Pagination.propTypes = {
   count: PropTypes.number.isRequired,
   range: PropTypes.shape({
-    first: PropTypes.number,
-    last: PropTypes.number,
-    after: PropTypes.arrayOf(PropTypes.number),
-    before: PropTypes.arrayOf(PropTypes.number),
+    $first: PropTypes.number,
+    $last: PropTypes.number,
+    $after: PropTypes.arrayOf(PropTypes.number),
+    $before: PropTypes.arrayOf(PropTypes.number),
   }),
   onNext: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,
   onPrev: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,

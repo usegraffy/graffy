@@ -27,7 +27,7 @@ describe('final', () => {
 
   test('range', async () => {
     store.write({ baz: [{ $key: ['a'], $ref: 'foo' }] });
-    const result = await store.read('baz', [{ $key: { first: 3 } }]);
+    const result = await store.read('baz', [{ $key: { $first: 3 } }]);
     const expectedResult = [42];
     expect(result).toEqual(expectedResult);
   });

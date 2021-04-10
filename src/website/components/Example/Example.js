@@ -11,18 +11,18 @@ const PAGE_SIZE = 12;
 function getQuery(range) {
   return {
     visitors: {
-      $key: { order: ['ts'], ...range },
+      $key: { $order: ['ts'], ...range },
       id: true,
       ts: true,
       name: true,
       avatar: true,
-      pageviews: { $key: { last: 3 } },
+      pageviews: { $key: { $last: 3 } },
     },
   };
 }
 
 export default function Example() {
-  const [range, setRange] = useState({ first: PAGE_SIZE });
+  const [range, setRange] = useState({ $first: PAGE_SIZE });
   const q = getQuery(range);
   const { data, loading } = useQuery(q);
 
@@ -36,10 +36,10 @@ export default function Example() {
 
   const visitors = data.visitors;
 
-  if (!loading && !prevPage && nextPage && range.last) {
+  if (!loading && !prevPage && nextPage && range.$last) {
     // We have reached the beginning of the list while paginating backwards.
     // Flip the query to the first N.
-    setRange({ first: PAGE_SIZE });
+    setRange({ $first: PAGE_SIZE });
     return <Spinner />;
   }
 

@@ -22,7 +22,7 @@ test('inward', () => {
   const query = encodeGraph({
     posts: [
       {
-        $key: { first: 10 },
+        $key: { $first: 10 },
       },
     ],
   });
@@ -31,8 +31,8 @@ test('inward', () => {
       id: 'user1',
       posts: [
         {
-          $key: { first: 10 },
-          $ref: ['posts', { authorId: 'user1', first: 10 }],
+          $key: { $first: 10 },
+          $ref: ['posts', { authorId: 'user1', $first: 10 }],
         },
       ],
     },
