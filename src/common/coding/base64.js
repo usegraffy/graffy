@@ -1,4 +1,4 @@
-import alpha from './alphabet';
+import alpha from './alphabet.js';
 
 function getByte(view, offset) {
   return offset < view.byteLength ? view.getUint8(offset) : 0;

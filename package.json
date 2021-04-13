@@ -17,7 +17,8 @@
     "next": "NEXTJS=1 next",
     "build": "NEXTJS=1 next build",
     "start": "node --es-module-specifier-resolution=node src/website/server.js",
-    "rogue": "node --es-module-specifier-resolution=node src/rogue-admin/server.js"
+    "rogue": "node --es-module-specifier-resolution=node src/rogue-admin/server.js",
+    "flatc": "flatc --js --es6-js-export --force-empty-vectors -o src/common/binary/ src/common/binary/*.fbs"
   },
   "workspaces": [
     "src/*",
@@ -41,6 +42,7 @@
     "@mapbox/rehype-prism": "^0.5.0",
     "@mdx-js/loader": "^1.6.6",
     "@mdx-js/mdx": "^1.6.6",
+    "@msgpack/msgpack": "^2.5.1",
     "@next/mdx": "10.0.3",
     "@testing-library/react-hooks": "^3.4.2",
     "babel-eslint": "^10.1.0",
@@ -54,6 +56,7 @@
     "express": "^4.17.1",
     "fakataaar": "^1.0.0",
     "faker": "^5.1.0",
+    "flatbuffers": "^1.12.0",
     "global": "^4.4.0",
     "globby": "^11.0.1",
     "graphiql": "^1.0.5",

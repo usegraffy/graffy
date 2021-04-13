@@ -1,0 +1,47 @@
+namespace graph;
+
+union GraphNodeUnion {
+  GraphPrefix: GraphBranch,
+  GraphBranch,
+  GraphLeaf,
+  GraphRange,
+  GraphLink
+}
+
+table GraphNode {
+  node: GraphNodeUnion;
+}
+
+table GraphItem {
+  key: [ubyte];
+  version: [ubyte];
+  child: [ubyte] (nested_flatbuffer: "GraphNode");
+}
+
+table GraphRoot {
+  options: [ubyte];
+  children: [GraphItem];
+  version: [ubyte];
+}
+
+table GraphBranch {
+  children: [GraphItem];
+}
+
+table GraphLeaf {
+  value: [ubyte];
+}
+
+table GraphRange {
+  end: [ubyte];
+}
+
+table GraphLink {
+  path: [PathSeg];
+}
+
+table PathSeg {
+  isprefix: bool;
+}
+
+root_type GraphRoot;

@@ -1,0 +1,47 @@
+namespace query;
+
+union QueryNode {
+  QueryBranch,
+  QueryLeaf,
+  QueryRangeBranch,
+  QueryRangeLeaf
+}
+
+table QueryRoot {
+  options: [ubyte];
+  children: [QueryList];
+  version: [ubyte];
+}
+
+table QueryList {
+  prefix: [ubyte];
+  nodes: [QueryItem];
+}
+
+table QueryItem {
+  key: [ubyte];
+  version: [ubyte];
+  node: QueryNode;
+}
+
+table QueryBranch {
+  children: [QueryList];
+}
+
+table QueryLeaf {
+  sum: ushort;
+}
+
+table QueryRangeBranch {
+  end: [ubyte];
+  limit: ushort;
+  children: [QueryList];
+}
+
+table QueryRangeLeaf {
+  end: [ubyte];
+  limit: ushort;
+  sum: ushort;
+}
+
+root_type QueryRoot;
