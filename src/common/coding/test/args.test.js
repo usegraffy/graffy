@@ -49,3 +49,10 @@ test('firstNRange', () => {
   const decoded = decode(encoded);
   expect(decoded).toEqual(original);
 });
+
+test('filterOnly', () => {
+  const original = { email: 'alice@example.com' };
+  const encoded = encode(original);
+  const decoded = decode(encoded);
+  expect(decoded).toEqual(original);
+});

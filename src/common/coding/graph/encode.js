@@ -2,6 +2,7 @@ import { encodeArgs } from '../index.js';
 import { makePath, wrap } from '../../path/index.js';
 import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
+import { format } from '@graffy/testing';
 
 export const ROOT_KEY = Symbol();
 
@@ -31,8 +32,15 @@ function makeNode(object, key, ver, linked = []) {
     node.value = $val;
   } else if ($ref) {
     node.path = makePath($ref);
-    if (!isEmpty(rest))
-      linked.push(wrap(makeNode(rest, key, node.version, linked), node.path));
+    if (!isEmpty(rest)) {
+      linked.push(
+        wrap(
+          makeNode(rest, key, node.version, linked).children,
+          node.path,
+          node.version,
+        )[0],
+      );
+    }
   } else if (Array.isArray(object)) {
     const children = object
       .map((obj) => makeNode(obj, undefined, node.version, linked))
@@ -76,7 +84,7 @@ function makeNode(object, key, ver, linked = []) {
 
   if (key === ROOT_KEY) {
     node.children = node.children || [];
-    for (const node of linked) merge(node.children, node.children);
+    for (const linkedNode of linked) merge(node.children, [linkedNode]);
   }
 
   if (

@@ -11,9 +11,7 @@ function joinEncode(value, prefix) {
 }
 
 export function encode(arg) {
-  if (!isArgObject(arg)) {
-    arg = { $cursor: arg };
-  }
+  if (!isArgObject(arg)) return { key: joinEncode(arg, '') };
 
   const {
     $first,
@@ -26,6 +24,8 @@ export function encode(arg) {
     ...filter
   } = arg;
   const hasRangeArg = $before || $after || $since || $until || $first || $last;
+
+  if (!hasRangeArg && !$cursor) return { key: joinEncode(arg, '') };
 
   throwIf('first_and_$last', $first && $last);
   throwIf('after_and_$since', $after && $since);
@@ -59,19 +59,10 @@ export function encode(arg) {
 
   Key and End might take one of these forms:
 
-  order.filter.$since -> order.filter.$until
-  order.filter.cursor
-
-  order..$since -> order..$until
-  order..cursor
-
-  .filter.$since -> .filter.$until
-  .filter.cursor
-
-  $since -> $until
-  cursor
-
-  .filter.
+  filter.since .. filter.until
+  since .. until
+  filter.cursor
+  filter OR cursor (not distinguished)
 */
 
 function splitEncoded(encodedKey) {
@@ -99,8 +90,8 @@ export function decode(node) {
   if (kParts.prefix) Object.assign(args, decodeValue(kParts.prefix));
 
   if (typeof end === 'undefined') {
-    if (isEmpty(args) && !isArgObject(kParts.value)) return kParts.value;
-    if (typeof kParts.value !== 'undefined') args.$cursor = kParts.value;
+    if (isEmpty(args)) return kParts.value;
+    args.$cursor = kParts.value;
     return args;
   }
 

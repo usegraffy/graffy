@@ -1,6 +1,6 @@
 import sql, { join, raw, empty } from 'sql-template-tag';
 import { isEmpty, makePath } from '@graffy/common';
-import { getSql } from '../filter';
+import { getFilterSql } from '../filter';
 
 import debug from 'debug';
 const log = debug('graffy:pg:select');
@@ -22,7 +22,8 @@ export function selectByArgs(args, options, { forUpdate } = {}) {
     )
     FROM "${raw(table)}"
     ${where.length ? sql`WHERE ${join(where, ` AND `)}` : empty}
-    ORDER BY ${order} LIMIT ${clampedLimit}
+    ${order ? sql`ORDER BY ${order}` : empty}
+    LIMIT ${clampedLimit}
     ${forUpdate ? sql`FOR UPDATE` : empty}
   `;
 }
@@ -113,59 +114,70 @@ function getBoundCond(orderCols, bound, kind) {
 }
 
 function getArgSql(
-  {
-    $first,
-    $last,
-    $after,
-    $before,
-    $since,
-    $until,
-    $order,
-    $cursor: _,
-    id,
-    ...filter
-  },
+  { $first, $last, $after, $before, $since, $until, $cursor: _, ...rest },
   options,
 ) {
+  const { $order, ...filter } = rest;
   const { args } = options;
+
+  const lookupExpr = (prefix, suffix = []) => {
+    const { role, name } = args[prefix];
+    return role === 'gin'
+      ? sql`"${raw(name)}" #>> '{"${[prefix].concat(suffix).join('","')}"}'`
+      : suffix.length
+      ? sql`"${raw(name)}" #>> '{"${suffix.join('","')}"}'`
+      : sql`"${raw(name)}"`;
+  };
 
   const lookup = (prop) => {
     // Fast path for the direct arg lookup case.
-    if (args[prop]) return raw(`"${args[prop].name}"`);
+    if (args[prop]) return lookupExpr(prop);
 
     const propArray = makePath(prop);
     const suffix = [];
     while (propArray.length) {
       suffix.unshift(propArray.pop());
       const propPrefix = propArray.join('.');
-      if (args[propPrefix]) {
-        return sql`"${raw(args[propPrefix].name)}" #>> {${suffix.join(',')}}`;
-      }
+      if (args[propPrefix]) return lookupExpr(propPrefix, suffix);
     }
     throw Error('pg.unknown_arg:' + prop);
   };
 
-  const orderCols = ($order || [options.idCol]).map(lookup);
-  const where = [];
+  const hasRangeArg =
+    $before || $after || $since || $until || $first || $last || $order;
 
-  if (!isEmpty(filter)) where.push(...getSql(filter, lookup));
+  let key;
+  const where = [];
+  if (!isEmpty(filter)) {
+    where.push(getFilterSql(filter, lookup));
+    key = sql`${JSON.stringify(filter)}::jsonb`;
+  }
+
+  if (!hasRangeArg) return { key, where, limit: 1 };
+
+  const orderCols = ($order || [options.idCol]).map(lookup);
+
   if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
   if ($before) where.push(getBoundCond(orderCols, $before, '$before'));
   if ($since) where.push(getBoundCond(orderCols, $since, '$since'));
   if ($until) where.push(getBoundCond(orderCols, $until, '$until'));
 
-  const cursor = sql`jsonb_build_array(${join(orderCols)})`;
-  const key = isEmpty(filter)
-    ? cursor
-    : sql`${JSON.stringify(
-        filter,
-      )}::jsonb || jsonb_build_object('$cursor', ${cursor})`;
+  key = sql`(${join(
+    [
+      key,
+      $order &&
+        sql`jsonb_build_object('$order', jsonb_build_array(${join($order)}))`,
+      sql`jsonb_build_object('$cursor', jsonb_build_array(${join(orderCols)}))`,
+    ].filter(Boolean),
+    ` || `,
+  )})`;
 
   return {
     key,
     where,
     order: join(
       orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
+      `, `,
     ),
     limit: $first || $last,
   };

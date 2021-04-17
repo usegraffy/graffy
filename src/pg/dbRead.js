@@ -1,6 +1,6 @@
 import { selectByArgs, selectByIds, readSql } from './sql';
 import { linkResult } from './link';
-import { acquirePool, releasePool } from './pool';
+import pool from './pool';
 import { isArgObject, decodeArgs } from '@graffy/common';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
@@ -32,8 +32,6 @@ export default async function dbRead(query, pgOptions) {
     );
   }
 
-  const pool = acquirePool();
-
   const results = (await Promise.all(sqls.map((sql) => readSql(sql, pool))))
     .map((res, i) => transforms[i](res))
     .flat(2);
@@ -62,7 +60,6 @@ export default async function dbRead(query, pgOptions) {
     What we return: [{ id: 1, ...}], [{ id: 2, ... }]
   */
 
-  releasePool();
   log(query, results);
   return results;
 }

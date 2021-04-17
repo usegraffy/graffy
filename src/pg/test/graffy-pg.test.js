@@ -5,7 +5,7 @@ import { populate } from './setup';
 import debug from 'debug';
 const log = debug('graffy:pg:test');
 
-describe('postgres', () => {
+describe.skip('postgres', () => {
   let store;
 
   beforeEach(async () => {
@@ -65,4 +65,6 @@ describe('postgres', () => {
       id: 'user1',
     });
   });
+
+  test('scenario 2');
 });

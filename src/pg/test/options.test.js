@@ -42,6 +42,7 @@ test('sink', () => {
     },
     args: {
       uid: { name: 'uid', role: 'primary' },
+      userType: { name: 'type', role: 'simple' },
       locale: { name: 'tags', role: 'gin' },
       timezone: { name: 'tags', role: 'gin' },
     },

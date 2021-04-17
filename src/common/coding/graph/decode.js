@@ -74,7 +74,7 @@ function decodeChildren(graph, query, links) {
   }
 
   /*
-    We return an array, not an object, as the decodeGraphd value in three
+    We return an array, not an object, as the decoded value in three
     situations:
 
     1. The query had pagination parameters
@@ -89,7 +89,6 @@ function decodeChildren(graph, query, links) {
     } else if (isPaginated(query)) {
       return makeArray(graph, query, links, resObj);
     }
-    return resObj;
   }
 
   if (hasEncoded) {

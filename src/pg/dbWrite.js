@@ -1,6 +1,6 @@
 import { selectByArgs, selectByIds, insert, update, readSql } from './sql';
 import { linkChange } from './link';
-import { acquirePool, releasePool } from './pool';
+import pool from './pool';
 import {
   isArgObject,
   isRange,
@@ -46,16 +46,15 @@ export default async function dbWrite(change, pgOptions) {
     );
   }
 
-  const pool = acquirePool();
   const client = await pool.connect();
   await client.query(sql`BEGIN TRANSACTION`);
 
   function writeObject(current, object) {
     if (current) {
-      const updated = object.$rng ? object : mergeObject(current, object);
+      const updated = object.$put ? object : mergeObject(current, object);
       return writeSql(update(updated, pgOptions), client);
     } else {
-      if (!object[pgOptions.idCol] || !object.$rng) {
+      if (!object[pgOptions.idCol] || !object.$put) {
         throw Error('pg_insert.not_full_object');
       }
       return writeSql(insert(object, pgOptions), client);
@@ -72,7 +71,6 @@ export default async function dbWrite(change, pgOptions) {
 
   await client.query(sql`COMMIT`);
   client.release();
-  releasePool();
   log(change);
   return change;
 }

@@ -34,14 +34,18 @@ export default function (prefix, { table, columns = defaults, ...rest }) {
         setOnce(`${table} idCol`, acc, 'idCol', name);
         setOnce(`${table} idProp`, acc, 'idProp', prop);
         setOnce(`${table} idArg`, acc.args, prop, { role, name });
+        acc.props[prop] = acc.props[prop] || {};
+        setOnce(`${table}/${prop}:${role}`, acc.props[prop], 'data', name);
+        acc.columns[name] = { role, prop };
       }
       if (role === 'default') setOnce(`${table} default`, acc, 'defCol', name);
       if (role === 'version') setOnce(`${table} version`, acc, 'verCol', name);
 
-      if (role === 'simple' || role === 'primary') {
+      if (role === 'simple') {
         prop = prop || name;
         acc.props[prop] = acc.props[prop] || {};
         setOnce(`${table}/${prop}:${role}`, acc.props[prop], 'data', name);
+        setOnce(`${table}/${prop}:${role}`, acc.args, prop, { role, name });
         acc.columns[name] = { role, prop };
       }
 

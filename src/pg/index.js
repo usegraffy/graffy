@@ -8,12 +8,13 @@ import {
   finalize,
   slice,
   wrap,
+  wrapObject,
   unwrap,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 import dbRead from './dbRead';
 import dbWrite from './dbWrite';
-import { acquirePool, releasePool } from './pool';
+import pool from './pool';
 
 import debug from 'debug';
 const log = debug('graffy:pg:index');
@@ -31,9 +32,7 @@ export default (opts = {}) => (store) => {
 
   async function poll() {
     if (!watchers.size) return;
-    const pool = acquirePool();
     const res = await readSql(selectUpdatedSince(timestamp, pgOptions), pool);
-    releasePool();
 
     for (const [object] of res) {
       for (const { query, push } of watchers) {
@@ -55,11 +54,17 @@ export default (opts = {}) => (store) => {
 
   setInterval(poll, pgOptions.pollInterval);
 
-  async function read(query) {
-    query = unwrap(query, store.path);
+  async function read(rootQuery) {
+    const query = unwrap(rootQuery, store.path);
     log(format(query));
     const res = await dbRead(query, pgOptions);
-    return wrap(finalize(encodeGraph(res), query), store.path);
+    log(format(encodeGraph(wrapObject(res, store.path))));
+    const rootResult = finalize(
+      encodeGraph(wrapObject(res, store.path)),
+      rootQuery,
+    );
+    log(format(rootResult));
+    return rootResult;
   }
 
   async function write(change) {

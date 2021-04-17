@@ -23,7 +23,7 @@ test('example', async () => {
       SELECT "data" || jsonb_build_object(
         'id', "id", 'userType', "type"
       ) || jsonb_build_object(
-        '$key', jsonb_build_array("id"),
+        '$key', (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
         '$ref', array[${'user'}, "id"]
       )
       FROM "user" ORDER BY "id" ASC LIMIT ${10}
