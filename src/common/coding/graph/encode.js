@@ -2,12 +2,13 @@ import { encodeArgs } from '../index.js';
 import { makePath, wrap } from '../../path/index.js';
 import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
+import finalize from './finalize.js';
 import { format } from '@graffy/testing';
 
 export const ROOT_KEY = Symbol();
 
 function makeNode(object, key, ver, linked = []) {
-  const { $key, $ref, $ver, $val, $err, $opt, ...rest } = object || {};
+  const { $key, $ref, $ver, $val, $put, $err, $opt, ...rest } = object || {};
   if (!key && !$key) {
     throw Error(`makeNode.no_key ${key} ${JSON.stringify($key)}`);
   }
@@ -16,7 +17,7 @@ function makeNode(object, key, ver, linked = []) {
   // }
 
   key = key || $key;
-  const node = key === ROOT_KEY ? {} : encodeArgs(key);
+  let node = key === ROOT_KEY ? {} : encodeArgs(key);
 
   node.version = ver;
 
@@ -67,6 +68,14 @@ function makeNode(object, key, ver, linked = []) {
     }
   } else {
     node.value = object;
+  }
+
+  if ($put) {
+    node.children = finalize(
+      node.children,
+      $put === true ? null : $put.map((arg) => encodeArgs(arg)),
+      node.version,
+    );
   }
 
   // TODO: Uncomment to introduce version invariant.

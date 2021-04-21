@@ -65,7 +65,7 @@ export async function readSql(sqlQuery, client) {
 
 /*--- helpers ---*/
 
-function getSelectCols(options) {
+export function getSelectCols(options) {
   return join(
     [
       options.defCol && raw(`"${options.defCol}"`),
@@ -113,7 +113,7 @@ function getBoundCond(orderCols, bound, kind) {
   }
 }
 
-function getArgSql(
+export function getArgSql(
   { $first, $last, $after, $before, $since, $until, $cursor: _, ...rest },
   options,
 ) {

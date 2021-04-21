@@ -2,7 +2,9 @@ import pg from 'pg';
 
 console.log('This is the actual pool filde');
 
-export default new pg.Pool();
+const pool = new pg.Pool();
+
+export default pool;
 
 // const ENV_TEST = process.env.NODE_ENV === 'testing';
 // let pool = null;
@@ -23,3 +25,13 @@ export default new pg.Pool();
 //     pool = null;
 //   }
 // }
+//
+// process.on('SIGINT', () => {
+//   pool.end();
+//   process.exit();
+// });
+//
+// process.on('SIGTERM', () => {
+//   pool.end();
+//   process.exit();
+// });

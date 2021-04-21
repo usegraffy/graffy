@@ -43,13 +43,18 @@ function decodeChildren(graph, query, links) {
   const resObj = {};
 
   let hasEncoded = false;
+  let hasRanges = false;
   // First, we construct the result object
   for (const node of graph) {
     const key = node.key;
-    if (!hasEncoded && key[0] === '\0') hasEncoded = true;
+    if (key[0] === '\0') hasEncoded = true;
 
     if (isRange(node)) {
-      if (key === node.end) resObj[key] = null;
+      if (key === node.end) {
+        resObj[key] = null;
+      } else {
+        hasRanges = true;
+      }
       continue;
     }
     if (isLink(node)) {
@@ -70,6 +75,42 @@ function decodeChildren(graph, query, links) {
       resObj[key] = child;
     } else {
       resObj[key] = node.value;
+    }
+  }
+
+  if (hasRanges) {
+    const putRanges = [];
+    let last = null;
+    for (let { key, end } of graph) {
+      if (last) {
+        if (last.end) {
+          if (key === keyAfter(last.end)) {
+            last.end = end || key;
+            continue;
+          }
+        } else {
+          if (key === keyAfter(last.key)) key = last.key;
+        }
+      }
+
+      if (end && key !== end) {
+        last = { key, end };
+        putRanges.push(last);
+      } else {
+        last = { key };
+      }
+    }
+
+    console.log(putRanges);
+
+    if (
+      putRanges.length === 1 &&
+      putRanges[0].key === '' &&
+      putRanges[0].end === '\uffff'
+    ) {
+      resObj.$put = true;
+    } else {
+      resObj.$put = putRanges.map((rNode) => decodeArgs(rNode));
     }
   }
 
@@ -106,7 +147,8 @@ function isPaginated({ $key: key } = {}) {
       key.$after ||
       key.$before ||
       key.$since ||
-      key.$until)
+      key.$until ||
+      key.all)
   );
 }
 

@@ -1,4 +1,4 @@
-import { insert } from './upsert.js';
+import { put, patch } from './upsert.js';
 import makeOptions from '../options.js';
 
 import sql from 'sql-template-tag';
@@ -15,10 +15,10 @@ const options = makeOptions(['post$'], {
   },
 });
 
-test('insert', async () => {
+test('put', async () => {
   expectSql(
-    insert(
-      { id: 'post22', type: 'post', name: 'hello', email: 'world' },
+    put(
+      { $put: true, id: 'post22', type: 'post', name: 'hello', email: 'world' },
       options,
     ),
     sql`INSERT INTO "post" ("id", "type", "gin", "data", "version")
@@ -26,6 +26,30 @@ test('insert', async () => {
         ${{ email: 'world' }},
         ${{ name: 'hello', email: 'world' }},
         ${expect.any(Number)})
+      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "gin", "data", "version")
+        = (${'post22'}, ${'post'},
+          ${{ email: 'world' }},
+          ${{ name: 'hello', email: 'world' }},
+          ${expect.any(Number)})
+      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type"))
+    `,
+  );
+});
+
+test('patch', async () => {
+  expectSql(
+    patch(
+      { $put: true, id: 'post22', type: 'post', name: 'hello', email: 'world' },
+      { id: 'post22' },
+      options,
+    ),
+    sql`UPDATE "post" SET ("id", "type", "gin", "data", "version")
+        = (${'post22'}, ${'post'},
+          ${{ email: 'world' }},
+          ${{ name: 'hello', email: 'world' }},
+          ${expect.any(Number)})
+      WHERE "id" = ${'post22'}
+      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type"))
     `,
   );
 });

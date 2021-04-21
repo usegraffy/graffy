@@ -115,3 +115,21 @@ describe('pagination', () => {
     ).toEqual({ $first: 10, $after: 'foo' });
   });
 });
+
+test('put_true', () => {
+  const result = decodeGraph([
+    { key: '', end: 'fon\uffff', version: 0 },
+    { key: 'foo', value: 3, version: 0 },
+    { key: 'foo\0', end: '\uffff', version: 0 },
+  ]);
+  expect(result).toEqual({ foo: 3, $put: true });
+});
+
+test('put_partial', () => {
+  const result = decodeGraph([
+    { key: '', end: 'fon\uffff', version: 0 },
+    { key: 'foo', value: 3, version: 0 },
+    { key: 'foo\0', end: 'goo', version: 0 },
+  ]);
+  expect(result).toEqual({ foo: 3, $put: [{ $until: 'goo' }] });
+});

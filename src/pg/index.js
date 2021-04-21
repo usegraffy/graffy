@@ -55,14 +55,13 @@ export default (opts = {}) => (store) => {
   setInterval(poll, pgOptions.pollInterval);
 
   async function read(rootQuery) {
+    log(format(rootQuery));
     const query = unwrap(rootQuery, store.path);
-    log(format(query));
-    const res = await dbRead(query, pgOptions);
-    log(format(encodeGraph(wrapObject(res, store.path))));
-    const rootResult = finalize(
-      encodeGraph(wrapObject(res, store.path)),
+    const result = await dbRead(query, pgOptions);
+    const rootResult = slice(
+      finalize(encodeGraph(wrapObject(result, store.path)), rootQuery),
       rootQuery,
-    );
+    ).known;
     log(format(rootResult));
     return rootResult;
   }

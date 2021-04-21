@@ -93,3 +93,21 @@ test('bounded_range', () => {
     { key: '\x000VKW\0', end: '\x000VKW\uffff', version: 0 },
   ]);
 });
+
+test('put_true', () => {
+  const result = encodeGraph({ foo: 3, $put: true }, 0);
+  expect(result).toEqual([
+    { key: '', end: 'fon\uffff', version: 0 },
+    { key: 'foo', value: 3, version: 0 },
+    { key: 'foo\0', end: '\uffff', version: 0 },
+  ]);
+});
+
+test('put_partial', () => {
+  const result = encodeGraph({ foo: 3, $put: [{ $until: 'goo' }] }, 0);
+  expect(result).toEqual([
+    { key: '', end: 'fon\uffff', version: 0 },
+    { key: 'foo', value: 3, version: 0 },
+    { key: 'foo\0', end: 'goo', version: 0 },
+  ]);
+});

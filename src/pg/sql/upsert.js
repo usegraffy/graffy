@@ -6,30 +6,31 @@ import {
   mergeObject,
   isEmpty,
 } from '@graffy/common';
+import { getSelectCols, getArgSql } from './select.js';
 
-export function update(object, options) {
-  const { idCol, table } = options;
-  if (!object[idCol]) {
-    throw Error('pg.write_no_id: ' + JSON.stringify(object));
-  }
+export function patch(object, condition, options) {
+  const { table } = options;
+  const { where } = getArgSql(condition, options);
+  if (!where || !where.length) throw Error('pg_write.no_condition');
 
   const row = objectToRow(object, options);
 
   return sql`
-    UPDATE "${raw(table)}" SET ${getUpdateSet(row, options)}
-    WHERE "${raw(idCol)}" = ${row[idCol]}`;
+    UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
+    WHERE ${join(where, ` AND `)}
+    RETURNING (${getSelectCols(options)})`;
 }
 
-export function insert(object, options) {
-  if (!object[options.idCol]) {
-    throw Error('pg.write_no_id: ' + JSON.stringify(object));
-  }
-
+export function put(object, options) {
+  const { idCol, table } = options;
   const row = objectToRow(object, options);
 
   return sql`
-    INSERT INTO "${raw(options.table)}" (${getInsertCols(row, options)})
-    VALUES (${getInsertVals(row, options)})`;
+    INSERT INTO "${raw(table)}" (${getCols(row, options)})
+    VALUES (${getVals(row, options)})
+    ON CONFLICT ("${raw(idCol)}") DO UPDATE SET
+    (${getCols(row, options)}) = (${getVals(row, options)})
+    RETURNING (${getSelectCols(options)})`;
 }
 
 function objectToRow(object, { props, defCol }) {
@@ -40,6 +41,8 @@ function objectToRow(object, { props, defCol }) {
     const { data, gin, tsv, trgm } = props[prop];
     const path = makePath(prop);
     const value = unwrapObject(object, path);
+
+    if (typeof value === 'undefined') continue;
 
     if (data) {
       row[data] = clean(value, false);
@@ -84,7 +87,7 @@ function clean(object, forLookup) {
   for (const prop in object) {
     switch (prop) {
       case '$key':
-      case '$rng':
+      case '$put':
       case '$ref':
         continue;
       case '$val':
@@ -100,17 +103,7 @@ function clean(object, forLookup) {
   return isEmpty(clone) ? null : clone;
 }
 
-function getUpdateSet(row, options) {
-  return join(
-    Object.entries(row)
-      .filter(([name]) => name !== options.idCol)
-      .map(([name, value]) => sql`"${raw(name)}" = ${value}`)
-      .concat(sql`"${raw(options.verCol)}" = ${Date.now()}`),
-    ', ',
-  );
-}
-
-function getInsertCols(row, options) {
+function getCols(row, options) {
   return join(
     Object.keys(row)
       .map((col) => raw(`"${col}"`))
@@ -119,6 +112,16 @@ function getInsertCols(row, options) {
   );
 }
 
-function getInsertVals(row, _options) {
+function getVals(row, _options) {
   return join(Object.values(row).concat(Date.now()), ', ');
+}
+
+function getUpdates(row, options) {
+  return join(
+    Object.entries(row)
+      .filter(([name]) => name !== options.idCol)
+      .map(([name, value]) => sql`"${raw(name)}" = ${value}`)
+      .concat(sql`"${raw(options.verCol)}" = ${Date.now()}`),
+    ', ',
+  );
 }
