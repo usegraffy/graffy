@@ -29,30 +29,25 @@ In this document, *property names* and *paths* refer to the structures in the Gr
   - **prop**, the property name or path that maps to this column. Valid for **simple** and **primary** columns. Defaults to the name of the column.
   - **props**, an array of property names or paths to copy into a **gin**, **tsv** or **trgm** column. Mandatory for these columns.
   - **arg**, the filter argument for querying a **tsv** or **trgm** column. Defaults to the column name.
-- **links**, an object with props as keys and link descriptors as values. The
-  link descriptor contains:
-  - **target**: the prefix of a collection to link into
-  - **backProp**: for filtered links, the prop on the target collection that contains the id of objects in this collection.
+- **links**, an object with props as keys and link templates as values. The
+  link template is an array of strings and objects, which may contain at any _value_ position (including inside the object) a string `$$` followed by a property name. This string will be replaced with a value of that property in this object.
 - **pollInterval**, the interval at which the table is polled, for watch.
 
 ```js
 {
-
   table: string, // the name of the PostgreSQL table
   columns: {
     [columnName]: {
       role: 'primary' | 'simple' | 'default' |
             'version' | 'gin' | 'tsv' | 'trgm',
       prop: string // primary or simple only
-      props: [string] // gin, tsv or trgm only
+      props: string[] // gin, tsv or trgm only
       arg: string // tsv or trgm only
     }
   },
   links: {
-    [prop]: {
-      target: string,
-      backProp: string,
-    }
+    [prop]: string | (string|object)[]
   }
+  pollInterval: number
 }
 ```

@@ -19,6 +19,7 @@ test('put', async () => {
   expectSql(
     put(
       { $put: true, id: 'post22', type: 'post', name: 'hello', email: 'world' },
+      'post22',
       options,
     ),
     sql`INSERT INTO "post" ("id", "type", "gin", "data", "version")
@@ -31,7 +32,8 @@ test('put', async () => {
           ${{ email: 'world' }},
           ${{ name: 'hello', email: 'world' }},
           ${expect.any(Number)})
-      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type"))
+      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type") ||
+        jsonb_build_object('$key', "id"))
     `,
   );
 });
@@ -40,16 +42,17 @@ test('patch', async () => {
   expectSql(
     patch(
       { $put: true, id: 'post22', type: 'post', name: 'hello', email: 'world' },
-      { id: 'post22' },
+      'post22',
       options,
     ),
-    sql`UPDATE "post" SET ("id", "type", "gin", "data", "version")
-        = (${'post22'}, ${'post'},
-          ${{ email: 'world' }},
-          ${{ name: 'hello', email: 'world' }},
-          ${expect.any(Number)})
+    sql`UPDATE "post" SET
+        "type" = ${'post'},
+        "gin" = ${{ email: 'world' }},
+        "data" = ${{ name: 'hello', email: 'world' }},
+        "version" = ${expect.any(Number)}
       WHERE "id" = ${'post22'}
-      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type"))
+      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type") ||
+        jsonb_build_object('$key', "id"))
     `,
   );
 });

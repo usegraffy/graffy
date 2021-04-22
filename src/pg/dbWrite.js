@@ -6,7 +6,6 @@ import {
 import { linkChange } from './link';
 import pool from './pool';
 import {
-  isArgObject,
   isRange,
   decodeArgs,
   decodeGraph,
@@ -32,14 +31,13 @@ export default async function dbWrite(change, pgOptions) {
     }
 
     const object = linkChange(decodeGraph(node.children), pgOptions);
-    const args = decodeArgs(node);
-    const condition = isArgObject(args) ? args : { [pgOptions.idProp]: args };
+    const arg = decodeArgs(node);
 
     if (object.$put) {
       if (object.$put !== true) throw Error('pg_write.partial_put_unsupported');
-      sqls.push(put(object, pgOptions));
+      sqls.push(put(object, arg, pgOptions));
     } else {
-      sqls.push(patch(object, condition, pgOptions));
+      sqls.push(patch(object, arg, pgOptions));
     }
 
     // if (isArgObject(args)) {

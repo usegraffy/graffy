@@ -1,7 +1,5 @@
 import pg from 'pg';
 
-console.log('This is the actual pool filde');
-
 const pool = new pg.Pool();
 
 export default pool;

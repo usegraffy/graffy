@@ -5,12 +5,17 @@ import {
   unwrapObject,
   mergeObject,
   isEmpty,
+  isArgObject,
 } from '@graffy/common';
-import { getSelectCols, getArgSql } from './select.js';
+import getArgSql from './getArgSql.js';
+import getIdMeta from './getIdMeta.js';
+import getSelectCols from './getSelectCols.js';
 
-export function patch(object, condition, options) {
-  const { table } = options;
-  const { where } = getArgSql(condition, options);
+export function patch(object, arg, options) {
+  const { table, idCol } = options;
+  const { where, attrs } = isArgObject(arg)
+    ? getArgSql(arg, options)
+    : { where: [sql`"${raw(idCol)}" = ${arg}`], attrs: getIdMeta(options) };
   if (!where || !where.length) throw Error('pg_write.no_condition');
 
   const row = objectToRow(object, options);
@@ -18,19 +23,34 @@ export function patch(object, condition, options) {
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
     WHERE ${join(where, ` AND `)}
-    RETURNING (${getSelectCols(options)})`;
+    RETURNING (${getSelectCols(options)} || ${attrs})`;
 }
 
-export function put(object, options) {
-  const { idCol, table } = options;
+export function put(object, arg, options) {
+  const { idCol, table, props } = options;
   const row = objectToRow(object, options);
 
+  let meta, conflictTarget;
+  if (isArgObject(arg)) {
+    const { attrs } = getArgSql(arg);
+    meta = attrs;
+    conflictTarget = join(
+      Object.keys(arg).map((prop) => {
+        const col = props[prop]?.data;
+        if (!col) throw Error('pg_write.bad_put_prop:' + prop);
+        return sql`"${raw(col)}"`;
+      }),
+    );
+  } else {
+    meta = getIdMeta(options);
+    conflictTarget = sql`"${raw(idCol)}"`;
+  }
   return sql`
     INSERT INTO "${raw(table)}" (${getCols(row, options)})
     VALUES (${getVals(row, options)})
-    ON CONFLICT ("${raw(idCol)}") DO UPDATE SET
+    ON CONFLICT (${conflictTarget}) DO UPDATE SET
     (${getCols(row, options)}) = (${getVals(row, options)})
-    RETURNING (${getSelectCols(options)})`;
+    RETURNING (${getSelectCols(options)} || ${meta})`;
 }
 
 function objectToRow(object, { props, defCol }) {

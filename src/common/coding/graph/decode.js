@@ -101,8 +101,6 @@ function decodeChildren(graph, query, links) {
       }
     }
 
-    console.log(putRanges);
-
     if (
       putRanges.length === 1 &&
       putRanges[0].key === '' &&
