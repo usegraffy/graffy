@@ -69,7 +69,7 @@ describe('postgres', () => {
       sql`
       SELECT
         "data" || jsonb_build_object( 'id', "id", 'createdAt', "createdAt" ) ||
-        jsonb_build_object( '$key', "id" )
+        jsonb_build_object( '$key', "id", '$ver', now() )
       FROM "users" WHERE "id" IN (${'foo'})
     `,
     );
@@ -96,7 +96,7 @@ describe('postgres', () => {
         "data" || jsonb_build_object( 'id', "id", 'createdAt', "createdAt" ) ||
         jsonb_build_object( '$key', ${JSON.stringify({
           email: 'alice@example.com',
-        })}::jsonb, '$ref', array[${'user'}, "id"] )
+        })}::jsonb, '$ref', array[${'user'}, "id"], '$ver', now() )
       FROM "users"
       WHERE "tags" #>> '{"${'email'}"}' = ${'alice@example.com'}
       LIMIT ${1}
@@ -146,7 +146,7 @@ describe('postgres', () => {
           ) || jsonb_build_object (
             '$cursor', jsonb_build_array ( \"createdAt\", \"id\" )
           )),
-          '$ref', array[${'user'}, "id"]
+          '$ref', array[${'user'}, "id"], '$ver', now()
         )
       FROM "users"
       ORDER BY "createdAt" ASC, "id" ASC

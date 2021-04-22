@@ -1,4 +1,4 @@
-import { selectByArgs, selectByIds, readSql } from './sql';
+import { selectByArgs, selectByIds } from './sql';
 import { linkResult } from './link';
 import pool from './pool';
 import { isArgObject, decodeArgs } from '@graffy/common';
@@ -62,4 +62,14 @@ export default async function dbRead(query, pgOptions) {
 
   log(query, results);
   return results;
+}
+
+async function readSql(sqlQuery, client) {
+  log(sqlQuery.text);
+  log(sqlQuery.values);
+
+  sqlQuery.rowMode = 'array';
+  const result = (await client.query(sqlQuery)).rows;
+  log(result);
+  return result;
 }

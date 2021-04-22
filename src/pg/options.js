@@ -20,7 +20,7 @@ function pushValue(acc, prop, value) {
 
 const defaults = {
   id: { role: 'primary' },
-  data: { role: 'default' },
+  data: { role: 'default', updater: '||' },
   version: { role: 'version' },
 };
 
@@ -28,7 +28,7 @@ export default function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';
 
   const columnOptions = Object.entries(columns).reduce(
-    (acc, [name, { role, prop, props, arg }]) => {
+    (acc, [name, { role, prop, props, arg, updater }]) => {
       if (role === 'primary') {
         prop = prop || name;
         setOnce(`${table} idCol`, acc, 'idCol', name);
@@ -64,9 +64,11 @@ export default function (prefix, { table, columns = defaults, ...rest }) {
         }
       }
 
+      if (updater) acc.updaters[name] = updater;
+
       return acc;
     },
-    { columns: {}, props: {}, args: {} },
+    { columns: {}, props: {}, args: {}, updaters: {} },
   );
 
   if (!columnOptions.idCol) throw Error(`pg.no_primary_column: ${table}`);

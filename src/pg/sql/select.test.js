@@ -24,7 +24,7 @@ test('example', async () => {
         'id', "id", 'userType', "type"
       ) || jsonb_build_object(
         '$key', (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
-        '$ref', array[${'user'}, "id"]
+        '$ref', array[${'user'}, "id"], '$ver', now()
       )
       FROM "user" ORDER BY "id" ASC LIMIT ${10}
     `,

@@ -41,7 +41,7 @@ describe('postgres', () => {
         columns: {
           id: { role: 'primary' },
           tags: { role: 'gin', props: ['email', 'phone'] },
-          data: { role: 'default' },
+          data: { role: 'default', updater: '||' },
           createdAt: { role: 'simple' },
           version: { role: 'version' },
         },
@@ -68,12 +68,12 @@ describe('postgres', () => {
       pool.query.mock.calls[0][0],
       sql`
       UPDATE "users" SET
-        "data" = ${{ name: 'Alice' }},
-        "version" = ${expect.any(Number)}
+        "data" = "data" || ${{ name: 'Alice' }},
+        "version" = now()
       WHERE "id" = ${'foo'}
       RETURNING
         ("data" || jsonb_build_object('id', "id", 'createdAt', "createdAt") ||
-        jsonb_build_object( '$key', "id" ))
+        jsonb_build_object( '$key', "id", '$ver', now() ))
     `,
     );
     expect(result).toEqual({

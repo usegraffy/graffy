@@ -45,13 +45,3 @@ export function selectUpdatedSince(version, options) {
     LIMIT ${MAX_LIMIT}
   `;
 }
-
-export async function readSql(sqlQuery, client) {
-  log(sqlQuery.text);
-  log(sqlQuery.values);
-
-  sqlQuery.rowMode = 'array';
-  const result = (await client.query(sqlQuery)).rows;
-  log(result);
-  return result;
-}

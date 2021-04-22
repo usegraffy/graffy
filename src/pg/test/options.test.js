@@ -7,6 +7,7 @@ test('no_options', () => {
     columns: { id: { prop: 'id', role: 'primary' } },
     props: { id: { data: 'id' } },
     args: { id: { name: 'id', role: 'primary' } },
+    updaters: { data: '||' },
     links: {},
     idCol: 'id',
     idProp: 'id',
@@ -22,7 +23,7 @@ test('sink', () => {
       columns: {
         uid: { role: 'primary' },
         type: { role: 'simple', prop: 'userType' },
-        config: { role: 'default' },
+        config: { role: 'default', updater: '||' },
         tags: { role: 'gin', props: ['locale', 'timezone'] },
         version: { role: 'version' },
       },
@@ -45,6 +46,9 @@ test('sink', () => {
       userType: { name: 'type', role: 'simple' },
       locale: { name: 'tags', role: 'gin' },
       timezone: { name: 'tags', role: 'gin' },
+    },
+    updaters: {
+      config: '||',
     },
     links: {},
     idProp: 'uid',

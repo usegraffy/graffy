@@ -140,8 +140,17 @@ function getUpdates(row, options) {
   return join(
     Object.entries(row)
       .filter(([name]) => name !== options.idCol)
-      .map(([name, value]) => sql`"${raw(name)}" = ${value}`)
-      .concat(sql`"${raw(options.verCol)}" = ${Date.now()}`),
+      .map(([name, value]) => {
+        const updater = options.updaters[name];
+        return sql`"${raw(name)}" = ${
+          updater === '||'
+            ? sql`"${raw(name)}" || ${value}`
+            : updater
+            ? sql`${raw(updater)}("${raw(name)}", ${value})`
+            : value
+        }`;
+      })
+      .concat(sql`"${raw(options.verCol)}" = now()`),
     ', ',
   );
 }
