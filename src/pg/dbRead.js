@@ -1,67 +1,73 @@
 import { selectByArgs, selectByIds } from './sql';
 import { linkResult } from './link';
 import pool from './pool';
-import { isArgObject, decodeArgs } from '@graffy/common';
+import {
+  isArgObject,
+  decodeArgs,
+  add,
+  isEmpty,
+  wrap,
+  unwrap,
+  finalize,
+  merge,
+  slice,
+  encodeGraph,
+} from '@graffy/common';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
 
-export default async function dbRead(query, pgOptions) {
-  const sqls = [];
-  const ids = [];
-  const transforms = [];
-  const idSubQueries = [];
+export default async function dbRead(rootQuery, pgOptions, store) {
+  const idQueries = {};
+  const refQuery = [];
+  const promises = [];
+  const results = [];
+
+  async function getByArgs(args, subQuery) {
+    const result = await readSql(selectByArgs(args, pgOptions), pool);
+    add(refQuery, linkResult(result, subQuery, pgOptions));
+
+    merge(
+      results,
+      wrap(finalize(encodeGraph(result), subQuery), pgOptions.prefix),
+    );
+  }
+
+  async function getByIds() {
+    const result = await readSql(
+      selectByIds(Object.keys(idQueries), pgOptions),
+      pool,
+    );
+
+    result.forEach((object) => {
+      const subQuery = idQueries[object[pgOptions.idProp]];
+      add(refQuery, linkResult([object], subQuery, pgOptions));
+      merge(
+        results,
+        wrap(finalize(encodeGraph([object]), subQuery), pgOptions.prefix),
+      );
+    });
+  }
+
+  const query = unwrap(rootQuery, store.path);
 
   for (const node of query) {
     const args = decodeArgs(node);
 
     if (isArgObject(args)) {
-      sqls.push(selectByArgs(args, pgOptions));
-      transforms.push((res) => linkResult(res, node.children, pgOptions));
+      promises.push(getByArgs(args, node.children));
     } else {
-      ids.push(node.key);
-      idSubQueries.push(node.children);
+      idQueries[node.key] = node.children;
     }
   }
 
-  if (ids.length) {
-    sqls.push(selectByIds(ids, pgOptions));
-    transforms.push((res) =>
-      res.map(
-        (object, i) => linkResult([object], idSubQueries[i], pgOptions)[0],
-      ),
-    );
+  if (!isEmpty(idQueries)) promises.push(getByIds());
+  await promises;
+  if (refQuery.length) {
+    merge(results, await store.call('read', refQuery));
   }
 
-  const results = (await Promise.all(sqls.map((sql) => readSql(sql, pool))))
-    .map((res, i) => transforms[i](res))
-    .flat(2);
-
-  /*
-    Why flat(2)?
-
-    The SQL we generate construct JSON objects inside Postgres and produce
-    rows with one field each, the constructed JSON. We use rowMode: array to
-    so each row is an array containing its one field.
-
-    One row: [{ id: ... }],
-
-    Each SQL query produces an array of rows:
-
-    One SQL query result: [[{ id: 1, ...}], [{ id: 2, ... }], ... ]
-
-    And we make several SQL queries, and wait for them together using
-    Promise.all, which gives an array of the results from each SQL query:
-
-    All SQL results: [[[{ id: 1, ...}], [{ id: 2, ... }], ...], ...]
-
-    We therefore use .flat(2) to make this a combined array of objects from
-    across all queries:
-
-    What we return: [{ id: 1, ...}], [{ id: 2, ... }]
-  */
-
   log(query, results);
-  return results;
+  return slice(results, query).known;
 }
 
 async function readSql(sqlQuery, client) {
@@ -69,7 +75,8 @@ async function readSql(sqlQuery, client) {
   log(sqlQuery.values);
 
   sqlQuery.rowMode = 'array';
-  const result = (await client.query(sqlQuery)).rows;
+  const result = (await client.query(sqlQuery)).rows.flat();
+  // Each row is an array, as there is only one column returned.
   log(result);
   return result;
 }

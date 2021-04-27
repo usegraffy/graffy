@@ -1,39 +1,88 @@
 import {
+  wrap,
   unwrap,
   wrapObject,
   unwrapObject,
   mergeObject,
   decodeArgs,
+  encodeArgs,
   makePath,
 } from '@graffy/common';
 
-export function linkResult(objects, query, { links: linkSpecs, idProp }) {
+function makeRef(template, object) {
+  function replacePlaceholders(key) {
+    if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
+      return unwrapObject(object, key.slice(2));
+    }
+    if (Array.isArray(key)) {
+      return key.map(replacePlaceholders);
+    }
+    if (typeof key === 'object' && key) {
+      const result = {};
+      for (const prop in key) result[prop] = replacePlaceholders(key[prop]);
+      return result;
+    }
+    return key;
+  }
+
+  return makePath(template).map(replacePlaceholders);
+}
+
+function isRangeKey(key) {
+  return (
+    typeof key === 'object' &&
+    ('$all' in key ||
+      '$first' in key ||
+      '$last' in key ||
+      '$before' in key ||
+      '$after' in key ||
+      '$until' in key ||
+      '$since' in key)
+  );
+}
+
+export function linkResult(objects, query, { links: linkSpecs }) {
+  const refQueries = [];
+
   for (let linkProp in linkSpecs) {
-    const { target, prop, back } = linkSpecs[linkProp];
-    const targetPath = makePath(target);
     const linkPath = makePath(linkProp);
+    const linkedQuery = unwrap(query, linkPath);
+    if (!linkedQuery) continue;
 
-    if (back) {
-      const linkedQueries = unwrap(query, linkPath);
-      if (!linkedQueries || !linkedQueries.length) continue;
-      const args = linkedQueries.map(decodeArgs);
-
-      for (const object of objects) {
-        const links = args.map((arg) => ({
-          $key: arg,
-          $ref: [...targetPath, { ...arg, [back]: object[idProp] }],
-        }));
-        mergeObject(object, wrapObject(links, linkPath));
-      }
-    } else {
-      const idPath = makePath(prop);
-      for (const object of objects) {
-        const link = { $ref: [...targetPath, unwrapObject(object, idPath)] };
-        mergeObject(object, wrapObject(link, linkPath));
+    for (const object of objects) {
+      const ref = makeRef(linkSpecs[linkProp]);
+      if (isRangeKey(ref[ref.length - 1])) {
+        const {
+          $all,
+          $first,
+          $last,
+          $before,
+          $after,
+          $until,
+          $since,
+          ...refArg
+        } = ref.pop();
+        const refQuery = linkedQuery.map((node) => {
+          const queryArg = decodeArgs(node);
+          if (!isRangeKey(arg)) {
+            throw Error('pg_link.expected_range:' + linkProp);
+          }
+          const arg = { ...refArg, ...queryArg };
+          mergeObject(
+            object,
+            wrapObject({ $ref: ref.concat([arg]) }, linkPath),
+          );
+          return { ...node, ...encodeArgs(arg) };
+        });
+        refQueries.push(wrap(refQuery, ref));
+      } else {
+        mergeObject(object, wrapObject({ $ref: ref }, linkPath));
+        refQueries.push(wrap(linkedQuery, ref));
       }
     }
   }
-  return objects;
+
+  return refQueries;
 }
 
 export function linkChange(object, { links: linkSpecs }) {
