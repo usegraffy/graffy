@@ -41,10 +41,10 @@ module.exports = async function build(name, version) {
 
   // Make destination directories
   await mkdir(dst(name, 'cjs'));
-  await mkdir(dst(name, 'esm'));
+  // await mkdir(dst(name, 'esm'));
   for (const dir of await globby('**/*', { cwd, onlyDirectories: true })) {
     await mkdir(dst(name, 'cjs', dir));
-    await mkdir(dst(name, 'esm', dir));
+    // await mkdir(dst(name, 'esm', dir));
   }
 
   // Keep track of dependencies found during source transformation
@@ -91,10 +91,10 @@ module.exports = async function build(name, version) {
             dst(name, 'cjs', path),
             (await transform(ast, source, babelConfig(false))).code,
           ),
-          writeFile(
-            dst(name, 'esm', path),
-            (await transform(ast, source, babelConfig(true))).code,
-          ),
+          // writeFile(
+          //   dst(name, 'esm', path),
+          //   (await transform(ast, source, babelConfig(true))).code,
+          // ),
         ]);
 
         addDeps(ast);
@@ -118,7 +118,7 @@ module.exports = async function build(name, version) {
         //   import: './esm/index.js',
         //   require: './cjs/index.js',
         // },
-        module: './esm/index.js',
+        // module: './esm/index.js',
         types: './types/index.d.ts',
         repository: {
           type: 'git',

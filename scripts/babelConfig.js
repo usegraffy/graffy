@@ -16,19 +16,12 @@ module.exports = function (esm) {
     plugins: [
       [
         '@babel/plugin-transform-runtime',
-        esm
-          ? {
-              corejs: false,
-              regenerator: false,
-              helpers: true,
-              useESModules: true,
-            }
-          : {
-              corejs: 3,
-              regenerator: true,
-              helpers: true,
-              useESModules: false,
-            },
+        {
+          corejs: 3,
+          regenerator: true,
+          helpers: true,
+          useESModules: esm,
+        },
       ],
       ...(esm ? [] : ['babel-plugin-add-module-exports']),
     ],
