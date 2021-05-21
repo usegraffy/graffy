@@ -4,36 +4,14 @@ import {
   wrapObject,
   unwrapObject,
   encodeGraph,
-  makePath,
   encodeQuery,
   finalize,
   wrap,
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';
+import { validateCall, validateOn } from './validate.js';
 import { shiftFn, shiftGen } from './shift.js';
 import Core from './Core';
-
-function validateArgs(first, ...args) {
-  let path;
-  try {
-    path = makePath(first);
-  } catch {
-    args.unshift(first);
-    path = [];
-  }
-
-  for (const arg of args) {
-    if (
-      typeof arg !== 'undefined' &&
-      typeof arg !== 'object' &&
-      typeof arg !== 'function'
-    ) {
-      throw Error('validateArgs.invalid_argument ' + JSON.stringify(arg));
-    }
-  }
-
-  return [path, ...args];
-}
 
 export default class Graffy {
   constructor(path = [], core = new Core()) {
@@ -42,12 +20,12 @@ export default class Graffy {
   }
 
   on(type, ...args) {
-    const [path, handler] = validateArgs(...args);
+    const [path, handler] = validateOn(...args);
     this.core.on(type, path, handler);
   }
 
   onRead(...args) {
-    const [pathArg, handle] = validateArgs(...args);
+    const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
     this.on(
       'read',
@@ -62,7 +40,7 @@ export default class Graffy {
   }
 
   onWatch(...args) {
-    const [pathArg, handle] = validateArgs(...args);
+    const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
     this.on(
       'watch',
@@ -88,7 +66,7 @@ export default class Graffy {
   }
 
   onWrite(...args) {
-    const [pathArg, handle] = validateArgs(...args);
+    const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
     this.on(
       'write',
@@ -100,7 +78,7 @@ export default class Graffy {
   }
 
   use(...args) {
-    const [path, provider] = validateArgs(...args);
+    const [path, provider] = validateOn(...args);
     provider(new Graffy(path, this.core));
   }
 
@@ -109,7 +87,7 @@ export default class Graffy {
   }
 
   async read(...args) {
-    const [pathArg, porcelainQuery, options] = validateArgs(...args);
+    const [pathArg, porcelainQuery, options] = validateCall(...args);
     const path = this.path.concat(pathArg);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
@@ -118,7 +96,7 @@ export default class Graffy {
   }
 
   watch(...args) {
-    const [pathArg, porcelainQuery, options] = validateArgs(...args);
+    const [pathArg, porcelainQuery, options] = validateCall(...args);
     const path = this.path.concat(pathArg);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
@@ -129,7 +107,7 @@ export default class Graffy {
   }
 
   async write(...args) {
-    const [pathArg, porcelainChange, options] = validateArgs(...args);
+    const [pathArg, porcelainChange, options] = validateCall(...args);
     const path = this.path.concat(pathArg);
     const change = wrap(encodeGraph(porcelainChange), path);
     const writtenChange = await this.call('write', change, options || {});

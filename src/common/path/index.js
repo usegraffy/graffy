@@ -4,9 +4,7 @@ import { encodeArgs } from '../coding';
 export const PATH_SEPARATOR = '.';
 
 export function makePath(path) {
-  if (Array.isArray(path) && path.every((key) => typeof key === 'string')) {
-    return path;
-  }
+  if (Array.isArray(path)) return path;
   if (typeof path !== 'string') throw Error('makePath.path_not_string');
   if (!path.length || path === PATH_SEPARATOR) return [];
 
