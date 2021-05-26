@@ -8,13 +8,13 @@ it('should encode graphs', () => {
         postCount: 25,
         posts: page(
           {
-            '1984': {
+            1984: {
               title: '1984',
               body: 'Lorem ipsum',
               author: link(['users', '1']),
               options: scalar({ inStock: true }),
             },
-            '2001': {
+            2001: {
               title: '2001',
               body: 'Hello world',
               author: link(['users', '2']),
@@ -56,4 +56,8 @@ it('should encode graphs', () => {
       ] }
     ],
   );
+});
+
+test('empty', () => {
+  expect(graph({ foo: {} })).toEqual([]);
 });

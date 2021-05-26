@@ -130,7 +130,7 @@ test('write array value', async () => {
 
   const provider = jest.fn((change) => {
     expect(change).toEqual({ foo: ['hello', 'world'] });
-    return change;
+    return { foo: scalar(change.foo) };
   });
   store.onWrite(provider);
 

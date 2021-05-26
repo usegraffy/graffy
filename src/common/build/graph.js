@@ -26,14 +26,14 @@ function makeGraph(key, value, version) {
     // This is a single key known to be missing.
     return { key, end: key, version };
   } else if (typeof value === 'object' && value) {
-    return {
-      key,
-      version,
-      children: Object.keys(value)
-        .sort()
-        .map((k) => makeGraph(k, value[k], version)),
-    };
-  } else {
+    const children = Object.keys(value)
+      .sort()
+      .map((k) => makeGraph(k, value[k], version))
+      .filter(Boolean);
+
+    if (!children.length) return;
+    return { key, version, children };
+  } else if (typeof value !== 'undefined') {
     return { key, version, value };
   }
 }
@@ -41,7 +41,7 @@ function makeGraph(key, value, version) {
 export function graph(obj, version = Date.now()) {
   // console.log('makeGraph called with', obj);
   if (!obj) return obj;
-  return makeGraph('', obj, version).children;
+  return makeGraph('', obj, version)?.children || [];
 }
 
 export function page(obj, key = '', end = '\uffff') {
