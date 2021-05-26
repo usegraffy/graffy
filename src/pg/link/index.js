@@ -50,7 +50,7 @@ export function linkResult(objects, query, { links: linkSpecs }) {
     if (!linkedQuery) continue;
 
     for (const object of objects) {
-      const ref = makeRef(linkSpecs[linkProp]);
+      const ref = makeRef(linkSpecs[linkProp], object);
       if (isRangeKey(ref[ref.length - 1])) {
         const {
           $all,

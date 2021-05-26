@@ -1,4 +1,5 @@
-import { unwrap, remove } from '.';
+import { wrap, unwrap, remove } from '.';
+import { encodeArgs, decodeArgs } from '../coding';
 
 describe('unwrap', () => {
   test('root', () => {
@@ -20,6 +21,21 @@ describe('unwrap', () => {
 
   test('unknown', () => {
     expect(unwrap([{ key: 'foo', value: '10' }], ['bar'])).toEqual(undefined);
+  });
+});
+
+describe('wrap', () => {
+  test('range_path', () => {
+    const qNode = encodeArgs({ $first: 10, foo: 42 });
+    const eNode = encodeArgs({ $first: 10, foo: 42, bar: 33 });
+    // console.log(qNode);
+    expect(wrap([qNode], ['bar', { bar: 33, $all: true }])).toEqual([
+      {
+        key: 'bar',
+        version: 0,
+        children: [eNode],
+      },
+    ]);
   });
 });
 

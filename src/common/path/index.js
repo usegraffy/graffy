@@ -1,7 +1,20 @@
 import { findFirst, isRange, isBranch } from '../node';
-import { encodeArgs } from '../coding';
+import { encodeArgs, decodeArgs } from '../coding';
 
 export const PATH_SEPARATOR = '.';
+
+function isRangeKey(key) {
+  return (
+    typeof key === 'object' &&
+    ('$all' in key ||
+      '$first' in key ||
+      '$last' in key ||
+      '$before' in key ||
+      '$after' in key ||
+      '$until' in key ||
+      '$since' in key)
+  );
+}
 
 export function makePath(path) {
   if (Array.isArray(path)) return path;
@@ -19,6 +32,29 @@ export function wrapValue(value, path, version = 0) {
 export function wrap(graph, path, version = 0) {
   if (!Array.isArray(graph) || !graph.length) return;
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
+
+  if (isRangeKey(path[path.length - 1])) {
+    const {
+      $all,
+      $first,
+      $last,
+      $before,
+      $after,
+      $until,
+      $since,
+      ...pathArg
+    } = path.pop();
+
+    graph = graph.map((node) => {
+      const graphArg = decodeArgs(node);
+      if (!isRangeKey(graphArg)) {
+        throw Error('pg_link.expected_range: found ' + JSON.stringify(arg));
+      }
+      const arg = { ...pathArg, ...graphArg };
+      return { ...node, ...encodeArgs(arg) };
+    });
+  }
+
   let children = graph;
   for (let i = path.length - 1; i >= 0; i--) {
     children = [{ ...encodeArgs(path[i]), version, children }];
@@ -29,6 +65,7 @@ export function wrap(graph, path, version = 0) {
 export function unwrap(graph, path) {
   let children = graph;
   if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
+  let rangeKey = isRangeKey(path[path.length - 1]) ? path.pop() : null;
   let node = { children };
   for (let i = 0; i < path.length; i++) {
     const { key } = encodeArgs(path[i]);
@@ -37,6 +74,9 @@ export function unwrap(graph, path) {
     node = children[findFirst(children, key)];
     if (!node || node.key > key) return undefined; // We lack knowledge.
     if (isRange(node)) return null; // This is known to be null.
+  }
+  if (rangeKey) {
+    throw Error('unimplemented.unwrap_range_path');
   }
   return node.children || node.value;
 }
