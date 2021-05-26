@@ -133,3 +133,7 @@ test('put_partial', () => {
   ]);
   expect(result).toEqual({ foo: 3, $put: [{ $until: 'goo' }] });
 });
+
+test('empty', () => {
+  expect(decodeGraph([])).toEqual({});
+});

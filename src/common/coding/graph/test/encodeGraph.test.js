@@ -111,3 +111,8 @@ test('put_partial', () => {
     { key: 'foo\0', end: 'goo', version: 0 },
   ]);
 });
+
+test('empty', () => {
+  const result = encodeGraph({ foo: {} }, 0);
+  expect(result).toEqual([]);
+});

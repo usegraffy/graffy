@@ -16,6 +16,15 @@ function makeNode(object, key, ver, linked = []) {
   //   throw Error(`makeNode.key_mismatch ${key} ${JSON.stringify($key)}`);
   // }
 
+  // There should be no node at all if this is an empty object {} OR undefined,
+  // but there SHOULD be a node if it is null or an empty array []
+  if (
+    typeof object === 'undefined' ||
+    (typeof object === 'object' && object && isEmpty(object))
+  ) {
+    return;
+  }
+
   key = key || $key;
   let node = key === ROOT_KEY ? {} : encodeArgs(key);
 
@@ -53,7 +62,7 @@ function makeNode(object, key, ver, linked = []) {
     }
   } else if (typeof object === 'object') {
     if ($key && key !== $key) {
-      node.children = [makeNode(object, undefined, ver)];
+      node.children = [makeNode(object, undefined, ver)].filter(Boolean);
     } else {
       const children = Object.entries(rest)
         .map(([key, obj]) => makeNode(obj, key, node.version, linked))
