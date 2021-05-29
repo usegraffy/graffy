@@ -1,4 +1,5 @@
 import {
+  add,
   wrap,
   unwrap,
   wrapObject,
@@ -8,11 +9,15 @@ import {
   encodeArgs,
   makePath,
 } from '@graffy/common';
+import { format } from '@graffy/testing';
+import debug from 'debug';
+
+const log = debug('graffy:pg:link');
 
 function makeRef(template, object) {
   function replacePlaceholders(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
-      return unwrapObject(object, key.slice(2));
+      return unwrapObject(object, makePath(key.slice(2)));
     }
     if (Array.isArray(key)) {
       return key.map(replacePlaceholders);
@@ -25,7 +30,8 @@ function makeRef(template, object) {
     return key;
   }
 
-  return makePath(template).map(replacePlaceholders);
+  const res = makePath(template).map(replacePlaceholders);
+  return res;
 }
 
 function isRangeKey(key) {
@@ -64,7 +70,7 @@ export function linkResult(objects, query, { links: linkSpecs }) {
         } = ref.pop();
         const refQuery = linkedQuery.map((node) => {
           const queryArg = decodeArgs(node);
-          if (!isRangeKey(arg)) {
+          if (!isRangeKey(queryArg)) {
             throw Error('pg_link.expected_range:' + linkProp);
           }
           const arg = { ...refArg, ...queryArg };
@@ -74,13 +80,15 @@ export function linkResult(objects, query, { links: linkSpecs }) {
           );
           return { ...node, ...encodeArgs(arg) };
         });
-        refQueries.push(wrap(refQuery, ref));
+        add(refQueries, wrap(refQuery, ref));
       } else {
         mergeObject(object, wrapObject({ $ref: ref }, linkPath));
-        refQueries.push(wrap(linkedQuery, ref));
+        add(refQueries, wrap(linkedQuery, ref));
       }
     }
   }
+
+  log('Linked Result', JSON.stringify(objects, null, 2), format(refQueries));
 
   return refQueries;
 }

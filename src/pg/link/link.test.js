@@ -1,40 +1,37 @@
-import { encodeGraph } from '@graffy/common';
+import { encodeQuery } from '@graffy/common';
 import { linkResult } from './index.js';
 
 test('outward', () => {
   const object = { id: 'post1', authorId: 'user1' };
-  const links = { author: { prop: 'authorId', target: 'users' } };
-  const idProp = 'id';
-  expect(linkResult([object], [], { links, idProp })).toEqual([
-    {
-      id: 'post1',
-      authorId: 'user1',
-      author: { $ref: ['users', 'user1'] },
-    },
-  ]);
+  const query = encodeQuery({ author: { name: true } });
+  const links = { author: ['users', '$$authorId'] };
+  const expQuery = { users: { user1: { name: 1 } } };
+  const expObject = {
+    id: 'post1',
+    authorId: 'user1',
+    author: { $ref: ['users', 'user1'] },
+  };
+
+  const resQuery = linkResult([object], query, { links });
+
+  expect(resQuery).toEqual(encodeQuery(expQuery, 0));
+  expect(object).toEqual(expObject);
 });
 
 test('inward', () => {
   const object = { id: 'user1' };
-  const links = { posts: { target: 'posts', back: 'authorId' } };
-  const idProp = 'id';
+  const links = { posts: ['posts', { authorId: '$$id', $all: true }] };
+  const query = encodeQuery({ posts: [{ $key: { $first: 10 }, title: 1 }] });
 
-  const query = encodeGraph({
-    posts: [
-      {
-        $key: { $first: 10 },
-      },
-    ],
-  });
-  expect(linkResult([object], query, { links, idProp })).toEqual([
-    {
-      id: 'user1',
-      posts: [
-        {
-          $key: { $first: 10 },
-          $ref: ['posts', { authorId: 'user1', $first: 10 }],
-        },
-      ],
-    },
-  ]);
+  const expQuery = {
+    posts: { $key: { authorId: 'user1', $first: 10 }, title: 1 },
+  };
+  const expObject = {
+    id: 'user1',
+    posts: { $ref: ['posts', { authorId: 'user1', $first: 10 }] },
+  };
+
+  const resQuery = linkResult([object], query, { links });
+  expect(resQuery).toEqual(encodeQuery(expQuery, 0));
+  expect(object).toEqual(expObject);
 });
