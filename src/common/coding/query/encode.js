@@ -30,7 +30,7 @@ function makeNode(object, key, ver) {
     if (children.length) node.children = children;
   } else if (typeof object === 'object') {
     if ($key && key !== $key) {
-      node.children = [makeNode(object, undefined, ver)];
+      node.children = [makeNode(object, undefined, ver)].filter(Boolean);
     } else {
       const children = Object.keys(rest)
         .sort()

@@ -34,6 +34,7 @@ export function wrap(graph, path, version = 0) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
 
   if (isRangeKey(path[path.length - 1])) {
+    const rangeKey = path.pop();
     const {
       $all,
       $first,
@@ -43,12 +44,12 @@ export function wrap(graph, path, version = 0) {
       $until,
       $since,
       ...pathArg
-    } = path.pop();
+    } = rangeKey;
 
     graph = graph.map((node) => {
       const graphArg = decodeArgs(node);
       if (!isRangeKey(graphArg)) {
-        throw Error('pg_link.expected_range: found ' + JSON.stringify(arg));
+        return { ...encodeArgs(rangeKey), children: [node] };
       }
       const arg = { ...pathArg, ...graphArg };
       return { ...node, ...encodeArgs(arg) };

@@ -117,8 +117,7 @@ function makeNode(object, key, ver, linked = []) {
 }
 
 export default function graph(rootObject, version = Date.now()) {
-  if (typeof rootObject === 'undefined' || rootObject === null) {
-    return rootObject;
-  }
+  if (rootObject === null) return [{ key: '', end: '\uffff', version: 0 }];
+  if (typeof rootObject === 'undefined') return [];
   return makeNode(rootObject, ROOT_KEY, version)?.children || [];
 }

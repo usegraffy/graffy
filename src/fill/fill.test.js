@@ -28,7 +28,7 @@ describe('changes', () => {
       skipFill: 1,
     });
 
-    await expectNext(subscription, undefined);
+    expect((await subscription.next()).value).toEqual(undefined);
     backend.write(encodeGraph({ foo: { a: 3 } }, 0));
     await expectNext(subscription, { foo: { a: 3 } });
     backend.write(encodeGraph({ foo: { a: 4 } }, 1));
@@ -46,10 +46,11 @@ describe('changes', () => {
   });
 
   test('simple-empty', async () => {
+    backend.write([{ key: '', end: '\uffff', version: 0 }]);
     const subscription = g.call('watch', encodeQuery({ foo: { a: 1 } }, 0), {
       raw: true,
     });
-    await expectNext(subscription, null);
+    await expectNext(subscription, { foo: { a: null } });
     backend.write(encodeGraph({ foo: { a: 3 } }, 0));
     await expectNext(subscription, { foo: { a: 3 } });
     backend.write(encodeGraph({ foo: { a: 4 } }, 1));

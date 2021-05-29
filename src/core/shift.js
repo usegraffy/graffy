@@ -1,5 +1,6 @@
 import { wrap, unwrap, remove, merge, mergeStreams } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
+import { format } from '@graffy/testing';
 
 async function mapStream(stream, fn) {
   for await (const value of stream) {
@@ -37,6 +38,7 @@ export function shiftFn(fn, path) {
       merge(result, remainingNextResult);
     }
 
+    // console.log('Shifted', path, format(payload), format(result));
     return result;
   };
 }

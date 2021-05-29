@@ -116,3 +116,13 @@ test('empty', () => {
   const result = encodeGraph({ foo: {} }, 0);
   expect(result).toEqual([]);
 });
+
+test('empty2', () => {
+  const result = encodeGraph({}, 0);
+  expect(result).toEqual([]);
+});
+
+test('empty3', () => {
+  const result = encodeGraph(undefined, 0);
+  expect(result).toEqual([]);
+});

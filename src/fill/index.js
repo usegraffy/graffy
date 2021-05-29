@@ -12,15 +12,20 @@ export default function fill(_) {
     store.on('read', [], async function fillOnRead(query, options, next) {
       let value = await next(query);
       if (options.skipFill) return value;
-      if (!value || !value.length) return null;
+      if (!value || !value.length) {
+        log('No progress', format(query));
+        throw Error('fill.no_progress');
+        // return null;
+      }
 
       let budget = MAX_RECURSIONS;
 
       while (budget-- > 1) {
+        // console.log(format(value));
         const { known, unknown } = slice(value, query);
         value = known;
         if (!unknown) break;
-        // console.log(unknown[0]);
+        // console.log(format(unknown));
         const res = await store.call('read', unknown, { skipFill: true });
         // console.log('this', value, res);
         merge(value, res);

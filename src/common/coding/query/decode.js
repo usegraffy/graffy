@@ -7,7 +7,7 @@ export default function decodeQuery(query) {
 }
 
 function decodeChildren(query) {
-  const isPage = query.some((node) => isRange(node));
+  const isPage = query.some((node) => isRange(node) || node.key[0] === '\0');
   if (isPage) {
     return decodeGraphPage(query);
   } else {
