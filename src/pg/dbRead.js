@@ -10,9 +10,12 @@ import {
   unwrap,
   finalize,
   merge,
+  mergeObject,
+  wrapObject,
   slice,
   encodeGraph,
 } from '@graffy/common';
+import { format } from '@graffy/testing';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
 
@@ -26,10 +29,17 @@ export default async function dbRead(rootQuery, pgOptions, store) {
     const result = await readSql(selectByArgs(args, pgOptions), pool);
     add(refQuery, linkResult(result, subQuery, pgOptions));
 
-    merge(
-      results,
-      wrap(finalize(encodeGraph(result), subQuery), pgOptions.prefix),
+    const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, args]);
+    const wrappedGraph = encodeGraph(wrapObject(result, pgOptions.prefix));
+
+    log(
+      'getByArgs',
+      format(wrappedGraph),
+      format(wrappedQuery),
+      format(finalize(wrappedGraph, wrappedQuery)),
     );
+
+    merge(results, finalize(wrappedGraph, wrappedQuery));
   }
 
   async function getByIds() {
@@ -39,12 +49,21 @@ export default async function dbRead(rootQuery, pgOptions, store) {
     );
 
     result.forEach((object) => {
-      const subQuery = idQueries[object[pgOptions.idProp]];
+      const id = object[pgOptions.idProp];
+      const subQuery = idQueries[id];
       add(refQuery, linkResult([object], subQuery, pgOptions));
-      merge(
-        results,
-        wrap(finalize(encodeGraph([object]), subQuery), pgOptions.prefix),
+
+      const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, id]);
+      const wrappedGraph = encodeGraph(wrapObject(object, pgOptions.prefix));
+
+      log(
+        'getByIds',
+        format(wrappedGraph),
+        format(wrappedQuery),
+        format(finalize(wrappedGraph, wrappedQuery)),
       );
+
+      merge(results, finalize(wrappedGraph, wrappedQuery));
     });
   }
 
@@ -61,13 +80,15 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   }
 
   if (!isEmpty(idQueries)) promises.push(getByIds());
-  await promises;
+  await Promise.all(promises);
+
   if (refQuery.length) {
+    log('refQuery', format(refQuery));
     merge(results, await store.call('read', refQuery));
   }
 
-  log(query, results);
-  return slice(results, query).known;
+  log('dbRead', format(rootQuery), format(results));
+  return slice(results, rootQuery).known || [];
 }
 
 async function readSql(sqlQuery, client) {
@@ -77,6 +98,6 @@ async function readSql(sqlQuery, client) {
   sqlQuery.rowMode = 'array';
   const result = (await client.query(sqlQuery)).rows.flat();
   // Each row is an array, as there is only one column returned.
-  log(result);
+  log('ReadSQL', result);
   return result;
 }
