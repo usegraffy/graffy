@@ -61,3 +61,7 @@ it('should encode graphs', () => {
 test('empty', () => {
   expect(graph({ foo: {} })).toEqual([]);
 });
+
+test('array', () => {
+  expect(graph({ foo: ['hello'] })).toEqual([]);
+});

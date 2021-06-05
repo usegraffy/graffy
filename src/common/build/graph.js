@@ -9,19 +9,19 @@ function makeGraph(key, value, version) {
     return value(key, version);
   } else if (Array.isArray(value)) {
     // Convert the KV-tuple format to a graph
-    return {
-      key,
-      version,
-      children: value
-        .map(({ key: k, name, value: v, children, path }) =>
-          makeGraph(
-            name || encodeKey(k),
-            children || (path && link(path)) || (v && scalar(v)),
-            version,
-          ),
-        )
-        .sort((a, b) => (a.key <= b.key ? -1 : 1)),
-    };
+    const children = value
+      .map(({ key: k, name, value: v, children, path }) =>
+        makeGraph(
+          name || encodeKey(k),
+          children || (path && link(path)) || (v && scalar(v)),
+          version,
+        ),
+      )
+      .filter(Boolean)
+      .sort((a, b) => (a.key <= b.key ? -1 : 1));
+
+    if (!children.length) return;
+    return { key, version, children };
   } else if (value === null) {
     // This is a single key known to be missing.
     return { key, end: key, version };
