@@ -126,3 +126,13 @@ test('empty3', () => {
   const result = encodeGraph(undefined, 0);
   expect(result).toEqual([]);
 });
+
+test('plain_array', () => {
+  const result = encodeGraph(['js', 'css'], 0);
+  expect(result).toEqual([
+    { key: '\x0007----------', value: 'js', version: 0 },
+    { key: '\x0007----------\0', end: '\x000Azk-------,\uffff', version: 0 },
+    { key: '\x000Azk--------', value: 'css', version: 0 },
+    { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
+  ]);
+});

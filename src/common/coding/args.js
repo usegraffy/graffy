@@ -10,6 +10,10 @@ function joinEncode(value, prefix) {
   }
 }
 
+function isDef(value) {
+  return typeof value !== 'undefined';
+}
+
 export function encode(arg) {
   if (!isArgObject(arg)) return { key: joinEncode(arg, '') };
 
@@ -27,26 +31,26 @@ export function encode(arg) {
 
   if (!hasRangeArg && !$cursor) return { key: joinEncode(arg, '') };
 
-  throwIf('first_and_$last', $first && $last);
-  throwIf('after_and_$since', $after && $since);
-  throwIf('before_and_$until', $before && $until);
-  throwIf('cursor_and_range_arg', $cursor && hasRangeArg);
+  throwIf('first_and_$last', isDef($first) && isDef($last));
+  throwIf('after_and_$since', isDef($after) && isDef($since));
+  throwIf('before_and_$until', isDef($before) && isDef($until));
+  throwIf('cursor_and_range_arg', isDef($cursor) && hasRangeArg);
 
   let key, end;
   const prefix = isEmpty(filter) ? '' : '\0' + encodeValue(filter) + '.';
 
-  if ($cursor) key = joinEncode($cursor, prefix);
-  if ($after) key = keyAfter(joinEncode($after, prefix));
-  if ($before) end = keyBefore(joinEncode($before, prefix));
-  if ($since) key = joinEncode($since, prefix);
-  if ($until) end = joinEncode($until, prefix);
+  if (isDef($cursor)) key = joinEncode($cursor, prefix);
+  if (isDef($after)) key = keyAfter(joinEncode($after, prefix));
+  if (isDef($before)) end = keyBefore(joinEncode($before, prefix));
+  if (isDef($since)) key = joinEncode($since, prefix);
+  if (isDef($until)) end = joinEncode($until, prefix);
 
   if (hasRangeArg) {
     key = key || prefix;
     end = end || prefix + '\uffff';
   }
 
-  if ($last) [key, end] = [end, key];
+  if (isDef($last)) [key, end] = [end, key];
 
   const node = { key };
   if (typeof end !== 'undefined') node.end = end;

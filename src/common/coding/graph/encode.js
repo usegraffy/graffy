@@ -9,15 +9,15 @@ export const ROOT_KEY = Symbol();
 
 function makeNode(object, key, ver, linked = []) {
   const { $key, $ref, $ver, $val, $put, $err, $opt, ...rest } = object || {};
-  if (!key && !$key) {
-    throw Error(`makeNode.no_key ${key} ${JSON.stringify($key)}`);
+  if (typeof key === 'undefined' && typeof $key === 'undefined') {
+    throw Error(`makeNode.no_key`);
   }
   // if (key && $key) {
   //   throw Error(`makeNode.key_mismatch ${key} ${JSON.stringify($key)}`);
   // }
 
   // There should be no node at all if this is an empty object {} OR undefined,
-  // but there SHOULD be a node if it is null or an empty array []
+  // but there SHOULD be a node if it is null
   if (
     typeof object === 'undefined' ||
     (typeof object === 'object' && object && isEmpty(object))
@@ -25,7 +25,11 @@ function makeNode(object, key, ver, linked = []) {
     return;
   }
 
-  key = key || $key;
+  let put = $put;
+
+  if ($key && (typeof key === 'number' || typeof key === 'undefined')) {
+    key = $key;
+  }
   let node = key === ROOT_KEY ? {} : encodeArgs(key);
 
   node.version = ver;
@@ -52,12 +56,18 @@ function makeNode(object, key, ver, linked = []) {
       );
     }
   } else if (Array.isArray(object)) {
+    const isKeyed = object.every((it) => it?.$key);
     const children = object
-      .map((obj) => makeNode(obj, undefined, node.version, linked))
+      .map((obj, i) => makeNode(obj, i, node.version, linked))
       .filter(Boolean)
       .reduce((acc, node) => merge(acc, [node]), []);
 
     if (children.length) {
+      // If this is not a keyed array, we have numeric keys, and we should
+      // "put" the entire range of possible indexes to ensure that plain
+      // arrays behave like atomic values.
+      if (!isKeyed) put = [{ $since: 0, $until: +Infinity }];
+
       node.children = children;
     }
   } else if (typeof object === 'object') {
@@ -79,10 +89,10 @@ function makeNode(object, key, ver, linked = []) {
     node.value = object;
   }
 
-  if ($put) {
+  if (put) {
     node.children = finalize(
       node.children,
-      $put === true ? null : $put.map((arg) => encodeArgs(arg)),
+      put === true ? null : put.map((arg) => encodeArgs(arg)),
       node.version,
     );
   }
