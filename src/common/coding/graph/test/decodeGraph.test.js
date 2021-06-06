@@ -137,3 +137,13 @@ test('put_partial', () => {
 test('empty', () => {
   expect(decodeGraph([])).toEqual({});
 });
+
+test('plain_array', () => {
+  const result = decodeGraph([
+    { key: '\x0007----------', value: 'js', version: 0 },
+    { key: '\x0007----------\0', end: '\x000Azk-------,\uffff', version: 0 },
+    { key: '\x000Azk--------', value: 'css', version: 0 },
+    { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
+  ]);
+  expect(result).toEqual(['js', 'css']);
+});
