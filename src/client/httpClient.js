@@ -22,6 +22,7 @@ const httpClient = (
     if (!fetch) throw Error('client.fetch.unavailable');
     const optionsParam = getOptionsParam(await getOptions('read', options));
     const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
+    console.log('enter here 1: ', query);
     return fetch(url).then((res) => {
       if (res.status === 200) return res.json();
       return res.text().then((message) => {
