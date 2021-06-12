@@ -1,5 +1,6 @@
 {
   "name": "@graffy/react",
   "version": "1.0.0",
-  "type": "module"
+  "type": "module",
+  "main": "index.js"
 }

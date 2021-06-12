@@ -1,4 +1,4 @@
-import { find, isBranch } from '../node';
+import { find, isBranch } from '../node/index.js';
 
 export default function add(base, diff) {
   let changed = false;

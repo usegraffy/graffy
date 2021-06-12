@@ -1,6 +1,6 @@
 import Graffy from '@graffy/core';
 import pg from '../index.js';
-import { populate } from './setup';
+import { populate } from './setup.js';
 
 import debug from 'debug';
 const log = debug('graffy:pg:test');

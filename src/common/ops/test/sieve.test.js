@@ -1,5 +1,5 @@
-import sieve from '../sieve';
-import { encodeGraph } from '../../coding';
+import sieve from '../sieve.js';
+import { encodeGraph } from '../../coding/index.js';
 
 test('empty', () => {
   const g = [];

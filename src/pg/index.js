@@ -1,6 +1,6 @@
-import { selectUpdatedSince, readSql } from './sql';
-import { filterObject } from './filter';
-import makeOptions from './options';
+import { selectUpdatedSince, readSql } from './sql/index.js';
+import { filterObject } from './filter/index.js';
+import makeOptions from './options.js';
 import {
   isArgObject,
   decodeArgs,
@@ -12,9 +12,9 @@ import {
   unwrap,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
-import dbRead from './dbRead';
-import dbWrite from './dbWrite';
-import pool from './pool';
+import dbRead from './dbRead.js';
+import dbWrite from './dbWrite.js';
+import pool from './pool.js';
 
 import debug from 'debug';
 const log = debug('graffy:pg:index');

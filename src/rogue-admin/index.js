@@ -4,7 +4,7 @@ import fill from '@graffy/fill';
 import client from '@graffy/client';
 import { GraffyProvider } from '@graffy/react';
 
-import Admin from './components/Admin';
+import Admin from './components/Admin.js';
 
 let tenantId = 'tenant0';
 

@@ -1,4 +1,4 @@
-import { keyBefore, keyAfter } from '../step';
+import { keyBefore, keyAfter } from '../step.js';
 
 describe('keyBefore', () => {
   test('simple', () => {

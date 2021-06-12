@@ -1,2 +1,2 @@
-export { default as makeStream } from './makeStream';
-export { default as mapStream } from './mapStream';
+export { default as makeStream } from './makeStream.js';
+export { default as mapStream } from './mapStream.js';

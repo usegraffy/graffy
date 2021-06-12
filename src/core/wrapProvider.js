@@ -1,4 +1,4 @@
-import wrappers from './wrappers';
+import wrappers from './wrappers.js';
 
 export default function wrapProvider(provider, options = {}) {
   const { decode, shift, finalize, _debounce, link, _fetch, _watch } = options;

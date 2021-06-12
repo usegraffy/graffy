@@ -1,4 +1,4 @@
-import makeOptions from '../options';
+import makeOptions from '../options.js';
 
 test('no_options', () => {
   expect(makeOptions(['blog', 'users'], {})).toEqual({

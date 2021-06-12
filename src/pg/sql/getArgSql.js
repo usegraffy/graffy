@@ -1,6 +1,6 @@
 import sql, { join, raw } from 'sql-template-tag';
 import { isEmpty, makePath } from '@graffy/common';
-import { getFilterSql } from '../filter';
+import { getFilterSql } from '../filter/index.js';
 
 function getBoundCond(orderCols, bound, kind) {
   if (!Array.isArray(bound)) {

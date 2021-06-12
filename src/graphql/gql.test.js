@@ -1,4 +1,4 @@
-import gql from './gql';
+import gql from './gql.js';
 
 test.skip('toQuery', () => {
   const userId = 123;

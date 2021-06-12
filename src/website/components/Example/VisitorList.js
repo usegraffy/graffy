@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Visitor from './Visitor';
+import Visitor from './Visitor.js';
 
 export default function VisitorList({ visitors }) {
   return (

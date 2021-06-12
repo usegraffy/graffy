@@ -3,9 +3,9 @@ import Graffy from '@graffy/core';
 import GraffyFill from '@graffy/fill';
 import { GraffyProvider } from '@graffy/react';
 
-import Source, { provider } from './Source';
-import Query from './Query';
-import Result from './Result';
+import Source, { provider } from './Source.js';
+import Query from './Query.js';
+import Result from './Result.js';
 
 const store = new Graffy();
 store.use(GraffyFill());

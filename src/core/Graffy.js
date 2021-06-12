@@ -11,7 +11,7 @@ import {
 import { makeStream, mapStream } from '@graffy/stream';
 import { validateCall, validateOn } from './validate.js';
 import { shiftFn, shiftGen } from './shift.js';
-import Core from './Core';
+import Core from './Core.js';
 
 export default class Graffy {
   constructor(path = [], core = new Core()) {

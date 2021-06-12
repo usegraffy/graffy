@@ -1,5 +1,5 @@
 // import WebSocket from 'ws';
-import Socket from './Socket';
+import Socket from './Socket.js';
 
 class MockWebSocket {
   constructor() {

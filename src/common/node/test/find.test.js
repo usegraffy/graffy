@@ -1,4 +1,4 @@
-import { find } from '../find';
+import { find } from '../find.js';
 
 test('exact matches', () => {
   expect(find([1, 2, 3, 4, 5], (n) => n - 3)).toBe(2);

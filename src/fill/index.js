@@ -1,5 +1,5 @@
 import { merge, slice } from '@graffy/common';
-import subscribe from './subscribe';
+import subscribe from './subscribe.js';
 import { format } from '@graffy/testing';
 import debug from 'debug';
 

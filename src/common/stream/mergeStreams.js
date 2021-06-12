@@ -1,5 +1,5 @@
 import mergeIterators from 'merge-async-iterators';
-import { merge } from '../ops';
+import { merge } from '../ops/index.js';
 
 export default async function* mergeStreams(...streams) {
   const firstValues = (

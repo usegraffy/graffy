@@ -1,3 +1,3 @@
-export { default as mockBackend } from './mockBackend';
-export { default as format, inspect } from './format';
-export { default as pretty } from './pretty';
+export { default as mockBackend } from './mockBackend.js';
+export { default as format, inspect } from './format.js';
+export { default as pretty } from './pretty.js';

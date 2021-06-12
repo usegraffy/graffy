@@ -1,5 +1,5 @@
-import { isBranch, isRange, findFirst, findLast } from '../node';
-import { keyAfter, keyBefore } from './step';
+import { isBranch, isRange, findFirst, findLast } from '../node/index.js';
+import { keyAfter, keyBefore } from './step.js';
 
 export default function merge(current, changes) {
   let index = 0;

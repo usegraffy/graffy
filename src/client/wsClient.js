@@ -1,6 +1,6 @@
 import { makeStream } from '@graffy/stream';
 import { makePath, makeWatcher } from '@graffy/common';
-import Socket from './Socket';
+import Socket from './Socket.js';
 
 const wsClient = (
   url,

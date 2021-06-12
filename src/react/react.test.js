@@ -3,8 +3,8 @@ import { act, renderHook } from '@testing-library/react-hooks';
 import Graffy from '@graffy/core';
 import { encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
-import { useQuery } from './';
-import { GraffyProvider } from './GraffyContext';
+import { useQuery } from './index.js';
+import { GraffyProvider } from './GraffyContext.js';
 
 describe('useQuery', () => {
   let g;

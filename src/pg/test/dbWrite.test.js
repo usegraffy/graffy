@@ -1,11 +1,11 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import graffyPg from '../index.js';
-// import { populate } from './setup';
+// import { populate } from './setup.js';
 import expectSql from '../sql/expectSql.js';
 
 import debug from 'debug';
-import pool from '../pool';
+import pool from '../pool.js';
 
 jest.mock('../pool', () => {
   const mockClient = {

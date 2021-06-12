@@ -1,2 +1,2 @@
-import Graffy from './Graffy';
+import Graffy from './Graffy.js';
 export default Graffy;

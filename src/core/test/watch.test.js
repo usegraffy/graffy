@@ -1,4 +1,4 @@
-import Graffy from '../Graffy';
+import Graffy from '../Graffy.js';
 
 describe('watch', () => {
   let g;

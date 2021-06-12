@@ -1,7 +1,7 @@
 import Graffy from '@graffy/core';
 import { encodeUrl } from '@graffy/common';
-import client from './';
-import MockSocket from './Socket'; // The mock is below, but gets hoisted.
+import client from './index.js';
+import MockSocket from './Socket.js'; // The mock is below, but gets hoisted.
 
 jest.mock('./Socket', () => ({
   __esModule: true,

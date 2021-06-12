@@ -1,5 +1,5 @@
-// import { isRange } from '../node';
-// import { keyAfter } from './step';
+// import { isRange } from '../node/index.js';
+// import { keyAfter } from './step.js';
 
 export default function setVersion(graph, version) {
   // mergeRanges(graph);

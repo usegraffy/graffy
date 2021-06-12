@@ -1,5 +1,5 @@
-import { encode, decode } from '../number';
-// import { string, number, boolean } from './types';
+import { encode, decode } from '../number.js';
+// import { string, number, boolean } from './types.js';
 
 describe('dencorder', () => {
   test('average number', () => {

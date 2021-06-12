@@ -6,7 +6,7 @@ import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
 import memory from '@graffy/memory';
 import { httpServer, wsServer } from '@graffy/server';
-import mock from './services/mockVisitorList';
+import mock from './services/mockVisitorList.js';
 
 process.env.NEXTJS = 1; // Use the Next.js babel config.
 

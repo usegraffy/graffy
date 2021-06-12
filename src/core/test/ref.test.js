@@ -1,4 +1,4 @@
-import Graffy from '../Graffy';
+import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
 
 describe('ref', () => {

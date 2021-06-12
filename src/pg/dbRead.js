@@ -1,6 +1,6 @@
-import { selectByArgs, selectByIds } from './sql';
-import { linkResult } from './link';
-import pool from './pool';
+import { selectByArgs, selectByIds } from './sql/index.js';
+import { linkResult } from './link/index.js';
+import pool from './pool.js';
 import {
   isArgObject,
   decodeArgs,

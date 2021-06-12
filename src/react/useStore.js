@@ -1,5 +1,5 @@
 import React from 'react';
-import GraffyContext from './GraffyContext';
+import GraffyContext from './GraffyContext.js';
 
 const { useContext } = React;
 

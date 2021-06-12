@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import getTime from './getTime';
+import getTime from './getTime.js';
 
 export default function Pagination({ range, count, onNext, onPrev }) {
   const getButtonProps = (fn) => (fn ? { onClick: fn } : { disabled: true });

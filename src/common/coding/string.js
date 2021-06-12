@@ -1,5 +1,5 @@
 import TextEncoderLite from 'text-encoder-lite';
-import window from 'global/window';
+import window from 'global/window.js';
 
 if (!window.TextEncoder || !window.TextDecoder) {
   window.TextEncoder = TextEncoderLite.TextEncoderLite;

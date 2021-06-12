@@ -1,4 +1,4 @@
-import getKnown from '../getKnown';
+import getKnown from '../getKnown.js';
 
 test('getKnown', () => {
   expect(

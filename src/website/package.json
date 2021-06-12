@@ -1,5 +1,6 @@
 {
   "name": "@graffy/website",
   "version": "1.0.0",
-  "type": "module"
+  "type": "module",
+  "main": "index.js"
 }

@@ -1,5 +1,5 @@
-import { encodeQuery } from '../../coding';
-import add from '../add';
+import { encodeQuery } from '../../coding/index.js';
+import add from '../add.js';
 
 test('unchanged', () => {
   const base = [];

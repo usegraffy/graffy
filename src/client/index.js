@@ -1,5 +1,5 @@
-import httpClient from './httpClient';
-import wsClient from './wsClient';
+import httpClient from './httpClient.js';
+import wsClient from './wsClient.js';
 
 const WSRE = /^wss?:\/\//;
 

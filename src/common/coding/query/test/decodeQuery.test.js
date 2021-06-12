@@ -1,4 +1,4 @@
-import decodeQuery from '../decode';
+import decodeQuery from '../decode.js';
 import { encodeValue as key } from '../../index.js';
 
 it('should decodeGraph queries', () => {

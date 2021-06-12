@@ -5,7 +5,7 @@ import GraffyClient from '@graffy/client';
 import { GraffyProvider } from '@graffy/react';
 import * as common from '@graffy/common';
 
-import Explore from './Explore';
+import Explore from './Explore.js';
 
 export default function ExploreContainer({
   baseUrl = '/',

@@ -12,7 +12,6 @@ describe('integration', () => {
         server = fork(`${__dirname + '/server.js'}`, {
           env: { PORT },
           silent: true,
-          execArgv: ['--es-module-specifier-resolution=node'],
         });
         server.on('error', reject);
         server.on('exit', reject);

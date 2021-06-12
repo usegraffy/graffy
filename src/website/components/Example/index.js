@@ -2,10 +2,10 @@ import React from 'react';
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
 import client from '@graffy/client';
-// import mock from './mockVisitorList';
+// import mock from './mockVisitorList.js';
 import { GraffyProvider } from '@graffy/react';
 
-import Example from './Example';
+import Example from './Example.js';
 // import './index.css';
 
 const store = new Graffy();

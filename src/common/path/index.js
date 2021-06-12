@@ -1,5 +1,5 @@
-import { findFirst, isRange, isBranch } from '../node';
-import { encodeArgs, decodeArgs } from '../coding';
+import { findFirst, isRange, isBranch } from '../node/index.js';
+import { encodeArgs, decodeArgs } from '../coding/index.js';
 
 export const PATH_SEPARATOR = '.';
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery } from '@graffy/react';
 
-import VisitorList from './VisitorList';
-import Pagination from './Pagination';
-import Spinner from './Spinner';
-// import Query from './Query';
+import VisitorList from './VisitorList.js';
+import Pagination from './Pagination.js';
+import Spinner from './Spinner.js';
+// import Query from './Query.js';
 
 const PAGE_SIZE = 12;
 

@@ -1,4 +1,4 @@
-import makeStream from './makeStream';
+import makeStream from './makeStream.js';
 
 export default function mapStream(stream, fn) {
   return makeStream((push, end) => {

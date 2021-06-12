@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import getTime from './getTime';
+import getTime from './getTime.js';
 
 export default function Visitor({ avatar, name, ts, pageviews }) {
   const timeString = getTime(ts);

@@ -5,11 +5,11 @@ import {
   isOlder,
   findFirst,
   findLast,
-} from '../node';
-import { keyAfter, keyBefore } from './step';
-import { wrap, wrapValue } from '../path';
-import merge from './merge';
-import add from './add';
+} from '../node/index.js';
+import { keyAfter, keyBefore } from './step.js';
+import { wrap, wrapValue } from '../path/index.js';
+import merge from './merge.js';
+import add from './add.js';
 
 import { format } from '@graffy/testing';
 

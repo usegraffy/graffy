@@ -1,6 +1,6 @@
-import { isRange, isBranch, isLink, findFirst, findLast } from '../../node';
+import { isRange, isBranch, isLink, findFirst, findLast } from '../../node/index.js';
 import { isEmpty } from '../../util.js';
-import { keyAfter, keyBefore } from '../../ops';
+import { keyAfter, keyBefore } from '../../ops/index.js';
 import { decodeArgs, encodeQuery } from '../index.js';
 const LINK_PLACEHOLDER = Symbol();
 
