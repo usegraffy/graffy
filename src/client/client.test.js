@@ -22,9 +22,9 @@ describe('wsClient', () => {
     store.use(client('ws://example'));
   });
 
-  afterAll(() => {
-    jest.mockRestore();
-  });
+  // afterAll(() => {
+  //   jest.mockRestore();
+  // });
 
   test('readStatus', async () => {
     expect(await store.read('connection', { status: true })).toEqual({
@@ -94,9 +94,9 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     store.use(client(connectionUrl, { getOptions }));
   });
 
-  afterAll(() => {
-    jest.mockRestore();
-  });
+  // afterAll(() => {
+  //   jest.mockRestore();
+  // });
 
   test('store read', async () => {
     await store.read({ demo: 1 });

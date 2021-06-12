@@ -66,5 +66,5 @@ describe.skip('postgres', () => {
     });
   });
 
-  test('scenario 2');
+  test.todo('scenario 2');
 });

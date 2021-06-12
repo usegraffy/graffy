@@ -6,4 +6,5 @@ module.exports = {
   collectCoverage: false,
   testEnvironment: 'node',
   setupFiles: ['../scripts/jest.setup.js'],
+  restoreMocks: true,
 };
