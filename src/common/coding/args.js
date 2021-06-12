@@ -16,21 +16,21 @@ const pageProps = {
   $cursor: 1,
 };
 
+export function splitArgs(arg) {
+  const props = { page: {}, filter: {} };
+  for (const p in arg) props[p in pageProps ? 'page' : 'filter'][p] = arg[p];
+  return props;
+}
+
 export function encode(arg) {
   if (!isArgObject(arg)) return { key: maybeEncode(arg) };
 
-  const props = { page: {}, filter: {} };
-  for (const p in arg) props[p in pageProps ? 'page' : 'filter'][p] = arg[p];
+  const { page, filter } = splitArgs(arg);
 
-  const { page, filter } = props;
+  throwIf('empty_args', isEmpty(page) && isEmpty(filter));
+  throwIf('page_and_filter', !isEmpty(page) && !isEmpty(filter));
 
-  if (!isEmpty(filter)) {
-    throw Error('unexpected_non_page_parameter: ' + JSON.stringify(filter));
-    // return {
-    //   key: maybeEncode(arg),
-    //   ...(!isEmpty(page) ? { prefix: true, children: [encode(page)] } : {}),
-    // };
-  }
+  if (!isEmpty(filter)) return { key: maybeEncode(filter) };
 
   const { $cursor, ...range } = page;
   const { $first, $last, $after, $before, $since, $until } = range;
@@ -85,7 +85,6 @@ export function decode(node) {
   if (!isDef(end)) return kParts.value;
 
   const eParts = maybeDecode(end);
-
   const [lower, upper] = key < end ? [kParts, eParts] : [eParts, kParts];
 
   if (lower.cursor !== '') {

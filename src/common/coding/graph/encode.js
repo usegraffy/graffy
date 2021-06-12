@@ -1,4 +1,10 @@
-import { encodeArgs, encodePath } from '../index.js';
+import { encode as encodeTree } from '../tree.js';
+
+export default function query(obj, version = 0) {
+  return encodeTree(obj, { version, isGraph: true });
+}
+
+/* import { encodeArgs, encodePath } from '../index.js';
 import { wrap } from '../../path/index.js';
 import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
@@ -131,3 +137,4 @@ export default function graph(rootObject, version = Date.now()) {
   if (typeof rootObject === 'undefined') return [];
   return makeNode(rootObject, ROOT_KEY, version)?.children || [];
 }
+*/

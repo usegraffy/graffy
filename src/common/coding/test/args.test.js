@@ -8,7 +8,7 @@ describe('encode', () => {
     });
   });
 
-  test('before_filter', () => {
+  test.skip('before_filter', () => {
     expect(encode({ $before: ['a'], foo: 42 })).toEqual({
       key: '\x000kKaQqw-0B04--------.',
       end: '\x000kKaQqw-0B04--------.0VKV\uffff',
@@ -26,7 +26,7 @@ describe('decode', () => {
     ).toEqual({ $before: ['a'] });
   });
 
-  test('before_filter', () => {
+  test.skip('before_filter', () => {
     expect(
       decode({
         key: '\x000kKaQqw-0B04--------.',
@@ -36,14 +36,14 @@ describe('decode', () => {
   });
 });
 
-test('cursor', () => {
+test.skip('cursor', () => {
   const original = { $order: ['id'], $cursor: [123] };
   const encoded = encode(original);
   const decoded = decode(encoded);
   expect(decoded).toEqual(original);
 });
 
-test('firstNRange', () => {
+test.skip('firstNRange', () => {
   const original = { $order: ['id'], $first: 10 };
   const encoded = encode(original);
   const decoded = decode(encoded);

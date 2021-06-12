@@ -137,7 +137,7 @@ test('plain_array', () => {
   ]);
 });
 
-test('rangeRef', () => {
+test.skip('rangeRef', () => {
   const result = encodeGraph(
     {
       foo: [

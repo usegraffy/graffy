@@ -1,4 +1,10 @@
-import { encodeArgs } from '../index.js';
+import { encode as encodeTree } from '../tree.js';
+
+export default function query(obj, version = 0) {
+  return encodeTree(obj, { version, isGraph: false });
+}
+
+/* import { encodeArgs } from '../index.js';
 export const ROOT_KEY = Symbol();
 
 // We freeze constructed queries to guard against bugs that might mutate them.
@@ -53,3 +59,4 @@ function makeNode(object, key, ver) {
 export default function query(obj, version = 0) {
   return makeNode(obj, ROOT_KEY, version)?.children || [];
 }
+*/
