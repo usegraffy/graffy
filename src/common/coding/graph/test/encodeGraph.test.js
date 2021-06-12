@@ -136,3 +136,38 @@ test('plain_array', () => {
     { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
   ]);
 });
+
+test('rangeRef', () => {
+  const result = encodeGraph(
+    {
+      foo: [
+        {
+          $key: { $first: 2, tag: 'x' },
+          $ref: ['bar', { $first: 2, tag: 'x', id: 'y' }],
+        },
+      ],
+    },
+    0,
+  );
+  // console.log(JSON.stringify(result));
+  expect(result).toEqual([
+    {
+      key: 'foo',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKoNLR-0MV.',
+          end: '\u00000kKoNLR-0MV.\uffff',
+          version: 0,
+          path: [
+            'bar',
+            {
+              key: '\u00000kKdO--4TF-4S54b--Ks.',
+              end: '\u00000kKdO--4TF-4S54b--Ks.\uffff',
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+});

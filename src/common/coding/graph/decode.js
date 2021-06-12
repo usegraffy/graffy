@@ -1,4 +1,10 @@
-import {
+import { decode as decodeTree } from '../tree.js';
+
+export default function decodeGraph(graph) {
+  return decodeTree(graph, { isGraph: true });
+}
+
+/* import {
   isRange,
   isBranch,
   isLink,
@@ -117,15 +123,6 @@ function decodeChildren(graph, query, links) {
       resObj.$put = putRanges.map((rNode) => decodeArgs(rNode));
     }
   }
-
-  /*
-    We return an array, not an object, as the decoded value in three
-    situations:
-
-    1. The query had pagination parameters
-    2. The result had ranges of unknown
-    3. The result has encoded values, which must be decoded into an $key
-  */
 
   if (query) {
     if (Array.isArray(query)) {
@@ -264,3 +261,4 @@ export function getRangeNodes(graph, { key, end, limit = Infinity }) {
   }
   return result;
 }
+*/

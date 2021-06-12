@@ -23,12 +23,14 @@ it('should decodeGraph queries', () => {
 
   expect(decodeGraphd).toEqual({
     postCount: true,
-    posts: {
-      $key: { $first: 10, $since: '1984' },
-      title: true,
-      body: true,
-      author: { name: true },
-    },
-    tags: { $key: { $first: 10 } },
+    posts: [
+      {
+        $key: { $first: 10, $since: '1984' },
+        title: true,
+        body: true,
+        author: { name: true },
+      },
+    ],
+    tags: [{ $key: { $first: 10 } }],
   });
 });

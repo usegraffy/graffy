@@ -7,6 +7,10 @@ export function isEmpty(object) {
   return true;
 }
 
+export function isDef(value) {
+  return typeof value !== 'undefined';
+}
+
 export function mergeObject(base, change) {
   if (
     typeof change !== 'object' ||

@@ -9,6 +9,7 @@ function resolve(handlers, firstPayload, options) {
 
   function run(i, payload) {
     if (i >= handlers.length) {
+      console.log('handlers', handlers);
       throw Error('resolve.no_providers_for ' + JSON.stringify(payload));
     }
 

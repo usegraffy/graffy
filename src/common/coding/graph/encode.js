@@ -1,5 +1,5 @@
-import { encodeArgs } from '../index.js';
-import { makePath, wrap } from '../../path/index.js';
+import { encodeArgs, encodePath } from '../index.js';
+import { wrap } from '../../path/index.js';
 import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
 import finalize from './finalize.js';
@@ -30,7 +30,7 @@ function makeNode(object, key, ver, linked = []) {
   if ($key && (typeof key === 'number' || typeof key === 'undefined')) {
     key = $key;
   }
-  let node = key === ROOT_KEY ? {} : encodeArgs(key);
+  let { limit: _, ...node } = key === ROOT_KEY ? {} : encodeArgs(key);
 
   node.version = ver;
 
@@ -45,7 +45,7 @@ function makeNode(object, key, ver, linked = []) {
   } else if (typeof $val !== 'undefined') {
     node.value = $val;
   } else if ($ref) {
-    node.path = makePath($ref);
+    node.path = encodePath($ref);
     if (!isEmpty(rest)) {
       linked.push(
         wrap(

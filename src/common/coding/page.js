@@ -25,11 +25,10 @@ export function encode(arg) {
   const { page, filter } = props;
 
   if (!isEmpty(filter)) {
-    throw Error('unexpected_non_page_parameter: ' + JSON.stringify(filter));
-    // return {
-    //   key: maybeEncode(arg),
-    //   ...(!isEmpty(page) ? { prefix: true, children: [encode(page)] } : {}),
-    // };
+    return {
+      key: maybeEncode(arg),
+      ...(!isEmpty(page) ? { prefix: true, children: [encode(page)] } : {}),
+    };
   }
 
   const { $cursor, ...range } = page;
@@ -41,13 +40,18 @@ export function encode(arg) {
   throwIf('before_and_$until', isDef($before) && isDef($until));
   throwIf('cursor_and_range_arg', isDef($cursor) && hasRange);
 
-  let [key, end] = hasRange ? ['', '\uffff'] : [];
+  let key, end;
 
   if (isDef($cursor)) key = maybeEncode($cursor);
   if (isDef($after)) key = keyAfter(maybeEncode($after));
   if (isDef($before)) end = keyBefore(maybeEncode($before));
   if (isDef($since)) key = maybeEncode($since);
   if (isDef($until)) end = maybeEncode($until);
+
+  if (hasRange) {
+    key = key || '';
+    end = end || '' + '\uffff';
+  }
 
   if (isDef($last)) [key, end] = [end, key];
 
@@ -58,12 +62,23 @@ export function encode(arg) {
   return node;
 }
 
-function maybeDecode(encodedKey) {
+/*
+
+  Key and End might take one of these forms:
+
+  filter.since .. filter.until
+  since .. until
+  filter.cursor
+  filter OR cursor (not distinguished)
+*/
+
+function splitEncoded(encodedKey) {
   if (encodedKey[0] === '\0') {
-    const cursor = encodedKey.slice(1);
+    const parts = encodedKey.slice(1).split('.');
+    const [prefix, cursor] = [undefined, ...parts].slice(-2);
     const { key, step } = keyStep(cursor);
     const value = key === '' || key === '\uffff' ? key : decodeValue(key);
-    return { cursor, value, step };
+    return { prefix, cursor, value, step };
   } else {
     const { key, step } = keyStep(encodedKey);
     return { cursor: encodedKey, value: key, step };
@@ -71,22 +86,37 @@ function maybeDecode(encodedKey) {
 }
 
 export function decode(node) {
-  if (typeof node === 'string') return node;
-  const { key, end, limit } = node;
-  if (key[0] !== '\0' && (!isDef(end) || end === key)) return key;
+  if (typeof node === 'string') return [node];
+  const { key, end, limit, prefix, children } = node;
+  if (key[0] !== '\0' && !prefix && !isDef(end)) return [key];
 
   throwIf('no_key', !isDef(key));
+  throwIf('prefix_and_end', isDef(prefix) && isDef(end));
   throwIf('limit_without_end', isDef(limit) && !isDef(end));
+
+  if (prefix) {
+    const filter = decodeValue(key.slice(0));
+    return children.map((child) => ({ ...filter, ...decode(child) }));
+  }
 
   const args = {};
   if (limit) args[key < end ? '$first' : '$last'] = limit;
 
-  const kParts = maybeDecode(key);
-  if (!isDef(end)) return kParts.value;
+  const kParts = splitEncoded(key);
+  if (kParts.prefix) Object.assign(args, decodeValue(kParts.prefix));
 
-  const eParts = maybeDecode(end);
+  if (typeof end === 'undefined') {
+    if (isEmpty(args)) return kParts.value;
+    args.$cursor = kParts.value;
+    return args;
+  }
 
-  const [lower, upper] = key < end ? [kParts, eParts] : [eParts, kParts];
+  const eParts = splitEncoded(end);
+
+  throwIf('prefix_mismatch', eParts.prefix !== kParts.prefix);
+
+  const [lower, upper] =
+    eParts.cursor > kParts.cursor ? [kParts, eParts] : [eParts, kParts];
 
   if (lower.cursor !== '') {
     args[lower.step === 1 ? '$after' : '$since'] = lower.value;

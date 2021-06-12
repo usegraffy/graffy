@@ -19,8 +19,7 @@ export default class Graffy {
     this.path = path;
   }
 
-  on(type, ...args) {
-    const [path, handler] = validateOn(...args);
+  on(type, path, handler) {
     this.core.on(type, path, handler);
   }
 

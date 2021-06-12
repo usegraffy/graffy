@@ -1,6 +1,6 @@
 import sql, { raw, join } from 'sql-template-tag';
 import {
-  makePath,
+  encodePath,
   wrapObject,
   unwrapObject,
   mergeObject,
@@ -59,7 +59,7 @@ function objectToRow(object, { props, defCol }) {
 
   for (const prop in props) {
     const { data, gin, tsv, trgm } = props[prop];
-    const path = makePath(prop);
+    const path = encodePath(prop);
     const value = unwrapObject(object, path);
 
     if (typeof value === 'undefined') continue;

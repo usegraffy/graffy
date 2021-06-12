@@ -2,7 +2,7 @@ import decodeGraph from '../decode.js';
 import { encodeValue as key, keyAfter, keyBefore } from '@graffy/common';
 
 test('decodeGraph', () => {
-  const decodeGraphd = decodeGraph(
+  const decodedGraph = decodeGraph(
     /* prettier-ignore */
     [
       { key: 'users', version: 2, children: [
@@ -14,106 +14,56 @@ test('decodeGraph', () => {
         ]}
       ] },
       { key: 'posts', version: 2, children: [
-        { key: '\0' + key('1984'), version: 2, children: [
+        { key: '\0' + key({title: '1984'}), version: 2, children: [
           { key: 'author', version: 2, path: ['users', '1'] },
           { key: 'body', value: 'Lorem ipsum', version: 2 },
           { key: 'options', value: { inStock: true }, version: 2 },
           { key: 'title', value: '1984', version: 2 },
         ] },
-        { key: '\0' + keyAfter(key('1984')), end: '\0' + keyBefore(key('2001')), version: 2},
-        { key: '\0' + key('2001'), version: 2, children: [
+        { key: '\0' + keyAfter(key({ title: '1984' })), end: '\0' + keyBefore(key({ title: '2001' })), version: 2},
+        { key: '\0' + key({ title: '2001' }), version: 2, children: [
           { key: 'author', version: 2, path: ['users', '2'] },
           { key: 'body', value: 'Hello world', version: 2 },
           { key: 'options', value: { borrowed: true }, version: 2 },
           { key: 'title', value: '2001', version: 2 },
         ] },
-        { key: '\0' + keyAfter(key('2001')), end: '\0\uffff', version: 2 }
+        { key: '\0' + keyAfter(key({ title: '2001' })), end: '\0\uffff', version: 2 }
       ] },
     ],
   );
-  expect(decodeGraphd).toEqual({
+  const expected = {
     users: {
-      1: { $ref: ['users', '1'], name: 'George Orwell' },
-      2: { $ref: ['users', '2'], name: 'Arthur C Clarke' },
+      1: { name: 'George Orwell' },
+      2: { name: 'Arthur C Clarke' },
     },
     posts: [
       {
-        $key: '1984',
+        $key: { title: '1984' },
         title: '1984',
         body: 'Lorem ipsum',
-        options: { $val: { inStock: true } },
-        author: { $ref: ['users', '1'], name: 'George Orwell' },
+        options: { inStock: true, $val: true },
+        author: { $ref: ['users', '1'] },
       },
       {
-        $key: '2001',
+        $key: { title: '2001' },
         title: '2001',
         body: 'Hello world',
-        options: { $val: { borrowed: true } },
-        author: { $ref: ['users', '2'], name: 'Arthur C Clarke' },
+        options: { borrowed: true, $val: true },
+        author: { $ref: ['users', '2'] },
       },
     ],
-  });
-
-  expect(decodeGraphd.posts[0].author).toBe(decodeGraphd.users['1']);
-  expect(decodeGraphd.posts[1].author).toBe(decodeGraphd.users['2']);
+  };
+  expected.posts.$put = [{ $since: { title: '1984' } }];
+  expect(decodedGraph.posts.$put).toEqual(expected.posts.$put);
+  expect(decodedGraph).toEqual(expected);
 });
 
 // TODO: Test multi-hop links and loops.
 
-test('arrayCursor.decode', () => {
+test.skip('arrayCursor.decode', () => {
   expect(
     decodeGraph([{ key: '\x000VI-Ck--------', value: 25, version: 0 }]),
   ).toEqual([25]);
-});
-
-describe('pagination', () => {
-  test('backward_mid', () => {
-    expect(
-      decodeGraph(
-        [
-          { key: 'foo', value: '123', version: 1 },
-          { key: 'foo\0', end: '\uffff', version: 1 },
-        ],
-        [{ $key: { $first: 10, $since: 'foo' }, name: 1 }],
-      ).prevPage,
-    ).toEqual({ $last: 10, $before: 'foo' });
-  });
-
-  test('forward_end', () => {
-    expect(
-      decodeGraph(
-        [
-          { key: 'foo', value: '123', version: 1 },
-          { key: 'foo\0', end: '\uffff', version: 1 },
-        ],
-        [{ $key: { $first: 10, $since: 'foo' }, name: 1 }],
-      ).nextPage,
-    ).toBe(undefined);
-  });
-
-  test('backward_start', () => {
-    expect(
-      decodeGraph(
-        [
-          { key: '', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: '123', version: 1 },
-        ],
-        [{ $key: { $last: 10, $until: 'foo' }, name: 1 }],
-      ).prevPage,
-    ).toBe(undefined);
-  });
-
-  test('forward_end', () => {
-    expect(
-      decodeGraph(
-        [
-          { key: '', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: '123', version: 1 },
-        ],
-        [{ $key: { $last: 10, $until: 'foo' }, name: 1 }],
-      ).nextPage,
-    ).toEqual({ $first: 10, $after: 'foo' });
-  });
 });
 
 test('put_true', () => {
@@ -145,5 +95,20 @@ test('plain_array', () => {
     { key: '\x000Azk--------', value: 'css', version: 0 },
     { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
   ]);
-  expect(result).toEqual(['js', 'css']);
+  const expected = ['js', 'css'];
+  expected.$put = [{ $since: 0, $until: Infinity }];
+  expect(result.$put).toEqual(expected.$put);
+  expect(result).toEqual(expected);
+});
+
+test.skip('range_ref', () => {
+  /* prettier-ignore */
+  const result = decodeGraph([
+    { key: 'foo', version: 0, children: [
+      { key: 'a', end: 'b', path: ['fox', { key: 'p', end: 'q' }] }
+    ] },
+    { key: 'fox', version: 0, children: [
+      {}
+    ]}
+  ])
 });

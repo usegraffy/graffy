@@ -7,7 +7,7 @@ import {
   mergeObject,
   decodeArgs,
   encodeArgs,
-  makePath,
+  encodePath,
 } from '@graffy/common';
 import { format } from '@graffy/testing';
 import debug from 'debug';
@@ -17,7 +17,7 @@ const log = debug('graffy:pg:link');
 function makeRef(template, object) {
   function replacePlaceholders(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
-      return unwrapObject(object, makePath(key.slice(2)));
+      return unwrapObject(object, encodePath(key.slice(2)));
     }
     if (Array.isArray(key)) {
       return key.map(replacePlaceholders);
@@ -30,7 +30,7 @@ function makeRef(template, object) {
     return key;
   }
 
-  const res = makePath(template).map(replacePlaceholders);
+  const res = template.map(replacePlaceholders);
   return res;
 }
 
@@ -51,7 +51,7 @@ export function linkResult(objects, query, { links: linkSpecs }) {
   const refQueries = [];
 
   for (let linkProp in linkSpecs) {
-    const linkPath = makePath(linkProp);
+    const linkPath = encodePath(linkProp);
     const linkedQuery = unwrap(query, linkPath);
     if (!linkedQuery) continue;
 
@@ -97,9 +97,9 @@ export function linkChange(object, { links: linkSpecs }) {
   for (let linkProp in linkSpecs) {
     const { target, prop, back } = linkSpecs[linkProp];
     if (back) continue;
-    const targetPath = makePath(target);
-    const linkPath = makePath(linkProp);
-    const idPath = makePath(prop);
+    const targetPath = encodePath(target);
+    const linkPath = encodePath(linkProp);
+    const idPath = encodePath(prop);
     const link = unwrapObject(object, linkPath);
     if (link) {
       // Remove the link from the object; we don't write it.
@@ -114,7 +114,7 @@ export function linkChange(object, { links: linkSpecs }) {
         );
       }
 
-      const ref = makePath(link.$ref);
+      const ref = encodePath(link.$ref);
       if (
         ref.length !== targetPath.length + 1 ||
         targetPath.some((tkey, i) => ref[i] !== tkey)

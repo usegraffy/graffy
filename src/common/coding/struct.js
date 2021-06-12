@@ -2,12 +2,12 @@ import { encode as encodeString, decode as decodeString } from './string.js';
 import { encode as encodeNumber, decode as decodeNumber } from './number.js';
 import { encode as encodeB64, decode as decodeB64 } from './base64.js';
 
-const END = 0;
-const NULL = 1;
-const FALSE = 2;
-const TRUE = 3;
-const NUM = 4;
-const STR = 5;
+export const END = 0;
+export const NULL = 1;
+export const FALSE = 2;
+export const TRUE = 3;
+export const NUM = 4;
+export const STR = 5;
 export const ARR = 6;
 export const OBJ = 7;
 

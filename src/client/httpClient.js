@@ -1,4 +1,4 @@
-import { encodeUrl, serialize, deserialize, makePath } from '@graffy/common';
+import { encodeUrl, serialize, deserialize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 function getOptionsParam(options) {
@@ -10,8 +10,6 @@ const httpClient = (
   baseUrl,
   { getOptions = async () => {}, watch, connInfoPath = 'connection' } = {},
 ) => (store) => {
-  connInfoPath = makePath(connInfoPath);
-
   store.onWrite(connInfoPath, ({ url }) => {
     baseUrl = url;
     return { url };

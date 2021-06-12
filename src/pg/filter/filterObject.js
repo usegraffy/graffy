@@ -1,9 +1,9 @@
-import { unwrapObject, makePath } from '@graffy/common';
+import { unwrapObject, encodePath } from '@graffy/common';
 import { getAst } from './getAst.js';
 
 export default function filterObject(filter, object) {
   function lookup(path) {
-    return unwrapObject(object, makePath(path));
+    return unwrapObject(object, encodePath(path));
   }
 
   function checkNode(ast) {

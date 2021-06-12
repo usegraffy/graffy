@@ -1,5 +1,5 @@
 import sql, { join, raw } from 'sql-template-tag';
-import { isEmpty, makePath } from '@graffy/common';
+import { isEmpty, encodePath } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
 
 function getBoundCond(orderCols, bound, kind) {
@@ -53,7 +53,7 @@ export default function getArgSql(
     // Fast path for the direct arg lookup case.
     if (args[prop]) return lookupExpr(prop);
 
-    const propArray = makePath(prop);
+    const propArray = encodePath(prop);
     const suffix = [];
     while (propArray.length) {
       suffix.unshift(propArray.pop());
