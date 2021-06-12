@@ -1,5 +1,5 @@
 import { slice, merge, setVersion } from '../../ops/index.js';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 export default function finalize(graph, query, version = Date.now()) {
   let result = [{ key: '', end: '\uffff', version: 0 }];

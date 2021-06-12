@@ -1,7 +1,7 @@
 import { merge, makeWatcher } from '@graffy/common';
-import debug from 'debug';
+// import debug from 'debug';
 
-const log = debug('graffy:mockBackend');
+// const log = debug('graffy:mockBackend');
 
 export default function mockBackend(options = {}) {
   const state = [];

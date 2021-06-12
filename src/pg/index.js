@@ -8,7 +8,6 @@ import {
   finalize,
   slice,
   wrap,
-  wrapObject,
   unwrap,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
@@ -16,9 +15,9 @@ import dbRead from './dbRead.js';
 import dbWrite from './dbWrite.js';
 import pool from './pool.js';
 
-import debug from 'debug';
-const log = debug('graffy:pg:index');
-import { format } from '@graffy/testing';
+// import debug from 'debug';
+// const log = debug('graffy:pg:index');
+// import { format } from '@graffy/testing';
 
 export default (opts = {}) => (store) => {
   store.on('read', read);

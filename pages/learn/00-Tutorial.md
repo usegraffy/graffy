@@ -57,7 +57,9 @@ console.log('Server started at 5000');
 Run the server with `node server.js` and test it out by visiting http://localhost:5000/api/explore in a browser. Type the query:
 
 ```js
-{ hello: 1 }
+{
+  hello: 1;
+}
 ```
 
 and click Read. The response should be `{ "hello": "world" }`.
@@ -98,27 +100,33 @@ const Graffy = require('@graffy/core');
 const pg = require('@graffy/pg');
 const store = Graffy();
 
-store.use('user', pg({
-  columns: {
-    id: { role: 'primary' },
-    name: { role: 'simple' },
-    avatar: { role: 'simple' },
-    version: { role: 'version '}
-  }
-}));
+store.use(
+  'user',
+  pg({
+    columns: {
+      id: { role: 'primary' },
+      name: { role: 'simple' },
+      avatar: { role: 'simple' },
+      version: { role: 'version ' },
+    },
+  }),
+);
 
-store.use('message', pg({
-  columns: {
-    id: { role: 'primary' },
-    text: { role: 'simple' },
-    time: { role: 'simple' },
-    authorId: { role: 'simple' },
-    version: { role: 'version' }
-  },
-  links: {
-    author: { target: 'user', prop: 'authorId' }
-  }
-}));
+store.use(
+  'message',
+  pg({
+    columns: {
+      id: { role: 'primary' },
+      text: { role: 'simple' },
+      time: { role: 'simple' },
+      authorId: { role: 'simple' },
+      version: { role: 'version' },
+    },
+    links: {
+      author: { target: 'user', prop: 'authorId' },
+    },
+  }),
+);
 
 module.exports = store;
 ```
@@ -130,32 +138,38 @@ The `links` object tells GraffyPG to construct an `author` link using the value 
 Restart the server and visit http://localhost:5000/api/explore to try out the following:
 
 1. **Read** a user:
-    ```js
-    { user: { alice: { name: 1, avatar: 1 } } }
-    ```
-    The result should be `{ name: 'Alice', avatar: 'alice.png' }`.
+
+   ```js
+   { user: { alice: { name: 1, avatar: 1 } } }
+   ```
+
+   The result should be `{ name: 'Alice', avatar: 'alice.png' }`.
 
 2. **Watch** the last 3 messages:
-    ```js
-    { message: {
-      $key: { order: ['time', 'id'], last: 3 },
-      text: 1,
-      time: 1,
-      author: { name: 1 }
-    } }
-    ```
-    The initial result should be an empty array, `[]`. Keep this tab open.
+
+   ```js
+   { message: {
+     $key: { order: ['time', 'id'], last: 3 },
+     text: 1,
+     time: 1,
+     author: { name: 1 }
+   } }
+   ```
+
+   The initial result should be an empty array, `[]`. Keep this tab open.
 
 3. In a new browser tab, **write** a message:
-    ```js
-    { message: { message0: {
-      id: 'message0',
-      text: 'Test message 1',
-      time: 10,
-      authorId: 'alice'
-    } } }
-    ```
-    This should complete without error, returning the object you wrote.
+
+   ```js
+   { message: { message0: {
+     id: 'message0',
+     text: 'Test message 1',
+     time: 10,
+     authorId: 'alice'
+   } } }
+   ```
+
+   This should complete without error, returning the object you wrote.
 
 4. Switch back to the **watch** tab. The result should now update automatically and show the message you just added.
 
@@ -164,12 +178,15 @@ Restart the server and visit http://localhost:5000/api/explore to try out the fo
 We probably don't want the client to set the time for new messages. Another requirement might be to prevent the client from updating existing messages. We do this by adding a _middleware_ provider. Add these lines to `server/store.js`, _before_ the first call to `store.use()`.
 
 ```js
-store.use('message', provider({
-  async write(change, options, next) {
-    change.time = Date.now();
-    return next(change, options);
-  }
-}));
+store.use(
+  'message',
+  provider({
+    async write(change, options, next) {
+      change.time = Date.now();
+      return next(change, options);
+    },
+  }),
+);
 ```
 
 Note the call to `next()`, this forwards the request to the next provider (GraffyPG).
@@ -200,6 +217,7 @@ import store from './store.js';
 ```
 
 and on the line which calls ReactDOM.render, replace `<App />` with:
+
 ```js
 <GraffyProvider store={store}>
   <App />

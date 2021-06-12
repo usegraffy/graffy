@@ -2,8 +2,8 @@ import sql, { join, raw, empty } from 'sql-template-tag';
 import getArgSql from './getArgSql.js';
 import getIdMeta from './getIdMeta.js';
 import getSelectCols from './getSelectCols.js';
-import debug from 'debug';
-const log = debug('graffy:pg:select');
+// import debug from 'debug';
+// const log = debug('graffy:pg:select');
 
 const MAX_LIMIT = 4096;
 

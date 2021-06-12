@@ -3,7 +3,7 @@ import { makePath, wrap } from '../../path/index.js';
 import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
 import finalize from './finalize.js';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 export const ROOT_KEY = Symbol();
 

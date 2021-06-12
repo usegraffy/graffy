@@ -1,5 +1,5 @@
 import { wrap, unwrap, remove } from './index.js';
-import { encodeArgs, decodeArgs } from '../coding/index.js';
+import { encodeArgs } from '../coding/index.js';
 
 describe('unwrap', () => {
   test('root', () => {

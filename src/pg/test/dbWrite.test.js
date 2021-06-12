@@ -4,7 +4,7 @@ import graffyPg from '../index.js';
 // import { populate } from './setup.js';
 import expectSql from '../sql/expectSql.js';
 
-import debug from 'debug';
+// import debug from 'debug';
 import pool from '../pool.js';
 
 jest.mock('../pool', () => {
@@ -25,7 +25,7 @@ jest.mock('../pool', () => {
   return mockPool;
 });
 
-const log = debug('graffy:pg:test');
+// const log = debug('graffy:pg:test');
 
 describe('postgres', () => {
   let store;

@@ -16,6 +16,6 @@
 
 */
 
-export default function provider(options) {
-  const { finalize, links, fetch, watch } = options;
+export default function provider(_options) {
+  // const { finalize, links, fetch, watch } = options;
 }

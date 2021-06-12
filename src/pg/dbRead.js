@@ -10,7 +10,6 @@ import {
   unwrap,
   finalize,
   merge,
-  mergeObject,
   wrapObject,
   slice,
   encodeGraph,
