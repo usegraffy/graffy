@@ -1,4 +1,4 @@
-import { getRangeNodes } from '../decode.js';
+import getRangeNodes from '../getRangeNodes.js';
 
 test('stopAtGap', () => {
   expect(

@@ -5,8 +5,7 @@ import {
 } from './args.js';
 import { decode as decodePath, encode as encodePath } from './path.js';
 import { isEmpty, isDef, isArgObject } from '../util.js';
-import { keyAfter, merge, add } from '../ops/index.js';
-import { wrap } from '../path/index.js';
+import { keyAfter, merge, add, wrap } from '../ops/index.js';
 import finalize from './graph/finalize.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
@@ -106,22 +105,34 @@ export function decode(nodes, { isGraph } = {}) {
   }
 
   function decodePrefixNode(node) {
-    if (!isBranch(node)) {
-      throw Error('decode.prefix_without_children: ' + node.key);
-    }
+    // if (!isBranch(node)) {
+    //   throw Error('decode.prefix_without_children: ' + node.key);
+    // }
 
     const args = decodeArgs(node);
-    if (typeof args !== 'string') {
+    if (typeof args === 'string') {
       throw Error('decode.unencoded_prefix: ' + args);
     }
 
+    if (isLink(node)) {
+      args.$all = true;
+      const $ref = decodePath(node.path);
+      const lastKey = $ref[$ref.length - 1];
+      if (typeof lastKey === 'string') {
+        throw Error('decode.unencoded_prefix_ref: ' + node.path);
+      }
+      lastKey.$all = true;
+      return [{ $key: args, $ref }];
+    }
+
     const children = decodeChildren(node.children);
+
     if (!Array.isArray(children)) {
       throw Error('decode.prefix_without_encoded_child_keys:' + node.key);
     }
 
     for (const child of children) {
-      if (typeof child.$key !== 'string') {
+      if (typeof child.$key === 'string') {
         throw Error('decode.prefix_with_unencoded_child_key:' + child.$key);
       }
       child.$key = { ...args, ...child.$key };
@@ -133,13 +144,6 @@ export function decode(nodes, { isGraph } = {}) {
     const child = decodeChildren(node.children);
     child.$key = decodeArgs(node);
     return child;
-    //
-    // const object = Object.assign(
-    //   { $key: decodeArgs(node) },
-    //   Array.isArray(child) ? { $chi: child } : child,
-    // );
-    //
-    // return object;
   }
 
   function decodeLeafNode(node) {
@@ -174,15 +178,15 @@ const ROOT_KEY = Symbol();
 export function encode(value, { version, isGraph } = {}) {
   const links = [];
 
-  function pushLink(rest, key, node) {
-    if (!isEmpty(rest)) {
-      links.push(
-        wrap(
-          makeNode(rest, key, node.version).children,
-          node.path,
-          node.version,
-        )[0],
-      );
+  function pushLink(key, node, rest, $val, $chi) {
+    // prettier-ignore
+    const children =
+      !isEmpty(rest) ? makeNode(rest, key, node.version).children :
+      isDef($chi) ? makeNode($chi, key, node.version).children :
+      isDef($val) ? $val : undefined;
+
+    if (children) {
+      links.push(wrap(children, node.path, node.version)[0]);
     }
   }
 
@@ -198,35 +202,39 @@ export function encode(value, { version, isGraph } = {}) {
       throw Error(`makeNode.no_key: ${JSON.stringify(value)}`);
     }
 
+    if (isDef($ver)) ver = $ver;
+
     if (isArgObject($key)) {
-      const { page, filter } = splitArgs($key);
-      if (!isEmpty(page) && !isEmpty(filter)) {
-        console.log('Filters!', $key);
-        const node = makeNode({
-          $key: filter,
-          $chi: [{ ...object, $key: page }],
-        });
-        node.filter = true;
+      const [page, filter] = splitArgs($key);
+      if (page && filter) {
+        const node = makeNode(
+          Object.assign(
+            {},
+            isGraph ? object : { $chi: [{ ...object, $key: page }] },
+            { $key: filter },
+          ),
+          key,
+          ver,
+        );
+        node.prefix = true;
         return node;
       }
     }
 
     if ($key && (Number.isInteger(key) || !isDef(key))) key = $key;
-    if ($ver) ver = $ver;
-
     const node = key === ROOT_KEY ? {} : encodeArgs(key);
     node.version = ver;
 
     if (object === null) {
       node.end = node.key;
+    } else if ($ref) {
+      node.path = encodePath($ref);
+      if (!isGraph) return; // Drop query aliases from encoded format
+      pushLink(key, node, rest, $val, $chi);
     } else if ($val === true) {
       node.value = rest;
     } else if (isDef($val)) {
       node.value = $val;
-    } else if ($ref) {
-      node.path = encodePath($ref);
-      pushLink(rest, key, node);
-      if (!isGraph) return; // Drop query aliases from encoded format
     } else if (typeof object !== 'object') {
       node.value = isGraph || typeof object === 'number' ? object : 1;
     } else if (isDef($chi)) {
@@ -296,6 +304,7 @@ export function encode(value, { version, isGraph } = {}) {
   }
 
   let result = makeNode(value, ROOT_KEY, version)?.children || [];
+
   while (links.length) {
     combine(result, [links.pop()]);
   }

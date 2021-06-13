@@ -56,3 +56,7 @@ export function cloneObject(object) {
 export function isArgObject(arg) {
   return typeof arg === 'object' && arg && !Array.isArray(arg);
 }
+
+export function isEncodedKey(str) {
+  return str[0] === '\0';
+}

@@ -1,62 +1,28 @@
 import { findFirst, isRange, isBranch } from '../node/index.js';
 import { encodeArgs /* decodeArgs */ } from '../coding/index.js';
 
-// function isRangeKey(key) {
-//   return (
-//     typeof key === 'object' &&
-//     ('$all' in key ||
-//       '$first' in key ||
-//       '$last' in key ||
-//       '$before' in key ||
-//       '$after' in key ||
-//       '$until' in key ||
-//       '$since' in key)
-//   );
-// }
-
 export function wrapValue(value, path, version = 0) {
   const node = { ...encodeArgs(path[path.length - 1]), value, version };
   return wrap([node], path.slice(0, -1), version);
 }
 
-export function wrap(graph, path, version = 0) {
-  if (!Array.isArray(graph) || !graph.length) return;
+export function wrap(children, path, version = 0) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
 
-  // if (isRangeKey(path[path.length - 1])) {
-  //   const rangeKey = path.pop();
-  //   const {
-  //     $all,
-  //     $first,
-  //     $last,
-  //     $before,
-  //     $after,
-  //     $until,
-  //     $since,
-  //     ...pathArg
-  //   } = rangeKey;
-  //
-  //   graph = graph.map((node) => {
-  //     const graphArg = decodeArgs(node);
-  //     if (!isRangeKey(graphArg)) {
-  //       return { ...encodeArgs(rangeKey), children: [node] };
-  //     }
-  //     const arg = { ...pathArg, ...graphArg };
-  //     return { ...node, ...encodeArgs(arg) };
-  //   });
-  // }
+  let i = path.length - 1;
 
-  let children = graph;
-  for (let i = path.length - 1; i >= 0; i--) {
-    children = [{ ...encodeArgs(path[i]), version, children }];
+  if (!Array.isArray(children)) {
+    children = [{ ...encodeArgs(path[i--]), value: children, version }];
   }
+
+  if (!children.length) return;
+  while (i >= 0) children = [{ ...encodeArgs(path[i--]), version, children }];
   return children;
 }
 
-export function unwrap(graph, path) {
-  let children = graph;
+export function unwrap(children, path) {
   if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
-  // let rangeKey = isRangeKey(path[path.length - 1]) ? path.pop() : null;
+
   let node = { children };
   for (let i = 0; i < path.length; i++) {
     const { key } = encodeArgs(path[i]);
@@ -66,9 +32,7 @@ export function unwrap(graph, path) {
     if (!node || node.key > key) return undefined; // We lack knowledge.
     if (isRange(node)) return null; // This is known to be null.
   }
-  // if (rangeKey) {
-  //   throw Error('unimplemented.unwrap_range_path');
-  // }
+
   return node.children || node.value;
 }
 

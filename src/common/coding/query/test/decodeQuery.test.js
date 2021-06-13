@@ -2,7 +2,7 @@ import decodeQuery from '../decode.js';
 import { encodeValue as key } from '../../index.js';
 
 it('should decodeGraph queries', () => {
-  const decodeGraphd = decodeQuery(
+  const decodedGraph = decodeQuery(
     /* prettier-ignore */
     [
           { key: 'postCount', value: 1, version: 2 },
@@ -21,7 +21,7 @@ it('should decodeGraph queries', () => {
         ],
   );
 
-  expect(decodeGraphd).toEqual({
+  expect(decodedGraph).toEqual({
     postCount: true,
     posts: [
       {
@@ -33,4 +33,23 @@ it('should decodeGraph queries', () => {
     ],
     tags: [{ $key: { $first: 10 } }],
   });
+});
+
+test('rangeRef', () => {
+  const result = decodeQuery([
+    {
+      key: 'foo',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKoNLR-0MV',
+          version: 0,
+          prefix: true,
+          children: [{ key: '', end: '\uffff', value: 1, version: 0 }],
+        },
+      ],
+    },
+  ]);
+  // console.log(JSON.stringify(result));
+  expect(result).toEqual({ foo: [{ $key: { $all: true, tag: 'x' } }] });
 });

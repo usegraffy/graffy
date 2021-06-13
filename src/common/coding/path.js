@@ -1,4 +1,9 @@
-import { encode as encodeArgs, decode as decodeArgs } from './args.js';
+import { isArgObject } from '../util.js';
+import {
+  encode as encodeArgs,
+  decode as decodeArgs,
+  splitArgs,
+} from './args.js';
 
 const PATH_SEPARATOR = '.';
 
@@ -12,10 +17,19 @@ export function encode(path) {
     throw Error('encodePath.invalid:' + JSON.stringify(path));
   }
 
-  let encoded = path.slice(0, -1);
-  const { key, end } = encodeArgs(path[path.length - 1]);
-  encoded.push(typeof end === 'undefined' ? key : { key, end });
-  return encoded;
+  function encodeSegment(seg) {
+    if (!isArgObject(seg)) return seg;
+    const { key, end } = encodeArgs(seg);
+    if (end) throw 'encodePath.unexpected_range_key';
+    return key;
+  }
+
+  if (!isArgObject(path[path.length - 1])) return path.map(encodeSegment);
+
+  const [page, filter] = splitArgs(path[path.length - 1]);
+  if (!page) return path.map(encodeSegment);
+
+  return path.slice(0, -1).concat([filter]).map(encodeSegment);
 }
 
 export function decode(path) {
@@ -23,9 +37,7 @@ export function decode(path) {
     throw Error('decodePath.invalid:' + JSON.stringify(path));
   }
 
-  if (!path.length) return [];
-
-  let decoded = path.slice(0, -1);
-  decoded.push(decodeArgs(path[path.length - 1]));
+  const decoded = path.map((key) => decodeArgs({ key }));
+  console.log('path', path, decoded);
   return decoded;
 }

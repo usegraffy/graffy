@@ -101,14 +101,28 @@ test('plain_array', () => {
   expect(result).toEqual(expected);
 });
 
-test.skip('range_ref', () => {
-  /* prettier-ignore */
+test('rangeRef', () => {
   const result = decodeGraph([
-    { key: 'foo', version: 0, children: [
-      { key: 'a', end: 'b', path: ['fox', { key: 'p', end: 'q' }] }
-    ] },
-    { key: 'fox', version: 0, children: [
-      {}
-    ]}
-  ])
+    {
+      key: 'foo',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKoNLR-0MV',
+          version: 0,
+          path: ['bar', '\u00000kKdO--4TF-4S54b--Ks'],
+          prefix: true,
+        },
+      ],
+    },
+  ]);
+  // console.log(JSON.stringify(result));
+  expect(result).toEqual({
+    foo: [
+      {
+        $key: { $all: true, tag: 'x' },
+        $ref: ['bar', { $all: true, tag: 'x', id: 'y' }],
+      },
+    ],
+  });
 });

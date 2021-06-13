@@ -137,13 +137,35 @@ test('plain_array', () => {
   ]);
 });
 
-test.skip('rangeRef', () => {
+test('refWithProperties', () => {
+  const result = encodeGraph({ foo: { $ref: ['bar'], baz: 42 } }, 0);
+
+  expect(result).toEqual([
+    {
+      key: 'bar',
+      children: [{ key: 'baz', value: 42, version: 0 }],
+      version: 0,
+    },
+    { key: 'foo', path: ['bar'], version: 0 },
+  ]);
+});
+
+test('refWithValue', () => {
+  const result = encodeGraph({ foo: { $ref: ['bar'], $val: 42 } }, 0);
+
+  expect(result).toEqual([
+    { key: 'bar', value: 42, version: 0 },
+    { key: 'foo', path: ['bar'], version: 0 },
+  ]);
+});
+
+test('rangeRef', () => {
   const result = encodeGraph(
     {
       foo: [
         {
-          $key: { $first: 2, tag: 'x' },
-          $ref: ['bar', { $first: 2, tag: 'x', id: 'y' }],
+          $key: { $all: true, tag: 'x' },
+          $ref: ['bar', { $all: true, tag: 'x', id: 'y' }],
         },
       ],
     },
@@ -156,16 +178,10 @@ test.skip('rangeRef', () => {
       version: 0,
       children: [
         {
-          key: '\u00000kKoNLR-0MV.',
-          end: '\u00000kKoNLR-0MV.\uffff',
+          key: '\u00000kKoNLR-0MV',
           version: 0,
-          path: [
-            'bar',
-            {
-              key: '\u00000kKdO--4TF-4S54b--Ks.',
-              end: '\u00000kKdO--4TF-4S54b--Ks.\uffff',
-            },
-          ],
+          path: ['bar', '\u00000kKdO--4TF-4S54b--Ks'],
+          prefix: true,
         },
       ],
     },

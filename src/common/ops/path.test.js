@@ -1,4 +1,4 @@
-import { wrap, unwrap, remove } from './index.js';
+import { wrap, unwrap, remove } from './path.js';
 import { encodeArgs } from '../coding/index.js';
 
 describe('unwrap', () => {
