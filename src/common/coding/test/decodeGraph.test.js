@@ -1,4 +1,4 @@
-import decodeGraph from '../decode.js';
+import { decodeGraph } from '../decodeTree.js';
 import { encodeValue as key, keyAfter, keyBefore } from '@graffy/common';
 
 test('decodeGraph', () => {

@@ -1,4 +1,4 @@
-import encodeQuery from '../encode.js';
+import { encodeQuery } from '../encodeTree.js';
 
 it('should encode queries', () => {
   expect(

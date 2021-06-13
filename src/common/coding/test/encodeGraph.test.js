@@ -1,4 +1,4 @@
-import encodeGraph from '../encode.js';
+import { encodeGraph } from '../encodeTree.js';
 
 test('simple', () => {
   const users = [

@@ -37,7 +37,5 @@ export function decode(path) {
     throw Error('decodePath.invalid:' + JSON.stringify(path));
   }
 
-  const decoded = path.map((key) => decodeArgs({ key }));
-  console.log('path', path, decoded);
-  return decoded;
+  return path.map((key) => decodeArgs({ key }));
 }

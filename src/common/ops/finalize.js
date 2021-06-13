@@ -1,4 +1,4 @@
-import { slice, merge, setVersion } from '../../ops/index.js';
+import { slice, merge, setVersion } from './index.js';
 // import { format } from '@graffy/testing';
 
 export default function finalize(graph, query, version = Date.now()) {
