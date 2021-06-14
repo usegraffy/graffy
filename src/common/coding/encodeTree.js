@@ -42,17 +42,27 @@ function encode(value, { version, isGraph } = {}) {
     if (isArgObject($key)) {
       const [page, filter] = splitArgs($key);
       if (page && filter) {
-        const node = makeNode(
-          Object.assign(
-            {},
-            isGraph ? object : { $chi: [{ ...object, $key: page }] },
-            { $key: filter },
-          ),
-          key,
-          ver,
-        );
-        node.prefix = true;
-        return node;
+        if (isGraph && !isDef(page.$cursor)) {
+          const node = makeNode({ ...object, $key: filter }, key, ver);
+          node.prefix = true;
+          return node;
+        } else {
+          const node = makeNode(
+            {
+              $key: filter,
+              $chi: [
+                {
+                  ...object,
+                  $key: isDef(page.$cursor) ? page.$cursor : page,
+                },
+              ],
+            },
+            key,
+            ver,
+          );
+          node.prefix = true;
+          return node;
+        }
       }
     }
 
@@ -62,6 +72,9 @@ function encode(value, { version, isGraph } = {}) {
 
     if (object === null) {
       node.end = node.key;
+    } else if (isDef($key) && isDef(key) && key !== $key) {
+      // An array has been skipped because there is only one child.
+      node.children = [makeNode(object, undefined, ver)].filter(Boolean);
     } else if ($ref) {
       node.path = encodePath($ref);
       if (!isGraph) return; // Drop query aliases from encoded format
@@ -73,7 +86,7 @@ function encode(value, { version, isGraph } = {}) {
     } else if (typeof object !== 'object') {
       node.value = isGraph || typeof object === 'number' ? object : 1;
     } else if (isDef($chi)) {
-      let children = $chi
+      const children = $chi
         .map((obj) => makeNode(obj, undefined, ver))
         .filter(Boolean)
         .sort((a, b) => (a.key <= b.key ? -1 : 1));
@@ -82,30 +95,30 @@ function encode(value, { version, isGraph } = {}) {
         node.children = children;
       }
     } else if (Array.isArray(object)) {
-      let children = object
+      const children = object
         .map((obj, i) => makeNode(obj, i, ver))
         .filter(Boolean)
-        .sort((a, b) => (a.key <= b.key ? -1 : 1));
+        .reduce((acc, it) => {
+          combine(acc, [it]);
+          return acc;
+        }, []);
+      // .sort((a, b) => (a.key <= b.key ? -1 : 1));
 
       if (children.length) {
         node.children = children;
       }
     } else {
-      if (isDef($key) && key !== $key) {
-        node.children = [makeNode(object, undefined, ver)].filter(Boolean);
-      } else {
-        const children = Object.keys(rest)
-          .sort()
-          .map((key) => makeNode(object[key], key, ver))
-          .filter(Boolean);
+      const children = Object.keys(rest)
+        .sort()
+        .map((key) => makeNode(object[key], key, ver))
+        .filter(Boolean);
 
-        if (children.length) {
-          node.children = children;
-        } else if (isGraph) {
-          if (!node.end) node.end = node.key;
-        } else {
-          node.value = 1;
-        }
+      if (children.length) {
+        node.children = children;
+      } else if (isGraph) {
+        if (!node.end) node.end = node.key;
+      } else {
+        node.value = 1;
       }
     }
 

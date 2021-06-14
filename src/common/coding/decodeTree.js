@@ -1,4 +1,4 @@
-import { decode as decodeArgs } from './args.js';
+import { decode as decodeArgs, splitArgs } from './args.js';
 import { decode as decodePath } from './path.js';
 import { isEmpty, isDef } from '../util.js';
 import { keyAfter } from '../ops/index.js';
@@ -129,6 +129,11 @@ function decode(nodes, { isGraph } = {}) {
     for (const child of children) {
       if (typeof child.$key === 'string') {
         throw Error('decode.prefix_with_unencoded_child_key:' + child.$key);
+      }
+      if (!splitArgs(child.$key)[0]) {
+        // splitArgs returns [page, filter]. If page is blank, it indicates
+        // we have a bare cursor.
+        child.$key = { $cursor: child.$key };
       }
       child.$key = { ...args, ...child.$key };
     }

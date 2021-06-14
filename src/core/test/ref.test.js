@@ -39,10 +39,11 @@ describe('ref', () => {
         posts: { abc: { title: true, author: { name: true } } },
       });
 
-      const uabc = { $ref: ['users', 'uabc'], name: 'User uabc' };
       const expected = {
-        users: { uabc },
-        posts: { abc: { title: 'Title abc', author: uabc } },
+        users: { uabc: { name: 'User uabc' } },
+        posts: {
+          abc: { title: 'Title abc', author: { $ref: ['users', 'uabc'] } },
+        },
       };
 
       expect(postProvider).toBeCalledTimes(1);
@@ -96,11 +97,17 @@ describe('ref', () => {
           res[id] = { name: `User ${id}`, posts };
           return res;
         }, {});
+        // console.log('userProvider', { query, res });
         return res;
       });
 
       postProvider = jest.fn((query) => {
-        const res = query.map(({ $key }, i) => ({ $key, title: `Title ${i}` }));
+        const $chi = [];
+        for (let i = 0; i < 3; i++) {
+          $chi.push({ $key: { postId: i }, title: `Title ${i}` });
+        }
+        const res = query.map(({ $key }) => ({ $key, $chi }));
+        console.log('postProvider', res);
         return res;
       });
 
@@ -111,7 +118,10 @@ describe('ref', () => {
     test('range', async () => {
       const res = await store.read({
         users: {
-          abc: { id: true, posts: [{ $key: { $first: 2 }, title: true }] },
+          abc: {
+            id: true,
+            posts: [{ $key: { tag: 'x', $first: 2 }, title: true }],
+          },
         },
       });
 
@@ -123,33 +133,33 @@ describe('ref', () => {
       };
 
       expect(postProvider).toBeCalledTimes(1);
+      expect(postProvider.mock.calls[0][0]).toEqual([
+        { $key: { $first: 2, tag: 'x', userId: 'abc' }, title: true },
+      ]);
+      console.log('Result', res);
+      expect(res).toEqual(expected);
+    });
+
+    test.skip('point', async () => {
+      // ref = (id) => ({ authorId: id, $all: true });
+      const res = await store.read({
+        users: {
+          abc: { id: true, posts: { title: true } },
+        },
+      });
+
+      const posts = { $ref: ['posts'], title: null };
+      const expected = {
+        users: { abc: { id: 'abc', posts } },
+        posts,
+      };
+
+      expect(postProvider).toBeCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual({
-        $key: { $first: 2, authorId: 'abc' },
+        $key: { $all: true, authorId: 'abc' },
         title: true,
       });
       expect(res).toEqual(expected);
     });
-  });
-
-  test.skip('point', async () => {
-    // ref = (id) => ({ authorId: id, $all: true });
-    const res = await store.read({
-      users: {
-        abc: { id: true, posts: { title: true } },
-      },
-    });
-
-    const posts = { $ref: ['posts'], title: null };
-    const expected = {
-      users: { abc: { id: 'abc', posts } },
-      posts,
-    };
-
-    expect(postProvider).toBeCalledTimes(1);
-    expect(postProvider.mock.calls[0][0]).toEqual({
-      $key: { $all: true, authorId: 'abc' },
-      title: true,
-    });
-    expect(res).toEqual(expected);
   });
 });

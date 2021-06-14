@@ -187,3 +187,104 @@ test('rangeRef', () => {
     },
   ]);
 });
+
+test('rangeRefChi', () => {
+  const result = encodeGraph(
+    [
+      {
+        $key: { tag: 'x', $first: 2 },
+        $chi: [
+          { $key: { i: 1 }, foo: 1 },
+          { $key: { i: 2 }, foo: 2 },
+        ],
+      },
+    ],
+    0,
+  );
+  expect(result).toEqual([
+    {
+      key: '\u00000kKoNLR-0MV',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKd--Hzw---------',
+          version: 0,
+          children: [{ key: 'foo', version: 0, value: 1 }],
+        },
+        {
+          key: '\u00000kKd--I-----------',
+          version: 0,
+          children: [{ key: 'foo', version: 0, value: 2 }],
+        },
+      ],
+      prefix: true,
+    },
+  ]);
+});
+
+test('rangeRefCursor1', () => {
+  const result = encodeGraph(
+    [
+      {
+        $key: { tag: 'x', $first: 2 },
+        $chi: [
+          { $key: { i: 1 }, foo: 1 },
+          { $key: { i: 2 }, foo: 2 },
+        ],
+      },
+    ],
+    0,
+  );
+
+  const expected = [
+    {
+      key: '\u00000kKoNLR-0MV',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKd--Hzw---------',
+          version: 0,
+          children: [{ key: 'foo', version: 0, value: 1 }],
+        },
+        {
+          key: '\u00000kKd--I-----------',
+          version: 0,
+          children: [{ key: 'foo', version: 0, value: 2 }],
+        },
+      ],
+      prefix: true,
+    },
+  ];
+
+  expect(result).toEqual(expected);
+});
+
+test('rangeRefCursor2', () => {
+  const arr = [
+    { $key: { tag: 'x', $cursor: { i: 1 } }, foo: 1 },
+    { $key: { tag: 'x', $cursor: { i: 2 } }, foo: 2 },
+  ];
+
+  const result = encodeGraph(arr, 0);
+  const expected = [
+    {
+      key: '\u00000kKoNLR-0MV',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKd--Hzw---------',
+          version: 0,
+          children: [{ key: 'foo', version: 0, value: 1 }],
+        },
+        {
+          key: '\u00000kKd--I-----------',
+          version: 0,
+          children: [{ key: 'foo', version: 0, value: 2 }],
+        },
+      ],
+      prefix: true,
+    },
+  ];
+
+  expect(result).toEqual(expected);
+});

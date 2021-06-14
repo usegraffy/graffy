@@ -6,16 +6,20 @@ export function wrapValue(value, path, version = 0) {
   return wrap([node], path.slice(0, -1), version);
 }
 
-export function wrap(children, path, version = 0) {
+export function wrap(children, path, version = 0, prefix = false) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
 
   let i = path.length - 1;
 
+  // If it is a plain value, make it a value node
   if (!Array.isArray(children)) {
     children = [{ ...encodeArgs(path[i--]), value: children, version }];
+  } else {
+    if (!children.length) return;
+    children = [{ ...encodeArgs(path[i--]), version, children }];
   }
 
-  if (!children.length) return;
+  if (prefix) children[0].prefix = true;
   while (i >= 0) children = [{ ...encodeArgs(path[i--]), version, children }];
   return children;
 }
