@@ -27,7 +27,7 @@ export default function fill(_) {
         if (!unknown) break;
         // console.log('unknown', unknown);
         const res = await store.call('read', unknown, { skipFill: true });
-        console.log('fetched', res);
+        // console.log('fetched', res);
         merge(value, res);
       }
 

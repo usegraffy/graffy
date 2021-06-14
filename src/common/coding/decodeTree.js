@@ -104,7 +104,8 @@ function decode(nodes, { isGraph } = {}) {
     //   throw Error('decode.prefix_without_children: ' + node.key);
     // }
 
-    const args = decodeArgs(node);
+    let args = decodeArgs(node);
+    if (args === '') args = {};
     if (typeof args === 'string') {
       throw Error('decode.unencoded_prefix: ' + args);
     }

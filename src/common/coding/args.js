@@ -41,10 +41,9 @@ export function encode(arg) {
   if (!isArgObject(arg)) return { key: maybeEncode(arg) };
 
   const [page, filter] = splitArgs(arg);
-  throwIf('empty_args', !page && !filter);
   throwIf('page_and_filter', page && filter);
 
-  if (filter) return { key: maybeEncode(filter) };
+  if (!page) return { key: maybeEncode(filter || {}) };
 
   const { $cursor, ...range } = page;
   const { $first, $all, $last, $after, $before, $since, $until } = range;

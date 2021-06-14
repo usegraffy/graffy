@@ -131,28 +131,36 @@ test('rangeRef', () => {
 test('rangeRefChi', () => {
   const result = decodeGraph([
     {
-      key: '\u00000kKoNLR-0MV',
+      key: 'foo',
       version: 0,
       children: [
         {
-          key: '\u00000kKd--Hzw---------',
+          key: '\u00000kKoNLR-0MV',
           version: 0,
-          children: [{ key: 'foo', version: 0, value: 1 }],
-        },
-        {
-          key: '\u00000kKd--I-----------',
-          version: 0,
-          children: [{ key: 'foo', version: 0, value: 2 }],
+          children: [
+            {
+              key: '\u00000kKd--Hzw---------',
+              version: 0,
+              children: [{ key: 'foo', version: 0, value: 1 }],
+            },
+            {
+              key: '\u00000kKd--I-----------',
+              version: 0,
+              children: [{ key: 'foo', version: 0, value: 2 }],
+            },
+          ],
+          prefix: true,
         },
       ],
-      prefix: true,
     },
   ]);
 
-  const expected = [
-    { $key: { tag: 'x', $cursor: { i: 1 } }, foo: 1 },
-    { $key: { tag: 'x', $cursor: { i: 2 } }, foo: 2 },
-  ];
+  const expected = {
+    foo: [
+      { $key: { tag: 'x', $cursor: { i: 1 } }, foo: 1 },
+      { $key: { tag: 'x', $cursor: { i: 2 } }, foo: 2 },
+    ],
+  };
 
   expect(result).toEqual(expected);
 });

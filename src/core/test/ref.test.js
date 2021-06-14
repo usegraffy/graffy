@@ -1,5 +1,6 @@
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
+// import {isEmpty} from '@graffy/common';
 
 describe('ref', () => {
   describe('author', () => {
@@ -94,7 +95,7 @@ describe('ref', () => {
             $key,
             $ref: ['posts', { ...$key, userId: id }],
           }));
-          res[id] = { name: `User ${id}`, posts };
+          res[id] = { id, name: `User ${id}`, posts };
           return res;
         }, {});
         // console.log('userProvider', { query, res });
@@ -107,7 +108,7 @@ describe('ref', () => {
           $chi.push({ $key: { postId: i }, title: `Title ${i}` });
         }
         const res = query.map(({ $key }) => ({ $key, $chi }));
-        console.log('postProvider', res);
+        // console.log('postProvider', res);
         return res;
       });
 
@@ -119,24 +120,81 @@ describe('ref', () => {
       const res = await store.read({
         users: {
           abc: {
-            id: true,
+            name: true,
             posts: [{ $key: { tag: 'x', $first: 2 }, title: true }],
           },
         },
       });
 
-      const posts = [];
-      posts.$ref = ['posts'];
       const expected = {
-        users: { abc: { id: 'abc', posts } },
-        posts,
+        users: {
+          abc: {
+            name: 'User abc',
+            posts: [
+              {
+                $key: { tag: 'x', $all: true },
+                $ref: ['posts', { tag: 'x', userId: 'abc', $all: true }],
+              },
+            ],
+          },
+        },
+        posts: [
+          {
+            $key: { tag: 'x', userId: 'abc', $cursor: { postId: 0 } },
+            title: 'Title 0',
+          },
+          {
+            $key: { tag: 'x', userId: 'abc', $cursor: { postId: 1 } },
+            title: 'Title 1',
+          },
+        ],
       };
 
       expect(postProvider).toBeCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual([
         { $key: { $first: 2, tag: 'x', userId: 'abc' }, title: true },
       ]);
-      console.log('Result', res);
+      expect(res).toEqual(expected);
+    });
+
+    test('range2', async () => {
+      const res = await store.read({
+        users: {
+          abc: {
+            name: true,
+            posts: [{ $key: { $first: 2 }, title: true }],
+          },
+        },
+      });
+
+      const expected = {
+        users: {
+          abc: {
+            name: 'User abc',
+            posts: [
+              {
+                $key: { $all: true },
+                $ref: ['posts', { userId: 'abc', $all: true }],
+              },
+            ],
+          },
+        },
+        posts: [
+          {
+            $key: { userId: 'abc', $cursor: { postId: 0 } },
+            title: 'Title 0',
+          },
+          {
+            $key: { userId: 'abc', $cursor: { postId: 1 } },
+            title: 'Title 1',
+          },
+        ],
+      };
+
+      expect(postProvider).toBeCalledTimes(1);
+      expect(postProvider.mock.calls[0][0]).toEqual([
+        { $key: { $first: 2, userId: 'abc' }, title: true },
+      ]);
       expect(res).toEqual(expected);
     });
 

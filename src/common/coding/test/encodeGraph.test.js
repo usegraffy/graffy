@@ -47,37 +47,21 @@ test('simple', () => {
 
 test('point_deletion', () => {
   const version = 0;
-  expect(
-    encodeGraph(
-      {
-        foo: null,
-      },
-      version,
-    ),
-  ).toEqual([{ key: 'foo', end: 'foo', version }]);
+  expect(encodeGraph({ foo: null }, version)).toEqual([
+    { key: 'foo', end: 'foo', version },
+  ]);
 });
 
 test('point_in_range_deletion', () => {
   const version = 0;
-  expect(
-    encodeGraph(
-      [
-        {
-          $key: { $cursor: ['foo'] },
-        },
-      ],
-      version,
-    ),
-  ).toEqual([{ key: '\x000VKaQqw', end: '\x000VKaQqw', version }]);
+  expect(encodeGraph([{ $key: { $cursor: ['foo'] } }], version)).toEqual([
+    { key: '\x000VKaQqw', end: '\x000VKaQqw', version },
+  ]);
 });
 
-test('range', () => {
-  expect(encodeGraph([{ $key: { $before: ['a'] } }], 0)).toEqual([
-    {
-      key: '',
-      end: '\x000VKV\uffff',
-      version: 0,
-    },
+test('plain_range', () => {
+  expect(encodeGraph({ $put: { $before: ['a'] } }, 0)).toEqual([
+    { key: '', end: '\x000VKV\uffff', version: 0 },
   ]);
 });
 
@@ -88,7 +72,7 @@ test('arrayCursor.encode', () => {
 });
 
 test('bounded_range', () => {
-  const result = encodeGraph([{ $key: { $after: ['a'], $before: ['b'] } }], 0);
+  const result = encodeGraph({ $put: { $after: ['a'], $before: ['b'] } }, 0);
   expect(result).toEqual([
     { key: '\x000VKW\0', end: '\x000VKW\uffff', version: 0 },
   ]);
@@ -287,4 +271,10 @@ test('rangeRefCursor2', () => {
   ];
 
   expect(result).toEqual(expected);
+});
+
+test('emptyString', () => {
+  expect(encodeGraph({ $key: '', $val: 4 }, 0)).toEqual([
+    { key: '', version: 0, value: 4 },
+  ]);
 });

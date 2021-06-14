@@ -24,5 +24,5 @@ test('firstN', () => {
   };
   const encoded = encodeQuery(original);
   const decoded = decodeQuery(encoded);
-  expect(decoded).toEqual(original);
+  expect(decoded).toEqual([original]);
 });

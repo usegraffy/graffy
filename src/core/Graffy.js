@@ -30,10 +30,14 @@ export default class Graffy {
       'read',
       path,
       shiftFn(async function porcelainRead(query, options) {
-        return finalize(
-          encodeGraph(await handle(decodeQuery(query), options)),
-          query,
-        );
+        // console.log('onRead', path, query);
+        const decoded = decodeQuery(query);
+        // console.log('decoded', path, decoded);
+        const encoded = encodeGraph(await handle(decoded, options));
+        // console.log({ encoded });
+        const finalized = finalize(encoded, query);
+        // console.log({ finalized });
+        return finalized;
       }, path),
     );
   }

@@ -93,6 +93,7 @@ function updateNode(current, index, change) {
     const newChange = getNewer(change, node);
     if (newChange) current[index] = newChange;
   }
+  if (change.prefix) current[index].prefix = true;
   return index + 1;
 }
 

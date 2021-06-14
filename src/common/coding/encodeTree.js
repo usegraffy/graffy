@@ -33,41 +33,36 @@ function encode(value, { version, isGraph } = {}) {
 
     const { $key, $ref, $ver, $val, $chi, $put, ...rest } = object || {};
 
-    if (!isDef(key) && !isDef($key)) {
-      throw Error(`makeNode.no_key: ${JSON.stringify(value)}`);
-    }
-
     if (isDef($ver)) ver = $ver;
 
     if (isArgObject($key)) {
       const [page, filter] = splitArgs($key);
+      if (isGraph && page && !isDef(page.$cursor)) {
+        const node = makeNode({ ...object, $key: filter || '' }, key, ver);
+        node.prefix = true;
+        return node;
+      }
       if (page && filter) {
-        if (isGraph && !isDef(page.$cursor)) {
-          const node = makeNode({ ...object, $key: filter }, key, ver);
-          node.prefix = true;
-          return node;
-        } else {
-          const node = makeNode(
-            {
-              $key: filter,
-              $chi: [
-                {
-                  ...object,
-                  $key: isDef(page.$cursor) ? page.$cursor : page,
-                },
-              ],
-            },
-            key,
-            ver,
-          );
-          node.prefix = true;
-          return node;
-        }
+        const node = makeNode(
+          {
+            $key: filter,
+            $chi: [
+              {
+                ...object,
+                $key: isDef(page.$cursor) ? page.$cursor : page,
+              },
+            ],
+          },
+          key,
+          ver,
+        );
+        node.prefix = true;
+        return node;
       }
     }
 
-    if ($key && (Number.isInteger(key) || !isDef(key))) key = $key;
-    const node = key === ROOT_KEY ? {} : encodeArgs(key);
+    if (isDef($key) && (Number.isInteger(key) || !isDef(key))) key = $key;
+    const node = key === ROOT_KEY || !isDef(key) ? {} : encodeArgs(key);
     node.version = ver;
 
     if (object === null) {
@@ -116,41 +111,43 @@ function encode(value, { version, isGraph } = {}) {
       if (children.length) {
         node.children = children;
       } else if (isGraph) {
-        if (!node.end) node.end = node.key;
+        if (node.key && !node.end) node.end = node.key;
       } else {
         node.value = 1;
       }
     }
 
-    let put = $put;
+    let putQuery;
     // If this is a plain array (without keyed objects), we should "put" the
     // entire positive integer range to give it atomic write behavior.
-    if (
-      Array.isArray(object) &&
-      object.length &&
-      object.every((it) => !isDef(it?.$key))
-    ) {
-      put = [{ $since: 0, $until: +Infinity }];
+    if (Array.isArray(object) && !object.some((it) => isDef(it?.$key))) {
+      putQuery = [encodeArgs({ $since: 0, $until: +Infinity })];
     }
 
-    if (isGraph && put) {
-      node.children = finalize(
-        node.children,
-        put === true ? null : put.map((arg) => encodeArgs(arg)),
-        node.version,
-      );
+    if ($put === true) {
+      putQuery = null;
+    } else if (Array.isArray($put)) {
+      putQuery = $put.map((arg) => encodeArgs(arg));
+    } else if (isDef($put)) {
+      putQuery = [encodeArgs($put)];
+    }
+
+    if (isGraph && isDef(putQuery)) {
+      node.children = finalize(node.children || [], putQuery, node.version);
     }
 
     if (
-      node.children?.length ||
-      isDef(node.end) ||
-      isDef(node.value) ||
-      isDef(node.path)
+      (key === ROOT_KEY || isDef(node.key)) &&
+      (node.children?.length ||
+        isDef(node.end) ||
+        isDef(node.value) ||
+        isDef(node.path))
     ) {
       return node;
     }
   }
 
+  if (value?.$key) value = [value];
   let result = makeNode(value, ROOT_KEY, version)?.children || [];
 
   while (links.length) {
