@@ -1,5 +1,27 @@
-export function throwIf(message, condition) {
-  if (condition) throw Error('arg_encoding.' + message);
+import util from 'util';
+
+const opts = {
+  showHidden: false,
+  depth: 3,
+  colors: false,
+  customInspect: true,
+  showProxy: false,
+  maxArrayLength: 3,
+  maxStringLength: 10,
+  breakLength: Infinity,
+  compact: true,
+  sorted: false,
+  getters: false,
+};
+
+export function err(message, { cause, ...args } = {}) {
+  const e = new Error(message + (args ? ' ' + util.inspect(args, opts) : ''));
+  e.cause = cause;
+  throw e;
+}
+
+export function errIf(message, condition) {
+  if (condition) err(message);
 }
 
 export function isEmpty(object) {
@@ -11,49 +33,7 @@ export function isDef(value) {
   return typeof value !== 'undefined';
 }
 
-export function mergeObject(base, change) {
-  if (
-    typeof change !== 'object' ||
-    typeof base !== 'object' ||
-    !base ||
-    !change
-  ) {
-    return change;
-  }
-
-  for (const prop in change) {
-    if (prop in base) {
-      const value = mergeObject(base[prop], change[prop]);
-      if (value === null) {
-        delete base[prop];
-      } else {
-        base[prop] = value;
-      }
-    } else {
-      base[prop] = change[prop];
-    }
-  }
-
-  return isEmpty(base) ? null : base;
-}
-
-export function cloneObject(object) {
-  if (typeof object !== 'object' || !object) {
-    return object;
-  }
-
-  const clone = {};
-
-  for (const prop in object) {
-    const value = cloneObject(object[prop]);
-    if (value === null) continue;
-    clone[prop] = value;
-  }
-
-  return isEmpty(clone) ? null : clone;
-}
-
-export function isArgObject(arg) {
+export function isPlainObject(arg) {
   return typeof arg === 'object' && arg && !Array.isArray(arg);
 }
 

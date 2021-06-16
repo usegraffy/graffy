@@ -41,9 +41,11 @@ describe('ref', () => {
       });
 
       const expected = {
-        users: { uabc: { name: 'User uabc' } },
         posts: {
-          abc: { title: 'Title abc', author: { $ref: ['users', 'uabc'] } },
+          abc: {
+            title: 'Title abc',
+            author: { $ref: ['users', 'uabc'], name: 'User uabc' },
+          },
         },
       };
 

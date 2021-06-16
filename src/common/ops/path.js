@@ -9,6 +9,7 @@ export function wrapValue(value, path, version = 0) {
 export function wrap(children, path, version = 0, prefix = false) {
   if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
 
+  if (!path.length) return children;
   let i = path.length - 1;
 
   // If it is a plain value, make it a value node
@@ -38,23 +39,6 @@ export function unwrap(children, path) {
   }
 
   return node.children || node.value;
-}
-
-export function wrapObject(object, path) {
-  if (!Array.isArray(path)) throw Error('wrapObject.path_not_array ' + path);
-  for (let i = path.length - 1; i >= 0; i--) {
-    object = { [path[i]]: object };
-  }
-  return object;
-}
-
-export function unwrapObject(object, path) {
-  if (!Array.isArray(path)) throw Error('unwrapObject.path_not_array ' + path);
-  for (let i = 0; i < path.length; i++) {
-    if (!object || typeof object !== 'object') return;
-    object = object[path[i]];
-  }
-  return object;
 }
 
 export function remove(children, path) {

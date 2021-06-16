@@ -2,7 +2,7 @@ import { selectByArgs, selectByIds } from './sql/index.js';
 import { linkResult } from './link/index.js';
 import pool from './pool.js';
 import {
-  isArgObject,
+  isPlainObject,
   decodeArgs,
   add,
   isEmpty,
@@ -71,7 +71,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   for (const node of query) {
     const args = decodeArgs(node);
 
-    if (isArgObject(args)) {
+    if (isPlainObject(args)) {
       promises.push(getByArgs(args, node.children));
     } else {
       idQueries[node.key] = node.children;

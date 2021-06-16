@@ -59,14 +59,6 @@ test('decodeGraph', () => {
   expect(decodedGraph).toEqual(expected);
 });
 
-// TODO: Test multi-hop links and loops.
-
-test.skip('arrayCursor.decode', () => {
-  expect(
-    decodeGraph([{ key: '\x000VI-Ck--------', value: 25, version: 0 }]),
-  ).toEqual([25]);
-});
-
 test('put_true', () => {
   const result = decodeGraph([
     { key: '', end: 'fon\uffff', version: 0 },

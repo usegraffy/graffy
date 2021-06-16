@@ -28,7 +28,10 @@ export function shiftFn(fn, path) {
       return unwrap(nextResult, path);
     }
 
-    const result = wrap(await fn(unwrappedPayload, options, shiftedNext), path);
+    const rawResult = await fn(unwrappedPayload, options, shiftedNext);
+    // console.log(rawResult, path);
+    const result = wrap(rawResult, path);
+    // console.log(result);
 
     if (!nextCalled && remainingPayload.length) {
       remainingNextResult = await next(remainingPayload);

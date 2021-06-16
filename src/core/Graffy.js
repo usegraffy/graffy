@@ -1,4 +1,5 @@
 import {
+  decorate,
   decodeGraph,
   decodeQuery,
   wrapObject,
@@ -94,7 +95,7 @@ export default class Graffy {
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
     const result = await this.call('read', query, options || {});
-    return unwrapObject(decodeGraph(result, rootQuery), path);
+    return unwrapObject(decorate(result, rootQuery), path);
   }
 
   watch(...args) {
@@ -103,7 +104,7 @@ export default class Graffy {
     const query = encodeQuery(rootQuery);
     const stream = this.call('watch', query, options || {});
     return mapStream(stream, (value) =>
-      unwrapObject(decodeGraph(value, rootQuery), path),
+      unwrapObject(decorate(value, rootQuery), path),
     );
   }
 

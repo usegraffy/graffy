@@ -56,11 +56,11 @@ describe('read', () => {
       provider = jest.fn(() => {
         return {
           foo: [
-            { $key: 'a', baz: 15, bar: 42 },
-            { $key: 'b', baz: 16, bar: 41 },
-            { $key: 'c', baz: 17, bar: 40 },
-            { $key: 'd', baz: 18, bar: 39 },
-            { $key: 'e', baz: 19, bar: 38 },
+            { $key: { x: 'a' }, baz: 15, bar: 42 },
+            { $key: { x: 'b' }, baz: 16, bar: 41 },
+            { $key: { x: 'c' }, baz: 17, bar: 40 },
+            { $key: { x: 'd' }, baz: 18, bar: 39 },
+            { $key: { x: 'e' }, baz: 19, bar: 38 },
           ],
         };
       });
@@ -72,17 +72,16 @@ describe('read', () => {
         foo: { $key: { $first: 100 }, bar: 1 },
       });
       expect(provider).toBeCalledWith(
-        { foo: { $key: { $first: 100 }, bar: true } },
+        { foo: [{ $key: { $first: 100 }, bar: true }] },
         {},
       );
-      expect(provider.mock.calls[0][0].foo.$key).toEqual({ $first: 100 });
       expect(result).toEqual({
         foo: [
-          { $key: 'a', bar: 42 },
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
-          { $key: 'd', bar: 39 },
-          { $key: 'e', bar: 38 },
+          { $key: { x: 'a' }, bar: 42 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
+          { $key: { x: 'd' }, bar: 39 },
+          { $key: { x: 'e' }, bar: 38 },
         ],
       });
     });
@@ -91,14 +90,14 @@ describe('read', () => {
       const result = await g.read({ foo: { $key: { $first: 2 }, bar: 1 } });
       expect(result).toEqual({
         foo: [
-          { $key: 'a', bar: 42 },
-          { $key: 'b', bar: 41 },
+          { $key: { x: 'a' }, bar: 42 },
+          { $key: { x: 'b' }, bar: 41 },
         ],
       });
     });
     test('last', async () => {
       const result = await g.read({ foo: { $key: { $last: 1 }, bar: 1 } });
-      expect(result).toEqual({ foo: [{ $key: 'e', bar: 38 }] });
+      expect(result).toEqual({ foo: [{ $key: { x: 'e' }, bar: 38 }] });
     });
     test('first-since', async () => {
       const result = await g.read({
@@ -106,8 +105,8 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
         ],
       });
     });
@@ -117,9 +116,9 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
-          { $key: 'd', bar: 39 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
+          { $key: { x: 'd' }, bar: 39 },
         ],
       });
     });
@@ -129,8 +128,8 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
         ],
       });
     });
@@ -140,9 +139,9 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
-          { $key: 'd', bar: 39 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
+          { $key: { x: 'd' }, bar: 39 },
         ],
       });
     });
@@ -152,8 +151,8 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
         ],
       });
     });
@@ -163,9 +162,9 @@ describe('read', () => {
       });
       expect(result).toEqual({
         foo: [
-          { $key: 'b', bar: 41 },
-          { $key: 'c', bar: 40 },
-          { $key: 'd', bar: 39 },
+          { $key: { x: 'b' }, bar: 41 },
+          { $key: { x: 'c' }, bar: 40 },
+          { $key: { x: 'd' }, bar: 39 },
         ],
       });
     });
@@ -178,10 +177,7 @@ describe('read', () => {
     });
 
     test('friendly', async () => {
-      // Update this test after decodeGraph starts to remove
-      // unrequested branches.
       expect(await g.read({ foo: { x: { baz: 1 } } })).toEqual({
-        bar: { $ref: ['bar'], baz: 3 },
         foo: { x: { $ref: ['bar'], baz: 3 } },
       });
     });

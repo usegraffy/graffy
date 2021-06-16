@@ -2,7 +2,7 @@ import { selectUpdatedSince, readSql } from './sql/index.js';
 import { filterObject } from './filter/index.js';
 import makeOptions from './options.js';
 import {
-  isArgObject,
+  isPlainObject,
   decodeArgs,
   encodeGraph,
   finalize,
@@ -39,7 +39,7 @@ export default (opts = {}) => (store) => {
 
         for (const node of query) {
           const args = decodeArgs(node);
-          if (isArgObject(args)) {
+          if (isPlainObject(args)) {
             if (filterObject(args, object)) payload.push(object);
           } else {
             if (object.id === node.key) payload.push(object);

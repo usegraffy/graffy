@@ -1,6 +1,6 @@
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath } from './path.js';
-import { isEmpty, isDef, isArgObject } from '../util.js';
+import { isEmpty, isDef, isPlainObject } from '../util.js';
 import { merge, add, wrap, finalize } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
@@ -35,7 +35,7 @@ function encode(value, { version, isGraph } = {}) {
 
     if (isDef($ver)) ver = $ver;
 
-    if (isArgObject($key)) {
+    if (isPlainObject($key)) {
       const [page, filter] = splitArgs($key);
       if (isGraph && page && !isDef(page.$cursor)) {
         const node = makeNode({ ...object, $key: filter || '' }, key, ver);

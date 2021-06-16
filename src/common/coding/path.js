@@ -1,4 +1,4 @@
-import { isArgObject } from '../util.js';
+import { isPlainObject } from '../util.js';
 import {
   encode as encodeArgs,
   decode as decodeArgs,
@@ -18,13 +18,13 @@ export function encode(path) {
   }
 
   function encodeSegment(seg) {
-    if (!isArgObject(seg)) return seg;
+    if (typeof seg === 'string') return seg;
     const { key, end } = encodeArgs(seg);
     if (end) throw 'encodePath.unexpected_range_key';
     return key;
   }
 
-  if (!isArgObject(path[path.length - 1])) return path.map(encodeSegment);
+  if (!isPlainObject(path[path.length - 1])) return path.map(encodeSegment);
 
   const [page, filter] = splitArgs(path[path.length - 1]);
   if (!page) return path.map(encodeSegment);

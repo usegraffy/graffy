@@ -1,7 +1,24 @@
 import decorate from '../decorate.js';
+import { encodeGraph } from '../encodeTree.js';
 
-describe('pagination', () => {
-  test.only('backward_mid', () => {
+describe('references', () => {
+  test('point', () => {
+    const result = decorate(
+      encodeGraph({
+        foo: { $ref: ['bar'] },
+        bar: { baz: 10 },
+      }),
+      { foo: { baz: 1 } },
+    );
+
+    expect(result).toEqual({
+      foo: { $ref: ['bar'], baz: 10 },
+    });
+  });
+});
+
+describe.skip('pagination', () => {
+  test('backward_mid', () => {
     expect(
       decorate(
         [
@@ -48,4 +65,14 @@ describe('pagination', () => {
       ).nextPage,
     ).toEqual({ $first: 10, $after: 'foo' });
   });
+});
+
+// TODO: Test multi-hop links and loops.
+
+test.skip('arrayCursor.decode', () => {
+  expect(
+    decorate([{ key: '\x000VI-Ck--------', value: 25, version: 0 }], {
+      $key: { $first: 3 },
+    }),
+  ).toEqual([25]);
 });

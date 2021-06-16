@@ -1,6 +1,6 @@
 import { encode as encodeValue, decode as decodeValue } from './struct.js';
 import { keyStep, keyAfter, keyBefore } from '../ops/step.js';
-import { throwIf, isEmpty, isArgObject, isEncodedKey, isDef } from '../util.js';
+import { errIf, isEmpty, isPlainObject, isEncodedKey, isDef } from '../util.js';
 
 function maybeEncode(value) {
   return typeof value === 'string' ? value : '\0' + encodeValue(value);
@@ -38,10 +38,10 @@ export function splitArgs(arg) {
 }
 
 export function encode(arg) {
-  if (!isArgObject(arg)) return { key: maybeEncode(arg) };
+  if (!isPlainObject(arg)) return { key: maybeEncode(arg) };
 
   const [page, filter] = splitArgs(arg);
-  throwIf('page_and_filter', page && filter);
+  errIf('page_and_filter', page && filter);
 
   if (!page) return { key: maybeEncode(filter || {}) };
 
@@ -49,12 +49,12 @@ export function encode(arg) {
   const { $first, $all, $last, $after, $before, $since, $until } = range;
   const hasRange = !isEmpty(range);
 
-  throwIf('first_and_last', isDef($first) && isDef($last));
-  throwIf('all_and_last', isDef($all) && isDef($last));
-  throwIf('all_and_first', isDef($first) && isDef($all));
-  throwIf('after_and_since', isDef($after) && isDef($since));
-  throwIf('before_and_until', isDef($before) && isDef($until));
-  throwIf('cursor_and_range_arg', isDef($cursor) && hasRange);
+  errIf('first_and_last', isDef($first) && isDef($last));
+  errIf('all_and_last', isDef($all) && isDef($last));
+  errIf('all_and_first', isDef($first) && isDef($all));
+  errIf('after_and_since', isDef($after) && isDef($since));
+  errIf('before_and_until', isDef($before) && isDef($until));
+  errIf('cursor_and_range_arg', isDef($cursor) && hasRange);
 
   let [key, end] = hasRange ? ['', '\uffff'] : [];
 
@@ -78,8 +78,8 @@ export function decode(node) {
   const { key, end, limit } = node;
   if (!isEncodedKey(key) && (!isDef(end) || end === key)) return key;
 
-  throwIf('no_key', !isDef(key));
-  throwIf('limit_without_end', isDef(limit) && !isDef(end));
+  errIf('no_key', !isDef(key));
+  errIf('limit_without_end', isDef(limit) && !isDef(end));
 
   const kParts = maybeDecode(key);
   if (!isDef(end)) return kParts.key;
