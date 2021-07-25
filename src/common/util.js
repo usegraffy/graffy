@@ -20,8 +20,8 @@ export function err(message, { cause, ...args } = {}) {
   throw e;
 }
 
-export function errIf(message, condition) {
-  if (condition) err(message);
+export function errIf(message, condition, args) {
+  if (condition) err(message, args);
 }
 
 export function isEmpty(object) {
@@ -39,4 +39,25 @@ export function isPlainObject(arg) {
 
 export function isEncodedKey(str) {
   return str[0] === '\0';
+}
+
+export function find(items, compare, first = 0, last = items.length) {
+  let currentFirst = first;
+  let currentLast = last;
+  while (currentFirst < currentLast) {
+    // console.log(currentFirst, currentLast);
+    const ix = ((currentFirst + currentLast) / 2) | 0;
+    const d = compare(items[ix]);
+    // console.log(ix, items[ix], d);
+
+    if (d < 0) {
+      currentFirst = ix + 1;
+    } else if (d > 0) {
+      currentLast = ix;
+    } else {
+      return ix;
+    }
+  }
+
+  return currentFirst;
 }

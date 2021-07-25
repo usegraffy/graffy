@@ -17,53 +17,81 @@ describe('references', () => {
   });
 });
 
-describe.skip('pagination', () => {
+describe('pagination', () => {
   test('backward_mid', () => {
-    expect(
-      decorate(
-        [
-          { key: 'foo', value: '123', version: 1 },
-          { key: 'foo\0', end: '\uffff', version: 1 },
-        ],
-        [{ $key: { $first: 10, $since: 'foo' }, name: 1 }],
-      ).prevPage,
-    ).toEqual({ $last: 10, $before: 'foo' });
+    const result = decorate(
+      [
+        { key: 'foo', value: 123, version: 1 },
+        { key: 'foo\0', end: '\uffff', version: 1 },
+      ],
+      [{ $key: { $first: 10, $since: 'foo' } }],
+    );
+    const expected = [123];
+    expected.$key = { $all: true, $since: 'foo' };
+    expected.$next = null;
+    expected.$prev = { $last: 10, $before: 'foo' };
+
+    expect(result.$key).toEqual(expected.$key);
+    expect(result.$prev).toEqual(expected.$prev);
+    expect(result.$next).toEqual(expected.$next);
+    expect(result).toEqual(expected);
   });
 
   test('forward_end', () => {
-    expect(
-      decorate(
-        [
-          { key: 'foo', value: '123', version: 1 },
-          { key: 'foo\0', end: '\uffff', version: 1 },
-        ],
-        [{ $key: { $first: 10, $since: 'foo' }, name: 1 }],
-      ).nextPage,
-    ).toBe(undefined);
+    const result = decorate(
+      [
+        { key: 'foo', value: 123, version: 1 },
+        { key: 'foo\0', end: '\uffff', version: 1 },
+      ],
+      [{ $key: { $first: 10, $since: 'foo' } }],
+    );
+    const expected = [123];
+    expected.$key = { $all: true, $since: 'foo' };
+    expected.$next = null;
+    expected.$prev = { $last: 10, $before: 'foo' };
+
+    expect(result.$key).toEqual(expected.$key);
+    expect(result.$prev).toEqual(expected.$prev);
+    expect(result.$next).toEqual(expected.$next);
+    expect(result).toEqual(expected);
   });
 
   test('backward_start', () => {
-    expect(
-      decorate(
-        [
-          { key: '', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: '123', version: 1 },
-        ],
-        [{ $key: { $last: 10, $until: 'foo' }, name: 1 }],
-      ).prevPage,
-    ).toBe(undefined);
+    const result = decorate(
+      [
+        { key: '', end: 'fon\uffff', version: 1 },
+        { key: 'foo', value: 123, version: 1 },
+      ],
+      [{ $key: { $last: 10, $until: 'foo' } }],
+    );
+    const expected = [123];
+    expected.$key = { $all: true, $until: 'foo' };
+    expected.$next = { $first: 10, $after: 'foo' };
+    expected.$prev = null;
+
+    expect(result.$key).toEqual(expected.$key);
+    expect(result.$prev).toEqual(expected.$prev);
+    expect(result.$next).toEqual(expected.$next);
+    expect(result).toEqual(expected);
   });
 
   test('forward_end', () => {
-    expect(
-      decorate(
-        [
-          { key: '', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: '123', version: 1 },
-        ],
-        [{ $key: { $last: 10, $until: 'foo' }, name: 1 }],
-      ).nextPage,
-    ).toEqual({ $first: 10, $after: 'foo' });
+    const result = decorate(
+      [
+        { key: '', end: 'fon\uffff', version: 1 },
+        { key: 'foo', value: 123, version: 1 },
+      ],
+      [{ $key: { $last: 10, $until: 'foo' } }],
+    );
+    const expected = [123];
+    expected.$key = { $all: true, $until: 'foo' };
+    expected.$next = { $first: 10, $after: 'foo' };
+    expected.$prev = null;
+
+    expect(result.$key).toEqual(expected.$key);
+    expect(result.$prev).toEqual(expected.$prev);
+    expect(result.$next).toEqual(expected.$next);
+    expect(result).toEqual(expected);
   });
 });
 

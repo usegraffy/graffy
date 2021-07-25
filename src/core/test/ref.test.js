@@ -1,6 +1,7 @@
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
-// import {isEmpty} from '@graffy/common';
+
+import { splitArgs } from '@graffy/common';
 
 describe('ref', () => {
   describe('author', () => {
@@ -105,11 +106,16 @@ describe('ref', () => {
       });
 
       postProvider = jest.fn((query) => {
-        const $chi = [];
-        for (let i = 0; i < 3; i++) {
-          $chi.push({ $key: { postId: i }, title: `Title ${i}` });
+        const res = [];
+        for (const { $key } of query) {
+          const [_, filter] = splitArgs($key);
+          for (let i = 0; i < 3; i++) {
+            res.push({
+              $key: { ...filter, $cursor: { postId: i } },
+              title: `Title ${i}`,
+            });
+          }
         }
-        const res = query.map(({ $key }) => ({ $key, $chi }));
         // console.log('postProvider', res);
         return res;
       });
@@ -118,7 +124,7 @@ describe('ref', () => {
       store.onRead('posts', postProvider);
     });
 
-    test('range', async () => {
+    test('range1', async () => {
       const res = await store.read({
         users: {
           abc: {
@@ -128,29 +134,15 @@ describe('ref', () => {
         },
       });
 
-      const expected = {
-        users: {
-          abc: {
-            name: 'User abc',
-            posts: [
-              {
-                $key: { tag: 'x', $all: true },
-                $ref: ['posts', { tag: 'x', userId: 'abc', $all: true }],
-              },
-            ],
-          },
-        },
-        posts: [
-          {
-            $key: { tag: 'x', userId: 'abc', $cursor: { postId: 0 } },
-            title: 'Title 0',
-          },
-          {
-            $key: { tag: 'x', userId: 'abc', $cursor: { postId: 1 } },
-            title: 'Title 1',
-          },
-        ],
-      };
+      const posts = [
+        { $key: { tag: 'x', $cursor: { postId: 0 } }, title: 'Title 0' },
+        { $key: { tag: 'x', $cursor: { postId: 1 } }, title: 'Title 1' },
+      ];
+      posts.$key = { tag: 'x', $all: true, $until: { postId: 1 } };
+      posts.$next = { tag: 'x', $first: 2, $after: { postId: 1 } };
+      posts.$prev = null;
+
+      const expected = { users: { abc: { name: 'User abc', posts } } };
 
       expect(postProvider).toBeCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual([
@@ -169,29 +161,15 @@ describe('ref', () => {
         },
       });
 
-      const expected = {
-        users: {
-          abc: {
-            name: 'User abc',
-            posts: [
-              {
-                $key: { $all: true },
-                $ref: ['posts', { userId: 'abc', $all: true }],
-              },
-            ],
-          },
-        },
-        posts: [
-          {
-            $key: { userId: 'abc', $cursor: { postId: 0 } },
-            title: 'Title 0',
-          },
-          {
-            $key: { userId: 'abc', $cursor: { postId: 1 } },
-            title: 'Title 1',
-          },
-        ],
-      };
+      const posts = [
+        { $key: { postId: 0 }, title: 'Title 0' },
+        { $key: { postId: 1 }, title: 'Title 1' },
+      ];
+      posts.$key = { $all: true, $until: { postId: 1 } };
+      posts.$next = { $first: 2, $after: { postId: 1 } };
+      posts.$prev = null;
+
+      const expected = { users: { abc: { name: 'User abc', posts } } };
 
       expect(postProvider).toBeCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual([

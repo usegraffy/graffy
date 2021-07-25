@@ -100,10 +100,6 @@ function decode(nodes, { isGraph } = {}) {
   }
 
   function decodePrefixNode(node) {
-    // if (!isBranch(node)) {
-    //   throw Error('decode.prefix_without_children: ' + node.key);
-    // }
-
     let args = decodeArgs(node);
     if (args === '') args = {};
     if (typeof args === 'string') {

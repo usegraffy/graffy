@@ -153,6 +153,9 @@ function encode(value, { version, isGraph } = {}) {
   while (links.length) {
     combine(result, [links.pop()]);
   }
+
+  // console.log('Encoded', isGraph, value);
+  // console.log('Result', result);
   return result;
 }
 

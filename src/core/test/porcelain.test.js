@@ -5,11 +5,13 @@ test('Porcelain read', async () => {
   const store = new Graffy();
   store.use(GraffyFill());
 
-  const expectedBooksQuery = {
-    $key: { $first: 2 },
-    title: true,
-    author: { name: true },
-  };
+  const expectedBooksQuery = [
+    {
+      $key: { $first: 2 },
+      title: true,
+      author: { name: true },
+    },
+  ];
 
   const expectedUsersQuery = {
     clarke: { name: true },
@@ -47,6 +49,9 @@ test('Porcelain read', async () => {
       author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
+  expectedResult.$key = { $all: true, $until: ['2001'] };
+  expectedResult.$next = { $first: 2, $after: ['2001'] };
+  expectedResult.$prev = null;
 
   expect(onReadBooks).toHaveBeenCalledWith(
     expectedBooksQuery,
@@ -110,6 +115,9 @@ test('Porcelain subscription', async () => {
       author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
+  expectedResult.$key = { $all: true, $until: ['2001'] };
+  expectedResult.$next = { $first: 2, $after: ['2001'] };
+  expectedResult.$prev = null;
 
   expect((await result.next()).value).toEqual(expectedResult);
 });
@@ -119,7 +127,9 @@ test('write array value', async () => {
   store.use(GraffyFill());
 
   const provider = jest.fn((change) => {
-    expect(change).toEqual({ foo: { $val: ['hello', 'world'] } });
+    const expected = ['hello', 'world'];
+    expected.$val = true;
+    expect(change).toEqual({ foo: expected });
     return { foo: { $val: ['hello', 'world'] } };
   });
   store.onWrite(provider);
@@ -139,5 +149,7 @@ test('read array value', async () => {
 
   const result = await store.read({ foo: 1 });
   expect(provider).toBeCalled();
-  expect(result).toEqual({ foo: { $val: ['hello', 'world'] } });
+  const expected = ['hello', 'world'];
+  expected.$val = true;
+  expect(result).toEqual({ foo: expected });
 });
