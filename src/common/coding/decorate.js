@@ -11,6 +11,7 @@ import { isRange, isBranch, findFirst } from '../node/index.js';
 
 const REF = Symbol();
 const PRE = Symbol();
+const VAL = Symbol();
 
 /*
   Approach to decorate (plumGraph, porcQuery):
@@ -86,11 +87,15 @@ export default function decorate(rootGraph, rootQuery) {
         if (isDef(res)) graph[prop] = res;
       }
     } else if (query) {
-      if (Array.isArray(plumGraph)) {
+      if (Array.isArray(plumGraph[VAL])) {
+        graph = plumGraph[VAL].slice(0);
+        graph.$val = true;
+      } else if (typeof plumGraph[VAL] === 'object' && plumGraph[VAL]) {
+        graph = { ...plumGraph[VAL], $val: true };
+      } else if (isDef(plumGraph[VAL])) {
+        graph = plumGraph[VAL];
+      } else if (Array.isArray(plumGraph)) {
         graph = decodeGraph(plumGraph);
-      } else {
-        graph = plumGraph;
-        if (typeof graph === 'object') graph = { ...graph, $val: true };
       }
     }
 
@@ -164,7 +169,7 @@ export default function decorate(rootGraph, rootQuery) {
 
 const getNodeValue = (node) => {
   if (isBranch(node)) return node.children;
-  return node.value;
+  return { [VAL]: node.value };
 };
 
 function addPageMeta(graph, args) {
