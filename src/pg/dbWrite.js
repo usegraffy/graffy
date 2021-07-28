@@ -1,5 +1,5 @@
-import { put, patch } from './sql/index.js';
-import { linkChange } from './link/index.js';
+import { put, patch } from './sql';
+import { linkChange } from './link';
 import pool from './pool.js';
 import { isRange, decodeArgs, decodeGraph } from '@graffy/common';
 import debug from 'debug';

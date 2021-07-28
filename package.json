@@ -31,7 +31,8 @@
   "homepage": "https://graffy.js.org",
   "dependencies": {
     "@babel/runtime": "^7.10.4",
-    "@babel/runtime-corejs3": "^7.10.4"
+    "@babel/runtime-corejs3": "^7.10.4",
+    "graphiql": "^1.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.10.4",

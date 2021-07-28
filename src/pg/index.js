@@ -1,4 +1,4 @@
-import { selectUpdatedSince, readSql } from './sql/index.js';
+import { selectUpdatedSince, readSql } from './sql';
 import { filterObject } from './filter/index.js';
 import makeOptions from './options.js';
 import {

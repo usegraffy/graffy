@@ -157,7 +157,7 @@ function subscribeToMessage(id) {
     msgDeleteSubscriptions[id] = client.subscribe(gql`
       messageDeleted(msgid: ${id}) { ... }
     `);
-    msgDeleteSubscriptions[id].subscribe(() => {
+    msgDeleteSubscriptions[id].subscribe(async () => {
       const index = _.findIndex(chat.logs, item => id === item.id);
       unsubscribeFromMessage(id)
       chat.logs.splice(index, 1);

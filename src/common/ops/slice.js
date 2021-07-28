@@ -5,9 +5,9 @@ import {
   isOlder,
   findFirst,
   findLast,
-} from '../node/index.js';
+} from '../node';
 import { keyAfter, keyBefore } from './step.js';
-import { wrap, wrapValue } from '../path/index.js';
+import { wrap, wrapValue } from '../path';
 import merge from './merge.js';
 import add from './add.js';
 

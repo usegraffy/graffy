@@ -1,4 +1,4 @@
-import { find, isBranch } from '../node/index.js';
+import { find, isBranch } from '../node';
 
 export default function add(base, diff) {
   let changed = false;
@@ -40,11 +40,11 @@ export default function add(base, diff) {
 
 function compare(node) {
   return (item) => {
-    const v =
+    return (
       compareValue(item.key, node.key) ||
       compareValue(item.end, node.end) ||
-      compareValue(item.limit, node.limit);
-    return v;
+      compareValue(item.limit, node.limit)
+    );
   };
 }
 

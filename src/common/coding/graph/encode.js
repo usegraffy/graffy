@@ -1,5 +1,5 @@
 import { encodeArgs } from '../index.js';
-import { makePath, wrap } from '../../path/index.js';
+import { makePath, wrap } from '../../path';
 import { isEmpty } from '../../util.js';
 import { merge } from '../../ops/index.js';
 import finalize from './finalize.js';

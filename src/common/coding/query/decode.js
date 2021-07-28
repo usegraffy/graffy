@@ -1,9 +1,8 @@
-import { isRange, isBranch } from '../../node/index.js';
+import { isBranch, isRange } from '../../node';
 import { decodeArgs } from '../index.js';
 
 export default function decodeQuery(query) {
-  const result = decodeChildren(query);
-  return result;
+  return decodeChildren(query);
 }
 
 function decodeChildren(query) {
