@@ -42,12 +42,7 @@ export default function server(store) {
           }
           res.end();
         } else {
-          const value = await store.call('read', query, {
-            ...options,
-            raw: true,
-          });
-          res.writeHead(200);
-          res.end(serialize(value));
+          return log('Get not supported for this type. Try POST');
         }
       } catch (e) {
         log(e);
@@ -57,12 +52,21 @@ export default function server(store) {
       }
     } else if (req.method === 'POST') {
       try {
-        const chunks = [];
-        for await (const chunk of req) chunks.push(chunk);
-        const change = deserialize(Buffer.concat(chunks).toString());
-        const value = await store.call('write', change, options);
-        res.writeHead(200);
-        res.end(serialize(value));
+        if (req.query.op === 'write') {
+          const chunks = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const change = deserialize(Buffer.concat(chunks).toString());
+          const value = await store.call('write', change, options);
+          res.writeHead(200);
+          res.end(serialize(value));
+        } else if (req.query.op === 'read') {
+          const value = await store.call('read', query, {
+            ...options,
+            raw: true,
+          });
+          res.writeHead(200);
+          res.end(serialize(value));
+        }
       } catch (e) {
         res.writeHead(400);
         res.end(`${e.message}`);
