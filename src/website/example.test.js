@@ -21,7 +21,7 @@ describe('integration', () => {
       }),
       puppeteer
         .launch({
-          headless: true,
+          headless: false,
           // slowMo: 200,
         })
         .then((b) => {
