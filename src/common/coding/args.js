@@ -17,16 +17,8 @@ function isDef(value) {
 export function encode(arg) {
   if (!isArgObject(arg)) return { key: joinEncode(arg, '') };
 
-  const {
-    $first,
-    $last,
-    $after,
-    $before,
-    $since,
-    $until,
-    $cursor,
-    ...filter
-  } = arg;
+  const { $first, $last, $after, $before, $since, $until, $cursor, ...filter } =
+    arg;
   const hasRangeArg = $before || $after || $since || $until || $first || $last;
 
   if (!hasRangeArg && !$cursor) return { key: joinEncode(arg, '') };

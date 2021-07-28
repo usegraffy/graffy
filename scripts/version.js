@@ -16,26 +16,22 @@ module.exports = async function version(str) {
   try {
     const { stdout } = await git('tag');
 
-    const [
-      major = 0,
-      minor = 0,
-      patch = 0,
-      pre = '',
-      number = 0,
-    ] = stdout.split('\n').reduce((latest, vstring) => {
-      const version = vstring
-        .split(/[.-]/)
-        .map((seg) => (isNaN(seg) ? seg : parseInt(seg)));
+    const [major = 0, minor = 0, patch = 0, pre = '', number = 0] = stdout
+      .split('\n')
+      .reduce((latest, vstring) => {
+        const version = vstring
+          .split(/[.-]/)
+          .map((seg) => (isNaN(seg) ? seg : parseInt(seg)));
 
-      for (let i = 0; i < 5; i++) {
-        const atPre = i === 3;
-        if (latest.length === i) return atPre ? latest : version;
-        if (version.length === i) return atPre ? version : latest;
-        if (latest[i] > version[i]) return latest;
-        if (latest[i] < version[i]) return version;
-      }
-      return latest;
-    }, []);
+        for (let i = 0; i < 5; i++) {
+          const atPre = i === 3;
+          if (latest.length === i) return atPre ? latest : version;
+          if (version.length === i) return atPre ? version : latest;
+          if (latest[i] > version[i]) return latest;
+          if (latest[i] < version[i]) return version;
+        }
+        return latest;
+      }, []);
 
     switch (str) {
       case 'major':

@@ -35,16 +35,8 @@ export function wrap(graph, path, version = 0) {
 
   if (isRangeKey(path[path.length - 1])) {
     const rangeKey = path.pop();
-    const {
-      $all,
-      $first,
-      $last,
-      $before,
-      $after,
-      $until,
-      $since,
-      ...pathArg
-    } = rangeKey;
+    const { $all, $first, $last, $before, $after, $until, $since, ...pathArg } =
+      rangeKey;
 
     graph = graph.map((node) => {
       const graphArg = decodeArgs(node);
