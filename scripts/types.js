@@ -3,7 +3,7 @@ const { src, dst, yarnx } = require('./utils.js');
 
 module.exports = async function types(name) {
   console.log('Generating definitions for ' + name);
-  yarnx(
+  await yarnx(
     'run',
     'typedef',
     '--',
