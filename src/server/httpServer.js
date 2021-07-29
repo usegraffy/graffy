@@ -9,6 +9,7 @@ export default function server(store) {
   return async (req, res) => {
     const parsed = url.parse(req.url, true);
     const query = parsed.query.q && decodeUrl(parsed.query.q);
+    // TODO: Sanitize options for security.
     const options =
       parsed.query.opts && deserialize(decodeURIComponent(parsed.query.opts));
 
@@ -42,31 +43,29 @@ export default function server(store) {
           }
           res.end();
         } else {
-          const value = await store.call('read', query, {
-            ...options,
-            raw: true,
-          });
-          res.writeHead(200);
-          res.end(serialize(value));
+          throw Error('httpServer.get_unsupported');
         }
       } catch (e) {
         log(e);
         res.writeHead(400);
         res.end(`${e.message}`);
-        return;
       }
     } else if (req.method === 'POST') {
       try {
+        const op = req.query.op;
+        if (op !== 'write' && op !== 'read') {
+          throw Error('httpServer.unsupported_op: ' + op);
+        }
+
         const chunks = [];
         for await (const chunk of req) chunks.push(chunk);
-        const change = deserialize(Buffer.concat(chunks).toString());
-        const value = await store.call('write', change, options);
+        const payload = deserialize(Buffer.concat(chunks).toString());
+        const value = await store.call(op, payload, options);
         res.writeHead(200);
         res.end(serialize(value));
       } catch (e) {
         res.writeHead(400);
         res.end(`${e.message}`);
-        return;
       }
     } else {
       res.writeHead(501);

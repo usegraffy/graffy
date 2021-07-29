@@ -102,9 +102,12 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     await store.read({ demo: 1 });
     expect(getOptions).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledWith(
-      `${connectionUrl}?q=${encodeUrl([
-        { key: 'demo', version: 0, value: 1 },
-      ])}&opts=${encodeUrl({ value })}`,
+      `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
+      {
+        body: '[{"key":"demo","version":0,"value":1}]',
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      },
     );
   });
 
@@ -112,7 +115,9 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     await store.write({ demo: 1 });
     expect(getOptions).toHaveBeenCalled();
     const result = fetch.mock.calls;
-    expect(result[0][0]).toBe(`${connectionUrl}?opts=${encodeUrl({ value })}`);
+    expect(result[0][0]).toBe(
+      `${connectionUrl}?opts=${encodeUrl({ value })}&op=write`,
+    );
     const requestInit = result[0][1];
     expect(requestInit.method).toBe('POST');
     expect(requestInit.headers).toEqual({

@@ -7,12 +7,13 @@ import fill from '@graffy/fill';
 import memory from '@graffy/memory';
 import { httpServer, wsServer } from '@graffy/server';
 import mock from './services/mockVisitorList.js';
+import { fileURLToPath } from 'url';
 
 process.env.NEXTJS = 1; // Use the Next.js babel config.
 
 const log = debug('graffy:website:server');
 const dev = process.env.NODE_ENV !== 'production';
-const dir = join(import.meta.url.substr(5), '../../..');
+const dir = join(fileURLToPath(import.meta.url), '..', '..', '..');
 const nextApp = next({ dev, dir });
 const handle = nextApp.getRequestHandler();
 const port = process.env.PORT || 3000;

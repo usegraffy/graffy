@@ -89,7 +89,9 @@ module.exports = async function build(name, version) {
         await Promise.all([
           writeFile(
             dst(name, 'cjs', path),
-            (await transform(ast, source, babelConfig(false))).code,
+            (
+              await transform(ast, source, babelConfig(false))
+            ).code,
           ),
           // writeFile(
           //   dst(name, 'esm', path),
