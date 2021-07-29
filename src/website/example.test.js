@@ -2,7 +2,7 @@ import { fork } from 'child_process';
 import puppeteer from 'puppeteer';
 
 const PORT = 1025 + Math.floor(Math.random() * 30000);
-jest.setTimeout(120000);
+jest.setTimeout(150000);
 
 describe('integration', () => {
   let server, browser;
@@ -73,9 +73,9 @@ describe('integration', () => {
       // console.log('Waiting for visitor');
       await page.waitForSelector('.Visitor', { timeout: 2000 });
       expect((await page.$$('.Visitor')).length).toBe(12);
-      label = await (await page.$('.CurrPage')).evaluate(
-        (el) => el.textContent,
-      );
+      label = await (
+        await page.$('.CurrPage')
+      ).evaluate((el) => el.textContent);
       attempts++;
     } while (!label.includes('First') && attempts < 2);
     expect(label).toMatch(/First/);
