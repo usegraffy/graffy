@@ -2,7 +2,7 @@ import { fork } from 'child_process';
 import puppeteer from 'puppeteer';
 
 const PORT = 1025 + Math.floor(Math.random() * 30000);
-jest.setTimeout(150000);
+jest.setTimeout(120000);
 
 describe('integration', () => {
   let server, browser;

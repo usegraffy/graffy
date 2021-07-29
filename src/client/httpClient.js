@@ -23,8 +23,15 @@ const httpClient =
     store.on('read', async (query, options) => {
       if (!fetch) throw Error('client.fetch.unavailable');
       const optionsParam = getOptionsParam(await getOptions('read', options));
-      const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
-      return fetch(url).then((res) => {
+      const url = `${baseUrl}?opts=${optionsParam}&op=read`;
+      //q=${encodeUrl(
+      //         query,
+      //       )}
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: serialize(query),
+      }).then((res) => {
         if (res.status === 200) return res.json();
         return res.text().then((message) => {
           throw Error('server.' + message);
@@ -67,7 +74,7 @@ const httpClient =
     store.on('write', async (change, options) => {
       if (!fetch) throw Error('client.fetch.unavailable');
       const optionsParam = getOptionsParam(await getOptions('write', options));
-      const url = `${baseUrl}?opts=${optionsParam}`;
+      const url = `${baseUrl}?opts=${optionsParam}&op=write`;
       return fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
