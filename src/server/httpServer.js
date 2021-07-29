@@ -52,21 +52,21 @@ export default function server(store) {
       }
     } else if (req.method === 'POST') {
       try {
-        if (req.query.op === 'write') {
-          const chunks = [];
-          for await (const chunk of req) chunks.push(chunk);
-          const change = deserialize(Buffer.concat(chunks).toString());
-          const value = await store.call('write', change, options);
-          res.writeHead(200);
-          res.end(serialize(value));
-        } else if (req.query.op === 'read') {
-          const value = await store.call('read', query, {
-            ...options,
-            raw: true,
-          });
-          res.writeHead(200);
-          res.end(serialize(value));
+        const op = req.query.op;
+        if (op !== 'write' && op !== 'read') {
+          throw Error('httpServer.unsupported_op: ' + op);
         }
+        
+        // TODO: Sanitize options for security.
+        if (op === 'read') options.raw = true;
+        
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const payload = deserialize(Buffer.concat(chunks).toString());
+        
+        const value = await store.call(op, payload, options);
+        res.writeHead(200);
+        res.end(serialize(value));
       } catch (e) {
         res.writeHead(400);
         res.end(`${e.message}`);
