@@ -1,6 +1,8 @@
 import { findFirst, isRange, isBranch } from '../node/index.js';
 import { encodeArgs /* decodeArgs */ } from '../coding/index.js';
 
+export const IS_VAL = Symbol('IS_VAL');
+
 export function wrapValue(value, path, version = 0) {
   const node = { ...encodeArgs(path[path.length - 1]), value, version };
   return wrap([node], path.slice(0, -1), version);
@@ -38,7 +40,15 @@ export function unwrap(children, path) {
     if (isRange(node)) return null; // This is known to be null.
   }
 
-  return node.children || node.value;
+  return getNodeValue(node);
+}
+
+export function getNodeValue(node) {
+  if (node.children) return node.children;
+  if (node.value && typeof node.value === 'object') {
+    node.value[IS_VAL] = true;
+  }
+  return node.value;
 }
 
 export function remove(children, path) {

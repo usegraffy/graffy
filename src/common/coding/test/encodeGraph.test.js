@@ -190,11 +190,19 @@ test('rangeRefChi', () => {
       key: '\u00000kKoNLR-0MV',
       version: 0,
       children: [
+        // Planned; not yet implemented
+        // { key: '', end: '\u00000kKd--Hzw--------,\uffff', version: 0 },
         {
           key: '\u00000kKd--Hzw---------',
           version: 0,
           children: [{ key: 'foo', version: 0, value: 1 }],
         },
+        // Planned; not yet implemented
+        // {
+        //   end: '\u00000kKd--I----------,\uffff',
+        //   key: '\u00000kKd--Hzw---------',
+        //   version: 0,
+        // },
         {
           key: '\u00000kKd--I-----------',
           version: 0,
@@ -206,44 +214,7 @@ test('rangeRefChi', () => {
   ]);
 });
 
-test('rangeRefCursor1', () => {
-  const result = encodeGraph(
-    [
-      {
-        $key: { tag: 'x', $first: 2 },
-        $chi: [
-          { $key: { i: 1 }, foo: 1 },
-          { $key: { i: 2 }, foo: 2 },
-        ],
-      },
-    ],
-    0,
-  );
-
-  const expected = [
-    {
-      key: '\u00000kKoNLR-0MV',
-      version: 0,
-      children: [
-        {
-          key: '\u00000kKd--Hzw---------',
-          version: 0,
-          children: [{ key: 'foo', version: 0, value: 1 }],
-        },
-        {
-          key: '\u00000kKd--I-----------',
-          version: 0,
-          children: [{ key: 'foo', version: 0, value: 2 }],
-        },
-      ],
-      prefix: true,
-    },
-  ];
-
-  expect(result).toEqual(expected);
-});
-
-test('rangeRefCursor2', () => {
+test('rangeRefCursor', () => {
   const arr = [
     { $key: { tag: 'x', $cursor: { i: 1 } }, foo: 1 },
     { $key: { tag: 'x', $cursor: { i: 2 } }, foo: 2 },
@@ -276,5 +247,11 @@ test('rangeRefCursor2', () => {
 test('emptyString', () => {
   expect(encodeGraph({ $key: '', $val: 4 }, 0)).toEqual([
     { key: '', version: 0, value: 4 },
+  ]);
+});
+
+test('ranges', () => {
+  expect(encodeGraph({ foo: [{ $key: { $until: 'a' } }] }, 0)).toEqual([
+    { key: 'foo', version: 0, children: [{ key: '', end: 'a', version: 0 }] },
   ]);
 });

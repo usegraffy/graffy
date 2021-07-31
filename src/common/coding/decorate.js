@@ -5,25 +5,12 @@ import {
   encode as encodeArgs,
   decode as decodeArgs,
 } from './args.js';
-import { unwrap } from '../ops/index.js';
+import { unwrap, getNodeValue, IS_VAL } from '../ops/index.js';
 import { isDef, isPlainObject, isEmpty } from '../util.js';
-import { isRange, isBranch, findFirst } from '../node/index.js';
+import { isRange, findFirst } from '../node/index.js';
 
 const REF = Symbol();
 const PRE = Symbol();
-const VAL = Symbol();
-
-/*
-  Approach to decorate (plumGraph, porcQuery):
-
-  Step 1: porcGraph := decodeGraph(plumGraph);
-  Step 2: Walk the porcQuery & porcGraph together;
-    replace links with references to actual porcGraph nodes.
-    extraneous children are OK.
-
-  Step 3: Walk the porcQuery with a path stack;
-    copy
-*/
 
 export default function decorate(rootGraph, rootQuery) {
   // console.log('Decorating', rootGraph, rootQuery);
@@ -37,7 +24,7 @@ export default function decorate(rootGraph, rootQuery) {
     if (query.$ref) {
       const { $ref, ...props } = query;
       const path = encodePath($ref);
-      graph = construct(getNodeValue(unwrap(rootGraph, path)), props);
+      graph = construct(unwrap(rootGraph, path), props);
       graph.$ref = decodePath(path);
     } else if (Array.isArray(query)) {
       let pageKey;
@@ -68,7 +55,13 @@ export default function decorate(rootGraph, rootQuery) {
             .filter((node) => !isRange(node))
             .map((node) => {
               const $key = decodeArgs(node);
-              const subResult = construct(getNodeValue(node), subQuery);
+              if (node.path) {
+                node = unwrap(rootGraph, node.path);
+                if (typeof result === 'object') result[REF] = node.path;
+              } else {
+                node = getNodeValue(node);
+              }
+              const subResult = construct(node, subQuery);
               if (typeof subResult === 'object') {
                 subResult.$key = children[PRE]
                   ? { ...children[PRE], $cursor: $key }
@@ -87,15 +80,17 @@ export default function decorate(rootGraph, rootQuery) {
         if (isDef(res)) graph[prop] = res;
       }
     } else if (query) {
-      if (Array.isArray(plumGraph[VAL])) {
-        graph = plumGraph[VAL].slice(0);
+      if (typeof plumGraph !== 'object' || !plumGraph) {
+        graph = plumGraph;
+      } else if (plumGraph[IS_VAL]) {
+        graph = Array.isArray(plumGraph)
+          ? plumGraph.slice(0)
+          : { ...plumGraph };
         graph.$val = true;
-      } else if (typeof plumGraph[VAL] === 'object' && plumGraph[VAL]) {
-        graph = { ...plumGraph[VAL], $val: true };
-      } else if (isDef(plumGraph[VAL])) {
-        graph = plumGraph[VAL];
       } else if (Array.isArray(plumGraph)) {
         graph = decodeGraph(plumGraph);
+      } else {
+        throw Error('decorate.unexpected_graph', plumGraph);
       }
     }
 
@@ -116,9 +111,8 @@ export default function decorate(rootGraph, rootQuery) {
     let result;
 
     if (node.path) {
-      // console.log('unwrapping', node.path, rootGraph);
       result = unwrap(rootGraph, node.path);
-      result[REF] = node.path;
+      if (typeof result === 'object') result[REF] = node.path;
     } else {
       result = getNodeValue(node);
     }
@@ -166,11 +160,6 @@ export default function decorate(rootGraph, rootQuery) {
   // console.log('Decorate', result, rootGraph, rootQuery);
   return result;
 }
-
-const getNodeValue = (node) => {
-  if (isBranch(node)) return node.children;
-  return { [VAL]: node.value };
-};
 
 function addPageMeta(graph, args) {
   if (args.$all) {

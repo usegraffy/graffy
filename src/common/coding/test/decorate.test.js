@@ -93,6 +93,31 @@ describe('pagination', () => {
     expect(result.$next).toEqual(expected.$next);
     expect(result).toEqual(expected);
   });
+
+  test('simpleArray', () => {
+    const result = decorate(
+      [
+        {
+          key: 'baz',
+          version: 0,
+          children: [
+            { key: '', end: '\x000VKV￿', version: 0 },
+            { key: '\x000VKW', version: 0, path: ['foo'] },
+            { key: '\x000VKW\x00', end: '￿', version: 0 },
+          ],
+        },
+        { key: 'foo', version: 0, value: 42 },
+      ],
+      { baz: [{ $key: { $first: 2 } }] },
+    );
+
+    const expected = [42];
+    expected.$key = { $all: true };
+    expected.$next = null;
+    expected.$prev = null;
+
+    expect(result).toEqual({ baz: expected });
+  });
 });
 
 // TODO: Test multi-hop links and loops.

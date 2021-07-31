@@ -8,7 +8,7 @@ import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
   @param {Tree} node
   @param {boolean} options.isGraph
 */
-function decode(nodes, { isGraph } = {}) {
+function decode(nodes = [], { isGraph } = {}) {
   function decodeChildren(nodes) {
     let result = [];
     let allStrs = true;

@@ -9,12 +9,10 @@ function resolve(handlers, firstPayload, options) {
 
   function run(i, payload) {
     if (i >= handlers.length) {
-      console.log('handlers', handlers);
       throw Error('resolve.no_providers_for ' + JSON.stringify(payload));
     }
 
     const { path, handle } = handlers[i];
-
     if (!unwrap(payload, path)) return run(i + 1, payload);
 
     let nextCalled = false;

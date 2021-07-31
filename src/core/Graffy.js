@@ -21,6 +21,7 @@ export default class Graffy {
   }
 
   on(type, path, handler) {
+    if (typeof path === 'function') [path, handler] = [[], path];
     this.core.on(type, path, handler);
   }
 

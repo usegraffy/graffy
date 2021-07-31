@@ -13,10 +13,10 @@ const ROOT_KEY = Symbol();
 function encode(value, { version, isGraph } = {}) {
   const links = [];
 
-  function pushLink(key, node, rest, $val, $chi) {
+  function pushLink(key, node, props, $val, $chi) {
     // prettier-ignore
     const children =
-      !isEmpty(rest) ? makeNode(rest, key, node.version).children :
+      !isEmpty(props) ? makeNode(props, key, node.version).children :
       isDef($chi) ? makeNode($chi, key, node.version).children :
       isDef($val) ? $val : undefined;
 
@@ -31,26 +31,53 @@ function encode(value, { version, isGraph } = {}) {
     if (!isDef(object)) return;
     if (typeof object === 'object' && object && isEmpty(object)) return;
 
-    const { $key, $ref, $ver, $val, $chi, $put, ...rest } = object || {};
+    const { $key, $ver, ...data } = object || {};
+    const { $ref, $val, $chi, $put, ...props } = data;
 
     if (isDef($ver)) ver = $ver;
 
     if (isPlainObject($key)) {
       const [page, filter] = splitArgs($key);
-      if (isGraph && page && !isDef(page.$cursor)) {
+      // console.log({ $key, page, filter });
+
+      /* When we encounter a range key in a graph, it means one of these:
+        1. an empty range, e.g. { $key: { $after: 'foo' } }
+        2. a range reference, e.g.
+            { $key: { x: 1, $all: true }, $ref: ['foo', { $all: true }] }
+        3. as a shortcut to avoid repetition in query results e.g.
+            { $key: { x: 1, $all: true }, $chi: [
+              { $key: 'a', $val: 'A' },
+              { $key: 'b', $val: 'B' } ] }
+          is equivalent to:
+            [ { $key: { x: 1, $before: 'a' } },
+              { $key: { x: 1, $cursor: 'a' }, $val: 'A' },
+              { $key: { x: 1, $after: 'a', $before: 'b' } },
+              { $key: { x: 1, $cursor: 'b' }, $val: 'B' } ]
+
+        Cases 2. and 3. are handled below: Basically we strip out the "page"
+        part from the key (leaving only the filter), construct a node with that,
+        then add the "prefix" flag to the node.
+      */
+
+      if (isGraph && page && !isDef(page.$cursor) && !isEmpty(data)) {
+        // console.log('here');
         const node = makeNode({ ...object, $key: filter || '' }, key, ver);
+        // if (!node) console.log(object, filter, key);
+        // if (node.children) {
+        //   TODO: "finalize" and fill gaps, but don't recurse into children.
+        // }
         node.prefix = true;
+        // console.log('Early Returning', node);
         return node;
       }
+
       if (page && filter) {
+        // console.log('here2');
         const node = makeNode(
           {
             $key: filter,
             $chi: [
-              {
-                ...object,
-                $key: isDef(page.$cursor) ? page.$cursor : page,
-              },
+              { ...object, $key: isDef(page.$cursor) ? page.$cursor : page },
             ],
           },
           key,
@@ -59,11 +86,14 @@ function encode(value, { version, isGraph } = {}) {
         node.prefix = true;
         return node;
       }
+      // console.log('$key is still', $key);
     }
 
     if (isDef($key) && (Number.isInteger(key) || !isDef(key))) key = $key;
     const node = key === ROOT_KEY || !isDef(key) ? {} : encodeArgs(key);
     node.version = ver;
+
+    // console.log('Constructed', { node, $key, key });
 
     if (object === null) {
       node.end = node.key;
@@ -73,9 +103,9 @@ function encode(value, { version, isGraph } = {}) {
     } else if ($ref) {
       node.path = encodePath($ref);
       if (!isGraph) return; // Drop query aliases from encoded format
-      pushLink(key, node, rest, $val, $chi);
+      pushLink(key, node, props, $val, $chi);
     } else if ($val === true) {
-      node.value = rest;
+      node.value = props;
     } else if (isDef($val)) {
       node.value = $val;
     } else if (typeof object !== 'object') {
@@ -97,13 +127,12 @@ function encode(value, { version, isGraph } = {}) {
           combine(acc, [it]);
           return acc;
         }, []);
-      // .sort((a, b) => (a.key <= b.key ? -1 : 1));
 
       if (children.length) {
         node.children = children;
       }
     } else {
-      const children = Object.keys(rest)
+      const children = Object.keys(props)
         .sort()
         .map((key) => makeNode(object[key], key, ver))
         .filter(Boolean);
