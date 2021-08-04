@@ -18,7 +18,7 @@ test('outward', () => {
   expect(object).toEqual(expObject);
 });
 
-test('inward', () => {
+test('inward_unfiltered', () => {
   const object = { id: 'user1' };
   const links = { posts: ['posts', { authorId: '$$id', $all: true }] };
   const query = encodeQuery({ posts: [{ $key: { $first: 10 }, title: 1 }] });
@@ -30,6 +30,30 @@ test('inward', () => {
     id: 'user1',
     posts: { $ref: ['posts', { authorId: 'user1', $first: 10 }] },
   };
+
+  console.log(encodeQuery(expQuery, 0));
+
+  const resQuery = linkResult([object], query, { links });
+  expect(resQuery).toEqual(encodeQuery(expQuery, 0));
+  expect(object).toEqual(expObject);
+});
+
+test('inward_filtered', () => {
+  const object = { id: 'user1' };
+  const links = { posts: ['posts', { authorId: '$$id', $all: true }] };
+  const query = encodeQuery({
+    posts: [{ tag: 'x', $key: { $first: 10 }, title: 1 }],
+  });
+
+  const expQuery = {
+    posts: { $key: { authorId: 'user1', tag: 'x', $first: 10 }, title: 1 },
+  };
+  const expObject = {
+    id: 'user1',
+    posts: { $ref: ['posts', { authorId: 'user1', tag: 'x', $all: true }] },
+  };
+
+  console.log(encodeQuery(expQuery, 0));
 
   const resQuery = linkResult([object], query, { links });
   expect(resQuery).toEqual(encodeQuery(expQuery, 0));

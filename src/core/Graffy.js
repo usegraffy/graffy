@@ -20,15 +20,15 @@ export default class Graffy {
     this.path = path;
   }
 
-  on(type, path, handler) {
-    if (typeof path === 'function') [path, handler] = [[], path];
+  on(type, ...args) {
+    const [path, handler] = validateOn(...args);
     this.core.on(type, path, handler);
   }
 
   onRead(...args) {
     const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
-    this.on(
+    this.core.on(
       'read',
       path,
       shiftFn(async function porcelainRead(query, options) {
@@ -47,7 +47,7 @@ export default class Graffy {
   onWatch(...args) {
     const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
-    this.on(
+    this.core.on(
       'watch',
       path,
       shiftGen(function porcelainWatch(query, options) {
@@ -73,7 +73,7 @@ export default class Graffy {
   onWrite(...args) {
     const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
-    this.on(
+    this.core.on(
       'write',
       path,
       shiftFn(async function porcelainWrite(change, options) {
@@ -95,7 +95,7 @@ export default class Graffy {
     const [path, porcelainQuery, options] = validateCall(...args);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
-    const result = await this.call('read', query, options || {});
+    const result = await this.core.call('read', query, options || {});
     return unwrapObject(decorate(result, rootQuery), path);
   }
 
@@ -103,7 +103,7 @@ export default class Graffy {
     const [path, porcelainQuery, options] = validateCall(...args);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
-    const stream = this.call('watch', query, options || {});
+    const stream = this.core.call('watch', query, options || {});
     return mapStream(stream, (value) =>
       unwrapObject(decorate(value, rootQuery), path),
     );
@@ -112,7 +112,7 @@ export default class Graffy {
   async write(...args) {
     const [path, porcelainChange, options] = validateCall(...args);
     const change = wrap(encodeGraph(porcelainChange), path);
-    const writtenChange = await this.call('write', change, options || {});
+    const writtenChange = await this.core.call('write', change, options || {});
     return unwrapObject(decodeGraph(writtenChange), path);
   }
 }

@@ -55,13 +55,7 @@ export default function decorate(rootGraph, rootQuery) {
             .filter((node) => !isRange(node))
             .map((node) => {
               const $key = decodeArgs(node);
-              if (node.path) {
-                node = unwrap(rootGraph, node.path);
-                if (typeof result === 'object') result[REF] = node.path;
-              } else {
-                node = getNodeValue(node);
-              }
-              const subResult = construct(node, subQuery);
+              const subResult = construct(getValue(node), subQuery);
               if (typeof subResult === 'object') {
                 subResult.$key = children[PRE]
                   ? { ...children[PRE], $cursor: $key }
@@ -108,6 +102,12 @@ export default function decorate(rootGraph, rootQuery) {
     if (isRange(node) && node.end >= key) return null;
     if (node.key !== key) return;
 
+    const result = getValue(node);
+    if (node.prefix) result[PRE] = $key;
+    return result;
+  }
+
+  function getValue(node) {
     let result;
 
     if (node.path) {
@@ -117,7 +117,6 @@ export default function decorate(rootGraph, rootQuery) {
       result = getNodeValue(node);
     }
 
-    if (node.prefix) result[PRE] = $key;
     return result;
   }
 

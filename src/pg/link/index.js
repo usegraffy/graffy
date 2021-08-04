@@ -7,6 +7,7 @@ import {
   mergeObject,
   decodeArgs,
   encodeArgs,
+  splitArgs,
   encodePath,
 } from '@graffy/common';
 import { format } from '@graffy/testing';
@@ -69,16 +70,21 @@ export function linkResult(objects, query, { links: linkSpecs }) {
           ...refArg
         } = ref.pop();
         const refQuery = linkedQuery.map((node) => {
+          console.log('queryNode', node);
           const queryArg = decodeArgs(node);
           if (!isRangeKey(queryArg)) {
             throw Error('pg_link.expected_range:' + linkProp);
           }
-          const arg = { ...refArg, ...queryArg };
+          const [page, filter] = splitArgs({ ...refArg, ...queryArg });
           mergeObject(
             object,
-            wrapObject({ $ref: ref.concat([arg]) }, linkPath),
+            wrapObject(
+              { $ref: ref.concat([{ ...filter, $all: true }]) },
+              linkPath,
+            ),
           );
-          return { ...node, ...encodeArgs(arg) };
+          console.log('encoding', filter);
+          return { ...node, ...encodeArgs(filter) };
         });
         add(refQueries, wrap(refQuery, ref));
       } else {

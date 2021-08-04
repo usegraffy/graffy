@@ -22,7 +22,7 @@ export function validateCall(...args) {
       }
       return [[], args[0], args[1]];
     } else {
-      return [encodePath(args[0]), args[1]];
+      return [encodePath(args[0]), args[1], {}];
     }
   } else if (args.length === 3) {
     if (!isPlainObject(args[2])) {
