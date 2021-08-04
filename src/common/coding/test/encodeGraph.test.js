@@ -45,6 +45,31 @@ test('simple', () => {
   ]);
 });
 
+test('skipped_array', () => {
+  const version = 0;
+  expect(
+    encodeGraph({ foo: { $key: { email: 'a' }, name: 'x' } }, version),
+  ).toEqual([
+    {
+      key: 'foo',
+      version,
+      children: [
+        {
+          key: '\x000kK_QL4dQ--4NF',
+          version,
+          children: [
+            {
+              key: 'name',
+              version,
+              value: 'x',
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+});
+
 test('point_deletion', () => {
   const version = 0;
   expect(encodeGraph({ foo: null }, version)).toEqual([

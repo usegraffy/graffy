@@ -71,7 +71,7 @@ function encode(value, { version, isGraph } = {}) {
         return node;
       }
 
-      if (page && filter) {
+      if ((!isDef(key) || Number.isInteger(key)) && page && filter) {
         // console.log('here2');
         const node = makeNode(
           {
