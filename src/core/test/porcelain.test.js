@@ -226,3 +226,78 @@ test('basic_range', async () => {
 
   expect(result).toEqual(expected);
 });
+
+test('basic_range_onRead', async () => {
+  const query = {
+    foo: {
+      $key: { $first: 2, bar: 'something' },
+      id: 1,
+      name: 1,
+    },
+  };
+
+  const store = new Graffy();
+  const store2 = new Graffy();
+
+  store.use((_store) => {
+    _store.onRead('foo', async (_query, _options) => {
+      return [
+        {
+          $key: {
+            $cursor: [1],
+            bar: 'something',
+          },
+          id: 'id-1',
+          name: 'name-1',
+          address: 'address-1',
+        },
+        {
+          $key: {
+            $cursor: [2],
+            bar: 'something',
+          },
+          id: 'id-2',
+          name: 'name-2',
+          address: 'address-2',
+        },
+        {
+          $key: {
+            $cursor: [3],
+            bar: 'something',
+          },
+          id: 'id-3',
+          name: 'name-3',
+          address: 'address-3',
+        },
+      ];
+    });
+  });
+  store2.onRead((...args) => store.read(...args));
+
+  const result = await store2.read(query);
+  const expected = {
+    foo: [
+      {
+        $key: {
+          $cursor: [1],
+          bar: 'something',
+        },
+        id: 'id-1',
+        name: 'name-1',
+      },
+      {
+        $key: {
+          $cursor: [2],
+          bar: 'something',
+        },
+        id: 'id-2',
+        name: 'name-2',
+      },
+    ],
+  };
+  expected.foo.$key = { bar: 'something', $all: true, $until: [2] };
+  expected.foo.$next = { bar: 'something', $first: 2, $after: [2] };
+  expected.foo.$prev = null;
+
+  expect(result).toEqual(expected);
+});
