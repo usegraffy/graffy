@@ -1,5 +1,27 @@
-export function throwIf(message, condition) {
-  if (condition) throw Error('arg_encoding.' + message);
+import util from 'util';
+
+const opts = {
+  showHidden: false,
+  depth: 3,
+  colors: false,
+  customInspect: true,
+  showProxy: false,
+  maxArrayLength: 3,
+  maxStringLength: 10,
+  breakLength: Infinity,
+  compact: true,
+  sorted: false,
+  getters: false,
+};
+
+export function err(message, { cause, ...args } = {}) {
+  const e = new Error(message + (args ? ' ' + util.inspect(args, opts) : ''));
+  e.cause = cause;
+  throw e;
+}
+
+export function errIf(message, condition, args) {
+  if (condition) err(message, args);
 }
 
 export function isEmpty(object) {
@@ -7,48 +29,35 @@ export function isEmpty(object) {
   return true;
 }
 
-export function mergeObject(base, change) {
-  if (
-    typeof change !== 'object' ||
-    typeof base !== 'object' ||
-    !base ||
-    !change
-  ) {
-    return change;
-  }
+export function isDef(value) {
+  return typeof value !== 'undefined';
+}
 
-  for (const prop in change) {
-    if (prop in base) {
-      const value = mergeObject(base[prop], change[prop]);
-      if (value === null) {
-        delete base[prop];
-      } else {
-        base[prop] = value;
-      }
+export function isPlainObject(arg) {
+  return typeof arg === 'object' && arg && !Array.isArray(arg);
+}
+
+export function isEncodedKey(str) {
+  return str[0] === '\0';
+}
+
+export function find(items, compare, first = 0, last = items.length) {
+  let currentFirst = first;
+  let currentLast = last;
+  while (currentFirst < currentLast) {
+    // console.log(currentFirst, currentLast);
+    const ix = ((currentFirst + currentLast) / 2) | 0;
+    const d = compare(items[ix]);
+    // console.log(ix, items[ix], d);
+
+    if (d < 0) {
+      currentFirst = ix + 1;
+    } else if (d > 0) {
+      currentLast = ix;
     } else {
-      base[prop] = change[prop];
+      return ix;
     }
   }
 
-  return isEmpty(base) ? null : base;
-}
-
-export function cloneObject(object) {
-  if (typeof object !== 'object' || !object) {
-    return object;
-  }
-
-  const clone = {};
-
-  for (const prop in object) {
-    const value = cloneObject(object[prop]);
-    if (value === null) continue;
-    clone[prop] = value;
-  }
-
-  return isEmpty(clone) ? null : clone;
-}
-
-export function isArgObject(arg) {
-  return typeof arg === 'object' && arg && !Array.isArray(arg);
+  return currentFirst;
 }

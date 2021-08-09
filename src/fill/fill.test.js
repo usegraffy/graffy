@@ -139,7 +139,7 @@ describe('changes', () => {
         { $key: ['c'], $val: 3 },
       ],
     });
-    backend.write(encodeGraph({ foo: [{ $key: ['b'], $val: null }] }, 1));
+    backend.write(encodeGraph({ foo: [{ $key: ['b'] }] }, 1));
     await expectNext(
       subscription,
       // prettier-ignore
@@ -272,7 +272,7 @@ describe('values', () => {
         { $key: ['c'], $val: 3 },
       ],
     });
-    backend.write(encodeGraph({ foo: [{ $key: ['b'], $val: null }] }, 1));
+    backend.write(encodeGraph({ foo: [{ $key: ['b'] }] }, 1));
     // TODO: In a future version, update versions throughout the tree in
     // live queries
     await expectNext(
@@ -283,7 +283,7 @@ describe('values', () => {
           { $key: { $before: ['a'] }, $ver: 0 },
           { $key: ['a'], $val: 1, $ver: 0 },
           { $key: { $after: ['a'], $before: ['b'] }, $ver: 0 },
-          { $key: ['b'], $val: null, $ver: 1 },
+          { $key: ['b'], $ver: 1 },
           { $key: { $after: ['b'], $before: ['c'] }, $ver: 0 },
           { $key: ['c'], $val: 3, $ver: 0 },
           { $key: { $after: ['c'], $before: ['d'] }, $ver: 0 },
@@ -352,7 +352,7 @@ describe('values', () => {
           { $key: { $before: ['a'] }, $ver: 0 },
           { $key: ['a'], $val: 1, $ver: 0 },
           { $key: { $after: ['a'], $before: ['b'] }, $ver: 0 },
-          { $key: ['b'], $val: null, $ver: 1 },
+          { $key: ['b'], $ver: 1 },
           { $key: { $after: ['b'], $before: ['c'] }, $ver: 0 },
           { $key: ['c'], $val: 3, $ver: 0 },
           { $key: { $after: ['c'], $before: ['d'] }, $ver: 1 },

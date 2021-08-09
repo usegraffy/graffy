@@ -1,4 +1,4 @@
-import encodeQuery from '../encode.js';
+import { encodeQuery } from '../encodeTree.js';
 
 it('should encode queries', () => {
   expect(
@@ -37,4 +37,42 @@ it('should encode queries', () => {
       ] }
     ],
   );
+});
+
+test('rangeRef', () => {
+  const result = encodeQuery({ foo: [{ $key: { $all: true, tag: 'x' } }] }, 0);
+  // console.log(JSON.stringify(result));
+  expect(result).toEqual([
+    {
+      key: 'foo',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKoNLR-0MV',
+          version: 0,
+          prefix: true,
+          children: [{ key: '', end: '\uffff', value: 1, version: 0 }],
+        },
+      ],
+    },
+  ]);
+});
+
+test('rangeRef2', () => {
+  const result = encodeQuery({ foo: { $key: { $all: true, tag: 'x' } } }, 0);
+  // console.log(JSON.stringify(result));
+  expect(result).toEqual([
+    {
+      key: 'foo',
+      version: 0,
+      children: [
+        {
+          key: '\u00000kKoNLR-0MV',
+          version: 0,
+          prefix: true,
+          children: [{ key: '', end: '\uffff', value: 1, version: 0 }],
+        },
+      ],
+    },
+  ]);
 });

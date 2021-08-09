@@ -29,6 +29,9 @@ describe('final', () => {
     store.write({ baz: [{ $key: ['a'], $ref: 'foo' }] });
     const result = await store.read('baz', [{ $key: { $first: 3 } }]);
     const expectedResult = [42];
+    expectedResult.$key = { $all: true };
+    expectedResult.$next = expectedResult.$prev = null;
+
     expect(result).toEqual(expectedResult);
   });
 });

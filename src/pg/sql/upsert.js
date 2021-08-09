@@ -1,11 +1,11 @@
 import sql, { raw, join } from 'sql-template-tag';
 import {
-  makePath,
+  encodePath,
   wrapObject,
   unwrapObject,
   mergeObject,
   isEmpty,
-  isArgObject,
+  isPlainObject,
 } from '@graffy/common';
 import getArgSql from './getArgSql.js';
 import getIdMeta from './getIdMeta.js';
@@ -13,7 +13,7 @@ import getSelectCols from './getSelectCols.js';
 
 export function patch(object, arg, options) {
   const { table, idCol } = options;
-  const { where, attrs } = isArgObject(arg)
+  const { where, attrs } = isPlainObject(arg)
     ? getArgSql(arg, options)
     : { where: [sql`"${raw(idCol)}" = ${arg}`], attrs: getIdMeta(options) };
   if (!where || !where.length) throw Error('pg_write.no_condition');
@@ -31,7 +31,7 @@ export function put(object, arg, options) {
   const row = objectToRow(object, options);
 
   let meta, conflictTarget;
-  if (isArgObject(arg)) {
+  if (isPlainObject(arg)) {
     const { attrs } = getArgSql(arg);
     meta = attrs;
     conflictTarget = join(
@@ -59,7 +59,7 @@ function objectToRow(object, { props, defCol }) {
 
   for (const prop in props) {
     const { data, gin, tsv, trgm } = props[prop];
-    const path = makePath(prop);
+    const path = encodePath(prop);
     const value = unwrapObject(object, path);
 
     if (typeof value === 'undefined') continue;

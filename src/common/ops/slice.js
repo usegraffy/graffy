@@ -7,7 +7,7 @@ import {
   findLast,
 } from '../node/index.js';
 import { keyAfter, keyBefore } from './step.js';
-import { wrap, wrapValue } from '../path/index.js';
+import { wrap } from './path.js';
 import merge from './merge.js';
 import add from './add.js';
 
@@ -86,11 +86,13 @@ function sliceNode(graph, query, result) {
     if (unknown) result.addUnknown({ ...query, children: unknown });
   } else if (isLink(graph)) {
     result.addKnown(graph);
-    result.addLinked(
-      isBranch(query)
-        ? wrap(query.children, graph.path, version)
-        : wrapValue(query.value, graph.path, version),
-    );
+    if (graph.prefix && isRange(query)) {
+      result.addLinked(wrap([query], graph.path, version, true));
+    } else {
+      result.addLinked(
+        wrap(query.children || query.value, graph.path, version, graph.prefix),
+      );
+    }
   } else if (isBranch(graph) && query.options && query.options.subtree) {
     // This option allows a query to say "give me the subtree under this"
     // without knowing specifically what's available. If using this, the
@@ -110,6 +112,14 @@ function sliceNode(graph, query, result) {
 export function sliceRange(graph, query, result) {
   let { key, end, limit = Infinity, version } = query;
   const step = key < end ? 1 : -1;
+
+  // Prefixes are used to combine filtering and pagination. In schemas where
+  // prefixes are expected but a particular graph does not have a filter, it
+  // will have a prefix node with an empty string as key.
+  if (graph[0].key === '' && graph[0].prefix) {
+    sliceNode(graph[0], query, result);
+    return;
+  }
 
   if (key < end) {
     for (let i = findFirst(graph, key); key <= end && limit > 0; i++) {
