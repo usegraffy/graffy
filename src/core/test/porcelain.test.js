@@ -227,7 +227,7 @@ test('basic_range', async () => {
   expect(result).toEqual(expected);
 });
 
-test('basic_range_onRead', async () => {
+test('query_forwarding', async () => {
   const query = {
     foo: {
       $key: { $first: 2, bar: 'something' },
