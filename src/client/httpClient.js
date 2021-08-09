@@ -1,9 +1,61 @@
-import { encodeUrl, serialize, deserialize, makePath } from '@graffy/common';
+import {
+  encodeUrl,
+  serialize,
+  deserialize,
+  makePath,
+  add,
+} from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 function getOptionsParam(options) {
   if (!options) return '';
   return encodeURIComponent(serialize(options));
+}
+const aggregateQueries = {};
+
+class AggregateQuery {
+  combinedQuery = [];
+  readers = [];
+  timer = null;
+
+  constructor(url) {
+    this.url = url;
+  }
+
+  add(query) {
+    add(this.combinedQuery, query);
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.doFetch(), 0);
+    return new Promise((resolve, reject) => {
+      this.readers.push({ query, resolve, reject });
+    });
+  }
+
+  async doFetch() {
+    delete aggregateQueries[this.url];
+    const response = await fetch(this.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: serialize(this.combinedQuery),
+    });
+    if (response.status !== 200) {
+      const message = await response.text();
+      const err = new Error(message);
+      for (const reader of this.readers) {
+        reader.reject(err);
+      }
+      return;
+    }
+    const data = await response.json();
+    for (const reader of this.readers) {
+      reader.resolve(data);
+    }
+  }
+}
+
+function makeQuery(url, query) {
+  if (!aggregateQueries[url]) aggregateQueries[url] = new AggregateQuery(url);
+  return aggregateQueries[url].add(query);
 }
 
 const httpClient =
@@ -24,19 +76,7 @@ const httpClient =
       if (!fetch) throw Error('client.fetch.unavailable');
       const optionsParam = getOptionsParam(await getOptions('read', options));
       const url = `${baseUrl}?opts=${optionsParam}&op=read`;
-      //q=${encodeUrl(
-      //         query,
-      //       )}
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: serialize(query),
-      }).then((res) => {
-        if (res.status === 200) return res.json();
-        return res.text().then((message) => {
-          throw Error('server.' + message);
-        });
-      });
+      return makeQuery(url, query);
     });
 
     store.on('watch', async function* (query, options) {
