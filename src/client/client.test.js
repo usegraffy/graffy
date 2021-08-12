@@ -83,6 +83,18 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
   const connectionUrl = 'http://example';
   const value = '12345';
 
+  function viewer() {
+    return (_store) => {
+      _store.onRead(async (query) => {
+        return {
+          deal: {
+            $ref: ['deal', { userId: 'USER-ID', $all: true }],
+          },
+        };
+      });
+    };
+  }
+
   beforeEach(() => {
     fetch.mockClear();
     if (description.startsWith('async')) {
@@ -91,6 +103,7 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
       getOptions = jest.fn().mockReturnValue({ value });
     }
     store = new Graffy();
+    store.use('viewer', viewer());
     store.use(client(connectionUrl, { getOptions }));
   });
 
@@ -109,6 +122,29 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
         method: 'POST',
       },
     );
+  });
+
+  test('store read 2', async () => {
+    await store.read({
+      viewer: {
+        deal: [
+          {
+            $key: {
+              $last: 11,
+              $order: ['createTime'],
+            },
+            id: 1,
+          },
+        ],
+      },
+    });
+    // expect(getOptions).toHaveBeenCalled();
+    // expect(fetch).toHaveBeenCalledWith(
+    //   `${connectionUrl}?q=${encodeUrl([
+    //     { key: 'demo', version: 0, value: 1 },
+    //   ])}&opts=${encodeUrl({ value })}`,
+    // );
+    expect(1).toBe(1);
   });
 
   test('store write', async () => {
