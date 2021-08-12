@@ -138,7 +138,7 @@ describe('ref', () => {
         { $key: { tag: 'x', $cursor: { postId: 0 } }, title: 'Title 0' },
         { $key: { tag: 'x', $cursor: { postId: 1 } }, title: 'Title 1' },
       ];
-      posts.$key = { tag: 'x', $all: true, $until: { postId: 1 } };
+      posts.$page = { tag: 'x', $all: true, $until: { postId: 1 } };
       posts.$next = { tag: 'x', $first: 2, $after: { postId: 1 } };
       posts.$prev = null;
 
@@ -165,7 +165,7 @@ describe('ref', () => {
         { $key: { postId: 0 }, title: 'Title 0' },
         { $key: { postId: 1 }, title: 'Title 1' },
       ];
-      posts.$key = { $all: true, $until: { postId: 1 } };
+      posts.$page = { $all: true, $until: { postId: 1 } };
       posts.$next = { $first: 2, $after: { postId: 1 } };
       posts.$prev = null;
 

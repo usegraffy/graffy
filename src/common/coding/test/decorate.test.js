@@ -27,11 +27,11 @@ describe('pagination', () => {
       [{ $key: { $first: 10, $since: 'foo' } }],
     );
     const expected = [123];
-    expected.$key = { $all: true, $since: 'foo' };
+    expected.$page = { $all: true, $since: 'foo' };
     expected.$next = null;
     expected.$prev = { $last: 10, $before: 'foo' };
 
-    expect(result.$key).toEqual(expected.$key);
+    expect(result.$page).toEqual(expected.$page);
     expect(result.$prev).toEqual(expected.$prev);
     expect(result.$next).toEqual(expected.$next);
     expect(result).toEqual(expected);
@@ -46,11 +46,11 @@ describe('pagination', () => {
       [{ $key: { $first: 10, $since: 'foo' } }],
     );
     const expected = [123];
-    expected.$key = { $all: true, $since: 'foo' };
+    expected.$page = { $all: true, $since: 'foo' };
     expected.$next = null;
     expected.$prev = { $last: 10, $before: 'foo' };
 
-    expect(result.$key).toEqual(expected.$key);
+    expect(result.$page).toEqual(expected.$page);
     expect(result.$prev).toEqual(expected.$prev);
     expect(result.$next).toEqual(expected.$next);
     expect(result).toEqual(expected);
@@ -65,11 +65,11 @@ describe('pagination', () => {
       [{ $key: { $last: 10, $until: 'foo' } }],
     );
     const expected = [123];
-    expected.$key = { $all: true, $until: 'foo' };
+    expected.$page = { $all: true, $until: 'foo' };
     expected.$next = { $first: 10, $after: 'foo' };
     expected.$prev = null;
 
-    expect(result.$key).toEqual(expected.$key);
+    expect(result.$page).toEqual(expected.$page);
     expect(result.$prev).toEqual(expected.$prev);
     expect(result.$next).toEqual(expected.$next);
     expect(result).toEqual(expected);
@@ -84,11 +84,11 @@ describe('pagination', () => {
       [{ $key: { $last: 10, $until: 'foo' } }],
     );
     const expected = [123];
-    expected.$key = { $all: true, $until: 'foo' };
+    expected.$page = { $all: true, $until: 'foo' };
     expected.$next = { $first: 10, $after: 'foo' };
     expected.$prev = null;
 
-    expect(result.$key).toEqual(expected.$key);
+    expect(result.$page).toEqual(expected.$page);
     expect(result.$prev).toEqual(expected.$prev);
     expect(result.$next).toEqual(expected.$next);
     expect(result).toEqual(expected);
@@ -112,7 +112,7 @@ describe('pagination', () => {
     );
 
     const expected = [42];
-    expected.$key = { $all: true };
+    expected.$page = { $all: true };
     expected.$next = null;
     expected.$prev = null;
 

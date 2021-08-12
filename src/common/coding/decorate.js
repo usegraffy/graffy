@@ -162,38 +162,38 @@ export default function decorate(rootGraph, rootQuery) {
 
 function addPageMeta(graph, args) {
   if (args.$all) {
-    Object.assign(graph, { $key: args, $prev: null, $next: null });
+    Object.assign(graph, { $page: args, $prev: null, $next: null });
     return;
   }
 
   const [{ $first, $last, ...bounds }, filter] = splitArgs(args);
   const count = $first || $last;
-  const $key = { ...filter, ...bounds, $all: true };
+  const $page = { ...filter, ...bounds, $all: true };
 
   if (graph.length === count) {
     // This result was limited by the count; update the "outer" bound.
     if ($first) {
       const boundKey = graph[graph.length - 1].$key;
-      $key.$until = isDef(boundKey?.$cursor) ? boundKey.$cursor : boundKey;
-      delete $key.$before;
+      $page.$until = isDef(boundKey?.$cursor) ? boundKey.$cursor : boundKey;
+      delete $page.$before;
     } else {
       const boundKey = graph[0].$key;
-      $key.$since = isDef(boundKey?.$cursor) ? boundKey.$cursor : boundKey;
-      delete $key.$after;
+      $page.$since = isDef(boundKey?.$cursor) ? boundKey.$cursor : boundKey;
+      delete $page.$after;
     }
   }
 
   // prettier-ignore
   const $prev =
-    isDef($key.$after) ? { ...filter, $last: count, $until: $key.$after } :
-    isDef($key.$since) ? { ...filter, $last: count, $before: $key.$since } :
+    isDef($page.$after) ? { ...filter, $last: count, $until: $page.$after } :
+    isDef($page.$since) ? { ...filter, $last: count, $before: $page.$since } :
     null;
 
   // prettier-ignore
   let $next =
-    isDef($key.$before) ? { ...filter, $first: count, $since: $key.$before } :
-    isDef($key.$until) ? { ...filter, $first: count, $after: $key.$until } :
+    isDef($page.$before) ? { ...filter, $first: count, $since: $page.$before } :
+    isDef($page.$until) ? { ...filter, $first: count, $after: $page.$until } :
     null;
 
-  Object.assign(graph, { $key, $next, $prev });
+  Object.assign(graph, { $page, $next, $prev });
 }

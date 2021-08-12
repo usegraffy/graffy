@@ -49,7 +49,7 @@ test('Porcelain read', async () => {
       author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
-  expectedResult.$key = { $all: true, $until: ['2001'] };
+  expectedResult.$page = { $all: true, $until: ['2001'] };
   expectedResult.$next = { $first: 2, $after: ['2001'] };
   expectedResult.$prev = null;
 
@@ -115,7 +115,7 @@ test('Porcelain subscription', async () => {
       author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
     },
   ];
-  expectedResult.$key = { $all: true, $until: ['2001'] };
+  expectedResult.$page = { $all: true, $until: ['2001'] };
   expectedResult.$next = { $first: 2, $after: ['2001'] };
   expectedResult.$prev = null;
 
@@ -220,7 +220,7 @@ test('basic_range', async () => {
       },
     ],
   };
-  expected.foo.$key = { bar: 'something', $all: true, $until: [2] };
+  expected.foo.$page = { bar: 'something', $all: true, $until: [2] };
   expected.foo.$next = { bar: 'something', $first: 2, $after: [2] };
   expected.foo.$prev = null;
 
@@ -228,6 +228,11 @@ test('basic_range', async () => {
 });
 
 test('query_forwarding', async () => {
+  /*
+    At this point, this is not a requirement:
+    The *result*
+
+  */
   const query = {
     foo: {
       $key: { $first: 2, bar: 'something' },
@@ -295,7 +300,7 @@ test('query_forwarding', async () => {
       },
     ],
   };
-  expected.foo.$key = { bar: 'something', $all: true, $until: [2] };
+  expected.foo.$page = { bar: 'something', $all: true, $until: [2] };
   expected.foo.$next = { bar: 'something', $first: 2, $after: [2] };
   expected.foo.$prev = null;
 

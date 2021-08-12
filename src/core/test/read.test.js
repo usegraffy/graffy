@@ -83,7 +83,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'e' }, bar: 38 },
       ],
     };
-    expected.foo.$key = { $all: true };
+    expected.foo.$page = { $all: true };
     expected.foo.$next = null;
     expected.foo.$prev = null;
     expect(result).toEqual(expected);
@@ -97,7 +97,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'b' }, bar: 41 },
       ],
     };
-    expected.foo.$key = { $all: true, $until: { x: 'b' } };
+    expected.foo.$page = { $all: true, $until: { x: 'b' } };
     expected.foo.$next = { $first: 2, $after: { x: 'b' } };
     expected.foo.$prev = null;
     expect(result).toEqual(expected);
@@ -105,7 +105,7 @@ describe('range-getKnown', () => {
   test('simple-last', async () => {
     const result = await g.read({ foo: { $key: { $last: 1 }, bar: 1 } });
     const expected = { foo: [{ $key: { x: 'e' }, bar: 38 }] };
-    expected.foo.$key = { $all: true, $since: { x: 'e' } };
+    expected.foo.$page = { $all: true, $since: { x: 'e' } };
     expected.foo.$next = null;
     expected.foo.$prev = { $last: 1, $before: { x: 'e' } };
     expect(result).toEqual(expected);
@@ -120,7 +120,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'c' }, bar: 40 },
       ],
     };
-    expected.foo.$key = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
+    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
     expected.foo.$next = { $first: 2, $after: { x: 'c' } };
     expected.foo.$prev = { $last: 2, $before: { x: 'b' } };
     expect(result).toEqual(expected);
@@ -136,7 +136,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'd' }, bar: 39 },
       ],
     };
-    expected.foo.$key = { $all: true, $until: { x: 'd' }, $since: { x: 'b' } };
+    expected.foo.$page = { $all: true, $until: { x: 'd' }, $since: { x: 'b' } };
     expected.foo.$next = { $first: 3, $after: { x: 'd' } };
     expected.foo.$prev = { $last: 3, $before: { x: 'b' } };
     expect(result).toEqual(expected);
@@ -154,7 +154,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'c' }, bar: 40 },
       ],
     };
-    expected.foo.$key = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
+    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
     expected.foo.$next = { $first: 2, $after: { x: 'c' } };
     expected.foo.$prev = { $last: 2, $before: { x: 'b' } };
     expect(result).toEqual(expected);
@@ -173,7 +173,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'd' }, bar: 39 },
       ],
     };
-    expected.foo.$key = { $all: true, $since: { x: 'b' }, $until: { x: 'd' } };
+    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'd' } };
     expected.foo.$next = { $first: 3, $after: { x: 'd' } };
     expected.foo.$prev = { $last: 3, $before: { x: 'b' } };
     expect(result).toEqual(expected);
@@ -191,7 +191,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'c' }, bar: 40 },
       ],
     };
-    expected.foo.$key = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
+    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
     expected.foo.$next = { $first: 4, $after: { x: 'c' } };
     expected.foo.$prev = { $last: 4, $before: { x: 'b' } };
     expect(result).toEqual(expected);
@@ -210,7 +210,7 @@ describe('range-getKnown', () => {
         { $key: { x: 'd' }, bar: 39 },
       ],
     };
-    expected.foo.$key = { $all: true, $since: { x: 'b' }, $until: { x: 'd' } };
+    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'd' } };
     expected.foo.$next = { $first: 5, $after: { x: 'd' } };
     expected.foo.$prev = { $last: 5, $before: { x: 'b' } };
     expect(result).toEqual(expected);
