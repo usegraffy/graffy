@@ -91,13 +91,6 @@ export default function decorate(rootGraph, rootQuery) {
     }
 
     if (plumGraph[REF]) graph.$ref = plumGraph[REF];
-    if (
-      (Array.isArray(graph) && !graph.length) ||
-      (typeof graph === 'object' && graph && isEmpty(graph))
-    ) {
-      // If it's an empty container, return undefined
-      return;
-    }
     return graph;
   }
 
