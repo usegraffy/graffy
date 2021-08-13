@@ -29,54 +29,53 @@ export default function decorate(rootGraph, rootQuery) {
       graph.$ref = decodePath(path);
     } else if (Array.isArray(query)) {
       let pageKey;
-      graph = query
-        .flatMap((item, i) => {
-          if (!item?.$key) {
-            // This is an integer-indexed array.
-            return construct(descend(plumGraph, i), item);
-          }
+      graph = query.flatMap((item, i) => {
+        if (!item?.$key) {
+          // This is an integer-indexed array.
+          return construct(descend(plumGraph, i), item);
+        }
 
-          const { $key, $chi, ...props } = item;
-          const subQuery = $chi || (isEmpty(props) ? 1 : props);
+        const { $key, $chi, ...props } = item;
+        const subQuery = $chi || (isEmpty(props) ? 1 : props);
 
-          if (!isPlainObject($key) || !splitArgs($key)[0]) {
-            // This is a non-string argument without pagination
-            return construct(descend(plumGraph, $key), subQuery);
-          }
+        if (!isPlainObject($key) || !splitArgs($key)[0]) {
+          // This is a non-string argument without pagination
+          return construct(descend(plumGraph, $key), subQuery);
+        }
 
-          // This is a pagination query.
-          if (pageKey) {
-            throw Error(
-              'decorate.multi_range_query:' + JSON.stringify({ $key, pageKey }),
-            );
-          }
-          pageKey = $key;
-          const children = slice(plumGraph, $key);
-          return children
-            .filter((node) => !isRange(node))
-            .map((node) => {
-              const $key = decodeArgs(node);
-              const subResult = construct(getValue(node), subQuery);
-              if (typeof subResult === 'object') {
-                subResult.$key = children[PRE]
-                  ? { ...children[PRE], $cursor: $key }
-                  : $key;
-              }
-              return subResult;
-            });
-        })
-        .filter(Boolean);
+        // This is a pagination query.
+        if (pageKey) {
+          throw Error(
+            'decorate.multi_range_query:' + JSON.stringify({ $key, pageKey }),
+          );
+        }
+        pageKey = $key;
+        const children = slice(plumGraph, $key);
+        return children
+          .filter((node) => !isRange(node))
+          .map((node) => {
+            const $key = decodeArgs(node);
+            const subResult = construct(getValue(node), subQuery);
+            if (typeof subResult === 'object') {
+              subResult.$key = children[PRE]
+                ? { ...children[PRE], $cursor: $key }
+                : $key;
+            }
+            return subResult;
+          });
+      });
+      // .filter(Boolean);
 
       addPageMeta(graph, pageKey);
     } else if (typeof query === 'object') {
       graph = {};
       for (const prop in query) {
-        // console.log('prop_iter', prop);
-        const res = construct(descend(plumGraph, prop), query[prop]);
-        if (isDef(res)) graph[prop] = res;
+        graph[prop] = construct(descend(plumGraph, prop), query[prop]);
       }
     } else if (query) {
-      if (typeof plumGraph !== 'object' || !plumGraph) {
+      if (Array.isArray(plumGraph) && !plumGraph.length) {
+        graph = undefined;
+      } else if (typeof plumGraph !== 'object' || !plumGraph) {
         graph = plumGraph;
       } else if (plumGraph[IS_VAL]) {
         graph = Array.isArray(plumGraph)

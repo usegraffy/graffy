@@ -20,7 +20,7 @@ describe('final', () => {
 
   test('watch', async () => {
     const result = store.watch({ foo: 1 });
-    expect((await result.next()).value).toEqual(undefined);
+    expect((await result.next()).value).toEqual({ foo: undefined });
     store.write({ foo: 44 });
     expect((await result.next()).value).toEqual({ foo: 44 });
   });
