@@ -18,7 +18,8 @@ function encode(value, { version, isGraph } = {}) {
     const children =
       !isEmpty(props) ? makeNode(props, key, node.version).children :
       isDef($chi) ? makeNode($chi, key, node.version).children :
-      isDef($val) ? $val : undefined;
+      isDef($val) ? $val :
+      isGraph ? undefined : 1;
 
     if (children) {
       links.push(wrap(children, node.path, node.version)[0]);
@@ -102,8 +103,8 @@ function encode(value, { version, isGraph } = {}) {
       node.children = [makeNode(object, undefined, ver)].filter(Boolean);
     } else if ($ref) {
       node.path = encodePath($ref);
-      if (!isGraph) return; // Drop query aliases from encoded format
       pushLink(key, node, props, $val, $chi);
+      if (!isGraph) return; // Drop query aliases from encoded format
     } else if ($val === true) {
       node.value = props;
     } else if (isDef($val)) {

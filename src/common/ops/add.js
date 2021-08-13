@@ -4,6 +4,9 @@ import { find } from '../util.js';
 export default function add(base, diff) {
   let changed = false;
 
+  // console.log('Add', diff);
+  // console.log('before add', base);
+
   let index = 0;
   for (const node of diff) {
     const cmp = compare(node);
@@ -35,6 +38,8 @@ export default function add(base, diff) {
       changed = true;
     }
   }
+
+  // console.log('after add', base);
 
   return changed;
 }

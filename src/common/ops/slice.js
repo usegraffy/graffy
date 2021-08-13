@@ -90,7 +90,12 @@ function sliceNode(graph, query, result) {
       result.addLinked(wrap([query], graph.path, version, true));
     } else {
       result.addLinked(
-        wrap(query.children || query.value, graph.path, version, graph.prefix),
+        wrap(
+          query.children || query.value,
+          graph.path,
+          version,
+          graph.prefix || query.prefix,
+        ),
       );
     }
   } else if (isBranch(graph) && query.options && query.options.subtree) {

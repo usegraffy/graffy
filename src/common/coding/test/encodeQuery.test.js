@@ -76,3 +76,21 @@ test('rangeRef2', () => {
     },
   ]);
 });
+
+describe('alias', () => {
+  test('simple', () => {
+    const result = encodeQuery({ foo: { $ref: ['bar'] } });
+    expect(result).toEqual([{ key: 'bar', version: 0, value: 1 }]);
+  });
+
+  test('children', () => {
+    const result = encodeQuery({ foo: { $ref: ['bar'], x: true } });
+    expect(result).toEqual([
+      {
+        key: 'bar',
+        version: 0,
+        children: [{ key: 'x', version: 0, value: 1 }],
+      },
+    ]);
+  });
+});

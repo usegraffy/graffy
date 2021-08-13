@@ -15,10 +15,11 @@ const PRE = Symbol();
 export default function decorate(rootGraph, rootQuery) {
   // console.log('Decorating', rootGraph, rootQuery);
   function construct(plumGraph, query) {
-    if (!plumGraph) return plumGraph;
+    if (plumGraph === null) return null;
+    if (!isDef(plumGraph)) plumGraph = [];
     if (query.$key) query = [query];
 
-    // console.log('Constructing', plumGraph[PRE], query);
+    // console.log('Constructing', plumGraph, query);
 
     let graph;
     if (query.$ref) {
@@ -70,6 +71,7 @@ export default function decorate(rootGraph, rootQuery) {
     } else if (typeof query === 'object') {
       graph = {};
       for (const prop in query) {
+        // console.log('prop_iter', prop);
         const res = construct(descend(plumGraph, prop), query[prop]);
         if (isDef(res)) graph[prop] = res;
       }
@@ -89,6 +91,13 @@ export default function decorate(rootGraph, rootQuery) {
     }
 
     if (plumGraph[REF]) graph.$ref = plumGraph[REF];
+    if (
+      (Array.isArray(graph) && !graph.length) ||
+      (typeof graph === 'object' && graph && isEmpty(graph))
+    ) {
+      // If it's an empty container, return undefined
+      return;
+    }
     return graph;
   }
 

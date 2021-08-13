@@ -229,3 +229,17 @@ describe('link', () => {
     });
   });
 });
+
+describe('alias', () => {
+  let onRead;
+  beforeEach(() => {
+    onRead = jest.fn(() => ({ x: 100 }));
+    g.onRead('foo', onRead);
+  });
+
+  test('simple', async () => {
+    expect(await g.read({ bar: { $ref: ['foo'], x: 1 } })).toEqual({
+      bar: { $ref: ['foo'], x: 100 },
+    });
+  });
+});
