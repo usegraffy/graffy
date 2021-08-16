@@ -231,15 +231,33 @@ describe('link', () => {
 });
 
 describe('alias', () => {
-  let onRead;
-  beforeEach(() => {
-    onRead = jest.fn(() => ({ x: 100 }));
-    g.onRead('foo', onRead);
-  });
-
   test('simple', async () => {
+    g.onRead('foo', () => ({ x: 100 }));
     expect(await g.read({ bar: { $ref: ['foo'], x: 1 } })).toEqual({
       bar: { $ref: ['foo'], x: 100 },
+    });
+  });
+
+  test('range', async () => {
+    g.onRead('foo', () => [
+      { $key: { t: 3, $cursor: 1 }, x: 100 },
+      { $key: { t: 3, $cursor: 2 }, x: 200 },
+      { $key: { t: 3, $cursor: 3 }, x: 300 },
+    ]);
+    const result = await g.read({
+      bar: { $ref: ['foo', { t: 3, $first: 2 }], x: 1 },
+    });
+    const expectedArray = [
+      { $key: { t: 3, $cursor: 1 }, x: 100 },
+      { $key: { t: 3, $cursor: 2 }, x: 200 },
+    ];
+    expectedArray.$page = { $all: true, $until: 2 };
+    expectedArray.$next = { $first: 2, $after: 2 };
+    expectedArray.$prev = null;
+    expectedArray.$ref = ['foo', { t: 3, $first: 2 }];
+
+    expect(result).toEqual({
+      bar: expectedArray,
     });
   });
 });

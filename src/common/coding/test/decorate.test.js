@@ -129,3 +129,51 @@ test.skip('arrayCursor.decode', () => {
     }),
   ).toEqual([25]);
 });
+
+test('alias', () => {
+  const expectedArray = [
+    { x: 100, $key: { t: 3, $cursor: 1 } },
+    { x: 200, $key: { t: 3, $cursor: 2 } },
+  ];
+  expectedArray.$page = { $all: true, $until: 2 };
+  expectedArray.$next = { $first: 2, $after: 2 };
+  expectedArray.$prev = null;
+  expectedArray.$ref = ['foo', { t: 3, $first: 2 }];
+
+  const result = decorate(
+    [
+      {
+        key: 'foo',
+        version: 0,
+        children: [
+          {
+            key: '\x000kKo--I-1---------',
+            version: 0,
+            prefix: true,
+            children: [
+              { key: '', end: '\x000Azk-------,￿', version: 1628955868126 },
+              {
+                key: '\x000Azk--------',
+                version: 1628955868126,
+                children: [{ key: 'x', version: 1628955868126, value: 100 }],
+              },
+              {
+                key: '\x000Azk--------\x00',
+                end: '\x000B---------,￿',
+                version: 1628955868126,
+              },
+              {
+                key: '\x000B----------',
+                version: 1628955868126,
+                children: [{ key: 'x', version: 1628955868126, value: 200 }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    { bar: { $ref: ['foo', { t: 3, $first: 2 }], x: 1 } },
+  );
+
+  expect(result).toEqual({ bar: expectedArray });
+});

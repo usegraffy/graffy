@@ -1,5 +1,5 @@
 import { decodeGraph } from './decodeTree.js';
-import { encode as encodePath, decode as decodePath } from './path.js';
+import { encode as encodePath, splitRef } from './path.js';
 import {
   splitArgs,
   encode as encodeArgs,
@@ -24,9 +24,15 @@ export default function decorate(rootGraph, rootQuery) {
     let graph;
     if (query.$ref) {
       const { $ref, ...props } = query;
+      const [range, filter] = splitRef($ref);
       const path = encodePath($ref);
-      graph = construct(unwrap(rootGraph, path), props);
-      graph.$ref = decodePath(path);
+      const targetPlumGraph = unwrap(rootGraph, path);
+      if (range) targetPlumGraph[PRE] = filter;
+      graph = construct(
+        targetPlumGraph,
+        range ? { $key: range, ...props } : props,
+      );
+      graph.$ref = $ref;
     } else if (Array.isArray(query)) {
       let pageKey;
       graph = query.flatMap((item, i) => {

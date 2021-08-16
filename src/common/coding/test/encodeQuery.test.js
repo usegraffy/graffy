@@ -93,4 +93,33 @@ describe('alias', () => {
       },
     ]);
   });
+
+  test('range', () => {
+    const result = encodeQuery({
+      foo: { $ref: ['bar', { $first: 4, t: '3' }], x: true },
+    });
+    console.log(result);
+    expect(result).toEqual([
+      {
+        key: 'bar',
+        version: 0,
+        children: [
+          {
+            key: '\x000kKo--Jn',
+            prefix: true,
+            version: 0,
+            children: [
+              {
+                key: '',
+                end: '\uffff',
+                limit: 4,
+                version: 0,
+                children: [{ key: 'x', version: 0, value: 1 }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
 });

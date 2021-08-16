@@ -1,5 +1,5 @@
 import { encode as encodeArgs, splitArgs } from './args.js';
-import { encode as encodePath } from './path.js';
+import { encode as encodePath, splitRef } from './path.js';
 import { isEmpty, isDef, isPlainObject } from '../util.js';
 import { merge, add, wrap, finalize } from '../ops/index.js';
 
@@ -13,16 +13,22 @@ const ROOT_KEY = Symbol();
 function encode(value, { version, isGraph } = {}) {
   const links = [];
 
-  function pushLink(key, node, props, $val, $chi) {
+  function pushLink($ref, $ver, props, $val, $chi) {
+    const [range, _] = splitRef($ref);
+
     // prettier-ignore
-    const children =
-      !isEmpty(props) ? makeNode(props, key, node.version).children :
-      isDef($chi) ? makeNode($chi, key, node.version).children :
+    let children =
+      !isEmpty(props) ? makeNode(
+        range ? [{ $key: range, ...props}] : props, undefined, $ver
+      ).children :
+      isDef($chi) ? makeNode(
+        range ? [{ $key: range, $chi }] : $chi, undefined, $ver
+      ).children :
       isDef($val) ? $val :
       isGraph ? undefined : 1;
 
     if (children) {
-      links.push(wrap(children, node.path, node.version)[0]);
+      links.push(wrap(children, encodePath($ref), $ver, !!range)[0]);
     }
   }
 
@@ -39,7 +45,7 @@ function encode(value, { version, isGraph } = {}) {
 
     if (isPlainObject($key)) {
       const [page, filter] = splitArgs($key);
-      // console.log({ $key, page, filter });
+      // console.log('isKey', { $key, page, filter });
 
       /* When we encounter a range key in a graph, it means one of these:
         1. an empty range, e.g. { $key: { $after: 'foo' } }
@@ -73,7 +79,6 @@ function encode(value, { version, isGraph } = {}) {
       }
 
       if ((!isDef(key) || Number.isInteger(key)) && page && filter) {
-        // console.log('here2');
         const node = makeNode(
           {
             $key: filter,
@@ -102,9 +107,9 @@ function encode(value, { version, isGraph } = {}) {
       // An array has been skipped because there is only one child.
       node.children = [makeNode(object, undefined, ver)].filter(Boolean);
     } else if ($ref) {
-      node.path = encodePath($ref);
-      pushLink(key, node, props, $val, $chi);
+      pushLink($ref, node.version, props, $val, $chi);
       if (!isGraph) return; // Drop query aliases from encoded format
+      node.path = encodePath($ref);
     } else if ($val === true) {
       node.value = props;
     } else if (isDef($val)) {
@@ -166,12 +171,14 @@ function encode(value, { version, isGraph } = {}) {
       node.children = finalize(node.children || [], putQuery, node.version);
     }
 
+    // console.log('returning', node);
+
     if (
-      (key === ROOT_KEY || isDef(node.key)) &&
-      (node.children?.length ||
-        isDef(node.end) ||
-        isDef(node.value) ||
-        isDef(node.path))
+      // (key === ROOT_KEY || isDef(node.key)) &&
+      node.children?.length ||
+      isDef(node.end) ||
+      isDef(node.value) ||
+      isDef(node.path)
     ) {
       return node;
     }

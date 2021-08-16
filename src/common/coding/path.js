@@ -1,4 +1,4 @@
-import { isPlainObject } from '../util.js';
+import { isPlainObject, isEmpty } from '../util.js';
 import {
   encode as encodeArgs,
   decode as decodeArgs,
@@ -38,4 +38,11 @@ export function decode(path) {
   }
 
   return path.map((key) => decodeArgs({ key }));
+}
+
+export function splitRef($ref) {
+  if (!Array.isArray($ref)) return [];
+  const tail = $ref[$ref.length - 1];
+  if (!isPlainObject(tail)) return [];
+  return splitArgs(tail);
 }
