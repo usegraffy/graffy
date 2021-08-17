@@ -8,7 +8,9 @@ import {
   decodeArgs,
   encodeArgs,
   splitArgs,
+  splitRef,
   encodePath,
+  isEmpty,
 } from '@graffy/common';
 import { format } from '@graffy/testing';
 import debug from 'debug';
@@ -56,40 +58,39 @@ export function linkResult(objects, query, { links: linkSpecs }) {
     const linkedQuery = unwrap(query, linkPath);
     if (!linkedQuery) continue;
 
+    // console.log({ query, linkProp, linkedQuery });
+
     for (const object of objects) {
       const ref = makeRef(linkSpecs[linkProp], object);
-      if (isRangeKey(ref[ref.length - 1])) {
-        const {
-          $all,
-          $first,
-          $last,
-          $before,
-          $after,
-          $until,
-          $since,
-          ...refArg
-        } = ref.pop();
-        const refQuery = linkedQuery.map((node) => {
-          console.log('queryNode', node);
-          const queryArg = decodeArgs(node);
-          if (!isRangeKey(queryArg)) {
-            throw Error('pg_link.expected_range:' + linkProp);
-          }
-          const [page, filter] = splitArgs({ ...refArg, ...queryArg });
-          mergeObject(
-            object,
-            wrapObject(
-              { $ref: ref.concat([{ ...filter, $all: true }]) },
-              linkPath,
-            ),
-          );
-          console.log('encoding', filter);
-          return { ...node, ...encodeArgs(filter) };
+      const [refRange, refArg] = splitRef(ref);
+      if (refRange) {
+        const links = [];
+        mergeObject(object, wrapObject(links, linkPath));
+
+        const refQuery = linkedQuery.map((queryNode) => {
+          const [queryRange, queryArgs] = splitArgs(decodeArgs(queryNode));
+          // const node = queryNode.prefix ? queryNode : queryNode.children[0];
+          const linkArg = { ...refArg, ...queryArgs };
+
+          links.push({
+            $key: isEmpty(queryArgs) ? '' : { ...queryArgs, $all: true },
+            $ref: ref.slice(0, -1).concat([{ ...linkArg, $all: true }]),
+          });
+
+          return queryRange
+            ? {
+                ...encodeArgs(linkArg),
+                children: [queryNode],
+                version: queryNode.version,
+                prefix: true,
+              }
+            : { ...queryNode, ...encodeArgs(linkArg) };
         });
-        add(refQueries, wrap(refQuery, ref));
+
+        add(refQueries, wrap(refQuery, encodePath(ref.slice(0, -1))));
       } else {
         mergeObject(object, wrapObject({ $ref: ref }, linkPath));
-        add(refQueries, wrap(linkedQuery, ref));
+        add(refQueries, wrap(linkedQuery, encodePath(ref)));
       }
     }
   }
