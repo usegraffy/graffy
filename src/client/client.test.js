@@ -111,6 +111,7 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     );
   });
 
+  // This test case will test batch output of graffy
   test('store query batching', async () => {
     await Promise.all([
       store.read({ demo: 1 }),
