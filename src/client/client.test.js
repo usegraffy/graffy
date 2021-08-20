@@ -120,6 +120,7 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
       store.read({ anotherDemo: 1 }),
     ]);
     expect(getOptions).toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
       `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
       {
