@@ -111,6 +111,26 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     );
   });
 
+  // This test case will test batch output of graffy
+  test('store query batching', async () => {
+    await Promise.all([
+      store.read({ demo: 1 }),
+      store.read({ anotherDemo: 1 }),
+      store.read({ demo: 1 }),
+      store.read({ anotherDemo: 1 }),
+    ]);
+    expect(getOptions).toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
+      {
+        body: '[{"key":"anotherDemo","version":0,"value":2},{"key":"demo","version":0,"value":2}]',
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      },
+    );
+  });
+
   test('store write', async () => {
     await store.write({ demo: 1 });
     expect(getOptions).toHaveBeenCalled();
