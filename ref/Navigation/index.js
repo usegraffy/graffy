@@ -1,5 +1,7 @@
 import React from 'react';
-import Link from 'next/link';
+import linkMod from 'next/link';
+
+const { default: Link } = linkMod;
 
 function Navigation({ menu }) {
   return (
@@ -15,7 +17,7 @@ function Navigation({ menu }) {
           {children && <Navigation menu={children} />}
         </li>
       ))}
-      <style jsx>{`
+      {/*<style jsx>{`
         text-decoration: none;
         list-style-type: none;
         ul {
@@ -34,7 +36,7 @@ function Navigation({ menu }) {
           padding: 0 4rem;
           box-shadow: none;
         }
-      `}</style>
+      `}</style>*/}
     </ul>
   );
 }

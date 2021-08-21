@@ -4,7 +4,7 @@ import Graffy from '@graffy/core';
 import { encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import { useQuery } from './index.js';
-import { GraffyProvider } from './GraffyContext.js';
+import { GraffyProvider } from './GraffyContext.jsx';
 
 describe('useQuery', () => {
   let g;

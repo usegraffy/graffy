@@ -5,18 +5,16 @@ import client from '@graffy/client';
 // import mock from './mockVisitorList.js';
 import { GraffyProvider } from '@graffy/react';
 
-import Example from './Example.js';
+import Example from './Example.jsx';
 // import './index.css';
 
 const store = new Graffy();
-if (process.browser) {
-  store.use(fill());
-  // store.use(mock);
-  const url = /\busehttp\b/.test(location.search)
-    ? '/api'
-    : `${location.origin.replace('http', 'ws')}/api`;
-  store.use(client(url));
-}
+store.use(fill());
+// store.use(mock);
+const url = /\busehttp\b/.test(location.search)
+  ? '/api'
+  : `${location.origin.replace('http', 'ws')}/api`;
+store.use(client(url));
 
 export default function ExampleProvider() {
   return (

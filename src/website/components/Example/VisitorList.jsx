@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Visitor from './Visitor.js';
+import Visitor from './Visitor.jsx';
 
 export default function VisitorList({ visitors }) {
   return (
@@ -8,13 +8,6 @@ export default function VisitorList({ visitors }) {
       {visitors.map((visitor) => (
         <Visitor key={visitor.id} {...visitor} />
       ))}
-      <style jsx>{`
-        .List {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
-          grid-gap: 1em;
-        }
-      `}</style>
     </div>
   );
 }

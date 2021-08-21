@@ -84,7 +84,7 @@ describe('integration', () => {
     await page.close();
   }
 
-  const exampleUrl = `http://localhost:${PORT}/learn/10-Full-Example`;
+  const exampleUrl = `http://localhost:${PORT}`;
   test('exampleWs', () => runExampleTests(exampleUrl));
   test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
 

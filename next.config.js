@@ -22,20 +22,23 @@ module.exports = withMDX({
   pageExtensions: ['js', 'jsx', 'mdx', 'md'],
   // exportTrailingSlash: true,
 
-  // Build @graffy libs with Webpack even for server-side builds.
-  // This is because externals are loaded with require(), and Next.js
-  // uses the esm polyfill to support ES modules under Node, which
-  // refuses to import ES modules with require().
-
-  // So for now, even though it's slower, we bundle up the @graffy
-  // dependencies on Node to render static pages.
   webpack(config, { isServer }) {
+    // Build @graffy libs with Webpack even for server-side builds.
+    // This is because externals are loaded with require(), and Next.js
+    // uses the esm polyfill to support ES modules under Node, which
+    // refuses to import ES modules with require().
+
+    // So for now, even though it's slower, we bundle up the @graffy
+    // dependencies on Node to render static pages.
     if (isServer && config.externals) {
       const nextExternals = config.externals[0];
       config.externals = [
-        (context, request, callback) => {
-          if (request.indexOf('@graffy/') === 0) return callback();
-          return nextExternals(context, request, callback);
+        (...args) => {
+          const [{ request }, callback] = args;
+          if (request.indexOf('@graffy/') === 0) {
+            return callback();
+          }
+          return nextExternals.apply(this, args);
         },
       ];
     }
