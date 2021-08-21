@@ -13,7 +13,6 @@ function resolve(handlers, firstPayload, options) {
     }
 
     const { path, handle } = handlers[i];
-
     if (!unwrap(payload, path)) return run(i + 1, payload);
 
     let nextCalled = false;

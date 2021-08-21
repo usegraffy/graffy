@@ -78,7 +78,7 @@ describe('postgres', () => {
     });
   });
 
-  test('email_lookup', async () => {
+  test.skip('email_lookup', async () => {
     pool.query.mockReturnValueOnce({
       rows: [
         [{ $key: { email: 'alice@example.com' }, id: 'foo', name: 'Alice' }],
@@ -110,7 +110,7 @@ describe('postgres', () => {
     ]);
   });
 
-  test('range_lookup', async () => {
+  test.skip('range_lookup', async () => {
     pool.query.mockReturnValueOnce({
       rows: [
         [

@@ -405,3 +405,82 @@ describe('version', () => {
     });
   });
 });
+
+test('prefix', () => {
+  expect(
+    slice(
+      [
+        {
+          key: 'favs',
+          version: 0,
+          children: [
+            {
+              key: '(tag:x)',
+              version: 0,
+              path: ['posts', '(favs:true,tag:x)'],
+              prefix: true,
+            },
+          ],
+        },
+      ],
+      [
+        {
+          key: 'favs',
+          version: 0,
+          children: [
+            {
+              key: '(tag:x)',
+              version: 0,
+              children: [
+                {
+                  key: '',
+                  end: '\uffff',
+                  limit: 3,
+                  version: 0,
+                  children: [{ key: 'name', version: 0, value: 1 }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    ),
+  ).toEqual({
+    known: [
+      {
+        key: 'favs',
+        version: 0,
+        children: [
+          {
+            key: '(tag:x)',
+            version: 0,
+            path: ['posts', '(favs:true,tag:x)'],
+            prefix: true,
+          },
+        ],
+      },
+    ],
+    unknown: [
+      {
+        key: 'posts',
+        version: 0,
+        children: [
+          {
+            key: '(favs:true,tag:x)',
+            version: 0,
+            prefix: true,
+            children: [
+              {
+                key: '',
+                end: '\uffff',
+                limit: 3,
+                version: 0,
+                children: [{ key: 'name', version: 0, value: 1 }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+});

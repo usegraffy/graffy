@@ -73,5 +73,3 @@ export default function server(store) {
     }
   };
 }
-
-// TODO: Write tests!

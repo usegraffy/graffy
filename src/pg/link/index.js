@@ -7,7 +7,10 @@ import {
   mergeObject,
   decodeArgs,
   encodeArgs,
-  makePath,
+  splitArgs,
+  splitRef,
+  encodePath,
+  isEmpty,
 } from '@graffy/common';
 import { format } from '@graffy/testing';
 import debug from 'debug';
@@ -17,7 +20,7 @@ const log = debug('graffy:pg:link');
 function makeRef(template, object) {
   function replacePlaceholders(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
-      return unwrapObject(object, makePath(key.slice(2)));
+      return unwrapObject(object, encodePath(key.slice(2)));
     }
     if (Array.isArray(key)) {
       return key.map(replacePlaceholders);
@@ -30,60 +33,51 @@ function makeRef(template, object) {
     return key;
   }
 
-  const res = makePath(template).map(replacePlaceholders);
+  const res = template.map(replacePlaceholders);
   return res;
-}
-
-function isRangeKey(key) {
-  return (
-    typeof key === 'object' &&
-    ('$all' in key ||
-      '$first' in key ||
-      '$last' in key ||
-      '$before' in key ||
-      '$after' in key ||
-      '$until' in key ||
-      '$since' in key)
-  );
 }
 
 export function linkResult(objects, query, { links: linkSpecs }) {
   const refQueries = [];
 
   for (let linkProp in linkSpecs) {
-    const linkPath = makePath(linkProp);
+    const linkPath = encodePath(linkProp);
     const linkedQuery = unwrap(query, linkPath);
     if (!linkedQuery) continue;
 
+    // console.log({ query, linkProp, linkedQuery });
+
     for (const object of objects) {
       const ref = makeRef(linkSpecs[linkProp], object);
-      if (isRangeKey(ref[ref.length - 1])) {
-        const {
-          $all,
-          $first,
-          $last,
-          $before,
-          $after,
-          $until,
-          $since,
-          ...refArg
-        } = ref.pop();
-        const refQuery = linkedQuery.map((node) => {
-          const queryArg = decodeArgs(node);
-          if (!isRangeKey(queryArg)) {
-            throw Error('pg_link.expected_range:' + linkProp);
-          }
-          const arg = { ...refArg, ...queryArg };
-          mergeObject(
-            object,
-            wrapObject({ $ref: ref.concat([arg]) }, linkPath),
-          );
-          return { ...node, ...encodeArgs(arg) };
+      const [refRange, refArg] = splitRef(ref);
+      if (refRange) {
+        const links = [];
+        mergeObject(object, wrapObject(links, linkPath));
+
+        const refQuery = linkedQuery.map((queryNode) => {
+          const [queryRange, queryArgs] = splitArgs(decodeArgs(queryNode));
+          // const node = queryNode.prefix ? queryNode : queryNode.children[0];
+          const linkArg = { ...refArg, ...queryArgs };
+
+          links.push({
+            $key: isEmpty(queryArgs) ? '' : { ...queryArgs, $all: true },
+            $ref: ref.slice(0, -1).concat([{ ...linkArg, $all: true }]),
+          });
+
+          return queryRange
+            ? {
+                ...encodeArgs(linkArg),
+                children: [queryNode],
+                version: queryNode.version,
+                prefix: true,
+              }
+            : { ...queryNode, ...encodeArgs(linkArg) };
         });
-        add(refQueries, wrap(refQuery, ref));
+
+        add(refQueries, wrap(refQuery, encodePath(ref.slice(0, -1))));
       } else {
         mergeObject(object, wrapObject({ $ref: ref }, linkPath));
-        add(refQueries, wrap(linkedQuery, ref));
+        add(refQueries, wrap(linkedQuery, encodePath(ref)));
       }
     }
   }
@@ -97,9 +91,9 @@ export function linkChange(object, { links: linkSpecs }) {
   for (let linkProp in linkSpecs) {
     const { target, prop, back } = linkSpecs[linkProp];
     if (back) continue;
-    const targetPath = makePath(target);
-    const linkPath = makePath(linkProp);
-    const idPath = makePath(prop);
+    const targetPath = encodePath(target);
+    const linkPath = encodePath(linkProp);
+    const idPath = encodePath(prop);
     const link = unwrapObject(object, linkPath);
     if (link) {
       // Remove the link from the object; we don't write it.
@@ -114,7 +108,7 @@ export function linkChange(object, { links: linkSpecs }) {
         );
       }
 
-      const ref = makePath(link.$ref);
+      const ref = encodePath(link.$ref);
       if (
         ref.length !== targetPath.length + 1 ||
         targetPath.some((tkey, i) => ref[i] !== tkey)

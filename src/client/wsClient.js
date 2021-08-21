@@ -1,12 +1,11 @@
 import { makeStream } from '@graffy/stream';
-import { makePath, makeWatcher } from '@graffy/common';
+import { makeWatcher } from '@graffy/common';
 import Socket from './Socket.js';
 
 const wsClient =
   (url, { getOptions = () => {}, watch, connInfoPath = 'connection' } = {}) =>
   (store) => {
     if (!WebSocket) throw Error('client.websocket.unavailable');
-    connInfoPath = makePath(connInfoPath);
 
     const socket = new Socket(url, { onUnhandled, onStatusChange });
     let status = false;

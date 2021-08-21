@@ -21,13 +21,13 @@ export default function fill(_) {
       let budget = MAX_RECURSIONS;
 
       while (budget-- > 1) {
-        // console.log(format(value));
+        // console.log('filled value', value);
         const { known, unknown } = slice(value, query);
         value = known;
         if (!unknown) break;
-        // console.log(format(unknown));
+        // console.log('unknown', unknown);
         const res = await store.call('read', unknown, { skipFill: true });
-        // console.log('this', value, res);
+        // console.log('fetched', res);
         merge(value, res);
       }
 

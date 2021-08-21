@@ -20,7 +20,7 @@ describe('final', () => {
 
   test('watch', async () => {
     const result = store.watch({ foo: 1 });
-    expect((await result.next()).value).toEqual(undefined);
+    expect((await result.next()).value).toEqual({ foo: undefined });
     store.write({ foo: 44 });
     expect((await result.next()).value).toEqual({ foo: 44 });
   });
@@ -29,6 +29,9 @@ describe('final', () => {
     store.write({ baz: [{ $key: ['a'], $ref: 'foo' }] });
     const result = await store.read('baz', [{ $key: { $first: 3 } }]);
     const expectedResult = [42];
+    expectedResult.$page = { $all: true };
+    expectedResult.$next = expectedResult.$prev = null;
+
     expect(result).toEqual(expectedResult);
   });
 });

@@ -1,4 +1,5 @@
 import {
+  decorate,
   decodeGraph,
   decodeQuery,
   wrapObject,
@@ -27,14 +28,18 @@ export default class Graffy {
   onRead(...args) {
     const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
-    this.on(
+    this.core.on(
       'read',
       path,
       shiftFn(async function porcelainRead(query, options) {
-        return finalize(
-          encodeGraph(await handle(decodeQuery(query), options)),
-          query,
-        );
+        // console.log('onRead', path, query);
+        const decoded = decodeQuery(query);
+        // console.log('decoded', path, decoded);
+        const encoded = encodeGraph(await handle(decoded, options));
+        // console.log({ encoded });
+        const finalized = finalize(encoded, query);
+        // console.log({ finalized });
+        return finalized;
       }, path),
     );
   }
@@ -42,7 +47,7 @@ export default class Graffy {
   onWatch(...args) {
     const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
-    this.on(
+    this.core.on(
       'watch',
       path,
       shiftGen(function porcelainWatch(query, options) {
@@ -68,7 +73,7 @@ export default class Graffy {
   onWrite(...args) {
     const [pathArg, handle] = validateOn(...args);
     const path = this.path.concat(pathArg);
-    this.on(
+    this.core.on(
       'write',
       path,
       shiftFn(async function porcelainWrite(change, options) {
@@ -90,24 +95,24 @@ export default class Graffy {
     const [path, porcelainQuery, options] = validateCall(...args);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
-    const result = await this.call('read', query, options || {});
-    return unwrapObject(decodeGraph(result, rootQuery), path);
+    const result = await this.core.call('read', query, options || {});
+    return unwrapObject(decorate(result, rootQuery), path);
   }
 
   watch(...args) {
     const [path, porcelainQuery, options] = validateCall(...args);
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
-    const stream = this.call('watch', query, options || {});
+    const stream = this.core.call('watch', query, options || {});
     return mapStream(stream, (value) =>
-      unwrapObject(decodeGraph(value, rootQuery), path),
+      unwrapObject(decorate(value, rootQuery), path),
     );
   }
 
   async write(...args) {
     const [path, porcelainChange, options] = validateCall(...args);
     const change = wrap(encodeGraph(porcelainChange), path);
-    const writtenChange = await this.call('write', change, options || {});
+    const writtenChange = await this.core.call('write', change, options || {});
     return unwrapObject(decodeGraph(writtenChange), path);
   }
 }
