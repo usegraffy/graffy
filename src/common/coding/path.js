@@ -1,4 +1,4 @@
-import { isPlainObject, isEmpty } from '../util.js';
+import { isPlainObject } from '../util.js';
 import {
   encode as encodeArgs,
   decode as decodeArgs,

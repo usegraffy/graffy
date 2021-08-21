@@ -37,19 +37,6 @@ function makeRef(template, object) {
   return res;
 }
 
-function isRangeKey(key) {
-  return (
-    typeof key === 'object' &&
-    ('$all' in key ||
-      '$first' in key ||
-      '$last' in key ||
-      '$before' in key ||
-      '$after' in key ||
-      '$until' in key ||
-      '$since' in key)
-  );
-}
-
 export function linkResult(objects, query, { links: linkSpecs }) {
   const refQueries = [];
 

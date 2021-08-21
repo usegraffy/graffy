@@ -98,7 +98,6 @@ describe('alias', () => {
     const result = encodeQuery({
       foo: { $ref: ['bar', { $first: 4, t: '3' }], x: true },
     });
-    console.log(result);
     expect(result).toEqual([
       {
         key: 'bar',
