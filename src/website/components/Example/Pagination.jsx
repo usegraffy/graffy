@@ -22,53 +22,6 @@ export default function Pagination({ range, count, onNext, onPrev }) {
       <button className="NextPage" {...getButtonProps(onNext)}>
         &gt;
       </button>
-      <style jsx>{`
-        .Pagination {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 2em;
-        }
-
-        .Pagination > * {
-          font-size: 1.25em;
-          line-height: 1em;
-          padding: 1em 0;
-          background: #eee;
-          color: #333;
-        }
-
-        .Pagination > span {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .Pagination > button {
-          width: 3em;
-          border-radius: 0;
-          border: none;
-          cursor: pointer;
-        }
-
-        .Pagination > button:disabled {
-          color: #ccc;
-          cursor: default;
-        }
-
-        .Pagination > button:hover:not(:disabled) {
-          background: #fff;
-          box-shadow: inset 0 0 16px 8px #eee;
-        }
-
-        .Pagination > button:first-child {
-          border-radius: 100% 0 0 100%;
-        }
-
-        .Pagination > button:last-child {
-          border-radius: 0 100% 100% 0;
-        }
-      `}</style>
     </div>
   );
 }
@@ -81,6 +34,6 @@ Pagination.propTypes = {
     $after: PropTypes.arrayOf(PropTypes.number),
     $before: PropTypes.arrayOf(PropTypes.number),
   }),
-  onNext: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,
-  onPrev: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,
+  onNext: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  onPrev: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
 };

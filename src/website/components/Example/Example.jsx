@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery } from '@graffy/react';
 
-import VisitorList from './VisitorList.js';
-import Pagination from './Pagination.js';
-import Spinner from './Spinner.js';
-// import Query from './Query.js';
+import VisitorList from './VisitorList.jsx';
+import Pagination from './Pagination.jsx';
+import Spinner from './Spinner.jsx';
+// import Query from './Query.jsx';
 
 const PAGE_SIZE = 12;
 
@@ -52,13 +52,6 @@ export default function Example() {
         onNext={$next && (() => setRange($next))}
       />
       <VisitorList visitors={visitors} />
-      <style jsx>{`
-        .Example {
-          text-align: left;
-          width: 100%;
-          line-height: 1em;
-        }
-      `}</style>
     </div>
   );
 }
