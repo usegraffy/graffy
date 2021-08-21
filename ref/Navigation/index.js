@@ -4,8 +4,6 @@ import linkMod from 'next/link';
 const { default: Link } = linkMod;
 
 function Navigation({ menu }) {
-  console.log('link', Link);
-  // return null;
   return (
     <ul>
       {menu.map(({ title, url, external, children }) => (
