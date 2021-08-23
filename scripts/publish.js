@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-const { yarn } = require('./utils');
+import { yarn } from './utils.js';
 
-module.exports = async function publish(name, version) {
+export default async function publish(name, version) {
   const isPre = version.includes('alpha') || version.includes('beta');
   try {
     await yarn(
@@ -20,4 +20,4 @@ module.exports = async function publish(name, version) {
     console.error(`Error publishing ${name}@${version}`);
     console.error(e.message);
   }
-};
+}

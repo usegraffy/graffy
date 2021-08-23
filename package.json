@@ -2,18 +2,20 @@
   "name": "graffy-project",
   "version": "0.0.2",
   "description": "Graffy Project",
+  "type": "module",
   "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "lint": "eslint scripts src pages",
-    "utest": "jest --testPathIgnorePatterns=example",
-    "test": "NODE_ENV=testing jest",
-    "package": "./scripts/package",
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
-    "start": "node src/website/server.js"
+    "lint": "eslint scripts src pages",
+    "package": "./scripts/package.js",
+    "start": "node src/website/server.js",
+    "typedef": "tsc --allowJs --declaration --emitDeclarationOnly",
+    "test": "NODE_ENV=testing jest",
+    "utest": "jest --testPathIgnorePatterns=example"
   },
   "workspaces": [
     "src/*",

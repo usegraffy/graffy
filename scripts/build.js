@@ -1,20 +1,16 @@
 /* eslint-disable no-console */
 
-const { mkdir, readFile, writeFile } = require('fs').promises;
-const globby = require('globby');
-const { src, dst, ownPattern } = require('./utils');
-const babelConfig = require('./babelConfig');
+import { mkdir, readFile, writeFile } from 'fs/promises';
+import { globby } from 'globby';
+import { src, dst, ownPattern, read } from './utils.js';
+import babelConfig from './babelConfig.js';
 
-const {
-  parseAsync: parse,
-  transformFromAstAsync: transform,
-} = require('@babel/core');
+import {
+  parseAsync as parse,
+  transformFromAstAsync as transform,
+} from '@babel/core';
 
-const {
-  extraDeps,
-  depVersions,
-  peerDepVersions /*, use */,
-} = require('./deps.js');
+import { extraDeps, depVersions, peerDepVersions /*, use */ } from './deps.js';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 const depAstNodes = [
@@ -23,13 +19,13 @@ const depAstNodes = [
   'ExportNamedDeclaration',
 ];
 
-module.exports = async function build(name, version) {
+export default async function build(name, version) {
   const cwd = src(name);
   let packageName, description;
 
   // Copy the Readme file first. If there is no readme, skip this directory.
   try {
-    ({ name: packageName } = require(src(name, 'package.json')));
+    ({ name: packageName } = read('src', name, 'package.json'));
     const readme = (await readFile(src(name, 'Readme.md'))).toString();
     description = readme.match(/^[^#].*$/m)[0].trim();
     await mkdir(dst(name));
@@ -136,4 +132,4 @@ module.exports = async function build(name, version) {
   );
 
   return true;
-};
+}

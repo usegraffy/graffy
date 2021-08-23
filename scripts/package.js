@@ -1,23 +1,28 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-const { mkdir } = require('fs').promises;
-const { sync: rimraf } = require('rimraf');
-const globby = require('globby');
-const argv = require('yargs')
+import { mkdir } from 'fs/promises';
+import mRimraf from 'rimraf';
+import { globby } from 'globby';
+import yargs from 'yargs';
+
+import version from './version.js';
+import build from './build.js';
+import publish from './publish.js';
+import link from './link.js';
+import interlink from './interlink.js';
+import tag from './tag.js';
+import types from './types.js';
+import { src, dst } from './utils.js';
+
+const { sync: rimraf } = mRimraf;
+
+const argv = yargs(process.argv.slice(2))
   .usage('$0 <version> [--publish] [--link] [--notypes]')
   .boolean('publish')
   .boolean('link')
+  .boolean('notypes')
   .demandCommand(1).argv;
-
-const version = require('./version.js');
-const build = require('./build.js');
-const publish = require('./publish.js');
-const link = require('./link.js');
-const interlink = require('./interlink.js');
-const tag = require('./tag.js');
-const types = require('./types.js');
-const { src, dst } = require('./utils.js');
 
 (async function () {
   const ver = await version(argv._[0]);

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-const { src, dst, yarnx } = require('./utils.js');
+import { src, dst, yarnx } from './utils.js';
 
-module.exports = async function types(name) {
+export default async function types(name) {
   console.log('Generating definitions for ' + name);
   await yarnx(
     'run',
@@ -11,4 +11,4 @@ module.exports = async function types(name) {
     '--outDir',
     dst(name, 'types'),
   );
-};
+}

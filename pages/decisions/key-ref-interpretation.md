@@ -43,7 +43,6 @@ The normal index pattern is
 
 This MUST interpreted as per option 2, key before ref.
 
-
 # Alias
 
 Ideally we would have used the option 1 interpretation, but as it is inconsistent with the indexes, we use this alternative way to specify aliases:

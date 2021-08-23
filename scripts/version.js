@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-const { git } = require('./utils');
+import { git } from './utils.js';
 
-module.exports = async function version(str) {
+export default async function version(str) {
   switch (str) {
     case 'major':
     case 'minor':
@@ -50,4 +50,4 @@ module.exports = async function version(str) {
     console.error(`Error incrementing version.`);
     console.error(e.message);
   }
-};
+}
