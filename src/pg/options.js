@@ -1,3 +1,4 @@
+import { loadSchema } from './pool.js';
 function setOnce(slotName, acc, prop, name) {
   if (acc[prop]) {
     throw Error(
@@ -24,10 +25,15 @@ const defaults = {
   version: { role: 'version' },
 };
 
-export default function (prefix, { table, columns = defaults, ...rest }) {
+export default async function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';
-
-  const columnOptions = Object.entries(columns).reduce(
+  console.log(table);
+  let schema = await loadSchema(table);
+  if (schema && columns)
+    Object.entries(schema.columns).forEach(([colName]) => {
+      if (columns[colName]) schema.columns[colName] = columns[colName];
+    });
+  const columnOptions = Object.entries(schema.columns).reduce(
     (acc, [name, { role, prop, props, arg, updater }]) => {
       if (role === 'primary') {
         prop = prop || name;
@@ -70,7 +76,6 @@ export default function (prefix, { table, columns = defaults, ...rest }) {
     },
     { columns: {}, props: {}, args: {}, updaters: {} },
   );
-
   if (!columnOptions.idCol) throw Error(`pg.no_primary_column: ${table}`);
   if (!columnOptions.verCol) throw Error(`pg.no_version_column: ${table}`);
   if (!columnOptions.links) columnOptions.links = {};

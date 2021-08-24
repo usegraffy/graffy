@@ -4,27 +4,21 @@ import { populate } from './setup.js';
 
 import debug from 'debug';
 const log = debug('graffy:pg:test');
-
-describe.skip('postgres', () => {
+const setEnv = () => {
+  process.env.PGDATABASE = 'lego';
+  process.env.PGUSER = 'postgres';
+  process.env.PGPASSWORD = 'postgres';
+  process.env.PGHOST = 'localhost';
+};
+describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
+    setEnv();
     await populate();
     jest.useFakeTimers();
     store = new Graffy();
-    store.use(
-      'user',
-      pg({
-        table: 'users',
-        columns: {
-          id: { role: 'primary' },
-          tags: { role: 'gin' },
-          data: { role: 'default' },
-          version: { role: 'version' },
-        },
-        links: { posts: { target: 'post', back: 'author' } },
-      }),
-    );
+    store.use('user', pg());
   });
 
   afterEach(async () => {
@@ -32,9 +26,10 @@ describe.skip('postgres', () => {
     jest.useRealTimers();
   });
 
-  test('scenario 1', async () => {
+  test.skip('scenario 1', async () => {
     const result1 = await store.read('user.user0', { i: 1 });
 
+    console.log(result1);
     expect(result1).toEqual({ i: 0 });
 
     const stream1 = await store.watch('user.user1', {

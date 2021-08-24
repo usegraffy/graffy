@@ -13,26 +13,31 @@ import {
 import { makeStream } from '@graffy/stream';
 import dbRead from './dbRead.js';
 import dbWrite from './dbWrite.js';
-import pool from './pool.js';
+import { pgPool } from './pool.js';
 
 // import debug from 'debug';
 // const log = debug('graffy:pg:index');
 // import { format } from '@graffy/testing';
 
-export default (opts = {}) =>
-  (store) => {
+export default (opts = {}) => {
+  return (store) => {
     store.on('read', read);
     store.on('write', write);
     store.on('watch', watch);
-
-    const pgOptions = makeOptions(store.path, opts);
 
     const watchers = new Set();
     let timestamp = Date.now();
 
     async function poll() {
+      const pgOptions =
+        Object.keys(opts).length === 0
+          ? await loadSchema(table)
+          : await makeOptions(store.path, opts);
       if (!watchers.size) return;
-      const res = await readSql(selectUpdatedSince(timestamp, pgOptions), pool);
+      const res = await readSql(
+        selectUpdatedSince(timestamp, pgOptions),
+        pgPool,
+      );
 
       for (const [object] of res) {
         for (const { query, push } of watchers) {
@@ -52,9 +57,10 @@ export default (opts = {}) =>
       }
     }
 
-    setInterval(poll, pgOptions.pollInterval);
+    setInterval(poll, opts.pollInterval);
 
-    function read(query) {
+    async function read(query) {
+      const pgOptions = await makeOptions(store.path, opts);
       return dbRead(query, pgOptions, store);
       // log(format(rootQuery));
       // const query = unwrap(rootQuery, store.path);
@@ -68,12 +74,14 @@ export default (opts = {}) =>
     }
 
     async function write(change) {
+      const pgOptions = await makeOptions(store.path, opts);
       change = unwrap(change, store.path);
       await dbWrite(change, pgOptions);
       return wrap(change, store.path);
     }
 
-    function watch(query) {
+    async function watch(query) {
+      const pgOptions = await makeOptions(store.path, opts);
       query = unwrap(query, store.path);
 
       return makeStream((push) => {
@@ -87,3 +95,4 @@ export default (opts = {}) =>
       });
     }
   };
+};

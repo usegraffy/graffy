@@ -1,6 +1,6 @@
 import { selectByArgs, selectByIds } from './sql/index.js';
 import { linkResult } from './link/index.js';
-import pool from './pool.js';
+import { pgPool } from './pool.js';
 import {
   isPlainObject,
   decodeArgs,
@@ -25,7 +25,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   const results = [];
 
   async function getByArgs(args, subQuery) {
-    const result = await readSql(selectByArgs(args, pgOptions), pool);
+    const result = await readSql(selectByArgs(args, pgOptions), pgPool);
     add(refQuery, linkResult(result, subQuery, pgOptions));
 
     const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, args]);
@@ -44,7 +44,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   async function getByIds() {
     const result = await readSql(
       selectByIds(Object.keys(idQueries), pgOptions),
-      pool,
+      pgPool,
     );
 
     result.forEach((object) => {
@@ -64,6 +64,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
 
       merge(results, finalize(wrappedGraph, wrappedQuery));
     });
+    console.log(result);
   }
 
   const query = unwrap(rootQuery, store.path);
@@ -77,7 +78,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
       idQueries[node.key] = node.children;
     }
   }
-
+  console.log(idQueries);
   if (!isEmpty(idQueries)) promises.push(getByIds());
   await Promise.all(promises);
 

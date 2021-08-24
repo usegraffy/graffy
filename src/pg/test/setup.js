@@ -3,14 +3,20 @@ import sql from 'sql-template-tag';
 
 export async function populate() {
   // console.log('Creating tables');
-  const pool = new pg.Pool();
+  const pool = new pg.Pool({
+    database: process.env.PGDATABASE,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    host: process.env.PGHOST,
+    port: parseInt(process.env.PGPORT || '5432'),
+  });
 
   async function insert(type, number, builder = () => {}) {
     for (let i = 0; i < number; i++) {
       const { tags = {}, data = {} } = builder(i) || {};
       const now = Date.now();
       // console.log('Inserting ', type, i);
-      await pool.query(sql`INSERT INTO "users" (
+      await pool.query(sql`INSERT INTO "user" (
         "id", "tags", "data", "version"
       ) VALUES (
         ${type + i},
@@ -22,15 +28,15 @@ export async function populate() {
   }
 
   await pool.query(sql`
-    DROP TABLE IF EXISTS "users";
+    DROP TABLE IF EXISTS "user";
   `);
 
   await pool.query(sql`
-    CREATE TABLE "users" (
+    CREATE TABLE "user" (
       "id" text PRIMARY KEY,
       "tags" jsonb NOT NULL DEFAULT '{}',
       "data" jsonb NOT NULL DEFAULT '{}',
-      "version" int8 NOT NULL DEFAULT NOW()
+      "version" int8 NOT NULL
     );
   `);
 
@@ -39,7 +45,7 @@ export async function populate() {
       providers: {
         user: {
           type: 'db',
-          table: 'users',
+          table: 'user',
           columns: {
             id: { role: 'primary' },
             tags: { role: 'gin' },

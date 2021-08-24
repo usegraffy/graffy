@@ -1,6 +1,6 @@
 import { put, patch } from './sql/index.js';
 import { linkChange } from './link/index.js';
-import pool from './pool.js';
+import { pgPool } from './pool.js';
 import { isRange, decodeArgs, decodeGraph } from '@graffy/common';
 import debug from 'debug';
 const log = debug('graffy:pg:dbWrite');
