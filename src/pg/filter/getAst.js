@@ -25,7 +25,7 @@ const inverse = {
   $lte: '$gt',
 };
 
-export default function getAst(filter) {
+export function getAst(filter) {
   counter = 0;
   return simplify(construct(filter));
 }

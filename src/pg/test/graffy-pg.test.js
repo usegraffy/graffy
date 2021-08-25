@@ -1,9 +1,8 @@
 import Graffy from '@graffy/core';
-import pg from '../index.js';
+import pg, { setPool } from '../index.js';
 import { populate } from './setup.js';
+import { Pool } from 'pg';
 
-import debug from 'debug';
-const log = debug('graffy:pg:test');
 const setEnv = () => {
   process.env.PGDATABASE = 'lego';
   process.env.PGUSER = 'postgres';
@@ -18,6 +17,21 @@ describe('postgres', () => {
     await populate();
     jest.useFakeTimers();
     store = new Graffy();
+    // connect({
+    //   database: process.env.PGDATABASE,
+    //   user: process.env.PGUSER,
+    //   password: process.env.PGPASSWORD,
+    //   host: process.env.PGHOST,
+    //   port: parseInt(process.env.PGPORT || '5432'),
+    // });
+    const pool = new Pool({
+      database: process.env.PGDATABASE,
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
+      host: process.env.PGHOST,
+      port: parseInt(process.env.PGPORT || '5432'),
+    });
+    setPool(pool);
     store.use('user', pg());
   });
 

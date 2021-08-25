@@ -1,4 +1,4 @@
-import { loadSchema } from './pool.js';
+import pg from './pool.js';
 function setOnce(slotName, acc, prop, name) {
   if (acc[prop]) {
     throw Error(
@@ -8,17 +8,6 @@ function setOnce(slotName, acc, prop, name) {
   acc[prop] = name;
 }
 
-function pushValue(acc, prop, value) {
-  acc[prop] = acc[prop] || [];
-  acc[prop].push(value);
-}
-
-/*
-  Normalizes options and adds idCol, defCol, verCol, props and args
-  args: { <argname>: { role: 'gin' | 'tsv' | 'trgm', name: <columnName> } }
-  props: { <propname>: { ['data'|'gin'|'tsv'|'trgm']: <columnName> } }
-*/
-
 const defaults = {
   id: { role: 'primary' },
   data: { role: 'default', updater: '||' },
@@ -27,13 +16,13 @@ const defaults = {
 
 export default async function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';
-  let schema = await loadSchema(table);
+  let schema = await pg.loadSchema(table);
   if (schema && columns)
     Object.entries(schema.columns).forEach(([colName]) => {
       if (columns[colName]) schema.columns[colName] = columns[colName];
     });
   const columnOptions = Object.entries(schema.columns).reduce(
-    (acc, [name, { role, prop, props, arg, updater }]) => {
+    (acc, [name, { role, prop, updater }]) => {
       if (role === 'primary') {
         prop = prop || name;
         setOnce(`${table} idCol`, acc, 'idCol', name);

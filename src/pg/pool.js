@@ -1,56 +1,55 @@
 import { Pool } from 'pg';
 import sql from 'sql-template-tag';
-
 import debug from 'debug';
 const errorlog = debug('graffy:pg:error');
 
-export const pgPool = new Pool({
-  database: process.env.PGDATABASE,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  host: process.env.PGHOST,
-  port: parseInt(process.env.PGPORT || '5432'),
-});
+const pgPool = {};
+pgPool.connect = (config) => {
+  const pool = new Pool(config);
+  pgPool.setPool(pool);
+};
 
-// the pool will emit an error on behalf of any idle clients
-// it contains if a backend error or network partition happens
-pgPool.on('error', (err, _) => {
-  errorlog('Unexpected error on idle client', err);
-  process.exit(-1);
-});
+pgPool.setPool = (pool) => {
+  // the pool will emit an error on behalf of any idle clients
+  // it contains if a backend error or network partition happens
+  pool.on('error', (err, _) => {
+    errorlog('Unexpected error on idle client', err);
+    process.exit(-1);
+  });
+  pgPool.pool = pool;
+};
 
-pgPool.query = (agrs) => query(agrs);
-
-export const getClient = async () => pgPool.connect().then((client) => client);
-
-export const query = async (query) => {
+pgPool.query = async (query) => {
+  if (!pgPool.pool) throw Error('Connect with postgres db is required!');
+  const client = await pgPool.pool.connect();
   try {
-    const client = await pgPool.connect();
-    const result = await client.query(query);
-    return result;
+    const res = await client.query(query);
+    return res;
   } catch (error) {
-    errorlog(error.stack);
+    errorlog(error);
   }
 };
 
+pgPool.getClient = async () => pgPool.pool.connect().then((client) => client);
+
 const getTables = async () => {
-  const tables = await query(
+  const tables = await pgPool.query(
     sql`select table_name from information_schema.tables where table_schema ='public'`,
   );
   return tables.rows;
 };
 
 const schemas = {};
-export const loadSchema = async (tableName) => {
+pgPool.loadSchema = async (tableName) => {
   if (Object.keys(schemas).length > 0) return schemas[tableName];
   const tables = await getTables();
   if (!tables || tables.length === 0) return;
   for (let { table_name } of tables) {
-    let schema = await query(
+    let schema = await pgPool.query(
       sql`select column_name , udt_name  from information_schema.columns where table_schema = 'public' and table_name = ${table_name}`,
     );
     if (schema) schema = schema.rows;
-    let constraints = await query(sql`
+    let constraints = await pgPool.query(sql`
             SELECT
                 tc.constraint_type ,
                 tc.constraint_name , 
@@ -109,6 +108,7 @@ function interpretSchema(table, schema) {
   return columnOptions;
 }
 
+export default pgPool;
 // const ENV_TEST = process.env.NODE_ENV === 'testing';
 // let pool = null;
 // let users = 0;

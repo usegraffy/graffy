@@ -1,4 +1,4 @@
-import { selectUpdatedSince, readSql } from './sql/index.js';
+import { selectUpdatedSince } from './sql/index.js';
 import { filterObject } from './filter/index.js';
 import makeOptions from './options.js';
 import {
@@ -11,13 +11,12 @@ import {
   unwrap,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
-import dbRead from './dbRead.js';
+import dbRead, { readSql } from './dbRead.js';
 import dbWrite from './dbWrite.js';
-import { pgPool } from './pool.js';
+import pg from './pool.js';
 
-// import debug from 'debug';
-// const log = debug('graffy:pg:index');
-// import { format } from '@graffy/testing';
+export const connect = (config) => pg.connect(config);
+export const setPool = (pool) => pg.setPool(pool);
 
 export default (opts = {}) => {
   return (store) => {
@@ -31,10 +30,7 @@ export default (opts = {}) => {
     async function poll() {
       const pgOptions = await makeOptions(store.path, opts);
       if (!watchers.size) return;
-      const res = await readSql(
-        selectUpdatedSince(timestamp, pgOptions),
-        pgPool,
-      );
+      const res = await readSql(selectUpdatedSince(timestamp, pgOptions));
 
       for (const [object] of res) {
         for (const { query, push } of watchers) {
@@ -59,15 +55,6 @@ export default (opts = {}) => {
     async function read(query) {
       const pgOptions = await makeOptions(store.path, opts);
       return dbRead(query, pgOptions, store);
-      // log(format(rootQuery));
-      // const query = unwrap(rootQuery, store.path);
-      // const result = await dbRead(query, pgOptions);
-      // const rootResult = slice(
-      //   finalize(encodeGraph(wrapObject(result, store.path)), rootQuery),
-      //   rootQuery,
-      // ).known;
-      // log(format(rootResult));
-      // return rootResult;
     }
 
     async function write(change) {

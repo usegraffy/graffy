@@ -1,6 +1,6 @@
 import { put, patch } from './sql/index.js';
 import { linkChange } from './link/index.js';
-import { pgPool } from './pool.js';
+import pg from './pool.js';
 import { isRange, decodeArgs, decodeGraph } from '@graffy/common';
 import debug from 'debug';
 const log = debug('graffy:pg:dbWrite');
@@ -28,18 +28,18 @@ export default async function dbWrite(change, pgOptions) {
     }
   }
 
-  await Promise.all(sqls.map((sql) => writeSql(sql, pgPool)));
+  await Promise.all(sqls.map((sql) => writeSql(sql)));
 
   log(change);
   return change;
 }
 
-async function writeSql(query, client) {
+async function writeSql(query) {
   log(query.text);
   log(query.values);
 
   query.rowMode = 'array';
-  const res = await client.query(query);
+  const res = await pg.query(query);
   log('Rows written', res.rowCount);
   return res.rowCount;
 }

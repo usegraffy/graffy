@@ -1,6 +1,6 @@
 import { selectByArgs, selectByIds } from './sql/index.js';
 import { linkResult } from './link/index.js';
-import { pgPool } from './pool.js';
+import pg from './pool.js';
 import {
   isPlainObject,
   decodeArgs,
@@ -25,7 +25,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   const results = [];
 
   async function getByArgs(args, subQuery) {
-    const result = await readSql(selectByArgs(args, pgOptions), pgPool);
+    const result = await readSql(selectByArgs(args, pgOptions));
     add(refQuery, linkResult(result, subQuery, pgOptions));
 
     const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, args]);
@@ -44,7 +44,6 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   async function getByIds() {
     const result = await readSql(
       selectByIds(Object.keys(idQueries), pgOptions),
-      pgPool,
     );
 
     result.forEach((object) => {
@@ -69,7 +68,6 @@ export default async function dbRead(rootQuery, pgOptions, store) {
 
   for (const node of query) {
     const args = decodeArgs(node);
-
     if (isPlainObject(args)) {
       promises.push(getByArgs(args, node.children));
     } else {
@@ -89,11 +87,11 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   return slice(results, rootQuery).known || [];
 }
 
-async function readSql(sqlQuery, client) {
+export async function readSql(sqlQuery) {
   log(sqlQuery.text);
   log(sqlQuery.values);
   sqlQuery.rowMode = 'array';
-  const result = (await client.query(sqlQuery)).rows.flat();
+  const result = (await pg.query(sqlQuery)).rows.flat();
   // Each row is an array, as there is only one column returned.
   log('ReadSQL', result);
   return result;
