@@ -27,7 +27,6 @@ const defaults = {
 
 export default async function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';
-  console.log(table);
   let schema = await loadSchema(table);
   if (schema && columns)
     Object.entries(schema.columns).forEach(([colName]) => {
@@ -53,21 +52,6 @@ export default async function (prefix, { table, columns = defaults, ...rest }) {
         setOnce(`${table}/${prop}:${role}`, acc.props[prop], 'data', name);
         setOnce(`${table}/${prop}:${role}`, acc.args, prop, { role, name });
         acc.columns[name] = { role, prop };
-      }
-
-      if (role === 'gin' || role === 'trgm' || role === 'tsv') {
-        arg = arg || name;
-        props = props || [];
-        for (const iProp of props) {
-          acc.props[iProp] = acc.props[iProp] || {};
-          pushValue(acc.props[iProp], role, name);
-          if (role === 'gin') {
-            setOnce(`${table} arg ${iProp}`, acc.args, iProp, { role, name });
-          }
-        }
-        if (role !== 'gin') {
-          setOnce(`${table} arg ${arg}`, acc.args, arg, { role, name });
-        }
       }
 
       if (updater) acc.updaters[name] = updater;

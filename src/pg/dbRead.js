@@ -61,10 +61,8 @@ export default async function dbRead(rootQuery, pgOptions, store) {
         format(wrappedQuery),
         format(finalize(wrappedGraph, wrappedQuery)),
       );
-
       merge(results, finalize(wrappedGraph, wrappedQuery));
     });
-    console.log(result);
   }
 
   const query = unwrap(rootQuery, store.path);
@@ -78,7 +76,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
       idQueries[node.key] = node.children;
     }
   }
-  console.log(idQueries);
+
   if (!isEmpty(idQueries)) promises.push(getByIds());
   await Promise.all(promises);
 
@@ -86,7 +84,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
     log('refQuery', format(refQuery));
     merge(results, await store.call('read', refQuery));
   }
-
+  // console.log(results);
   log('dbRead', format(rootQuery), format(results));
   return slice(results, rootQuery).known || [];
 }
@@ -94,7 +92,6 @@ export default async function dbRead(rootQuery, pgOptions, store) {
 async function readSql(sqlQuery, client) {
   log(sqlQuery.text);
   log(sqlQuery.values);
-
   sqlQuery.rowMode = 'array';
   const result = (await client.query(sqlQuery)).rows.flat();
   // Each row is an array, as there is only one column returned.

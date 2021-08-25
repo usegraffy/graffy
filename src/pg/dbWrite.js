@@ -28,7 +28,7 @@ export default async function dbWrite(change, pgOptions) {
     }
   }
 
-  await Promise.all(sqls.map((sql) => writeSql(sql, pool)));
+  await Promise.all(sqls.map((sql) => writeSql(sql, pgPool)));
 
   log(change);
   return change;

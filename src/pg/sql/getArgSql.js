@@ -66,7 +66,7 @@ export default function getArgSql(
   const attrs = (key) => sql`jsonb_build_object(
     '$key', ${key},
     '$ref', array[${join(prefix)}, "${raw(options.idCol)}"],
-    '$ver', now()
+    '$ver', cast(extract(epoch from now()) as integer)
   )`;
 
   const hasRangeArg =

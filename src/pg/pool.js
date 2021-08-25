@@ -4,7 +4,6 @@ import sql from 'sql-template-tag';
 import debug from 'debug';
 const errorlog = debug('graffy:pg:error');
 
-const pg = {};
 export const pgPool = new Pool({
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
@@ -19,6 +18,8 @@ pgPool.on('error', (err, _) => {
   errorlog('Unexpected error on idle client', err);
   process.exit(-1);
 });
+
+pgPool.query = (agrs) => query(agrs);
 
 export const getClient = async () => pgPool.connect().then((client) => client);
 
@@ -107,7 +108,6 @@ function interpretSchema(table, schema) {
   }
   return columnOptions;
 }
-export default pg;
 
 // const ENV_TEST = process.env.NODE_ENV === 'testing';
 // let pool = null;

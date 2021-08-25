@@ -150,7 +150,11 @@ function getUpdates(row, options) {
             : value
         }`;
       })
-      .concat(sql`"${raw(options.verCol)}" = now()`),
+      .concat(
+        sql`"${raw(
+          options.verCol,
+        )}" =  cast(extract(epoch from now()) as integer)`,
+      ),
     ', ',
   );
 }

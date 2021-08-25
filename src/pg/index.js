@@ -29,10 +29,7 @@ export default (opts = {}) => {
     let timestamp = Date.now();
 
     async function poll() {
-      const pgOptions =
-        Object.keys(opts).length === 0
-          ? await loadSchema(table)
-          : await makeOptions(store.path, opts);
+      const pgOptions = await makeOptions(store.path, opts);
       if (!watchers.size) return;
       const res = await readSql(
         selectUpdatedSince(timestamp, pgOptions),

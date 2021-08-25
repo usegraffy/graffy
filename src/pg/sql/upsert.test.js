@@ -52,7 +52,7 @@ test('patch', async () => {
         "version" = now()
       WHERE "id" = ${'post22'}
       RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type") ||
-        jsonb_build_object('$key', "id", '$ver', now()))
+        jsonb_build_object('$key', "id", '$ver',  cast(extract(epoch from now()) as integer)))
     `,
   );
 });
