@@ -1,13 +1,13 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import graffyPg from '../index.js';
+import graffyPg from '../../index.js';
 // import { populate } from './setup.js';
-import expectSql from '../sql/expectSql.js';
+import expectSql from '../../sql/expectSql.js';
 
 // import debug from 'debug';
-import pool from '../pool.js';
+import pool from '../../pool.js';
 
-jest.mock('../pool', () => {
+jest.mock('../../pool', () => {
   const mockClient = {
     query: jest.fn(),
     release: jest.fn(),
@@ -16,9 +16,10 @@ jest.mock('../pool', () => {
   const mockPool = {
     __esModule: true,
     default: {
-      query: jest.fn(),
+      insert: jest.fn(),
       connect: jest.fn(() => mockClient),
       mockClient,
+      loadSchema: (_) => undefined,
     },
   };
 
@@ -53,27 +54,27 @@ describe('postgres', () => {
   afterEach(async () => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    pool.query.mockReset();
+    pool.insert.mockReset();
   });
 
   test.only('patch_by_id', async () => {
-    pool.query.mockReturnValueOnce({
+    pool.insert.mockReturnValueOnce({
       rowCount: 1,
     });
     const result = await store.write('user.foo', {
       name: 'Alice',
     });
-    expect(pool.query).toBeCalled();
+    expect(pool.insert).toBeCalled();
     expectSql(
-      pool.query.mock.calls[0][0],
+      pool.insert.mock.calls[0][0],
       sql`
       UPDATE "users" SET
         "data" = "data" || ${{ name: 'Alice' }},
-        "version" = now()
+        "version" = cast ( extract ( epoch from now ( ) ) as integer )
       WHERE "id" = ${'foo'}
       RETURNING
         ("data" || jsonb_build_object('id', "id", 'createdAt', "createdAt") ||
-        jsonb_build_object( '$key', "id", '$ver', now() ))
+        jsonb_build_object( '$key', "id", '$ver', cast ( extract ( epoch from now ( ) ) as integer ) ))
     `,
     );
     expect(result).toEqual({

@@ -1,14 +1,23 @@
-import { selectByArgs } from './select.js';
-import makeOptions from '../options.js';
+import { selectByArgs } from '../../sql/select.js';
+import { createOptions } from '../../options.js';
 
 import sql from 'sql-template-tag';
-import expectSql from './expectSql.js';
+import expectSql from '../../sql/expectSql.js';
+jest.mock('../../pool', () => {
+  const mockPool = {
+    __esModule: true,
+    default: {
+      loadSchema: (_) => undefined,
+    },
+  };
 
+  return mockPool;
+});
 test('example', async () => {
   expectSql(
     await selectByArgs(
       { $first: 10 },
-      makeOptions(['user'], {
+      createOptions(['user'], {
         columns: {
           id: { role: 'primary' },
           data: { role: 'default' },
@@ -24,7 +33,7 @@ test('example', async () => {
         'id', "id", 'userType', "type"
       ) || jsonb_build_object(
         '$key', (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
-        '$ref', array[${'user'}, "id"], '$ver', now()
+        '$ref', array[${'user'}, "id"], '$ver', cast ( extract ( epoch from now ( ) ) as integer ) 
       )
       FROM "user" ORDER BY "id" ASC LIMIT ${10}
     `,

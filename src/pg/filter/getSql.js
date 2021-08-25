@@ -1,5 +1,5 @@
 import sql, { join, raw } from 'sql-template-tag';
-import getAst from './getAst.js';
+import { getAst } from './getAst.js';
 
 export default function getSql(filter, getLookupSql) {
   function lhs(string) {

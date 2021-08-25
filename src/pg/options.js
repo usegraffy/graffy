@@ -17,11 +17,18 @@ const defaults = {
 export default async function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';
   let schema = await pg.loadSchema(table);
-  if (schema && columns)
+  if (schema && columns) {
     Object.entries(schema.columns).forEach(([colName]) => {
       if (columns[colName]) schema.columns[colName] = columns[colName];
     });
-  const columnOptions = Object.entries(schema.columns).reduce(
+    columns = schema.columns;
+  }
+  return createOptions(prefix, { table, columns, rest });
+}
+
+export function createOptions(prefix, { table, columns = defaults, ...rest }) {
+  table = table || prefix[prefix.length - 1] || 'default';
+  const columnOptions = Object.entries(columns).reduce(
     (acc, [name, { role, prop, updater }]) => {
       if (role === 'primary') {
         prop = prop || name;

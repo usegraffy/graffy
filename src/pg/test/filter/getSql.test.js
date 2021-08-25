@@ -1,5 +1,5 @@
 import sql, { join, raw } from 'sql-template-tag';
-import getSql from './getSql.js';
+import getSql from '../../filter/getSql.js';
 
 const lookup = (str) => sql`"${raw(str)}"`;
 

@@ -1,4 +1,4 @@
-import getAst from './getAst.js';
+import { getAst } from '../../filter/getAst.js';
 
 test('simple', () => {
   expect(getAst({ foo: 5 })).toEqual(['$eq', 'foo', 5]);

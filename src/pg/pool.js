@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import sql from 'sql-template-tag';
 import debug from 'debug';
-const errorlog = debug('graffy:pg:error');
+const log = (...text) => debug(`graffy:pg:${text.shift()}`)(text);
 
 const pgPool = {};
 pgPool.connect = (config) => {
@@ -13,7 +13,7 @@ pgPool.setPool = (pool) => {
   // the pool will emit an error on behalf of any idle clients
   // it contains if a backend error or network partition happens
   pool.on('error', (err, _) => {
-    errorlog('Unexpected error on idle client', err);
+    log('error', 'Unexpected error on idle client', err);
     process.exit(-1);
   });
   pgPool.pool = pool;
@@ -26,7 +26,7 @@ pgPool.query = async (query) => {
     const res = await client.query(query);
     return res;
   } catch (error) {
-    errorlog(error);
+    log('error', error);
   }
 };
 
@@ -78,6 +78,36 @@ pgPool.loadSchema = async (tableName) => {
     schemas[table_name] = interpretSchema(table_name, schema);
   }
   return schemas[tableName];
+};
+
+pgPool.select = async (sqlQuery) => {
+  log('select', sqlQuery.text);
+  log('select', sqlQuery.values);
+  sqlQuery.rowMode = 'array';
+  const result = (await pgPool.query(sqlQuery)).rows.flat();
+  // Each row is an array, as there is only one column returned.
+  log('select', 'ReadSQL', result);
+  return result;
+};
+
+pgPool.select = async (sqlQuery) => {
+  log('select', sqlQuery.text);
+  log('select', sqlQuery.values);
+  sqlQuery.rowMode = 'array';
+  const result = (await pgPool.query(sqlQuery)).rows.flat();
+  // Each row is an array, as there is only one column returned.
+  log('select', 'ReadSQL', result);
+  return result;
+};
+
+pgPool.insert = async (query) => {
+  log('insert', query.text);
+  log('insert', query.values);
+
+  query.rowMode = 'array';
+  const res = await pgPool.query(query);
+  log('insert', 'Rows written', res.rowCount);
+  return res.rowCount;
 };
 
 function interpretSchema(table, schema) {
