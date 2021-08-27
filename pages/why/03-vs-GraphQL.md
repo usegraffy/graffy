@@ -96,7 +96,8 @@ Doing this using GraphQL (this example uses Apollo) requires an enormous amount 
 
 ```js
 // First, we get the initial state and render it.
-const chat = (await client.query(gql`{
+const chat = (
+  await client.query(gql`{
   chat(id: 123) {
     name
     logs(last: 50) {
@@ -111,16 +112,21 @@ const chat = (await client.query(gql`{
       }
     }
   }
-}`)).chat;
+}`)
+).chat;
 render(chat);
 
 // Now we subscribe to name changes
-const nameSubscription = client.subscribe(gql`
+const nameSubscription = client
+  .subscribe(
+    gql`
   nameChanged(chatid: 123) { ... }
-`).subscribe(({ nameChanged }) => {
-  chat.name = nameChanged.newName;
-  render(chat);
-});
+`,
+  )
+  .subscribe(({ nameChanged }) => {
+    chat.name = nameChanged.newName;
+    render(chat);
+  });
 
 // Then, we need to subscribe to new chat messages and changes and deletion
 // of existing messages (deliver status updates, edits). We also want to keep
@@ -148,7 +154,7 @@ function subscribeToMessage(id) {
       messageUpdated(msgid: ${id}) { ... }
     `);
     msgUpdateSubscriptions[id].subscribe(({ messageUpdated }) => {
-      const index = _.findIndex(chat.logs, item => id === item.id);
+      const index = _.findIndex(chat.logs, (item) => id === item.id);
       chat.logs.splice(index, 1, messageUpdated);
     });
   }
@@ -158,14 +164,15 @@ function subscribeToMessage(id) {
       messageDeleted(msgid: ${id}) { ... }
     `);
     msgDeleteSubscriptions[id].subscribe(() => {
-      const index = _.findIndex(chat.logs, item => id === item.id);
-      unsubscribeFromMessage(id)
+      const index = _.findIndex(chat.logs, (item) => id === item.id);
+      unsubscribeFromMessage(id);
       chat.logs.splice(index, 1);
       if (chat.logs.length === 49) {
         // The length was previously 50, we need to fetch a new item
         // to make up for the one that got deleted.
         const before = chat.logs[0].id;
-        const fetchedMessage = (await client.query(gql`
+        const fetchedMessage = (
+          await client.query(gql`
           chat(id: 123) {
             logs(last: 2, before: ${before}) {
               edges {
@@ -175,7 +182,8 @@ function subscribeToMessage(id) {
               }
             }
           }
-        }`)).chat.logs.edges[0]?.node
+        }`)
+        ).chat.logs.edges[0]?.node;
         chat.logs.unshift(fetchedMessage);
         subscribeToMessage(fetchedMessage.id);
       }
