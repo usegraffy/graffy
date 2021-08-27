@@ -1,8 +1,10 @@
+import { read } from './utils.js';
+
 const {
   dependencies: extraDeps,
   devDependencies: depVersions,
   peerDependencies: peerDepVersions,
-} = require('../package.json');
+} = read('package.json');
 
 const used = {};
 
@@ -19,4 +21,4 @@ function printUnused() {
   });
 }
 
-module.exports = { extraDeps, depVersions, peerDepVersions, use, printUnused };
+export { extraDeps, depVersions, peerDepVersions, use, printUnused };

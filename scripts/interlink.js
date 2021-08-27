@@ -1,16 +1,16 @@
 /* eslint-disable no-console */
-const { yarn, dst, ownPattern } = require('./utils');
+import { yarn, ownPattern, read } from './utils.js';
 
-module.exports = async function link(name) {
+export default async function link(name) {
   try {
     await Promise.all(
-      Object.keys(require(dst(name, 'package.json')).dependencies)
+      Object.keys(read('dist', name, 'package.json').dependencies)
         .filter((dep) => ownPattern.test(dep))
         .map((dep) => yarn(name, 'link', dep)),
     );
-    console.log(`Interlinked: ${name}`);
+    console.log(`INFO [${name}] interlinked`);
   } catch (e) {
-    console.error(`Error interlinking: ${name}`);
+    console.error(`ERROR [${name}] interlink failed`);
     console.error(e.message);
   }
-};
+}

@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
-const { yarn } = require('./utils');
+import { yarn } from './utils.js';
 
-module.exports = async function link(name) {
+export default async function link(name) {
   try {
     await yarn(name, 'link');
-    console.log(`Linked ${name}`);
+    console.log(`INFO [${name}] linked`);
   } catch (e) {
-    console.error(`Error linking ${name}`);
+    console.error(`ERROR [${name}] link failed`);
     console.error(e.message);
   }
-};
+}

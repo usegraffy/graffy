@@ -1,20 +1,17 @@
 /* eslint-disable no-console */
 
-const { mkdir, readFile, writeFile } = require('fs').promises;
-const globby = require('globby');
-const { src, dst, ownPattern } = require('./utils');
-const babelConfig = require('./babelConfig');
+import { mkdir, readFile, writeFile } from 'fs/promises';
+import { globby } from 'globby';
+import isBuiltin from 'is-builtin-module';
+import { src, dst, ownPattern, read } from './utils.js';
+import babelConfig from './babelConfig.js';
 
-const {
-  parseAsync: parse,
-  transformFromAstAsync: transform,
-} = require('@babel/core');
+import {
+  parseAsync as parse,
+  transformFromAstAsync as transform,
+} from '@babel/core';
 
-const {
-  extraDeps,
-  depVersions,
-  peerDepVersions /*, use */,
-} = require('./deps.js');
+import { extraDeps, depVersions, peerDepVersions /*, use */ } from './deps.js';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 const depAstNodes = [
@@ -23,19 +20,19 @@ const depAstNodes = [
   'ExportNamedDeclaration',
 ];
 
-module.exports = async function build(name, version) {
+export default async function build(name, version) {
   const cwd = src(name);
   let packageName, description;
 
   // Copy the Readme file first. If there is no readme, skip this directory.
   try {
-    ({ name: packageName } = require(src(name, 'package.json')));
+    ({ name: packageName } = read('src', name, 'package.json'));
     const readme = (await readFile(src(name, 'Readme.md'))).toString();
     description = readme.match(/^[^#].*$/m)[0].trim();
     await mkdir(dst(name));
     writeFile(dst(name, 'Readme.md'), readme);
   } catch (_) {
-    console.warn(`Skipping "${name}": package.json or Readme.md missing`);
+    console.warn(`WARN [${name}] no package.json or Readme.md; skipping`);
     return false;
   }
 
@@ -67,11 +64,10 @@ module.exports = async function build(name, version) {
             dependencies[dep] = version;
           } else if (depVersions[dep]) {
             dependencies[dep] = depVersions[dep];
-          } else if (require.resolve(dep) === dep) {
-            console.log('Ignoring built-in', dep);
-            // This is a node built-in; ignore.
+          } else if (isBuiltin(dep)) {
+            console.log(`INFO [${name}] ignoring built-in ${dep}`);
           } else {
-            console.warn('No version found for package:', dep);
+            console.warn(`WARN [${name}] unversioned package ${dep}`);
             dependencies[dep] = 'x';
           }
         }
@@ -80,31 +76,37 @@ module.exports = async function build(name, version) {
 
   // Transform source files
   const paths = await globby(['**/*.js', '!**/*.test*.js'], { cwd });
-  await Promise.all(
-    paths.map(async (path) => {
-      try {
-        const source = (await readFile(src(name, path))).toString();
-        const ast = await parse(source, babelConfig(false));
+  try {
+    await Promise.all(
+      paths.map(async (path) => {
+        try {
+          const source = (await readFile(src(name, path))).toString();
+          const ast = await parse(source, babelConfig(false));
 
-        await Promise.all([
-          writeFile(
-            dst(name, 'cjs', path),
-            (
-              await transform(ast, source, babelConfig(false))
-            ).code,
-          ),
-          // writeFile(
-          //   dst(name, 'esm', path),
-          //   (await transform(ast, source, babelConfig(true))).code,
-          // ),
-        ]);
+          await Promise.all([
+            writeFile(
+              dst(name, 'cjs', path),
+              (
+                await transform(ast, source, babelConfig(false))
+              ).code,
+            ),
+            // writeFile(
+            //   dst(name, 'esm', path),
+            //   (await transform(ast, source, babelConfig(true))).code,
+            // ),
+          ]);
 
-        addDeps(ast);
-      } catch (e) {
-        console.error(`Skipping file ${path}:`, e.message);
-      }
-    }),
-  );
+          addDeps(ast);
+        } catch (e) {
+          console.error(`ERROR [${name}] error transpiling ${path}; skipping`);
+          console.error(e);
+          throw e;
+        }
+      }),
+    );
+  } catch (_) {
+    return false;
+  }
 
   // Write package.json
   await writeFile(
@@ -135,5 +137,6 @@ module.exports = async function build(name, version) {
     ),
   );
 
+  console.log(`INFO [${name}] built`);
   return true;
-};
+}

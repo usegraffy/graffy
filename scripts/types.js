@@ -1,14 +1,19 @@
 /* eslint-disable no-console */
-const { src, dst, yarnx } = require('./utils.js');
+import { src, dst, yarnx } from './utils.js';
 
-module.exports = async function types(name) {
-  console.log('Generating definitions for ' + name);
-  await yarnx(
-    'run',
-    'typedef',
-    '--',
-    src(name, 'index.js'),
-    '--outDir',
-    dst(name, 'types'),
-  );
-};
+export default async function types(name) {
+  try {
+    await yarnx(
+      'run',
+      'typedef',
+      '--',
+      src(name, 'index.js'),
+      '--outDir',
+      dst(name, 'types'),
+    );
+    console.log(`INFO [${name}] generated definitions`);
+  } catch (e) {
+    console.error(`INFO [${name}] generating definitions failed`);
+    console.error(e.message);
+  }
+}

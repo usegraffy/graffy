@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-const { yarn } = require('./utils');
+import { yarn } from './utils.js';
 
-module.exports = async function publish(name, version) {
+export default async function publish(name, version) {
   const isPre = version.includes('alpha') || version.includes('beta');
   try {
     await yarn(
@@ -15,9 +15,9 @@ module.exports = async function publish(name, version) {
       '--non-interactive',
       '--no-git-tag-version',
     );
-    console.log(`Published ${name}@${version}`);
+    console.log(`INFO [${name}] published`);
   } catch (e) {
-    console.error(`Error publishing ${name}@${version}`);
+    console.error(`ERROR [${name}] publishing failed`);
     console.error(e.message);
   }
-};
+}

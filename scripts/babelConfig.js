@@ -1,4 +1,4 @@
-module.exports = function (esm) {
+export default function (esm) {
   return {
     configFile: false,
     babelrc: false,
@@ -26,4 +26,4 @@ module.exports = function (esm) {
       ...(esm ? [] : ['babel-plugin-add-module-exports']),
     ],
   };
-};
+}

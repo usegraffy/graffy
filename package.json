@@ -2,18 +2,20 @@
   "name": "graffy-project",
   "version": "0.0.2",
   "description": "Graffy Project",
+  "type": "module",
   "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "lint": "eslint scripts src pages",
-    "utest": "jest --testPathIgnorePatterns=example",
-    "test": "NODE_ENV=testing jest",
-    "package": "./scripts/package",
     "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
-    "start": "node src/website/server.js"
+    "lint": "eslint scripts src pages",
+    "package": "./scripts/package.js",
+    "start": "node src/website/server.js",
+    "typedef": "tsc --allowJs --declaration --emitDeclarationOnly",
+    "test": "NODE_ENV=testing jest",
+    "utest": "jest --testPathIgnorePatterns=example"
   },
   "workspaces": [
     "src/*",
@@ -26,7 +28,6 @@
   },
   "homepage": "https://graffy.js.org",
   "dependencies": {
-    "@babel/runtime": "^7.15.3",
     "@babel/runtime-corejs3": "^7.15.3"
   },
   "devDependencies": {
@@ -48,10 +49,12 @@
     "faker": "^5.1.0",
     "global": "^4.4.0",
     "globby": "^12.0.1",
+    "is-builtin-module": "^3.1.0",
     "jest": "^27.0.6",
     "lodash": "^4.17.19",
     "merge-async-iterators": "^0.2.1",
     "nanoid": "^3.1.25",
+    "p-map": "^5.1.0",
     "pg": "^8.7.1",
     "prettier": "^2.3.2",
     "prop-types": "^15.7.2",
