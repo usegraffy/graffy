@@ -4,11 +4,7 @@ import { execFile as cExecFile } from 'child_process';
 import { promisify } from 'util';
 import { readFileSync } from 'fs';
 
-const pExecFile = promisify(cExecFile);
-const execFile = (...args) => {
-  console.log('DEBUG execFile', args);
-  return pExecFile(...args);
-};
+const execFile = promisify(cExecFile);
 
 const base = join(fileURLToPath(import.meta.url), '..', '..');
 export const read = (...args) =>
