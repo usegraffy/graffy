@@ -1,10 +1,14 @@
 import { join } from 'path';
 import { fileURLToPath } from 'url';
-import { execFile as rExecFile } from 'child_process';
+import { execFile as cExecFile } from 'child_process';
 import { promisify } from 'util';
 import { readFileSync } from 'fs';
 
-const execFile = promisify(rExecFile);
+const pExecFile = promisify(cExecFile);
+const execFile = (...args) => {
+  console.log('DEBUG execFile', args);
+  return pExecFile(...args);
+};
 
 const base = join(fileURLToPath(import.meta.url), '..', '..');
 export const read = (...args) =>

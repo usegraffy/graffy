@@ -2,6 +2,7 @@
 
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { globby } from 'globby';
+import isBuiltin from 'is-builtin-module';
 import { src, dst, ownPattern, read } from './utils.js';
 import babelConfig from './babelConfig.js';
 
@@ -31,7 +32,7 @@ export default async function build(name, version) {
     await mkdir(dst(name));
     writeFile(dst(name, 'Readme.md'), readme);
   } catch (_) {
-    console.warn(`Skipping "${name}": package.json or Readme.md missing`);
+    console.warn(`WARN [${name}] no package.json or Readme.md; skipping`);
     return false;
   }
 
@@ -63,11 +64,10 @@ export default async function build(name, version) {
             dependencies[dep] = version;
           } else if (depVersions[dep]) {
             dependencies[dep] = depVersions[dep];
-          } else if (require.resolve(dep) === dep) {
-            console.log('Ignoring built-in', dep);
-            // This is a node built-in; ignore.
+          } else if (isBuiltin(dep)) {
+            console.log(`INFO [${name}] ignoring built-in ${dep}`);
           } else {
-            console.warn('No version found for package:', dep);
+            console.warn(`WARN [${name}] unversioned package ${dep}`);
             dependencies[dep] = 'x';
           }
         }
@@ -76,31 +76,37 @@ export default async function build(name, version) {
 
   // Transform source files
   const paths = await globby(['**/*.js', '!**/*.test*.js'], { cwd });
-  await Promise.all(
-    paths.map(async (path) => {
-      try {
-        const source = (await readFile(src(name, path))).toString();
-        const ast = await parse(source, babelConfig(false));
+  try {
+    await Promise.all(
+      paths.map(async (path) => {
+        try {
+          const source = (await readFile(src(name, path))).toString();
+          const ast = await parse(source, babelConfig(false));
 
-        await Promise.all([
-          writeFile(
-            dst(name, 'cjs', path),
-            (
-              await transform(ast, source, babelConfig(false))
-            ).code,
-          ),
-          // writeFile(
-          //   dst(name, 'esm', path),
-          //   (await transform(ast, source, babelConfig(true))).code,
-          // ),
-        ]);
+          await Promise.all([
+            writeFile(
+              dst(name, 'cjs', path),
+              (
+                await transform(ast, source, babelConfig(false))
+              ).code,
+            ),
+            // writeFile(
+            //   dst(name, 'esm', path),
+            //   (await transform(ast, source, babelConfig(true))).code,
+            // ),
+          ]);
 
-        addDeps(ast);
-      } catch (e) {
-        console.error(`Skipping file ${path}:`, e.message);
-      }
-    }),
-  );
+          addDeps(ast);
+        } catch (e) {
+          console.error(`ERROR [${name}] error transpiling ${path}; skipping`);
+          console.error(e);
+          throw e;
+        }
+      }),
+    );
+  } catch (_) {
+    return false;
+  }
 
   // Write package.json
   await writeFile(
@@ -131,5 +137,6 @@ export default async function build(name, version) {
     ),
   );
 
+  console.log(`INFO [${name}] built`);
   return true;
 }

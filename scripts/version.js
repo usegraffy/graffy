@@ -47,7 +47,7 @@ export default async function version(str) {
         }`;
     }
   } catch (e) {
-    console.error(`Error incrementing version.`);
-    console.error(e.message);
+    console.error(`ERROR incrementing version`);
+    console.error(e);
   }
 }

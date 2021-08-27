@@ -15,9 +15,9 @@ export default async function publish(name, version) {
       '--non-interactive',
       '--no-git-tag-version',
     );
-    console.log(`Published ${name}@${version}`);
+    console.log(`INFO [${name}] published`);
   } catch (e) {
-    console.error(`Error publishing ${name}@${version}`);
+    console.error(`ERROR [${name}] publishing failed`);
     console.error(e.message);
   }
 }

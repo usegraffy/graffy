@@ -2,9 +2,11 @@
 /* eslint-disable no-console */
 
 import { mkdir } from 'fs/promises';
+import os from 'os';
 import mRimraf from 'rimraf';
 import { globby } from 'globby';
 import yargs from 'yargs';
+import pMap from 'p-map';
 
 import version from './version.js';
 import build from './build.js';
@@ -26,26 +28,29 @@ const argv = yargs(process.argv.slice(2))
 
 (async function () {
   const ver = await version(argv._[0]);
-  console.log('Building version', ver);
+  console.log(`INFO packaging version ${ver}`);
 
   await rimraf(dst());
   await mkdir(dst());
 
   let dirs = await globby('*', { cwd: src(), onlyDirectories: true });
   dirs = (
-    await Promise.all(
-      dirs.map(async (dir) => {
-        if (!(await build(dir, ver))) return;
-        if (!argv.notypes) await types(dir);
-        if (argv.publish) await publish(dir, ver);
-        if (argv.link) await link(dir);
-        return dir;
-      }),
+    await pMap(
+      dirs,
+      async (name) => {
+        console.log(`INFO [${name}] started`);
+        if (!(await build(name, ver))) return;
+        if (!argv.notypes) await types(name);
+        if (argv.publish) await publish(name, ver);
+        if (argv.link) await link(name);
+        return name;
+      },
+      { concurrency: os.cpus().length },
     )
   ).filter(Boolean);
 
-  if (argv.link) await Promise.all(dirs.map((dir) => interlink(dir)));
-  if (argv.publish) tag(ver);
+  if (argv.link) await Promise.all(dirs.map((name) => interlink(name)));
+  if (argv.publish) await tag(ver);
 
-  console.log('Done.');
+  console.log('INFO done');
 })();
