@@ -8,11 +8,13 @@ function setOnce(slotName, acc, prop, name) {
   acc[prop] = name;
 }
 
-const defaults = {
+let defaults = {
   id: { role: 'primary' },
   data: { role: 'default', updater: '||' },
   version: { role: 'version' },
 };
+
+export const setDefaultAst = (new_defaults) => (defaults = new_defaults);
 
 export default async function (prefix, { table, columns = defaults, ...rest }) {
   table = table || prefix[prefix.length - 1] || 'default';

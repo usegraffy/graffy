@@ -87,14 +87,12 @@ export async function dbRead(rootQuery, pgOptions, store) {
     log('read', 'refQuery', format(refQuery));
     merge(results, await store.call('read', refQuery));
   }
-  // console.log(results);
   log('read', 'dbRead', format(rootQuery), format(results));
   return slice(results, rootQuery).known || [];
 }
 
 export const dbWrite = async (change, pgOptions) => {
   const sqls = [];
-
   for (const node of change) {
     if (isRange(node)) {
       throw Error(
@@ -103,10 +101,8 @@ export const dbWrite = async (change, pgOptions) => {
           : 'pg_write.write_range_unsupported',
       );
     }
-
     const object = linkChange(decodeGraph(node.children), pgOptions);
     const arg = decodeArgs(node);
-
     if (object.$put) {
       if (object.$put !== true) throw Error('pg_write.partial_put_unsupported');
       sqls.push(put(object, arg, pgOptions));

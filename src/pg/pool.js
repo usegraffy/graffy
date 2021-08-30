@@ -19,9 +19,18 @@ pgPool.setPool = (pool) => {
   pgPool.pool = pool;
 };
 
+// customised client
+pgPool.setClient = (client) => {
+  pgPool.client = client;
+};
+
+pgPool.getClient = async () =>
+  pgPool.client ? pgPool.client() : pgPool.pool.connect();
+
 pgPool.query = async (query) => {
-  if (!pgPool.pool) throw Error('Connect with postgres db is required!');
-  const client = await pgPool.pool.connect();
+  if (!pgPool.pool && !pgPool.client)
+    throw Error('Connect with postgres db is required!');
+  const client = await pgPool.getClient();
   try {
     const res = await client.query(query);
     return res;
@@ -30,26 +39,14 @@ pgPool.query = async (query) => {
   }
 };
 
-pgPool.getClient = async () => pgPool.pool.connect().then((client) => client);
-
-const getTables = async () => {
-  const tables = await pgPool.query(
-    sql`select table_name from information_schema.tables where table_schema ='public'`,
-  );
-  return tables.rows;
-};
-
 const schemas = {};
 pgPool.loadSchema = async (tableName) => {
-  if (Object.keys(schemas).length > 0) return schemas[tableName];
-  const tables = await getTables();
-  if (!tables || tables.length === 0) return;
-  for (let { table_name } of tables) {
-    let schema = await pgPool.query(
-      sql`select column_name , udt_name  from information_schema.columns where table_schema = 'public' and table_name = ${table_name}`,
-    );
-    if (schema) schema = schema.rows;
-    let constraints = await pgPool.query(sql`
+  if (schemas[tableName]) return schemas[tableName];
+  let schema = await pgPool.query(
+    sql`select column_name , udt_name  from information_schema.columns where table_schema = 'public' and table_name = ${tableName}`,
+  );
+  if (schema) schema = schema.rows;
+  let constraints = await pgPool.query(sql`
             SELECT
                 tc.constraint_type ,
                 tc.constraint_name , 
@@ -64,19 +61,18 @@ pgPool.loadSchema = async (tableName) => {
                 JOIN information_schema.constraint_column_usage AS ccu
                   ON ccu.constraint_name = tc.constraint_name
                   AND ccu.table_schema = tc.table_schema
-            WHERE  tc.table_name=${table_name}`);
-    if (constraints) constraints = constraints.rows;
-    // const indexing =
-    //   await query(sql`   SELECT pg_get_indexdef(indexrelid) from pg_index
-    //       WHERE pg_get_indexdef(indexrelid) ~ 'USING (gin |gist )'`);
-    schema.map(
-      (each) =>
-        (each.constrain = constraints.find(
-          (c) => c.column_name === each.column_name,
-        )),
-    );
-    schemas[table_name] = interpretSchema(table_name, schema);
-  }
+            WHERE  tc.table_name=${tableName}`);
+  if (constraints) constraints = constraints.rows;
+  // const indexing =
+  //   await query(sql`   SELECT pg_get_indexdef(indexrelid) from pg_index
+  //       WHERE pg_get_indexdef(indexrelid) ~ 'USING (gin |gist )'`);
+  schema.map(
+    (each) =>
+      (each.constrain = constraints.find(
+        (c) => c.column_name === each.column_name,
+      )),
+  );
+  schemas[tableName] = interpretSchema(tableName, schema);
   return schemas[tableName];
 };
 
@@ -103,9 +99,9 @@ pgPool.select = async (sqlQuery) => {
 pgPool.insert = async (query) => {
   log('insert', query.text);
   log('insert', query.values);
-
   query.rowMode = 'array';
-  const res = await pgPool.query(query);
+  let res = await pgPool.query(query);
+  res = res || { rowCount: 0 };
   log('insert', 'Rows written', res.rowCount);
   return res.rowCount;
 };
@@ -114,26 +110,30 @@ function interpretSchema(table, schema) {
   const columnOptions = { columns: {}, links: {} };
   columnOptions.table = table;
   for (let { column_name: name, udt_name: dataType, constrain } of schema) {
-    if (!constrain) {
-      columnOptions.columns[name] = { role: 'simple' };
-      continue;
-    }
-    if (dataType === 'JSON') {
-      columnOptions.columns[name] = { role: 'default' };
-      continue;
-    }
-    const { constraint_type, foreign_table_name, foreign_column_name } =
-      constrain;
-    if (constraint_type === 'PRIMARY KEY') {
-      columnOptions.columns[name] = { role: 'primary' };
+    if (constrain) {
+      const { constraint_type, foreign_table_name, foreign_column_name } =
+        constrain;
+
+      columnOptions.columns[name] =
+        constraint_type.toUpperCase() === 'PRIMARY KEY'
+          ? (columnOptions.columns[name] = { role: 'primary' })
+          : { role: 'simple' };
+      if (constraint_type.toUpperCase() === 'FOREIGN KEY')
+        columnOptions.links[foreign_table_name] = {
+          target: foreign_table_name,
+          prop: foreign_column_name,
+        };
       continue;
     }
 
-    if (constraint_type === 'FOREIGN KEY')
-      columnOptions.links[foreign_table_name] = {
-        target: foreign_table_name,
-        prop: foreign_column_name,
-      };
+    if (
+      dataType.toLowerCase() === 'json' ||
+      dataType.toLowerCase() === 'jsonb'
+    ) {
+      columnOptions.columns[name] = { role: 'default' };
+      continue;
+    }
+    columnOptions.columns[name] = { role: 'simple' };
   }
   return columnOptions;
 }

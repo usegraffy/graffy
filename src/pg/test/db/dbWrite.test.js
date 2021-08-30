@@ -38,7 +38,7 @@ describe('postgres', () => {
     store.use(
       'user',
       graffyPg({
-        table: 'users',
+        table: 'user',
         columns: {
           id: { role: 'primary' },
           tags: { role: 'gin', props: ['email', 'phone'] },
@@ -57,7 +57,7 @@ describe('postgres', () => {
     pool.insert.mockReset();
   });
 
-  test.only('patch_by_id', async () => {
+  test('patch_by_id', async () => {
     pool.insert.mockReturnValueOnce({
       rowCount: 1,
     });
@@ -68,7 +68,7 @@ describe('postgres', () => {
     expectSql(
       pool.insert.mock.calls[0][0],
       sql`
-      UPDATE "users" SET
+      UPDATE "user" SET
         "data" = "data" || ${{ name: 'Alice' }},
         "version" = cast ( extract ( epoch from now ( ) ) as integer )
       WHERE "id" = ${'foo'}
