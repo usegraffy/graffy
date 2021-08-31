@@ -29,6 +29,7 @@ export function patch(object, arg, options) {
 export function put(object, arg, options) {
   const { idCol, table, props } = options;
   const row = objectToRow(object, options);
+  console.log(arg, options);
 
   let meta, conflictTarget;
   if (isPlainObject(arg)) {
@@ -53,44 +54,9 @@ export function put(object, arg, options) {
     RETURNING (${getSelectCols(options)} || ${meta})`;
 }
 
-function objectToRow(object, { props, defCol }) {
+function objectToRow(object, { defCol }) {
   const row = {};
   const defVal = defCol ? clean(object, false) : {};
-
-  for (const prop in props) {
-    const { data, gin, tsv, trgm } = props[prop];
-    const path = encodePath(prop);
-    const value = unwrapObject(object, path);
-
-    if (typeof value === 'undefined') continue;
-
-    if (data) {
-      row[data] = clean(value, false);
-      // Delete this path from the default object
-      if (defCol) mergeObject(defVal, wrapObject(null, path));
-    }
-
-    if (gin) {
-      for (const col of gin) {
-        row[col] = row[col] || {};
-        row[col][prop] = clean(value, true);
-      }
-    }
-
-    if (tsv) {
-      for (const col of tsv) {
-        row[col] = row[col] || [];
-        row[col].push(value);
-      }
-    }
-
-    if (trgm) {
-      for (const col of trgm) {
-        row[col] = row[col] || [];
-        row[col].push(value);
-      }
-    }
-  }
 
   if (defCol) row[defCol] = defVal;
 

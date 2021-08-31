@@ -40,7 +40,7 @@ describe('postgres', () => {
     jest.useRealTimers();
   });
 
-  test.skip('scenario 1', async () => {
+  test('scenario 1', async () => {
     const result1 = await store.read('user.user0', { i: 1 });
 
     expect(result1).toEqual({ i: 0 });
@@ -52,5 +52,15 @@ describe('postgres', () => {
     expect(response1).toEqual({ i: 2 });
   });
 
-  test.todo('scenario 2');
+  // something is not right with default value
+  test('scenario 2', async () => {
+    const result1 = await store.write('user.user0', {
+      i: 1,
+      $put: true,
+    });
+    console.log(result1);
+  });
+
+  // test('scenario 3', async () => {
+  // }
 });

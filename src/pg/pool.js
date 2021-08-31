@@ -109,7 +109,7 @@ pgPool.insert = async (query) => {
 function interpretSchema(table, schema) {
   const columnOptions = { columns: {}, links: {} };
   columnOptions.table = table;
-  for (let { column_name: name, udt_name: dataType, constrain } of schema) {
+  for (let { column_name: name, constrain } of schema) {
     if (constrain) {
       const { constraint_type, foreign_table_name, foreign_column_name } =
         constrain;
@@ -126,13 +126,6 @@ function interpretSchema(table, schema) {
       continue;
     }
 
-    if (
-      dataType.toLowerCase() === 'json' ||
-      dataType.toLowerCase() === 'jsonb'
-    ) {
-      columnOptions.columns[name] = { role: 'default' };
-      continue;
-    }
     columnOptions.columns[name] = { role: 'simple' };
   }
   return columnOptions;

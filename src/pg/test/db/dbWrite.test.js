@@ -81,4 +81,36 @@ describe('postgres', () => {
       name: 'Alice',
     });
   });
+
+  test('insert (with $put)', async () => {
+    pool.insert.mockReturnValueOnce({
+      rowCount: 1,
+    });
+    const result = await store.write('user.foo', {
+      name: 'Alice',
+      $put: true,
+    });
+    expect(pool.insert).toBeCalled();
+
+    const values =
+      pool.insert.mock.calls[pool.insert.mock.calls.length - 1][0].values;
+    const version = values[values.length - 1];
+    // console.log(result);
+    // console.log(values);
+    // console.log(version);
+
+    expectSql(
+      pool.insert.mock.calls[0][0],
+      sql`
+      INSERT INTO "user" ("data", "version")
+      VALUES(${{ name: 'Alice' }}, ${version})
+      ON CONFLICT ("id") DO UPDATE SET ("data", "version") = (${{
+        name: 'Alice',
+      }}, ${version})
+      RETURNING
+        ("data" || jsonb_build_object('id', "id", 'createdAt', "createdAt") ||
+        jsonb_build_object( '$key', "id", '$ver', cast ( extract ( epoch from now ( ) ) as integer ) ))
+    `,
+    );
+  });
 });

@@ -103,14 +103,15 @@ export const dbWrite = async (change, pgOptions) => {
     }
     const object = linkChange(decodeGraph(node.children), pgOptions);
     const arg = decodeArgs(node);
-    if (object.$put) {
-      if (object.$put !== true) throw Error('pg_write.partial_put_unsupported');
-      sqls.push(put(object, arg, pgOptions));
-    } else {
-      sqls.push(patch(object, arg, pgOptions));
-    }
-  }
 
+    if (object.$put && object.$put !== true)
+      throw Error('pg_write.partial_put_unsupported');
+
+    object.$put || false
+      ? sqls.push(put(object, arg, pgOptions))
+      : sqls.push(patch(object, arg, pgOptions));
+  }
+  console.log(sqls);
   await Promise.all(sqls.map((sql) => pg.insert(sql)));
 
   log('write', change);

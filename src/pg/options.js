@@ -37,8 +37,6 @@ export function createOptions(prefix, { table, columns = defaults, ...rest }) {
         setOnce(`${table} idCol`, acc, 'idCol', name);
         setOnce(`${table} idProp`, acc, 'idProp', prop);
         setOnce(`${table} idArg`, acc.args, prop, { role, name });
-        acc.props[prop] = acc.props[prop] || {};
-        setOnce(`${table}/${prop}:${role}`, acc.props[prop], 'data', name);
         acc.columns[name] = { role, prop };
       }
       if (role === 'default') setOnce(`${table} default`, acc, 'defCol', name);
@@ -46,21 +44,17 @@ export function createOptions(prefix, { table, columns = defaults, ...rest }) {
 
       if (role === 'simple') {
         prop = prop || name;
-        acc.props[prop] = acc.props[prop] || {};
-        setOnce(`${table}/${prop}:${role}`, acc.props[prop], 'data', name);
         setOnce(`${table}/${prop}:${role}`, acc.args, prop, { role, name });
         acc.columns[name] = { role, prop };
       }
 
       if (updater) acc.updaters[name] = updater;
-
       return acc;
     },
-    { columns: {}, props: {}, args: {}, updaters: {} },
+    { columns: {}, args: {}, updaters: {} },
   );
   if (!columnOptions.idCol) throw Error(`pg.no_primary_column: ${table}`);
   if (!columnOptions.verCol) throw Error(`pg.no_version_column: ${table}`);
   if (!columnOptions.links) columnOptions.links = {};
-
   return { ...rest, prefix, table, ...columnOptions };
 }
