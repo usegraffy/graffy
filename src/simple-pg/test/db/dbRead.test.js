@@ -1,13 +1,13 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import graffyPg from '../index.js';
+import graffyPg from '../../index.js';
+import expectSql from '../expectSql';
 // import { populate } from './setup.js';
-import expectSql from '../sql/expectSql.js';
 
 // import debug from 'debug';
-import pool from '../pool.js';
+import pool from '../../pool.js';
 
-jest.mock('../pool', () => {
+jest.mock('../../pool', () => {
   const mockClient = {
     query: jest.fn(),
     release: jest.fn(),
@@ -16,7 +16,7 @@ jest.mock('../pool', () => {
   const mockPool = {
     __esModule: true,
     default: {
-      query: jest.fn(),
+      select: jest.fn(),
       connect: jest.fn(() => mockClient),
       mockClient,
     },
@@ -37,15 +37,9 @@ describe('postgres', () => {
     store.use(
       'user',
       graffyPg({
-        table: 'users',
-        columns: {
-          id: { role: 'primary' },
-          tags: { role: 'gin', props: ['email', 'phone'] },
-          data: { role: 'default' },
-          createdAt: { role: 'simple' },
-          version: { role: 'version' },
-        },
-        links: { posts: { target: 'post', back: 'author' } },
+        table: 'user',
+        id: 'id',
+        version: 'version',
       }),
     );
   });
@@ -53,29 +47,29 @@ describe('postgres', () => {
   afterEach(async () => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    pool.query.mockReset();
+    pool.select.mockReset();
   });
 
   test('id_lookup', async () => {
-    pool.query.mockReturnValueOnce({
-      rows: [[{ $key: 'foo', id: 'foo', name: 'Alice' }]],
-    });
+    const now = Date.now();
+    pool.select.mockReturnValueOnce([
+      { id: 'foo', name: 'Alice', version: now },
+    ]);
     const result = await store.read('user.foo', {
       name: true,
       version: true,
     });
-    expect(pool.query).toBeCalled();
+    expect(pool.select).toBeCalled();
     expectSql(
-      pool.query.mock.calls[0][0],
+      pool.select.mock.calls[0][0],
       sql`
-      SELECT
-        "data" || jsonb_build_object( 'id', "id", 'createdAt', "createdAt" ) ||
-        jsonb_build_object( '$key', "id", '$ver', now() )
-      FROM "users" WHERE "id" IN (${'foo'})
+      SELECT * 
+      FROM "user" WHERE "id" IN (${'foo'})
     `,
     );
     expect(result).toEqual({
       name: 'Alice',
+      version: now,
     });
   });
 
