@@ -4,8 +4,8 @@ import { find } from '../util.js';
 export default function add(base, diff) {
   let changed = false;
 
-  console.log('Add', diff);
-  console.log('before add', base);
+  // console.log('Add', diff);
+  // console.log('before add', base);
 
   let index = 0;
   for (const node of diff) {
@@ -39,7 +39,7 @@ export default function add(base, diff) {
     }
   }
 
-  console.log('after add', base);
+  // console.log('after add', base);
 
   return changed;
 }

@@ -22,7 +22,7 @@ describe('postgres', () => {
       host: process.env.PGHOST,
       port: parseInt(process.env.PGPORT || '5432'),
     });
-    // await populate(pool);
+    await populate(pool);
     jest.useFakeTimers();
     store = new Graffy();
     setPool(pool);
