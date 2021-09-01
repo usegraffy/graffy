@@ -62,7 +62,6 @@ describe('postgres', () => {
     });
     const result = await store.read('user.foo', {
       name: true,
-      version: true,
     });
     expect(pool.query).toBeCalled();
     expectSql(
