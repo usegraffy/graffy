@@ -14,17 +14,25 @@ import {
 } from '@graffy/common';
 import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch } from './sql/index.js';
-import { linkChange } from './link/index.js';
 import pg from './pool.js';
 import { format } from '@graffy/testing';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
 
-export const dbRead = async (rootQuery, opts, store) => {
+let defaults = {
+  id: 'id',
+  version: '_version',
+};
+
+export const setDefaultAst = (new_defaults) => (defaults = new_defaults);
+
+export const dbRead = async (rootQuery, opts = defaults, store) => {
   const idQueries = {};
   const promises = [];
   const results = [];
-  const { id } = opts;
+  const { id, table } = opts;
+  opts.table = table || store.path[store.path.length - 1] || 'default';
+
   async function getByArgs(args, subQuery) {
     let result = await pg.select(selectByArgs(args, opts));
     result = result.map(([object]) => [{ ...object, keys: object[id] }]);
@@ -95,11 +103,11 @@ export const dbWrite = async (change, opts) => {
     }
 
     const arg = decodeArgs(node);
-    const object = linkChange(decodeGraph(node.children), opts);
+    const object = decodeGraph(node.children);
     if (object.$put && object.$put !== true)
       throw Error('pg_write.partial_put_unsupported');
 
-    object.$put || false
+    object.$put
       ? addToPuts(put(object, arg, opts))
       : addToPatches(patch(object, arg, opts));
   }

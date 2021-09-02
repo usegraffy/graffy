@@ -6,7 +6,7 @@ import expectSql from '../expectSql.js';
 
 // import debug from 'debug';
 import pool from '../../pool.js';
-import { _nowToInt } from '../../sql/helper.js';
+import { nowTimestamp } from '../../sql/helper.js';
 
 jest.mock('../../pool', () => {
   const mockClient = {
@@ -67,7 +67,7 @@ describe('postgres', () => {
     const sqlQuery = sql`
       UPDATE "users" SET
         "name" = ${data.name},
-        "version" = ${_nowToInt}
+        "version" = ${nowTimestamp}
       WHERE "id" = ${id}
       RETURNING *
     `;

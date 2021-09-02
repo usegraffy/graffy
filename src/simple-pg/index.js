@@ -21,3 +21,4 @@ export default (opts = {}) =>
 export const connect = (config) => pg.connect(config);
 export const setPool = (pool) => pg.setPool(pool);
 export const setPgClient = (client) => pg.setClient(client);
+export const setDefaultAst = (defaults) => setDefaultAstOp(defaults);

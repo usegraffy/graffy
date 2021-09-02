@@ -28,6 +28,4 @@ export async function populate(pool) {
   `);
 
   await insert('user', 5, (i) => `name_${i}`);
-
-  // await pool.end();
 }

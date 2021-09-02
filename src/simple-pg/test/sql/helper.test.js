@@ -1,6 +1,6 @@
 import sql from 'sql-template-tag';
 import expectSql from '../../../pg/sql/expectSql';
-import { colsAndValues, getUpdates, _nowToInt } from '../../sql/helper';
+import { colsAndValues, getUpdates, nowTimestamp } from '../../sql/helper';
 
 describe('tests sql helper', () => {
   const data = { a: 1, b: 1 };
@@ -17,7 +17,7 @@ describe('tests sql helper', () => {
     const update = getUpdates(data, options);
     expectSql(
       update,
-      sql`"a" = ${data.a}, "b" = ${data.b}, "version" =  ${_nowToInt}`,
+      sql`"a" = ${data.a}, "b" = ${data.b}, "version" =  ${nowTimestamp}`,
     );
   });
 });

@@ -2,7 +2,7 @@ import { put, patch } from '../../sql';
 
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import { _nowToInt } from '../../sql/helper';
+import { nowTimestamp } from '../../sql/helper';
 
 describe('test upset', () => {
   const options = { id: 'id', table: 'post', version: 'version' };
@@ -34,7 +34,7 @@ describe('test upset', () => {
         "type" = ${data.type},
         "name" = ${data.name},
         "email" = ${data.email},
-        "version" = ${_nowToInt}
+        "version" = ${nowTimestamp}
       WHERE "id" = ${data.id}
       RETURNING *
     `,

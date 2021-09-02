@@ -18,7 +18,6 @@ pgPool.setPool = (pool) => {
   pgPool.pool = pool;
 };
 
-// customised client
 pgPool.setClient = (client) => {
   pgPool.client = client;
 };
