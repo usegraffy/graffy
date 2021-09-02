@@ -1,6 +1,6 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import graffyPg from '../../index.js';
+import graffyPg, { setDefaultAst } from '../../index.js';
 import expectSql from '../expectSql';
 // import { populate } from './setup.js';
 
@@ -32,16 +32,22 @@ describe('postgres', () => {
 
   beforeEach(async () => {
     jest.useFakeTimers();
-
+    setDefaultAst({
+      table: 'user',
+      id: 'id',
+      version: 'version',
+    });
     store = new Graffy();
-    store.use(
-      'user',
-      graffyPg({
-        table: 'user',
-        id: 'id',
-        version: 'version',
-      }),
-    );
+    // store.use(
+    //   'user',
+    //   graffyPg({
+    //     table: 'user',
+    //     id: 'id',
+    //     version: 'version',
+    //   }),
+    // );
+
+    store.use('user', graffyPg());
   });
 
   afterEach(async () => {
