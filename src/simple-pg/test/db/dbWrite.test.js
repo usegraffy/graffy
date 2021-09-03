@@ -1,33 +1,12 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import graffyPg from '../../index.js';
-// import { populate } from './setup.js';
 import expectSql from '../expectSql.js';
-
-// import debug from 'debug';
-import pool from '../../pool.js';
+import pg from '../../index.js';
 import { nowTimestamp } from '../../sql/helper.js';
 
-jest.mock('../../pool', () => {
-  const mockClient = {
-    query: jest.fn(),
-    release: jest.fn(),
-  };
-
-  const mockPool = {
-    __esModule: true,
-    default: {
-      insert: jest.fn(),
-      update: jest.fn(),
-      connect: jest.fn(() => mockClient),
-      mockClient,
-    },
-  };
-
-  return mockPool;
-});
-
-// const log = debug('graffy:pg:test');
+const client = {
+  query: jest.fn(),
+};
 
 describe('postgres', () => {
   let store;
@@ -35,22 +14,21 @@ describe('postgres', () => {
   beforeEach(async () => {
     jest.useFakeTimers();
 
-    store = new Graffy();
-    store.use(
-      'user',
-      graffyPg({
-        table: 'users',
+    const graffyPg = pg({
+      client,
+      opts: {
         id: 'id',
         version: 'version',
-      }),
-    );
+      },
+    });
+    store = new Graffy();
+    store.use('user', graffyPg);
   });
 
   afterEach(async () => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    pool.update.mockReset();
-    pool.insert.mockReset();
+    client.query.mockReset();
   });
 
   test('patch_by_id', async () => {
@@ -58,20 +36,20 @@ describe('postgres', () => {
       name: 'Alice',
     };
     const id = 'foo';
-    pool.update.mockReturnValueOnce({
+    client.query.mockReturnValueOnce({
       rowCount: 1,
     });
     const result = await store.write('user.foo', data);
-    expect(pool.update).toBeCalled();
+    expect(client.query).toBeCalled();
 
     const sqlQuery = sql`
-      UPDATE "users" SET
+      UPDATE "user" SET
         "name" = ${data.name},
         "version" = ${nowTimestamp}
       WHERE "id" = ${id}
-      RETURNING *
+      RETURNING row_to_json ( user.* ) 
     `;
-    expectSql(pool.update.mock.calls[0][0], sqlQuery);
+    expectSql(client.query.mock.calls[0][0], sqlQuery);
     expect(result).toEqual({
       name: 'Alice',
     });
@@ -83,21 +61,21 @@ describe('postgres', () => {
       $put: true,
     };
     const id = 'foo';
-    pool.insert.mockReturnValueOnce({
+    client.query.mockReturnValueOnce({
       rowCount: 1,
     });
     const result = await store.write('user.foo', data);
-    expect(pool.insert).toBeCalled();
+    expect(client.query).toBeCalled();
 
-    const expectedQuery = pool.insert.mock.calls[0][0];
+    const expectedQuery = client.query.mock.calls[0][0];
     const version = expectedQuery.values[expectedQuery.values.length - 1];
     const sqlQuery = sql`
-      INSERT INTO "users" ("id", "name", "version")
+      INSERT INTO "user" ("id", "name", "version")
       VALUES (${id}, ${data.name}, ${version}) ON CONFLICT ("id") DO UPDATE SET
       ("name", "version") = (${data.name}, ${version})
-      RETURNING *
+      RETURNING row_to_json(user.*)
     `;
-    expectSql(pool.insert.mock.calls[0][0], sqlQuery);
+    expectSql(client.query.mock.calls[0][0], sqlQuery);
 
     expect(result).toEqual({
       name: 'Alice',

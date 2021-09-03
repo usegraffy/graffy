@@ -1,5 +1,5 @@
 import Graffy from '@graffy/core';
-import pg, { setPool } from '../index.js';
+import pg from '../index.js';
 import { populate } from './setup.js';
 import { Pool } from 'pg';
 
@@ -10,7 +10,7 @@ const setEnv = () => {
   process.env.PGHOST = 'localhost';
 };
 
-describe('postgres', () => {
+describe.skip('postgres', () => {
   let store;
 
   beforeEach(async () => {
@@ -22,16 +22,20 @@ describe('postgres', () => {
       host: process.env.PGHOST,
       port: parseInt(process.env.PGPORT || '5432'),
     });
-    await populate(pool);
+    const client = await pool.connect();
+    await populate(client);
+
     jest.useFakeTimers();
     store = new Graffy();
-    setPool(pool);
     store.use(
       'users',
       pg({
-        table: 'users',
-        id: 'id',
-        version: 'version',
+        client: client,
+        opts: {
+          table: 'users',
+          id: 'id',
+          version: 'version',
+        },
       }),
     );
   });
@@ -41,13 +45,13 @@ describe('postgres', () => {
     jest.useRealTimers();
   });
 
-  test.skip('scenario 1', async () => {
+  test('scenario 1', async () => {
     const result1 = await store.read('users.user0', { name: true });
     expect(result1).toEqual({ name: 'name_0' });
     const response1 = await store.write('users.user1', {
-      i: 2,
+      name: 'name_test',
     });
-    expect(response1).toEqual({ i: 2 });
+    expect(response1).toEqual({ name: 'name_test' });
   });
 
   test.todo('scenario 2');

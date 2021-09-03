@@ -1,76 +1,51 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import graffyPg, { setDefaultAst } from '../../index.js';
+import pg from '../../index.js';
 import expectSql from '../expectSql';
-// import { populate } from './setup.js';
 
-// import debug from 'debug';
-import pool from '../../pool.js';
-
-jest.mock('../../pool', () => {
-  const mockClient = {
-    query: jest.fn(),
-    release: jest.fn(),
-  };
-
-  const mockPool = {
-    __esModule: true,
-    default: {
-      select: jest.fn(),
-      connect: jest.fn(() => mockClient),
-      mockClient,
-    },
-  };
-
-  return mockPool;
-});
-
-// const log = debug('graffy:pg:test');
+const client = {
+  query: jest.fn(),
+};
 
 describe('postgres', () => {
   let store;
-
   beforeEach(async () => {
     jest.useFakeTimers();
-    setDefaultAst({
-      table: 'user',
-      id: 'id',
-      version: 'version',
+    const graffyPg = pg({
+      client,
+      opts: {
+        id: 'id',
+        version: 'version',
+      },
     });
     store = new Graffy();
-    // store.use(
-    //   'user',
-    //   graffyPg({
-    //     table: 'user',
-    //     id: 'id',
-    //     version: 'version',
-    //   }),
-    // );
-
-    store.use('user', graffyPg());
+    store.use('user', graffyPg);
   });
 
   afterEach(async () => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    pool.select.mockReset();
+    // client.query.mockReset();
   });
 
   test('id_lookup', async () => {
     const now = Date.now();
-    pool.select.mockReturnValueOnce([
-      { id: 'foo', name: 'Alice', version: now },
-    ]);
+    client.query.mockReturnValueOnce({
+      rows: [[{ id: 'foo', name: 'Alice', version: now }]],
+    });
+
     const result = await store.read('user.foo', {
       name: true,
       version: true,
     });
-    expect(pool.select).toBeCalled();
+
+    expect(client.query).toBeCalled();
     expectSql(
-      pool.select.mock.calls[0][0],
-      sql`
-      SELECT * 
-      FROM "user" WHERE "id" IN (${'foo'})
+      client.query.mock.calls[0][0],
+      sql`  SELECT row_to_json ( a ) FROM (
+        SELECT *
+        FROM "user" WHERE "id" IN (${'foo'})
+      ) a
     `,
     );
     expect(result).toEqual({

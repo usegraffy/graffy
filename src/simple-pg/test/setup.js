@@ -1,11 +1,11 @@
 import sql from 'sql-template-tag';
-export async function populate(pool) {
+export async function populate(client) {
   async function insert(type, number, builder = () => {}) {
     for (let i = 0; i < number; i++) {
       const name = builder(i) || {};
       const now = Date.now();
       // console.log('Inserting ', type, i);
-      await pool.query(sql`INSERT INTO "users" (
+      await client.query(sql`INSERT INTO "users" (
         "id", "name", "version"
       ) VALUES (
         ${type + i},
@@ -15,11 +15,11 @@ export async function populate(pool) {
     }
   }
 
-  await pool.query(sql`
+  await client.query(sql`
     DROP TABLE IF EXISTS "users";
   `);
 
-  await pool.query(sql`
+  await client.query(sql`
     CREATE TABLE "users" (
       "id" text PRIMARY KEY,
       "name" text,

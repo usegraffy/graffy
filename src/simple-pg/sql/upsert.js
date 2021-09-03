@@ -10,7 +10,7 @@ export function patch(object, arg, options) {
   return sql`
     UPDATE "${raw(table)}" SET ${setUpdate}
     WHERE ${where}
-    RETURNING *`;
+    RETURNING row_to_json(${raw(table)}.*)`;
 }
 
 export function put(object, arg, options) {
@@ -30,5 +30,5 @@ export function put(object, arg, options) {
     VALUES (${values})
     ON CONFLICT (${conflictTarget}) DO UPDATE SET
     (${colsForUpdate}) = (${valuesForUpdate})
-    RETURNING *`;
+    RETURNING row_to_json(${raw(table)}.*)`;
 }

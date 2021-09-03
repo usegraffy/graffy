@@ -1,6 +1,6 @@
 import sql, { raw, join } from 'sql-template-tag';
 
-export const nowTimestamp = sql`cast(extract(epoch from now()) as integer))`;
+export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
 
 export const colsAndValues = (data, versionCol) => ({
   cols: join(

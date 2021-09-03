@@ -21,7 +21,7 @@ describe('test upset', () => {
       VALUES (${id}, ${data.type}, ${data.name}, ${data.email}, ${version} )
       ON CONFLICT ("id") DO UPDATE SET
       ("type", "name", "email", "version") = (${data.type},${data.name}, ${data.email}, ${version})
-      RETURNING *
+      RETURNING row_to_json ( post.*  ) 
     `,
     );
   });
@@ -36,7 +36,7 @@ describe('test upset', () => {
         "email" = ${data.email},
         "version" = ${nowTimestamp}
       WHERE "id" = ${data.id}
-      RETURNING *
+      RETURNING row_to_json (  post.*  ) 
     `,
     );
   });

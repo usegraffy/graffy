@@ -1,27 +1,24 @@
 import { wrap, unwrap } from '@graffy/common';
-import {
-  dbRead,
-  dbWrite,
-  setDefaultAst as setDefaultAstOp,
-} from './transaction';
-import pg from './pool.js';
+import { Transaction } from './transaction';
 
-export default (opts) => (store) => {
-  store.on('read', read);
-  store.on('write', write);
+const pg =
+  ({ client, opts }) =>
+  (store) => {
+    const myTransaction = new Transaction({ client, opts });
+    store.on('read', read);
+    store.on('write', write);
 
-  function read(query) {
-    return dbRead(query, opts, store);
-  }
+    function read(query) {
+      return myTransaction.dbRead(query, opts, store);
+    }
 
-  async function write(change) {
-    change = unwrap(change, store.path);
-    await dbWrite(change, opts);
-    return wrap(change, store.path);
-  }
-};
+    async function write(change) {
+      change = unwrap(change, store.path);
+      await myTransaction.dbWrite(change, opts, store);
+      return wrap(change, store.path);
+    }
+  };
 
-export const connect = (config) => pg.connect(config);
-export const setPool = (pool) => pg.setPool(pool);
-export const setPgClient = (client) => pg.setClient(client);
-export const setDefaultAst = (defaults) => setDefaultAstOp(defaults);
+pg.customize = (defaultOptions) => (options) =>
+  pg({ ...defaultOptions, ...options });
+export default pg;
