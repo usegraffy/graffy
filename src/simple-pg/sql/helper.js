@@ -9,7 +9,7 @@ export const colsAndValues = (data, versionCol) => ({
       .concat(raw(`"${versionCol}"`)),
     ', ',
   ),
-  values: join(Object.values(data).concat(Date.now()), ', '),
+  values: join(Object.values(data).concat(nowTimestamp), ', '),
 });
 
 export const whereConditions = (data) =>

@@ -8,8 +8,7 @@ describe('tests sql helper', () => {
   test('should correctly return sql for cols and values', () => {
     const { cols, values } = colsAndValues(data, 'version');
     expectSql(cols, sql`"a", "b", "version"`);
-    const version = values.values[2];
-    expectSql(values, sql`${data.a} , ${data.b} , ${version}`);
+    expectSql(values, sql`${data.a} , ${data.b} , ${nowTimestamp}`);
   });
 
   test('should correctly return sql for updating', () => {

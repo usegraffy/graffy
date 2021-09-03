@@ -67,12 +67,10 @@ describe('postgres', () => {
     const result = await store.write('user.foo', data);
     expect(client.query).toBeCalled();
 
-    const expectedQuery = client.query.mock.calls[0][0];
-    const version = expectedQuery.values[expectedQuery.values.length - 1];
     const sqlQuery = sql`
       INSERT INTO "user" ("id", "name", "version")
-      VALUES (${id}, ${data.name}, ${version}) ON CONFLICT ("id") DO UPDATE SET
-      ("name", "version") = (${data.name}, ${version})
+      VALUES (${id}, ${data.name}, ${nowTimestamp}) ON CONFLICT ("id") DO UPDATE SET
+      ("name", "version") = (${data.name}, ${nowTimestamp})
       RETURNING row_to_json(user.*)
     `;
     expectSql(client.query.mock.calls[0][0], sqlQuery);

@@ -14,13 +14,12 @@ describe('test upset', () => {
   };
   test('should return correct upsert fof put sql with right params and values', async () => {
     const sqlQuery = put(data, id, options);
-    const version = sqlQuery.values[sqlQuery.values.length - 1];
     expectSql(
       sqlQuery,
       sql`INSERT INTO "post" ("id", "type", "name", "email", "version")
-      VALUES (${id}, ${data.type}, ${data.name}, ${data.email}, ${version} )
+      VALUES (${id}, ${data.type}, ${data.name}, ${data.email}, ${nowTimestamp} )
       ON CONFLICT ("id") DO UPDATE SET
-      ("type", "name", "email", "version") = (${data.type},${data.name}, ${data.email}, ${version})
+      ("type", "name", "email", "version") = (${data.type},${data.name}, ${data.email}, ${nowTimestamp})
       RETURNING row_to_json ( post.*  ) 
     `,
     );
