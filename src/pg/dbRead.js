@@ -46,12 +46,15 @@ export default async function dbRead(rootQuery, pgOptions, store) {
       selectByIds(Object.keys(idQueries), pgOptions),
       pool,
     );
+
     result.forEach((object) => {
       const id = object[pgOptions.idProp];
       const subQuery = idQueries[id];
       add(refQuery, linkResult([object], subQuery, pgOptions));
+
       const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, id]);
       const wrappedGraph = encodeGraph(wrapObject(object, pgOptions.prefix));
+
       log(
         'getByIds',
         format(wrappedGraph),
@@ -64,8 +67,10 @@ export default async function dbRead(rootQuery, pgOptions, store) {
   }
 
   const query = unwrap(rootQuery, store.path);
+
   for (const node of query) {
     const args = decodeArgs(node);
+
     if (isPlainObject(args)) {
       promises.push(getByArgs(args, node.children));
     } else {

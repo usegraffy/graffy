@@ -23,7 +23,6 @@ export class Transaction {
   constructor({ client, opts }) {
     this.client = client;
     this.options = opts;
-    this.schemas = {};
   }
 
   setOptions(opts) {
