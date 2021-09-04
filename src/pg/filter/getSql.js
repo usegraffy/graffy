@@ -33,29 +33,27 @@ export default function getSql(filter, getLookupSql) {
         return sql`${lhs(ast[1])} && ${ast[2]}`;
       case '$and':
         return sql`(${join(
-          ast[1].map((node) => getNodeSql(node, getLookupSql)),
+          ast[1].map((node) => getNodeSql(node)),
           `) AND (`,
         )})`;
       case '$or':
         return sql`(${join(
-          ast[1].map((node) => getNodeSql(node, getLookupSql)),
+          ast[1].map((node) => getNodeSql(node)),
           `) OR (`,
         )})`;
       case '$not':
-        return sql`NOT (${getNodeSql(ast[1], getLookupSql)})`;
+        return sql`NOT (${getNodeSql(ast[1])})`;
       case '$any':
-        return sql`(SELECT bool_or(${getNodeSql(
-          ast[3],
-          getLookupSql,
-        )}) FROM UNNEST(${lhs(ast[1])}) ${lhs(ast[2])})`;
+        return sql`(SELECT bool_or(${getNodeSql(ast[3])}) FROM UNNEST(${lhs(
+          ast[1],
+        )}) ${lhs(ast[2])})`;
       case '$all':
-        return sql`(SELECT bool_and(${getNodeSql(
-          ast[3],
-          getLookupSql,
-        )}) FROM UNNEST(${lhs(ast[1])}) ${lhs(ast[2])})`;
+        return sql`(SELECT bool_and(${getNodeSql(ast[3])}) FROM UNNEST(${lhs(
+          ast[1],
+        )}) ${lhs(ast[2])})`;
       case '$has':
         return sql`(SELECT bool_or(${join(
-          ast[3].map((node) => getNodeSql(node, getLookupSql)),
+          ast[3].map((node) => getNodeSql(node)),
           `) AND bool_or(`,
         )}) FROM UNNEST(${lhs(ast[1])}) ${lhs(ast[2])})`;
     }

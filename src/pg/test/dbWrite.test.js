@@ -38,13 +38,7 @@ describe('postgres', () => {
       'user',
       graffyPg({
         table: 'users',
-        columns: {
-          id: { role: 'primary' },
-          tags: { role: 'gin', props: ['email', 'phone'] },
-          data: { role: 'default', updater: '||' },
-          createdAt: { role: 'simple' },
-          version: { role: 'version' },
-        },
+        verCol: 'version',
         links: { posts: { target: 'post', back: 'author' } },
       }),
     );
@@ -68,11 +62,11 @@ describe('postgres', () => {
       pool.query.mock.calls[0][0],
       sql`
       UPDATE "users" SET
-        "data" = "data" || ${{ name: 'Alice' }},
+        "name" = ${'Alice'},
         "version" = now()
       WHERE "id" = ${'foo'}
       RETURNING
-        ("data" || jsonb_build_object('id', "id", 'createdAt', "createdAt") ||
+        (to_json("users") ||
         jsonb_build_object( '$key', "id", '$ver', now() ))
     `,
     );

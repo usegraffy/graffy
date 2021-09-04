@@ -1,6 +1,5 @@
 import { selectUpdatedSince, readSql } from './sql/index.js';
 import { filterObject } from './filter/index.js';
-import makeOptions from './options.js';
 import {
   isPlainObject,
   decodeArgs,
@@ -11,9 +10,8 @@ import {
   unwrap,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
-import dbRead from './dbRead.js';
+import { dbRead, dbPoll } from './dbRead.js';
 import dbWrite from './dbWrite.js';
-import pool from './pool.js';
 
 // import debug from 'debug';
 // const log = debug('graffy:pg:index');
@@ -25,61 +23,73 @@ export default (opts = {}) =>
     store.on('write', write);
     store.on('watch', watch);
 
-    const pgOptions = makeOptions(store.path, opts);
+    // TODO: Make the defaults smarter using introspection.
+    const prefix = store.path;
+    const pgOptions = {
+      prefix,
+      table: prefix[prefix.length - 1] || 'default',
+      idCol: 'id',
+      verCol: 'updatedAt',
+      links: {},
+      pollInterval: 5000,
+      ...opts,
+    };
 
     const watchers = new Set();
     let timestamp = Date.now();
 
+    function getArgKey() {
+      /* TODO */
+    }
+
     async function poll() {
       if (!watchers.size) return;
-      const res = await readSql(selectUpdatedSince(timestamp, pgOptions), pool);
+      const result = await dbPoll(timestamp, pgOptions);
 
-      for (const [object] of res) {
-        for (const { query, push } of watchers) {
+      for (const { query, push } of watchers) {
+        for (const [object] of result) {
           const payload = [];
 
           for (const node of query) {
             const args = decodeArgs(node);
             if (isPlainObject(args)) {
-              if (filterObject(args, object)) payload.push(object);
+              if (filterObject(args, object))
+                payload.push({
+                  ...object,
+                  $ref: object.$key,
+                  $key: getArgKey(args, object),
+                });
             } else {
               if (object.id === node.key) payload.push(object);
             }
           }
 
-          push(wrap(slice(encodeGraph(payload), query).known, store.path));
+          push(wrap(slice(encodeGraph(payload), query).known, prefix));
         }
       }
     }
 
     setInterval(poll, pgOptions.pollInterval);
 
-    function read(query) {
-      return dbRead(query, pgOptions, store);
-      // log(format(rootQuery));
-      // const query = unwrap(rootQuery, store.path);
-      // const result = await dbRead(query, pgOptions);
-      // const rootResult = slice(
-      //   finalize(encodeGraph(wrapObject(result, store.path)), rootQuery),
-      //   rootQuery,
-      // ).known;
-      // log(format(rootResult));
-      // return rootResult;
+    async function read(query) {
+      const res = await dbRead(query, pgOptions, store);
+      console.log('Read result', res);
+      return res;
     }
 
     async function write(change) {
-      change = unwrap(change, store.path);
+      change = unwrap(change, prefix);
       await dbWrite(change, pgOptions);
-      return wrap(change, store.path);
+      return wrap(change, prefix);
     }
 
     function watch(query) {
-      query = unwrap(query, store.path);
+      query = unwrap(query, prefix);
 
       return makeStream((push) => {
         const watcher = { query, push };
         dbRead(query, pgOptions).then((init) => {
-          push(wrap(finalize(encodeGraph(init), query), store.path));
+          push(wrap(finalize(encodeGraph(init), query), prefix));
           watchers.add(watcher);
         });
 

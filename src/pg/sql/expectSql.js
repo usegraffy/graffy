@@ -1,3 +1,5 @@
+/** @var {function} expect */
+
 export default function expectSql(actual, expected) {
   const normalSql = (str) =>
     str

@@ -1,4 +1,4 @@
-import { selectByArgs, selectByIds } from './sql/index.js';
+import { selectByArgs, selectByIds, selectUpdatedSince } from './sql/index.js';
 import { linkResult } from './link/index.js';
 import pool from './pool.js';
 import {
@@ -18,18 +18,20 @@ import { format } from '@graffy/testing';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
 
-export default async function dbRead(rootQuery, pgOptions, store) {
+export async function dbRead(rootQuery, options, store) {
   const idQueries = {};
   const refQuery = [];
   const promises = [];
   const results = [];
 
-  async function getByArgs(args, subQuery) {
-    const result = await readSql(selectByArgs(args, pgOptions), pool);
-    add(refQuery, linkResult(result, subQuery, pgOptions));
+  const { idCol, prefix } = options;
 
-    const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, args]);
-    const wrappedGraph = encodeGraph(wrapObject(result, pgOptions.prefix));
+  async function getByArgs(args, subQuery) {
+    const result = await readSql(selectByArgs(args, options), pool);
+    add(refQuery, linkResult(result, subQuery, options));
+
+    const wrappedQuery = wrap(subQuery, [...prefix, args]);
+    const wrappedGraph = encodeGraph(wrapObject(result, prefix));
 
     log(
       'getByArgs',
@@ -43,17 +45,17 @@ export default async function dbRead(rootQuery, pgOptions, store) {
 
   async function getByIds() {
     const result = await readSql(
-      selectByIds(Object.keys(idQueries), pgOptions),
+      selectByIds(Object.keys(idQueries), options),
       pool,
     );
 
     result.forEach((object) => {
-      const id = object[pgOptions.idProp];
+      const id = object[idCol];
       const subQuery = idQueries[id];
-      add(refQuery, linkResult([object], subQuery, pgOptions));
+      add(refQuery, linkResult([object], subQuery, options));
 
-      const wrappedQuery = wrap(subQuery, [...pgOptions.prefix, id]);
-      const wrappedGraph = encodeGraph(wrapObject(object, pgOptions.prefix));
+      const wrappedQuery = wrap(subQuery, [...prefix, id]);
+      const wrappedGraph = encodeGraph(wrapObject(object, prefix));
 
       log(
         'getByIds',
@@ -66,7 +68,7 @@ export default async function dbRead(rootQuery, pgOptions, store) {
     });
   }
 
-  const query = unwrap(rootQuery, store.path);
+  const query = unwrap(rootQuery, prefix);
 
   for (const node of query) {
     const args = decodeArgs(node);
@@ -88,6 +90,10 @@ export default async function dbRead(rootQuery, pgOptions, store) {
 
   log('dbRead', format(rootQuery), format(results));
   return slice(results, rootQuery).known || [];
+}
+
+export async function dbPoll(timestamp, options) {
+  return readSql(selectUpdatedSince(timestamp, options), pool);
 }
 
 async function readSql(sqlQuery, client) {

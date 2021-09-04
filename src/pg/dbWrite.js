@@ -5,7 +5,7 @@ import { isRange, decodeArgs, decodeGraph } from '@graffy/common';
 import debug from 'debug';
 const log = debug('graffy:pg:dbWrite');
 
-export default async function dbWrite(change, pgOptions) {
+export default async function dbWrite(change, options) {
   const sqls = [];
 
   for (const node of change) {
@@ -17,14 +17,14 @@ export default async function dbWrite(change, pgOptions) {
       );
     }
 
-    const object = linkChange(decodeGraph(node.children), pgOptions);
+    const object = linkChange(decodeGraph(node.children), options);
     const arg = decodeArgs(node);
 
     if (object.$put) {
       if (object.$put !== true) throw Error('pg_write.partial_put_unsupported');
-      sqls.push(put(object, arg, pgOptions));
+      sqls.push(put(object, arg, options));
     } else {
-      sqls.push(patch(object, arg, pgOptions));
+      sqls.push(patch(object, arg, options));
     }
   }
 

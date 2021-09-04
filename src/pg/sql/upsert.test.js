@@ -1,19 +1,14 @@
 import { put, patch } from './upsert.js';
-import makeOptions from '../options.js';
 
 import sql from 'sql-template-tag';
 import expectSql from './expectSql.js';
 
-const options = makeOptions(['post$'], {
+const options = {
   table: 'post',
-  columns: {
-    id: { role: 'primary' },
-    type: { role: 'simple' },
-    data: { role: 'default', updater: '||' },
-    gin: { role: 'gin', props: ['email'] },
-    version: { role: 'version' },
-  },
-});
+  prefix: ['post'],
+  idCol: 'id',
+  verCol: 'version',
+};
 
 test('put', async () => {
   expectSql(
@@ -22,17 +17,11 @@ test('put', async () => {
       'post22',
       options,
     ),
-    sql`INSERT INTO "post" ("id", "type", "gin", "data", "version")
-      VALUES (${'post22'}, ${'post'},
-        ${{ email: 'world' }},
-        ${{ name: 'hello', email: 'world' }},
-        ${expect.any(Number)})
-      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "gin", "data", "version")
-        = (${'post22'}, ${'post'},
-          ${{ email: 'world' }},
-          ${{ name: 'hello', email: 'world' }},
-          ${expect.any(Number)})
-      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type") ||
+    sql`INSERT INTO "post" ("id", "type", "name", "email", "version")
+      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, now())
+      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "version")
+        = (${'post22'}, ${'post'}, ${'hello'},${'world'}, now())
+      RETURNING (to_json("post") ||
         jsonb_build_object('$key', "id", '$ver', now()))
     `,
   );
@@ -47,11 +36,11 @@ test('patch', async () => {
     ),
     sql`UPDATE "post" SET
         "type" = ${'post'},
-        "gin" = ${{ email: 'world' }},
-        "data" = "data" || ${{ name: 'hello', email: 'world' }},
+        "name" = ${'hello'},
+        "email" = ${'world'},
         "version" = now()
       WHERE "id" = ${'post22'}
-      RETURNING ("data" || jsonb_build_object('id', "id", 'type', "type") ||
+      RETURNING (to_json("post") ||
         jsonb_build_object('$key', "id", '$ver', now()))
     `,
   );

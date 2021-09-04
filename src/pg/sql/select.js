@@ -7,16 +7,16 @@ import getSelectCols from './getSelectCols.js';
 
 const MAX_LIMIT = 4096;
 
-export function selectByArgs(args, options, { forUpdate } = {}) {
+export function selectByArgs(args, options, { forUpdate = false } = {}) {
   const { table } = options;
-  const { where, order, limit, attrs } = getArgSql(args, options);
+  const { where, order, limit, meta } = getArgSql(args, options);
   const clampedLimit = forUpdate
     ? 1
     : Math.min(MAX_LIMIT, Math.max(0, limit || 0));
 
   return sql`
     SELECT
-    ${getSelectCols(options)} || ${attrs}
+    ${getSelectCols(options)} || ${meta}
     FROM "${raw(table)}"
     ${where.length ? sql`WHERE ${join(where, ` AND `)}` : empty}
     ${order ? sql`ORDER BY ${order}` : empty}
@@ -25,7 +25,7 @@ export function selectByArgs(args, options, { forUpdate } = {}) {
   `;
 }
 
-export function selectByIds(ids, options, { forUpdate } = {}) {
+export function selectByIds(ids, options, { forUpdate = false } = {}) {
   const { table, idCol } = options;
   return sql`
     SELECT

@@ -38,13 +38,7 @@ describe('postgres', () => {
       'user',
       graffyPg({
         table: 'users',
-        columns: {
-          id: { role: 'primary' },
-          tags: { role: 'gin', props: ['email', 'phone'] },
-          data: { role: 'default' },
-          createdAt: { role: 'simple' },
-          version: { role: 'version' },
-        },
+        verCol: 'version',
         links: { posts: { target: 'post', back: 'author' } },
       }),
     );
@@ -68,7 +62,7 @@ describe('postgres', () => {
       pool.query.mock.calls[0][0],
       sql`
       SELECT
-        "data" || jsonb_build_object( 'id', "id", 'createdAt', "createdAt" ) ||
+        to_json("users") ||
         jsonb_build_object( '$key', "id", '$ver', now() )
       FROM "users" WHERE "id" IN (${'foo'})
     `,
@@ -81,7 +75,14 @@ describe('postgres', () => {
   test.skip('email_lookup', async () => {
     pool.query.mockReturnValueOnce({
       rows: [
-        [{ $key: { email: 'alice@example.com' }, id: 'foo', name: 'Alice' }],
+        [
+          {
+            $key: { email: 'alice@example.com' },
+            $ref: ['user', 'foo'],
+            id: 'foo',
+            name: 'Alice',
+          },
+        ],
       ],
     });
     const result = await store.read(['user'], {
@@ -93,7 +94,7 @@ describe('postgres', () => {
       pool.query.mock.calls[0][0],
       sql`
       SELECT
-        "data" || jsonb_build_object( 'id', "id", 'createdAt', "createdAt" ) ||
+      to_json("users") ||
         jsonb_build_object( '$key', ${JSON.stringify({
           email: 'alice@example.com',
         })}::jsonb, '$ref', array[${'user'}, "id"], '$ver', now() )
@@ -139,7 +140,7 @@ describe('postgres', () => {
     expectSql(
       pool.query.mock.calls[0][0],
       sql`SELECT
-        "data" || jsonb_build_object( 'id', "id", 'createdAt', "createdAt" ) ||
+      to_json("users") ||
         jsonb_build_object(
           '$key', (jsonb_build_object(
             '$order', jsonb_build_array(${'createdAt'},${'id'})
