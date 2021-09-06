@@ -31,5 +31,3 @@ export const getUpdates = (data, options) => {
     ', ',
   );
 };
-
-export const updateAudits = () => {};
