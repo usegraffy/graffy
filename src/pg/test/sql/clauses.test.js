@@ -1,24 +1,24 @@
 import sql, { raw } from 'sql-template-tag';
 import expectSql from '../expectSql';
 import {
-  colsAndValues,
+  getInsert,
   getUpdates,
   nowTimestamp,
   getJsonBuildObject,
   getSelectCols,
-} from '../../sql/helper';
+} from '../../sql/clauses';
 
 describe('tests sql helper', () => {
   const data = { a: 1, b: 1 };
 
   test('should correctly return sql for cols and values', () => {
-    const { cols, values } = colsAndValues(data, 'version');
+    const { cols, vals } = getInsert(data, { verCol: 'version' });
     expectSql(cols, sql`"a", "b", "version"`);
-    expectSql(values, sql`${data.a} , ${data.b} , ${nowTimestamp}`);
+    expectSql(vals, sql`${data.a} , ${data.b} , ${nowTimestamp}`);
   });
 
   test('should correctly return sql for updating', () => {
-    const options = { id: 'id', version: 'version' };
+    const options = { id: 'id', verCol: 'version' };
     const update = getUpdates(data, options);
     expectSql(
       update,

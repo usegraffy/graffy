@@ -1,5 +1,5 @@
 import { wrap, unwrap } from '@graffy/common';
-import { Transaction } from './transaction';
+import { DbWrapper } from './db';
 // import debug from 'debug';
 // const log = debug('graffy:pg:index');
 // import { format } from '@graffy/testing';
@@ -21,18 +21,18 @@ export default ({ client, opts }) =>
       ...opts,
     };
 
-    const myTransaction = new Transaction({ client, pgOptions });
+    const db = new DbWrapper({ client, pgOptions });
     store.on('read', read);
     store.on('write', write);
 
     async function read(query) {
-      const res = await myTransaction.dbRead(query);
+      const res = await db.read(query);
       return res;
     }
 
     async function write(change) {
       change = unwrap(change, prefix);
-      await myTransaction.dbWrite(change);
+      await db.write(change);
       return wrap(change, prefix);
     }
   };

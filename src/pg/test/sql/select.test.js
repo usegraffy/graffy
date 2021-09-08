@@ -2,7 +2,7 @@ import { selectByArgs, selectByIds } from '../../sql/select.js';
 
 import sql, { raw } from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import { nowTimestamp } from '../../sql/helper.js';
+import { nowTimestamp } from '../../sql/clauses';
 
 describe('tests select sql', () => {
   test('should return correctly sql query for selectByArgs', () => {

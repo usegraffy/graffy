@@ -20,14 +20,14 @@ import { format } from '@graffy/testing';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
 
-export class Transaction {
+export class DbWrapper {
   // client is pgClient
   constructor({ client, pgOptions }) {
     this.client = client;
     this.pgOptions = pgOptions;
   }
 
-  async dbRead(rootQuery, opts = this.pgOptions) {
+  async read(rootQuery, opts = this.pgOptions) {
     const client = this.client;
     const idQueries = {};
     const promises = [];
@@ -105,7 +105,7 @@ export class Transaction {
     return slice(results, rootQuery).known || [];
   }
 
-  async dbWrite(change, opts = this.pgOptions) {
+  async write(change, opts = this.pgOptions) {
     async function writeSql(query, client) {
       log(query.text);
       log(query.values);

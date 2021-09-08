@@ -2,7 +2,7 @@ import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
 import pg from '../../index.js';
-import { nowTimestamp } from '../../sql/helper.js';
+import { nowTimestamp } from '../../sql/clauses';
 
 const client = {
   query: jest.fn(),

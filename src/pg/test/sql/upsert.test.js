@@ -2,7 +2,7 @@ import { put, patch } from '../../sql/upsert.js';
 
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import { nowTimestamp } from '../../sql/helper.js';
+import { nowTimestamp } from '../../sql/clauses';
 
 const options = {
   table: 'post',

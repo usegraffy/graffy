@@ -2,7 +2,7 @@ import sql, { raw, join } from 'sql-template-tag';
 import { isPlainObject } from '@graffy/common';
 import getArgSql from './getArgSql.js';
 import { getIdMeta } from './getMeta.js';
-import { getSelectCols, nowTimestamp } from './helper.js';
+import { getInsert, getSelectCols, getUpdates } from './clauses.js';
 
 export function patch(object, arg, options) {
   const { table, idCol } = options;
@@ -38,35 +38,4 @@ export function put(object, arg, options) {
     INSERT INTO "${raw(table)}" (${cols}) VALUES (${vals})
     ON CONFLICT (${conflictTarget}) DO UPDATE SET (${cols}) = (${vals})
     RETURNING (${getSelectCols(table)} || ${meta})`;
-}
-
-function getInsert(row, options) {
-  const cols = [];
-  const vals = [];
-
-  Object.entries(row)
-    .filter(([name]) => name !== options.verCol && name[0] !== '$')
-    .concat([[options.verCol, nowTimestamp]])
-    .forEach(([col, val]) => {
-      cols.push(sql`"${raw(col)}"`);
-      vals.push(val);
-    });
-
-  return { cols: join(cols, ', '), vals: join(vals, ', ') };
-}
-
-function getUpdates(row, options) {
-  return join(
-    Object.entries(row)
-      .filter(([name]) => name !== options.idCol && name[0] !== '$')
-      .map(([name, value]) => {
-        return sql`"${raw(name)}" = ${
-          typeof value === 'object' && value
-            ? sql`"${raw(name)}" || ${value}`
-            : value
-        }`;
-      })
-      .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
-    ', ',
-  );
 }

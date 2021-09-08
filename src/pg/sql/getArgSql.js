@@ -1,8 +1,8 @@
 import sql, { join, raw } from 'sql-template-tag';
 import { isEmpty, encodePath } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
-import { getMeta } from './getMeta';
-import { getJsonBuildObject } from './helper.js';
+import { getArgMeta } from './getMeta';
+import { getJsonBuildObject } from './clauses.js';
 
 /**
   Uses the args object (typically passed in the $key attribute)
@@ -27,7 +27,7 @@ export default function getArgSql(
       : sql`"${raw(prefix)}"`;
   };
 
-  const meta = (key) => getMeta(key, prefix, idCol);
+  const meta = (key) => getArgMeta(key, prefix, idCol);
 
   const hasRangeArg =
     $before || $after || $since || $until || $first || $last || $order;

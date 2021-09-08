@@ -1,5 +1,5 @@
 import sql, { join, raw } from 'sql-template-tag';
-import { getJsonBuildObject, nowTimestamp } from './helper';
+import { getJsonBuildObject, nowTimestamp } from './clauses';
 
 export const getIdMeta = ({ idCol }) =>
   getJsonBuildObject({
@@ -7,7 +7,7 @@ export const getIdMeta = ({ idCol }) =>
     $ver: nowTimestamp,
   });
 
-export const getMeta = (key, prefix, idCol) =>
+export const getArgMeta = (key, prefix, idCol) =>
   getJsonBuildObject({
     $key: key,
     $ref: sql`array[${join(prefix)}, "${raw(idCol)}"]`,
