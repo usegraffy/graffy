@@ -1,7 +1,8 @@
-import { put, patch } from './upsert.js';
+import { put, patch } from '../../sql/upsert.js';
 
 import sql from 'sql-template-tag';
-import expectSql from './expectSql.js';
+import expectSql from '../expectSql.js';
+import { nowTimestamp } from '../../sql/helper.js';
 
 const options = {
   table: 'post',
@@ -18,11 +19,11 @@ test('put', async () => {
       options,
     ),
     sql`INSERT INTO "post" ("id", "type", "name", "email", "version")
-      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, now())
+      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},  ${nowTimestamp})
       ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "version")
-        = (${'post22'}, ${'post'}, ${'hello'},${'world'}, now())
-      RETURNING (to_json("post") ||
-        jsonb_build_object('$key', "id", '$ver', now()))
+        = (${'post22'}, ${'post'}, ${'hello'},${'world'},  ${nowTimestamp})
+      RETURNING (to_jsonb("post") ||
+        jsonb_build_object('$key', "id", '$ver',  ${nowTimestamp}))
     `,
   );
 });
@@ -38,10 +39,10 @@ test('patch', async () => {
         "type" = ${'post'},
         "name" = ${'hello'},
         "email" = ${'world'},
-        "version" = now()
+        "version" =  ${nowTimestamp}
       WHERE "id" = ${'post22'}
-      RETURNING (to_json("post") ||
-        jsonb_build_object('$key', "id", '$ver', now()))
+      RETURNING (to_jsonb("post") ||
+        jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
     `,
   );
 });

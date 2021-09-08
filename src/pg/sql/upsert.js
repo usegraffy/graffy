@@ -1,8 +1,8 @@
 import sql, { raw, join } from 'sql-template-tag';
 import { isPlainObject } from '@graffy/common';
 import getArgSql from './getArgSql.js';
-import getIdMeta from './getIdMeta.js';
-import getSelectCols from './getSelectCols.js';
+import { getIdMeta } from './getMeta.js';
+import { getSelectCols, nowTimestamp } from './helper.js';
 
 export function patch(object, arg, options) {
   const { table, idCol } = options;
@@ -16,7 +16,7 @@ export function patch(object, arg, options) {
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
     WHERE ${join(where, ` AND `)}
-    RETURNING (${getSelectCols(options)} || ${meta})`;
+    RETURNING (${getSelectCols(table)} || ${meta})`;
 }
 
 export function put(object, arg, options) {
@@ -37,7 +37,7 @@ export function put(object, arg, options) {
   return sql`
     INSERT INTO "${raw(table)}" (${cols}) VALUES (${vals})
     ON CONFLICT (${conflictTarget}) DO UPDATE SET (${cols}) = (${vals})
-    RETURNING (${getSelectCols(options)} || ${meta})`;
+    RETURNING (${getSelectCols(table)} || ${meta})`;
 }
 
 function getInsert(row, options) {
@@ -46,7 +46,7 @@ function getInsert(row, options) {
 
   Object.entries(row)
     .filter(([name]) => name !== options.verCol && name[0] !== '$')
-    .concat([[options.verCol, sql`now()`]])
+    .concat([[options.verCol, nowTimestamp]])
     .forEach(([col, val]) => {
       cols.push(sql`"${raw(col)}"`);
       vals.push(val);
@@ -66,7 +66,7 @@ function getUpdates(row, options) {
             : value
         }`;
       })
-      .concat(sql`"${raw(options.verCol)}" = now()`),
+      .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
     ', ',
   );
 }

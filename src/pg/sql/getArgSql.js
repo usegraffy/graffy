@@ -1,6 +1,8 @@
 import sql, { join, raw } from 'sql-template-tag';
 import { isEmpty, encodePath } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
+import { getMeta } from './getMeta';
+import { getJsonBuildObject } from './helper.js';
 
 /**
   Uses the args object (typically passed in the $key attribute)
@@ -25,11 +27,7 @@ export default function getArgSql(
       : sql`"${raw(prefix)}"`;
   };
 
-  const meta = (key) => sql`jsonb_build_object(
-    '$key', ${key},
-    '$ref', array[${join(prefix)}, "${raw(idCol)}"],
-    '$ver', now()
-  )`;
+  const meta = (key) => getMeta(key, prefix, idCol);
 
   const hasRangeArg =
     $before || $after || $since || $until || $first || $last || $order;
@@ -44,21 +42,24 @@ export default function getArgSql(
   if (!hasRangeArg) return { meta: meta(key), where, limit: 1 };
 
   const orderCols = ($order || [idCol]).map(lookup);
+  Object.entries({ $after, $before, $since, $until }).forEach(
+    ([name, value]) => {
+      // if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
+      if (value) where.push(getBoundCond(orderCols, value, name));
+    },
+  );
 
-  if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
-  if ($before) where.push(getBoundCond(orderCols, $before, '$before'));
-  if ($since) where.push(getBoundCond(orderCols, $since, '$since'));
-  if ($until) where.push(getBoundCond(orderCols, $until, '$until'));
+  const orderQuery =
+    $order &&
+    getJsonBuildObject({
+      $order: sql`jsonb_build_array(${join($order.map(lookup))})`,
+    });
 
-  key = sql`(${join(
-    [
-      key,
-      $order &&
-        sql`jsonb_build_object('$order', jsonb_build_array(${join($order)}))`,
-      sql`jsonb_build_object('$cursor', jsonb_build_array(${join(orderCols)}))`,
-    ].filter(Boolean),
-    ` || `,
-  )})`;
+  const cursorQuery = getJsonBuildObject({
+    $cursor: sql`jsonb_build_array(${join(orderCols)})`,
+  });
+
+  key = sql`(${join([key, orderQuery, cursorQuery].filter(Boolean), ` || `)})`;
 
   return {
     meta: meta(key),

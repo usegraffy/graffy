@@ -1,25 +1,27 @@
-import getAst from './getAst.js';
+import sql, { join, raw } from 'sql-template-tag';
+import getSql from '../../filter/getSql.js';
+
+const lookup = (str) => sql`"${raw(str)}"`;
 
 test('simple', () => {
-  expect(getAst({ foo: 5 })).toEqual(['$eq', 'foo', 5]);
+  expect(getSql({ foo: 5 }, lookup)).toEqual(sql`"foo" = ${5}`);
 });
 
 test('simple_logic', () => {
-  expect(getAst({ foo: { $gt: 5, $lt: 6 } })).toEqual([
-    '$and',
-    [
-      ['$gt', 'foo', 5],
-      ['$lt', 'foo', 6],
-    ],
-  ]);
+  expect(getSql({ foo: { $gt: 5, $lt: 6 } }, lookup)).toEqual(
+    sql`("foo" > ${5}) AND ("foo" < ${6})`,
+  );
 });
 
 test('or', () => {
-  expect(getAst({ foo: [5, 6] })).toEqual(['$in', 'foo', [5, 6]]);
+  expect(getSql({ foo: [5, 6] }, lookup)).toEqual(
+    sql`"foo" IN (${join([5, 6])})`,
+  );
 });
 
+/* 
 test('or_root', () => {
-  expect(getAst([{ foo: 6 }, { bar: 7 }])).toEqual([
+  expect(getSql([{ foo: 6 }, { bar: 7 }], lookup)).toEqual([
     '$or',
     [
       ['$eq', 'foo', 6],
@@ -29,11 +31,11 @@ test('or_root', () => {
 });
 
 test('not', () => {
-  expect(getAst({ foo: { $not: 6 } })).toEqual(['$neq', 'foo', 6]);
+  expect(getSql({ foo: { $not: 6 } }, lookup)).toEqual(['$neq', 'foo', 6]);
 });
 
 test('not_or', () => {
-  expect(getAst({ foo: { $not: [5, { $gt: 6 }] } })).toEqual([
+  expect(getSql({ foo: { $not: [5, { $gt: 6 }] } }, lookup)).toEqual([
     '$not',
     [
       '$or',
@@ -47,9 +49,12 @@ test('not_or', () => {
 
 test('logic_inversion', () => {
   expect(
-    getAst({
-      $and: [{ $or: { foo: 5, bar: 6 } }, { $or: { baz: 7, qux: 4 } }],
-    }),
+    getSql(
+      {
+        $and: [{ $or: { foo: 5, bar: 6 } }, { $or: { baz: 7, qux: 4 } }],
+      },
+      lookup,
+    ),
   ).toEqual([
     '$and',
     [
@@ -72,11 +77,15 @@ test('logic_inversion', () => {
 });
 
 test('any_ovl', () => {
-  expect(getAst({ tags: { $any: 'foo' } })).toEqual(['$ovl', 'tags', ['foo']]);
+  expect(getSql({ tags: { $any: 'foo' } }, lookup)).toEqual([
+    '$ovl',
+    'tags',
+    ['foo'],
+  ]);
 });
 
 test('all_ctd', () => {
-  expect(getAst({ tags: { $all: ['foo', 'bar', 'baz'] } })).toEqual([
+  expect(getSql({ tags: { $all: ['foo', 'bar', 'baz'] } }, lookup)).toEqual([
     '$ctd',
     'tags',
     ['foo', 'bar', 'baz'],
@@ -84,7 +93,7 @@ test('all_ctd', () => {
 });
 
 test('has_cts', () => {
-  expect(getAst({ tags: { $has: ['foo', 'bar'] } })).toEqual([
+  expect(getSql({ tags: { $has: ['foo', 'bar'] } }, lookup)).toEqual([
     '$cts',
     'tags',
     ['foo', 'bar'],
@@ -92,7 +101,7 @@ test('has_cts', () => {
 });
 
 test('any', () => {
-  expect(getAst({ tags: { $any: { $gte: 'm' } } })).toEqual([
+  expect(getSql({ tags: { $any: { $gte: 'm' } } }, lookup)).toEqual([
     '$any',
     'tags',
     'el$0',
@@ -101,7 +110,9 @@ test('any', () => {
 });
 
 test('has', () => {
-  expect(getAst({ tags: { $has: [{ $gte: 'm' }, { $lt: 'b' }] } })).toEqual([
+  expect(
+    getSql({ tags: { $has: [{ $gte: 'm' }, { $lt: 'b' }] } }, lookup),
+  ).toEqual([
     '$has',
     'tags',
     'el$0',
@@ -113,7 +124,7 @@ test('has', () => {
 });
 
 test('all', () => {
-  expect(getAst({ tags: { $all: { $gte: 'm' } } })).toEqual([
+  expect(getSql({ tags: { $all: { $gte: 'm' } } }, lookup)).toEqual([
     '$all',
     'tags',
     'el$0',

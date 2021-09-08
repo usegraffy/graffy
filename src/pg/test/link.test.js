@@ -1,5 +1,5 @@
 import { encodeQuery } from '@graffy/common';
-import { linkResult } from './index.js';
+import { linkResult } from '../link/index.js';
 
 test('outward', () => {
   const object = { id: 'post1', authorId: 'user1' };

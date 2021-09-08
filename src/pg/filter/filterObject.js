@@ -25,22 +25,15 @@ export default function filterObject(filter, object) {
       case '$nin':
         return !Array.isArray(ast[2]) || !ast[2].includes(lookup(ast[1]));
       case '$cts':
-        throw Error('pgfilter.unimplemented');
       case '$ctd':
-        throw Error('pgfilter.unimplemented');
       case '$ovp':
-        throw Error('pgfilter.unimplemented');
       case '$and':
-        throw Error('pgfilter.unimplemented');
       case '$or':
-        throw Error('pgfilter.unimplemented');
       case '$not':
-        throw Error('pgfilter.unimplemented');
       case '$any':
-        throw Error('pgfilter.unimplemented');
       case '$all':
-        throw Error('pgfilter.unimplemented');
       case '$has':
+        throw Error('pgfilter.unimplemented');
     }
   }
 
