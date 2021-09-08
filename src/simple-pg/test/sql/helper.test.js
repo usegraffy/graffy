@@ -1,5 +1,5 @@
 import sql from 'sql-template-tag';
-import expectSql from '../../../pg/sql/expectSql';
+import expectSql from '../expectSql';
 import { colsAndValues, getUpdates, nowTimestamp } from '../../sql/helper';
 
 describe('tests sql helper', () => {
