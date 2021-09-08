@@ -60,7 +60,6 @@ describe('postgres', () => {
       name: 'Alice',
       $put: true,
     };
-    const id = 'foo';
     client.query.mockReturnValueOnce({
       rowCount: 1,
     });
