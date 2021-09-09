@@ -4,18 +4,21 @@ import expectSql from '../expectSql.js';
 import pg from '../../index.js';
 import { nowTimestamp } from '../../sql/clauses';
 
-import { Pool } from 'pg';
+import { PgDb } from '../../db/pool';
 
-jest.mock('pg');
+jest.mock('../../db/pool');
+const mockClient = {
+  query: jest.fn(),
+  release: jest.fn(),
+};
 
 const mockQuery = jest.fn();
-
 describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
     jest.useFakeTimers();
-    Pool.prototype.query = mockQuery;
+    PgDb.prototype = { write: mockQuery, getClient: mockClient };
     const graffyPg = pg({
       opts: {
         id: 'id',

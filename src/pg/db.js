@@ -94,7 +94,7 @@ export class DbWrapper {
     const db = this.db;
     const queries = [];
 
-    const addToQuery = (sql) => queries.push(db.write(sql));
+    const addToQuery = (sql) => queries.push(sql);
 
     for (const node of change) {
       if (isRange(node)) {
@@ -116,7 +116,7 @@ export class DbWrapper {
         : addToQuery(patch(object, arg, opts));
     }
 
-    await Promise.all(queries);
+    await Promise.all(queries.map((sql) => db.write(sql)));
 
     log(change);
     return change;

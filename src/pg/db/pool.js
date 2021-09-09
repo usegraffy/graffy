@@ -7,23 +7,22 @@ const log = (...text) => debug(`graffy:pg:${text.shift()}`)(text);
 export class PgDb {
   constructor(config) {
     const {
-      connection = defaultConfig.connection,
-      poolOption = defaultConfig.poolOption,
-      handlers = defaultConfig.handlers,
+      connection = defaultConfig().connection,
+      poolOption = defaultConfig().poolOption,
+      handlers = defaultConfig().handlers,
     } = config;
-
     this.pool = new Pool({ ...connection, ...poolOption });
     const { onError } = handlers;
     this.pool.on('error', onError);
   }
 
-  async query(query, type = 'query') {
+  async query(sqlQuery, type = 'query') {
     const start = Date.now();
-    query.rowMode = 'array';
-    const res = await this.pool.query(query);
+    sqlQuery.rowMode = 'array';
+    const client = await this.getClient();
+    const res = await client.query(sqlQuery);
     const duration = Date.now() - start;
-    log(type, `${{ query: query.text, duration, rows: res.rowCount }}`);
-
+    log(type, `${{ query: sqlQuery.text, duration, rows: res.rowCount }}`);
     if (type === 'read') {
       let result = res || [];
       result = result.rows.flat();

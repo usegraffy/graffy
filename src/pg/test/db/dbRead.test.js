@@ -2,18 +2,20 @@ import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import pg from '../../index.js';
 import expectSql from '../expectSql';
+import { PgDb } from '../../db/pool';
 
-import { Pool } from 'pg';
-
-jest.mock('pg');
+jest.mock('../../db/pool');
+const mockClient = {
+  query: jest.fn(),
+  release: jest.fn(),
+};
 
 const mockQuery = jest.fn();
-
 describe('postgres', () => {
   let store;
-  Pool.prototype.query = mockQuery;
   beforeEach(async () => {
     jest.useFakeTimers();
+    PgDb.prototype = { read: mockQuery, getClient: mockClient };
     const graffyPg = pg({
       opts: {
         id: 'id',
@@ -32,9 +34,9 @@ describe('postgres', () => {
 
   test('id_lookup', async () => {
     const now = Date.now();
-    mockQuery.mockReturnValueOnce({
-      rows: [[{ $key: 'foo', id: 'foo', name: 'Alice', version: now }]],
-    });
+    mockQuery.mockReturnValueOnce([
+      { $key: 'foo', id: 'foo', name: 'Alice', version: now },
+    ]);
 
     const result = await store.read('user.foo', {
       name: true,

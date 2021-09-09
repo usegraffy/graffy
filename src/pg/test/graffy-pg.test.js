@@ -10,9 +10,8 @@ const setEnv = () => {
   process.env.PGHOST = 'localhost';
 };
 
-describe.skip('postgres', () => {
+describe('postgres', () => {
   let store;
-
   beforeEach(async () => {
     setEnv();
     const pool = new Pool({
@@ -22,15 +21,13 @@ describe.skip('postgres', () => {
       host: process.env.PGHOST,
       port: parseInt(process.env.PGPORT || '5432'),
     });
-    const client = await pool.connect();
-    await populate(client);
+    await populate(pool);
 
     jest.useFakeTimers();
     store = new Graffy();
     store.use(
       'users',
       pg({
-        client: client,
         opts: {
           table: 'users',
           id: 'id',

@@ -1,5 +1,5 @@
 import debug from 'debug';
-export const config = {
+export const config = () => ({
   connection: {
     host: process.env.PGHOST,
     user: process.env.PGUSER,
@@ -24,4 +24,4 @@ export const config = {
       }
     },
   },
-};
+});
