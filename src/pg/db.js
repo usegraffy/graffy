@@ -19,16 +19,17 @@ import { put, patch } from './sql/index.js';
 import { format } from '@graffy/testing';
 import debug from 'debug';
 const log = debug('graffy:pg:dbRead');
-
+import { PgDb } from './db/pool';
 export class DbWrapper {
   // client is pgClient
-  constructor({ client, pgOptions }) {
-    this.client = client;
+  constructor({ pgOptions }) {
     this.pgOptions = pgOptions;
+    const { connection, poolOption, handlers } = pgOptions;
+    this.db = new PgDb({ connection, poolOption, handlers });
   }
 
   async read(rootQuery, opts = this.pgOptions) {
-    const client = this.client;
+    const db = this.db;
     const idQueries = {};
     const promises = [];
     const results = [];
@@ -36,7 +37,7 @@ export class DbWrapper {
     const { id: idCol, prefix } = opts;
 
     async function getByArgs(args, subQuery) {
-      const result = await readSql(selectByArgs(args, opts), client);
+      const result = await db.read(selectByArgs(args, opts));
       add(refQuery, linkResult(result, subQuery, opts));
 
       const wrappedQuery = wrap(subQuery, [...prefix, args]);
@@ -53,10 +54,7 @@ export class DbWrapper {
     }
 
     async function getByIds() {
-      const result = await readSql(
-        selectByIds(Object.keys(idQueries), opts),
-        client,
-      );
+      const result = await db.read(selectByIds(Object.keys(idQueries), opts));
       result.forEach((object) => {
         const id = object[idCol];
         const subQuery = idQueries[id];
@@ -73,19 +71,6 @@ export class DbWrapper {
 
         merge(results, finalize(wrappedGraph, wrappedQuery));
       });
-    }
-
-    async function readSql(sqlQuery, client) {
-      log(sqlQuery.text);
-      log(sqlQuery.values);
-
-      sqlQuery.rowMode = 'array';
-      let result = await client.query(sqlQuery);
-      result = result || [];
-      result = result.rows.flat();
-      // Each row is an array, as there is only one column returned.
-      log('ReadSQL', result);
-      return result;
     }
 
     const query = unwrap(rootQuery, prefix);
@@ -106,18 +91,10 @@ export class DbWrapper {
   }
 
   async write(change, opts = this.pgOptions) {
-    async function writeSql(query, client) {
-      log(query.text);
-      log(query.values);
-      query.rowMode = 'array';
-      const res = await client.query(query);
-      log('Rows written', res.rowCount);
-      return res.rowCount;
-    }
-    const client = this.client;
+    const db = this.db;
     const queries = [];
 
-    const addToQuery = (sql) => queries.push(writeSql(sql, client));
+    const addToQuery = (sql) => queries.push(db.write(sql));
 
     for (const node of change) {
       if (isRange(node)) {

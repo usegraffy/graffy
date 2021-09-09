@@ -3,16 +3,18 @@ import sql from 'sql-template-tag';
 import pg from '../../index.js';
 import expectSql from '../expectSql';
 
-const client = {
-  query: jest.fn(),
-};
+import { Pool } from 'pg';
+
+jest.mock('pg');
+
+const mockQuery = jest.fn();
 
 describe('postgres', () => {
   let store;
+  Pool.prototype.query = mockQuery;
   beforeEach(async () => {
     jest.useFakeTimers();
     const graffyPg = pg({
-      client,
       opts: {
         id: 'id',
         version: 'version',
@@ -30,7 +32,7 @@ describe('postgres', () => {
 
   test('id_lookup', async () => {
     const now = Date.now();
-    client.query.mockReturnValueOnce({
+    mockQuery.mockReturnValueOnce({
       rows: [[{ $key: 'foo', id: 'foo', name: 'Alice', version: now }]],
     });
 
@@ -39,9 +41,9 @@ describe('postgres', () => {
       version: true,
     });
 
-    expect(client.query).toBeCalled();
+    expect(mockQuery).toBeCalled();
     expectSql(
-      client.query.mock.calls[0][0],
+      mockQuery.mock.calls[0][0],
       sql`SELECT to_jsonb ("user") || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) )
        FROM "user" WHERE "id" IN ( ${'foo'} )
     `,

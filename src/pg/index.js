@@ -4,7 +4,7 @@ import { DbWrapper } from './db';
 // const log = debug('graffy:pg:index');
 // import { format } from '@graffy/testing';
 
-export default ({ client, opts }) =>
+export default ({ opts }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
@@ -17,11 +17,10 @@ export default ({ client, opts }) =>
       idCol: 'id',
       verCol: 'updatedAt',
       links: {},
-      pollInterval: 5000,
       ...opts,
     };
 
-    const db = new DbWrapper({ client, pgOptions });
+    const db = new DbWrapper({ pgOptions });
     store.on('read', read);
     store.on('write', write);
 
