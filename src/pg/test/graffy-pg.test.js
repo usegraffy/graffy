@@ -10,7 +10,7 @@ const setEnv = () => {
   process.env.PGHOST = 'localhost';
 };
 
-describe('postgres', () => {
+describe.skip('postgres', () => {
   let store;
   beforeEach(async () => {
     setEnv();
