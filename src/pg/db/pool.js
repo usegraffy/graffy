@@ -16,34 +16,30 @@ export class PgDb {
     this.pool.on('error', onError);
   }
 
-  async query(sqlQuery, type = 'query') {
+  async query(sqlQuery) {
     const start = Date.now();
     sqlQuery.rowMode = 'array';
     const client = await this.getClient();
     const res = await client.query(sqlQuery);
     const duration = Date.now() - start;
-    log(type, `${{ query: sqlQuery.text, duration, rows: res.rowCount }}`);
-    if (type === 'read') {
-      let result = res || [];
-      result = result.rows.flat();
-      // Each row is an array, as there is only one column returned.
-      log('ReadSQL', result);
-      return result;
-    }
-    if (type === 'write') {
-      log('Rows written', res.rowCount);
-      return res.rowCount;
-    }
+    log('query', `${{ query: sqlQuery.text, duration, rows: res.rowCount }}`);
 
     return res;
   }
 
   async read(query) {
-    return this.query(query, 'read');
+    let res = await this.query(query);
+    let result = res || [];
+    result = result.rows.flat();
+    // Each row is an array, as there is only one column returned.
+    log('ReadSQL', result);
+    return result;
   }
 
   async write(query) {
-    return this.query(query, 'write');
+    let res = await this.query(query);
+    log('Rows written', res.rowCount);
+    return res.rowCount;
   }
 
   async getClient() {

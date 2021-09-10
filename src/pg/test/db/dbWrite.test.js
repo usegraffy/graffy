@@ -7,10 +7,6 @@ import { nowTimestamp } from '../../sql/clauses';
 import { PgDb } from '../../db/pool';
 
 jest.mock('../../db/pool');
-const mockClient = {
-  query: jest.fn(),
-  release: jest.fn(),
-};
 
 const mockQuery = jest.fn();
 describe('postgres', () => {
@@ -18,7 +14,7 @@ describe('postgres', () => {
 
   beforeEach(async () => {
     jest.useFakeTimers();
-    PgDb.prototype = { write: mockQuery, getClient: mockClient };
+    PgDb.prototype.write = mockQuery;
     const graffyPg = pg({
       opts: {
         id: 'id',

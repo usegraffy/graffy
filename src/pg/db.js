@@ -22,7 +22,7 @@ const log = debug('graffy:pg:dbRead');
 import { PgDb } from './db/pool';
 export class DbWrapper {
   // client is pgClient
-  constructor({ pgOptions }) {
+  constructor(pgOptions) {
     this.pgOptions = pgOptions;
     const { connection, poolOption, handlers } = pgOptions;
     this.db = new PgDb({ connection, poolOption, handlers });

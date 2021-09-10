@@ -5,17 +5,13 @@ import expectSql from '../expectSql';
 import { PgDb } from '../../db/pool';
 
 jest.mock('../../db/pool');
-const mockClient = {
-  query: jest.fn(),
-  release: jest.fn(),
-};
 
 const mockQuery = jest.fn();
 describe('postgres', () => {
   let store;
   beforeEach(async () => {
     jest.useFakeTimers();
-    PgDb.prototype = { read: mockQuery, getClient: mockClient };
+    PgDb.prototype.read = mockQuery;
     const graffyPg = pg({
       opts: {
         id: 'id',
@@ -29,7 +25,7 @@ describe('postgres', () => {
   afterEach(async () => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    // client.query.mockReset();
+    mockQuery.mockReset();
   });
 
   test('id_lookup', async () => {

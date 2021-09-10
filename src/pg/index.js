@@ -20,7 +20,7 @@ export default ({ opts }) =>
       ...opts,
     };
 
-    const db = new DbWrapper({ pgOptions });
+    const db = new DbWrapper(pgOptions);
     store.on('read', read);
     store.on('write', write);
 
