@@ -15,7 +15,8 @@
     "start": "node src/website/server.js",
     "typedef": "tsc --allowJs --declaration --emitDeclarationOnly",
     "test": "NODE_ENV=testing jest",
-    "utest": "jest --testPathIgnorePatterns=example"
+    "utest": "jest --testPathIgnorePatterns=example",
+    "pg:clean": "docker rm -f graffypg"
   },
   "workspaces": [
     "src/*",

@@ -1,9 +1,17 @@
 import pg from 'pg';
 import sql from 'sql-template-tag';
 
+export const connOptions = {
+  host: 'localhost',
+  port: 15432,
+  user: 'postgres',
+  password: 'graffy',
+  database: 'postgres',
+};
+
 export async function populate() {
   // console.log('Creating tables');
-  const pool = new pg.Pool();
+  const pool = new pg.Pool(connOptions);
 
   async function insert(type, number, builder = () => {}) {
     for (let i = 0; i < number; i++) {
