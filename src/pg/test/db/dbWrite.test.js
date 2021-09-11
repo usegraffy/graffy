@@ -1,20 +1,25 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import pg from '../../index.js';
+import { pg } from '../../index.js';
 import { nowTimestamp } from '../../sql/clauses';
 
-import { PgDb } from '../../db/pool';
+let mockQuery = jest.fn();
 
-jest.mock('../../db/pool');
+jest.mock('pg', () => ({
+  __esModule: true,
+  Pool: class {
+    query = mockQuery;
+  },
+  Client: class {
+    query = mockQuery;
+  },
+}));
 
-const mockQuery = jest.fn();
 describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
-    jest.useFakeTimers();
-    PgDb.prototype.write = mockQuery;
     const graffyPg = pg({
       opts: {
         id: 'id',
@@ -26,8 +31,6 @@ describe('postgres', () => {
   });
 
   afterEach(async () => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
     mockQuery.mockReset();
   });
 

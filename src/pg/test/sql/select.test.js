@@ -4,8 +4,8 @@ import sql, { raw } from 'sql-template-tag';
 import expectSql from '../expectSql.js';
 import { nowTimestamp } from '../../sql/clauses';
 
-describe('tests select sql', () => {
-  test('should return correctly sql query for selectByArgs', () => {
+describe('select_sql', () => {
+  test('selectByArgs_first', () => {
     const arg = { $first: 10 };
     const options = {
       table: 'user',
@@ -24,7 +24,7 @@ describe('tests select sql', () => {
     expectSql(selectByArgs(arg, options), expectedResult);
   });
 
-  test('should return correctly sql query for selectById', () => {
+  test('selectById', () => {
     const ids = ['1', '2'];
     const options = {
       table: 'user',
@@ -42,7 +42,7 @@ describe('tests select sql', () => {
     expectSql(selectByIds(ids, options), expectedResult);
   });
 
-  test('should return correctly sql query for selectByArgs having RangeArg', () => {
+  test('selectByArgs_order_first', () => {
     const arg = { $order: ['createTime', 'id'], $first: 10 };
     const options = {
       table: 'user',
@@ -62,7 +62,7 @@ describe('tests select sql', () => {
     expectSql(selectByArgs(arg, options), expectedResult);
   });
 
-  test('should return correctly sql query for selectByArgs having before', () => {
+  test('selectByArgs_order_before', () => {
     const arg = { $order: ['createTime', 'id'], $before: [2, 3] };
     const options = {
       table: 'user',
@@ -82,5 +82,5 @@ describe('tests select sql', () => {
     expectSql(selectByArgs(arg, options), expectedResult);
   });
 
-  test('should return correctly sql query for selectByArgs having json manipulation', () => {});
+  // test('selectByArgs_json manipulation', () => {});
 });

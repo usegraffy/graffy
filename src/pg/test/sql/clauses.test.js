@@ -8,16 +8,16 @@ import {
   getSelectCols,
 } from '../../sql/clauses';
 
-describe('tests sql helper', () => {
+describe('clauses', () => {
   const data = { a: 1, b: 1 };
 
-  test('should correctly return sql for cols and values', () => {
+  test('insert', () => {
     const { cols, vals } = getInsert(data, { verCol: 'version' });
     expectSql(cols, sql`"a", "b", "version"`);
     expectSql(vals, sql`${data.a} , ${data.b} , ${nowTimestamp}`);
   });
 
-  test('should correctly return sql for updating', () => {
+  test('updates', () => {
     const options = { id: 'id', verCol: 'version' };
     const update = getUpdates(data, options);
     expectSql(
@@ -26,7 +26,7 @@ describe('tests sql helper', () => {
     );
   });
 
-  test('should correctly return sql for json-build-object', () => {
+  test('jsonBuildObject', () => {
     const data = { a: 1, b: 2, version: nowTimestamp };
     const query = getJsonBuildObject(data);
     expectSql(
@@ -35,7 +35,7 @@ describe('tests sql helper', () => {
     );
   });
 
-  test('should correctly return select columns', () => {
+  test('selectCols', () => {
     const table = 'test';
     const query = getSelectCols(table);
     expectSql(query, sql`to_jsonb("${raw(table)}")`);
