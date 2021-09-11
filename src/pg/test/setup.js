@@ -38,7 +38,7 @@ export async function populate() {
       "id" text PRIMARY KEY,
       "tags" jsonb NOT NULL DEFAULT '{}',
       "data" jsonb NOT NULL DEFAULT '{}',
-      "version" int8 NOT NULL DEFAULT NOW()
+      "version" int8 NOT NULL
     );
   `);
 
