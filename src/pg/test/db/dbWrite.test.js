@@ -1,21 +1,26 @@
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import pg from '../../index.js';
-import { nowTimestamp } from '../../sql/helper.js';
+import { pg } from '../../index.js';
+import { nowTimestamp } from '../../sql/clauses';
 
-const client = {
-  query: jest.fn(),
-};
+let mockQuery = jest.fn();
+
+jest.mock('pg', () => ({
+  __esModule: true,
+  Pool: class {
+    query = mockQuery;
+  },
+  Client: class {
+    query = mockQuery;
+  },
+}));
 
 describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
-    jest.useFakeTimers();
-
     const graffyPg = pg({
-      client,
       opts: {
         id: 'id',
         version: 'version',
@@ -26,9 +31,7 @@ describe('postgres', () => {
   });
 
   afterEach(async () => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
-    client.query.mockReset();
+    mockQuery.mockReset();
   });
 
   test('patch_by_id', async () => {
@@ -36,20 +39,20 @@ describe('postgres', () => {
       name: 'Alice',
     };
     const id = 'foo';
-    client.query.mockReturnValueOnce({
+    mockQuery.mockReturnValueOnce({
       rowCount: 1,
     });
     const result = await store.write('user.foo', data);
-    expect(client.query).toBeCalled();
+    expect(mockQuery).toBeCalled();
 
     const sqlQuery = sql`
       UPDATE "user" SET
         "name" = ${data.name},
-        "version" = ${nowTimestamp}
+        "updatedAt" = ${nowTimestamp}
       WHERE "id" = ${id}
-      RETURNING row_to_json ( user.* ) 
+      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
-    expectSql(client.query.mock.calls[0][0], sqlQuery);
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
     expect(result).toEqual({
       name: 'Alice',
     });
@@ -60,20 +63,19 @@ describe('postgres', () => {
       name: 'Alice',
       $put: true,
     };
-    const id = 'foo';
-    client.query.mockReturnValueOnce({
+    mockQuery.mockReturnValueOnce({
       rowCount: 1,
     });
     const result = await store.write('user.foo', data);
-    expect(client.query).toBeCalled();
+    expect(mockQuery).toBeCalled();
 
     const sqlQuery = sql`
-      INSERT INTO "user" ("id", "name", "version")
-      VALUES (${id}, ${data.name}, ${nowTimestamp}) ON CONFLICT ("id") DO UPDATE SET
-      ("name", "version") = (${data.name}, ${nowTimestamp})
-      RETURNING row_to_json(user.*)
+      INSERT INTO "user" ("name", "updatedAt")
+      VALUES (${data.name}, ${nowTimestamp}) ON CONFLICT ("id") DO UPDATE SET
+      ("name", "updatedAt\") = (${data.name}, ${nowTimestamp})
+      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
-    expectSql(client.query.mock.calls[0][0], sqlQuery);
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
 
     expect(result).toEqual({
       name: 'Alice',

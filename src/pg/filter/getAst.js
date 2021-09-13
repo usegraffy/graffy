@@ -41,7 +41,7 @@ function construct(node, prop, op) {
   if (!node || typeof node !== 'object') {
     if (op && prop) return [op, prop, node];
     if (prop) return ['$eq', prop, node];
-    throw Error('pgast.expected_prop_before', node);
+    throw Error('pgast.expected_prop_before:' + JSON.stringify(node));
   }
   if (Array.isArray(node)) {
     return ['$or', node.map((item) => construct(item, prop, op))];
