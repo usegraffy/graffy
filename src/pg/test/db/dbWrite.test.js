@@ -20,14 +20,15 @@ describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
-    const graffyPg = pg({
-      opts: {
-        id: 'id',
-        version: 'version',
-      },
-    });
     store = new Graffy();
-    store.use('user', graffyPg);
+    store.use(
+      'user',
+      pg({
+        table: 'user',
+        idCol: 'id',
+        verCol: 'version',
+      }),
+    );
   });
 
   afterEach(async () => {
@@ -81,5 +82,36 @@ describe('postgres', () => {
       name: 'Alice',
       $put: true,
     });
+  });
+
+  test.only('with $put, other table, (insert on conflict)', () => {
+    mockQuery.mockReturnValueOnce({
+      rowCount: 1,
+    });
+    store.use(
+      'googleSession',
+      pg({
+        table: 'googleSession',
+        idCol: 'id',
+        verCol: 'version',
+      }),
+    );
+    const data = {
+      $key: { userId: 'userId_01' },
+      token: 'test',
+      $put: true,
+    };
+    store.write('googleSession', data);
+    const sqlQuery = sql`
+     INSERT INTO "googleSession" ( "token" , "version" )
+     VALUES ( ${
+       data.token
+     } , cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
+     DO UPDATE SET ( "token" , "version" ) = (  ${
+       data.token
+     } , cast ( extract ( epoch from now ( ) ) as integer ) )
+     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    `;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });

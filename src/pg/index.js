@@ -3,8 +3,8 @@ import Db from './Db.js';
 export const pg =
   ({ table, idCol, verCol, links, connection }) =>
   (store) => {
-    store.on('read', read);
-    store.on('write', write);
+    store.on('read', store.path, read);
+    store.on('write', store.path, write);
 
     // TODO: Make the defaults smarter using introspection.
     const prefix = store.path;
@@ -17,8 +17,6 @@ export const pg =
     };
 
     const defaultDb = new Db(connection);
-    store.on('read', read);
-    store.on('write', write);
 
     function read(query, options) {
       const { transactionDb = defaultDb, ...readOpts } = options;
