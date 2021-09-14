@@ -21,10 +21,11 @@ describe('postgres', () => {
 
   beforeEach(async () => {
     store = new Graffy();
+    store.use('user', pg({}));
     store.use(
-      'user',
+      'googleSession',
       pg({
-        table: 'user',
+        table: 'googleSession',
         idCol: 'id',
         verCol: 'version',
       }),
@@ -84,23 +85,17 @@ describe('postgres', () => {
     });
   });
 
-  test.only('with $put, other table, (insert on conflict)', () => {
+  test('with $put, other table, (insert on conflict)', () => {
     mockQuery.mockReturnValueOnce({
       rowCount: 1,
     });
-    store.use(
-      'googleSession',
-      pg({
-        table: 'googleSession',
-        idCol: 'id',
-        verCol: 'version',
-      }),
-    );
+
     const data = {
       $key: { userId: 'userId_01' },
       token: 'test',
       $put: true,
     };
+
     store.write('googleSession', data);
     const sqlQuery = sql`
      INSERT INTO "googleSession" ( "token" , "version" )
@@ -113,5 +108,29 @@ describe('postgres', () => {
      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
+  });
+
+  test('with $put, other table, (insert on conflict) v2', () => {
+    mockQuery.mockReturnValueOnce({
+      rowCount: 1,
+    });
+    const data = {
+      userId: 'userId_01',
+      token: 'test',
+      $put: true,
+    };
+
+    store.write(['googleSession', { userId: 'userId_01' }], data);
+    // const sqlQuery = sql`
+    //  INSERT INTO "googleSession" ( "token" , "userId", "version" )
+    //  VALUES ( ${data.token} , ${
+    //   data.userId
+    // }, cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
+    //  DO UPDATE SET ( "token" ,"userId", "version" ) = (  ${data.token}, ${
+    //   data.userId
+    // }, cast ( extract ( epoch from now ( ) ) as integer ) )
+    //  RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    // `;
+    // expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });
