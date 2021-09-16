@@ -21,7 +21,8 @@ export default class Graffy {
   }
 
   on(type, ...args) {
-    const [path, handler] = validateOn(...args);
+    const [pathArg, handler] = validateOn(...args);
+    const path = this.path.concat(pathArg);
     this.core.on(type, path, handler);
   }
 
