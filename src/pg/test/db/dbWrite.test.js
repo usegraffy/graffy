@@ -165,5 +165,13 @@ describe('postgres', () => {
     };
 
     store.write('email.e1', data);
+
+    const sqlQuery = sql`
+     INSERT INTO "email" ( "tenantId" , "userId" , "version" )
+     VALUES ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
+     ON CONFLICT ( "id" ) DO UPDATE SET ( "tenantId" , "userId" , "version" ) = ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
+     RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    `;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });
