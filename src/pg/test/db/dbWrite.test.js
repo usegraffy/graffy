@@ -154,7 +154,7 @@ describe('postgres', () => {
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test.only('with $put, table with link, (insert on conflict)', () => {
+  test('with $put, table with link, (insert on conflict)', () => {
     mockQuery.mockReturnValueOnce({
       rowCount: 1,
     });

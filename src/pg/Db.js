@@ -14,7 +14,7 @@ import {
   isRange,
   decodeGraph,
 } from '@graffy/common';
-import { linkChange, linkResult } from './link/index.js';
+import { linkResult } from './link/index.js';
 import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch } from './sql/index.js';
 import debug from 'debug';
@@ -138,8 +138,7 @@ export default class Db {
         );
       }
 
-      const object = linkChange(decodeGraph(node.children), tableOptions);
-      console.log(object);
+      const object = decodeGraph(node.children);
       const arg = decodeArgs(node);
 
       if (object.$put && object.$put !== true)
