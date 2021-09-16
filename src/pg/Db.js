@@ -139,6 +139,7 @@ export default class Db {
       }
 
       const object = linkChange(decodeGraph(node.children), tableOptions);
+      console.log(object);
       const arg = decodeArgs(node);
 
       if (object.$put && object.$put !== true)

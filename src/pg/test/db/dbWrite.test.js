@@ -30,6 +30,26 @@ describe('postgres', () => {
         verCol: 'version',
       }),
     );
+
+    store.use(
+      'email',
+      pg({
+        table: 'email',
+        idCol: 'id',
+        verCol: 'version',
+        links: {
+          tenant: ['tenant', '$$tenantId'],
+        },
+      }),
+    );
+    store.use(
+      'tenant',
+      pg({
+        table: 'tenant',
+        idCol: 'id',
+        verCol: 'version',
+      }),
+    );
   });
 
   afterEach(async () => {
@@ -132,5 +152,18 @@ describe('postgres', () => {
      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
+  });
+
+  test.only('with $put, table with link, (insert on conflict)', () => {
+    mockQuery.mockReturnValueOnce({
+      rowCount: 1,
+    });
+    const data = {
+      userId: 'userId_01',
+      tenantId: 't1',
+      $put: true,
+    };
+
+    store.write('email.e1', data);
   });
 });
