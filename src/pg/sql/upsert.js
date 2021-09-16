@@ -25,7 +25,7 @@ export function put(object, arg, options) {
 
   let meta, conflictTarget;
   if (isPlainObject(arg)) {
-    ({ meta } = getArgSql(arg));
+    ({ meta } = getArgSql(arg, options));
     conflictTarget = join(Object.keys(arg).map((col) => sql`"${raw(col)}"`));
   } else {
     meta = getIdMeta(options);

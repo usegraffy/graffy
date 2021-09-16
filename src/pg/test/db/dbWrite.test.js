@@ -20,14 +20,36 @@ describe('postgres', () => {
   let store;
 
   beforeEach(async () => {
-    const graffyPg = pg({
-      opts: {
-        id: 'id',
-        version: 'version',
-      },
-    });
     store = new Graffy();
-    store.use('user', graffyPg);
+    store.use('user', pg({}));
+    store.use(
+      'googleSession',
+      pg({
+        table: 'googleSession',
+        idCol: 'id',
+        verCol: 'version',
+      }),
+    );
+
+    store.use(
+      'email',
+      pg({
+        table: 'email',
+        idCol: 'id',
+        verCol: 'version',
+        links: {
+          tenant: ['tenant', '$$tenantId'],
+        },
+      }),
+    );
+    store.use(
+      'tenant',
+      pg({
+        table: 'tenant',
+        idCol: 'id',
+        verCol: 'version',
+      }),
+    );
   });
 
   afterEach(async () => {
@@ -81,5 +103,75 @@ describe('postgres', () => {
       name: 'Alice',
       $put: true,
     });
+  });
+
+  test('with $put, other table, (insert on conflict)', () => {
+    mockQuery.mockReturnValueOnce({
+      rowCount: 1,
+    });
+
+    const data = {
+      $key: { userId: 'userId_01' },
+      token: 'test',
+      $put: true,
+    };
+
+    store.write('googleSession', data);
+    const sqlQuery = sql`
+     INSERT INTO "googleSession" ( "token" , "version" )
+     VALUES ( ${
+       data.token
+     } , cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
+     DO UPDATE SET ( "token" , "version" ) = (  ${
+       data.token
+     } , cast ( extract ( epoch from now ( ) ) as integer ) )
+     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    `;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
+  });
+
+  test('with $put, other table, (insert on conflict) v2', () => {
+    mockQuery.mockReturnValueOnce({
+      rowCount: 1,
+    });
+    const data = {
+      userId: 'userId_01',
+      token: 'test',
+      $put: true,
+    };
+
+    store.write(['googleSession', { userId: 'userId_01' }], data);
+    const sqlQuery = sql`
+     INSERT INTO "googleSession" ( "token" , "userId", "version" )
+     VALUES ( ${data.token} , ${
+      data.userId
+    }, cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
+     DO UPDATE SET ( "token" ,"userId", "version" ) = (  ${data.token}, ${
+      data.userId
+    }, cast ( extract ( epoch from now ( ) ) as integer ) )
+     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    `;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
+  });
+
+  test('with $put, table with link, (insert on conflict)', () => {
+    mockQuery.mockReturnValueOnce({
+      rowCount: 1,
+    });
+    const data = {
+      userId: 'userId_01',
+      tenantId: 't1',
+      $put: true,
+    };
+
+    store.write('email.e1', data);
+
+    const sqlQuery = sql`
+     INSERT INTO "email" ( "tenantId" , "userId" , "version" )
+     VALUES ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
+     ON CONFLICT ( "id" ) DO UPDATE SET ( "tenantId" , "userId" , "version" ) = ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
+     RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    `;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });

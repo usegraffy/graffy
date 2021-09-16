@@ -17,8 +17,6 @@ export const pg =
     };
 
     const defaultDb = new Db(connection);
-    store.on('read', read);
-    store.on('write', write);
 
     function read(query, options) {
       const { transactionDb = defaultDb, ...readOpts } = options;
