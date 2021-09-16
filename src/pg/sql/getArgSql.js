@@ -1,6 +1,76 @@
 import sql, { join, raw } from 'sql-template-tag';
 import { isEmpty, encodePath } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
+import { getArgMeta } from './getMeta';
+import { getJsonBuildObject } from './clauses.js';
+
+/**
+  Uses the args object (typically passed in the $key attribute)
+
+  @param {object} args
+  @param {object} options
+
+  @typedef { import('sql-template-tag').Sql } Sql
+  @return {{ meta: Sql, where: Sql[], order?: Sql, limit: number }}
+*/
+export default function getArgSql(
+  { $first, $last, $after, $before, $since, $until, $cursor: _, ...rest },
+  options,
+) {
+  const { $order, ...filter } = rest;
+  const { prefix, idCol } = options;
+
+  const lookup = (prop) => {
+    const [prefix, ...suffix] = encodePath(prop);
+    return suffix.length
+      ? sql`"${raw(prefix)}" #>> '{"${suffix.join('","')}"}'`
+      : sql`"${raw(prefix)}"`;
+  };
+
+  const meta = (key) => getArgMeta(key, prefix, idCol);
+
+  const hasRangeArg =
+    $before || $after || $since || $until || $first || $last || $order;
+
+  let key;
+  const where = [];
+  if (!isEmpty(filter)) {
+    where.push(getFilterSql(filter, lookup));
+    key = sql`${JSON.stringify(filter)}::jsonb`;
+  }
+
+  if (!hasRangeArg) return { meta: meta(key), where, limit: 1 };
+
+  const orderCols = ($order || [idCol]).map(lookup);
+  Object.entries({ $after, $before, $since, $until }).forEach(
+    ([name, value]) => {
+      // if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
+      if (value) where.push(getBoundCond(orderCols, value, name));
+    },
+  );
+
+  const orderQuery =
+    $order &&
+    getJsonBuildObject({
+      $order: sql`jsonb_build_array(${join($order.map(lookup))})`,
+    });
+
+  const cursorQuery = getJsonBuildObject({
+    $cursor: sql`jsonb_build_array(${join(orderCols)})`,
+  });
+
+  key = sql`(${join([key, orderQuery, cursorQuery].filter(Boolean), ` || `)})`;
+
+  return {
+    meta: meta(key),
+    where,
+    order: join(
+      orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
+      `, `,
+    ),
+    limit: $first || $last,
+  };
+}
 
 function getBoundCond(orderCols, bound, kind) {
   if (!Array.isArray(bound)) {
@@ -31,80 +101,4 @@ function getBoundCond(orderCols, bound, kind) {
         return sql`${lhs} <= ${rhs}`;
     }
   }
-}
-
-export default function getArgSql(
-  { $first, $last, $after, $before, $since, $until, $cursor: _, ...rest },
-  options,
-) {
-  const { $order, ...filter } = rest;
-  const { args, prefix } = options;
-
-  const lookupExpr = (prefix, suffix = []) => {
-    const { role, name } = args[prefix];
-    return role === 'gin'
-      ? sql`"${raw(name)}" #>> '{"${[prefix].concat(suffix).join('","')}"}'`
-      : suffix.length
-      ? sql`"${raw(name)}" #>> '{"${suffix.join('","')}"}'`
-      : sql`"${raw(name)}"`;
-  };
-
-  const lookup = (prop) => {
-    // Fast path for the direct arg lookup case.
-    if (args[prop]) return lookupExpr(prop);
-
-    const propArray = encodePath(prop);
-    const suffix = [];
-    while (propArray.length) {
-      suffix.unshift(propArray.pop());
-      const propPrefix = propArray.join('.');
-      if (args[propPrefix]) return lookupExpr(propPrefix, suffix);
-    }
-    throw Error('pg.unknown_arg:' + prop);
-  };
-
-  const attrs = (key) => sql`jsonb_build_object(
-    '$key', ${key},
-    '$ref', array[${join(prefix)}, "${raw(options.idCol)}"],
-    '$ver', now()
-  )`;
-
-  const hasRangeArg =
-    $before || $after || $since || $until || $first || $last || $order;
-
-  let key;
-  const where = [];
-  if (!isEmpty(filter)) {
-    where.push(getFilterSql(filter, lookup));
-    key = sql`${JSON.stringify(filter)}::jsonb`;
-  }
-
-  if (!hasRangeArg) return { attrs: attrs(key), where, limit: 1 };
-
-  const orderCols = ($order || [options.idCol]).map(lookup);
-
-  if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
-  if ($before) where.push(getBoundCond(orderCols, $before, '$before'));
-  if ($since) where.push(getBoundCond(orderCols, $since, '$since'));
-  if ($until) where.push(getBoundCond(orderCols, $until, '$until'));
-
-  key = sql`(${join(
-    [
-      key,
-      $order &&
-        sql`jsonb_build_object('$order', jsonb_build_array(${join($order)}))`,
-      sql`jsonb_build_object('$cursor', jsonb_build_array(${join(orderCols)}))`,
-    ].filter(Boolean),
-    ` || `,
-  )})`;
-
-  return {
-    attrs: attrs(key),
-    where,
-    order: join(
-      orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
-      `, `,
-    ),
-    limit: $first || $last,
-  };
 }

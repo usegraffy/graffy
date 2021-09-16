@@ -1,28 +1,38 @@
 import Graffy from '@graffy/core';
 import pg from '../index.js';
 import { populate } from './setup.js';
+import { Pool } from 'pg';
 
-import debug from 'debug';
-const log = debug('graffy:pg:test');
+const setEnv = () => {
+  process.env.PGDATABASE = 'lego';
+  process.env.PGUSER = 'postgres';
+  process.env.PGPASSWORD = 'postgres';
+  process.env.PGHOST = 'localhost';
+};
 
 describe.skip('postgres', () => {
   let store;
-
   beforeEach(async () => {
-    await populate();
+    setEnv();
+    const pool = new Pool({
+      database: process.env.PGDATABASE,
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
+      host: process.env.PGHOST,
+      port: parseInt(process.env.PGPORT || '5432'),
+    });
+    await populate(pool);
+
     jest.useFakeTimers();
     store = new Graffy();
     store.use(
-      'user',
+      'users',
       pg({
-        table: 'users',
-        columns: {
-          id: { role: 'primary' },
-          tags: { role: 'gin' },
-          data: { role: 'default' },
-          version: { role: 'version' },
+        opts: {
+          table: 'users',
+          id: 'id',
+          version: 'version',
         },
-        links: { posts: { target: 'post', back: 'author' } },
       }),
     );
   });
@@ -32,39 +42,12 @@ describe.skip('postgres', () => {
     jest.useRealTimers();
   });
 
-  test('scenario 1', async () => {
-    const result1 = await store.read('user.user0', { i: 1 });
-
-    expect(result1).toEqual({ i: 0 });
-
-    const stream1 = await store.watch('user.user1', {
-      id: 1,
-      i: 1,
+  test('read and write', async () => {
+    const result1 = await store.read('users.user0', { name: true });
+    expect(result1).toEqual({ name: 'name_0' });
+    const response1 = await store.write('users.user1', {
+      name: 'name_test',
     });
-    jest.runOnlyPendingTimers();
-
-    expect((await stream1.next()).value).toEqual({
-      i: 1,
-      id: 'user1',
-    });
-
-    const response1 = await store.write('user.user1', {
-      i: 2,
-    });
-
-    expect(response1).toEqual({ i: 2 });
-
-    log('Before timer');
-
-    jest.runOnlyPendingTimers();
-
-    log('After timer');
-
-    expect((await stream1.next()).value).toEqual({
-      i: 2,
-      id: 'user1',
-    });
+    expect(response1).toEqual({ name: 'name_test' });
   });
-
-  test.todo('scenario 2');
 });

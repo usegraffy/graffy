@@ -1,89 +1,52 @@
-import { selectUpdatedSince, readSql } from './sql/index.js';
-import { filterObject } from './filter/index.js';
-import makeOptions from './options.js';
-import {
-  isPlainObject,
-  decodeArgs,
-  encodeGraph,
-  finalize,
-  slice,
-  wrap,
-  unwrap,
-} from '@graffy/common';
-import { makeStream } from '@graffy/stream';
-import dbRead from './dbRead.js';
-import dbWrite from './dbWrite.js';
-import pool from './pool.js';
+import Db from './Db.js';
 
-// import debug from 'debug';
-// const log = debug('graffy:pg:index');
-// import { format } from '@graffy/testing';
-
-export default (opts = {}) =>
+export const pg =
+  ({ table, idCol, verCol, links, connection }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
-    store.on('watch', watch);
 
-    const pgOptions = makeOptions(store.path, opts);
+    // TODO: Make the defaults smarter using introspection.
+    const prefix = store.path;
+    const tableOpts = {
+      prefix,
+      table: table || prefix[prefix.length - 1] || 'default',
+      idCol: idCol || 'id',
+      verCol: verCol || 'updatedAt',
+      links: links || {},
+    };
 
-    const watchers = new Set();
-    let timestamp = Date.now();
+    const defaultDb = new Db(connection);
 
-    async function poll() {
-      if (!watchers.size) return;
-      const res = await readSql(selectUpdatedSince(timestamp, pgOptions), pool);
-
-      for (const [object] of res) {
-        for (const { query, push } of watchers) {
-          const payload = [];
-
-          for (const node of query) {
-            const args = decodeArgs(node);
-            if (isPlainObject(args)) {
-              if (filterObject(args, object)) payload.push(object);
-            } else {
-              if (object.id === node.key) payload.push(object);
-            }
-          }
-
-          push(wrap(slice(encodeGraph(payload), query).known, store.path));
-        }
-      }
+    function read(query, options) {
+      const { transactionDb = defaultDb, ...readOpts } = options;
+      return transactionDb.read(query, tableOpts, readOpts);
     }
 
-    setInterval(poll, pgOptions.pollInterval);
-
-    function read(query) {
-      return dbRead(query, pgOptions, store);
-      // log(format(rootQuery));
-      // const query = unwrap(rootQuery, store.path);
-      // const result = await dbRead(query, pgOptions);
-      // const rootResult = slice(
-      //   finalize(encodeGraph(wrapObject(result, store.path)), rootQuery),
-      //   rootQuery,
-      // ).known;
-      // log(format(rootResult));
-      // return rootResult;
-    }
-
-    async function write(change) {
-      change = unwrap(change, store.path);
-      await dbWrite(change, pgOptions);
-      return wrap(change, store.path);
-    }
-
-    function watch(query) {
-      query = unwrap(query, store.path);
-
-      return makeStream((push) => {
-        const watcher = { query, push };
-        dbRead(query, pgOptions).then((init) => {
-          push(wrap(finalize(encodeGraph(init), query), store.path));
-          watchers.add(watcher);
-        });
-
-        return () => watchers.delete(watcher);
-      });
+    function write(change, options) {
+      const { transactionDb = defaultDb, ...writeOpts } = options;
+      return transactionDb.write(change, tableOpts, writeOpts);
     }
   };
+
+/*
+  TODO: Uncomment and test in another PR.
+  
+  export const transaction = ({ connection }) => {
+    store.on('write', (change, options, next) => {
+      const client = await pool.connect();
+      await client.query('BEGIN');
+      const transactionDb = new Db(client);
+
+      nextOptions = { ...options, transactionDb };
+      try {
+        const response = await next(change, nextOptions);
+        await client.query('COMMIT');
+      } catch (e) {
+        await client.query('ROLLBACK')
+      } finally {
+        await client.release();
+      }
+    })
+  }
+*/
