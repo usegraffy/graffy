@@ -121,16 +121,16 @@ describe('postgres', () => {
     };
 
     store.write(['googleSession', { userId: 'userId_01' }], data);
-    // const sqlQuery = sql`
-    //  INSERT INTO "googleSession" ( "token" , "userId", "version" )
-    //  VALUES ( ${data.token} , ${
-    //   data.userId
-    // }, cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
-    //  DO UPDATE SET ( "token" ,"userId", "version" ) = (  ${data.token}, ${
-    //   data.userId
-    // }, cast ( extract ( epoch from now ( ) ) as integer ) )
-    //  RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
-    // `;
-    // expectSql(mockQuery.mock.calls[0][0], sqlQuery);
+    const sqlQuery = sql`
+     INSERT INTO "googleSession" ( "token" , "userId", "version" )
+     VALUES ( ${data.token} , ${
+      data.userId
+    }, cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
+     DO UPDATE SET ( "token" ,"userId", "version" ) = (  ${data.token}, ${
+      data.userId
+    }, cast ( extract ( epoch from now ( ) ) as integer ) )
+     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+    `;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });

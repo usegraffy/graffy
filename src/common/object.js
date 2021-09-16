@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual.js';
 import { isEmpty } from './util.js';
 import { splitArgs } from './coding/index.js';
 
@@ -69,14 +70,18 @@ export function unwrapObject(object, path) {
       }
       object = object[$key];
     } else {
-      const [page, _filter] = splitArgs($key);
-      if (page && !page.cursor) {
-        if (!Array.isArray(object)) {
-          throw Error('unwrapObject.arg_key_object:' + JSON.stringify($key));
-        }
+      if (!Array.isArray(object)) {
+        throw Error('unwrapObject.arg_key_object:' + JSON.stringify($key));
+      }
+      const [page, filter] = splitArgs($key);
+      if (page && !page.$cursor) {
+        // TODO: Return a slice of this array
         return object;
       } else {
-        throw Error('unimplemented');
+        const target = page?.$cursor
+          ? { ...filter, $cursor: page.$cursor }
+          : filter;
+        object = object.find(({ $key }) => isEqual($key, target));
       }
     }
   }
