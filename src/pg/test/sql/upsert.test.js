@@ -40,7 +40,7 @@ test('patch', async () => {
         "name" = ${'hello'},
         "email" = ${'world'},
         "version" =  ${nowTimestamp}
-      WHERE "id" = ${'post22'}
+      WHERE "id" = ${'post22'} LIMIT 1
       RETURNING (to_jsonb("post") ||
         jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
     `,

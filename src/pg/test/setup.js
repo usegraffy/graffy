@@ -11,7 +11,7 @@ const connOptions = {
   database: 'postgres',
 };
 
-let pool;
+let pool = null;
 const execFile = promisify(execFileCb);
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const isPgReady = async () => {
@@ -57,43 +57,46 @@ export async function setupPgServer() {
 }
 
 export async function teardownPgServer() {
-  await pool.end();
-  pool = undefined;
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
   await execFile('docker', ['rm', '-f', 'graffypg']);
 }
 
-export async function populate() {
-  // console.log('Creating tables');
-  async function insert(type, number, builder = () => {}) {
-    for (let i = 0; i < number; i++) {
-      const name = builder(i) || {};
-      const now = Date.now();
-      // console.log('Inserting ', type, i);
-      await pool.query(sql`INSERT INTO "users" (
-        "id", "name", "updatedAt", "version"
-      ) VALUES (
-        ${type + i},
-        ${name},
-        ${now},
-        ${now}
-      );`);
-    }
-  }
+export async function resetTables() {
+  if (!pool) throw Error('No pool; Did not setup PG or already torn down.');
+
+  await pool.query(sql`
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto"
+  `);
 
   await pool.query(sql`
     DROP TABLE IF EXISTS "users";
   `);
 
   await pool.query(sql`
-    CREATE TABLE "users" (
-      "id" text PRIMARY KEY,
+    CREATE UNLOGGED TABLE "users" (
+      "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
       "name" text,
-      "updatedAt" int8 NOT NULL,
+      "settings" jsonb,
+      "email" text UNIQUE,
       "version" int8 NOT NULL
     );
   `);
 
-  await insert('user', 5, (i) => `name_${i}`);
+  await pool.query(sql`
+    DROP TABLE IF EXISTS "posts";
+  `);
+
+  await pool.query(sql`
+    CREATE UNLOGGED TABLE "posts" (
+      "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+      "title" text,
+      "authorId" text,
+      "version" int8 NOT NULL
+    );
+  `);
 }
 
 export function getPool() {

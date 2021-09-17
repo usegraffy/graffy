@@ -16,6 +16,7 @@ export function patch(object, arg, options) {
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
     WHERE ${join(where, ` AND `)}
+    LIMIT 1
     RETURNING (${getSelectCols(table)} || ${meta})`;
 }
 

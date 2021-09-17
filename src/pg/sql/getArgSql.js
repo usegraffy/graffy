@@ -14,7 +14,7 @@ import { getJsonBuildObject } from './clauses.js';
   @return {{ meta: Sql, where: Sql[], order?: Sql, limit: number }}
 */
 export default function getArgSql(
-  { $first, $last, $after, $before, $since, $until, $cursor: _, ...rest },
+  { $first, $last, $after, $before, $since, $until, $all, $cursor: _, ...rest },
   options,
 ) {
   const { $order, ...filter } = rest;
@@ -30,7 +30,7 @@ export default function getArgSql(
   const meta = (key) => getArgMeta(key, prefix, idCol);
 
   const hasRangeArg =
-    $before || $after || $since || $until || $first || $last || $order;
+    $before || $after || $since || $until || $first || $last || $all || $order;
 
   let key;
   const where = [];
@@ -44,7 +44,6 @@ export default function getArgSql(
   const orderCols = ($order || [idCol]).map(lookup);
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([name, value]) => {
-      // if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
       if (value) where.push(getBoundCond(orderCols, value, name));
     },
   );

@@ -16,7 +16,9 @@ describe('select_sql', () => {
     const expectedResult = sql`
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object(
         '$key', (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
-        '$ref', array[${options.table}, "id"], '$ver', ${nowTimestamp}
+        '$ref', jsonb_build_array(${
+          options.table
+        }::text, "id"), '$ver', ${nowTimestamp}
       )
       FROM "user" ORDER BY "id" ASC LIMIT ${10}
     `;
@@ -54,7 +56,9 @@ describe('select_sql', () => {
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object(
         '$key', (jsonb_build_object ('$order', jsonb_build_array ( "createTime" , "id" ))
         || jsonb_build_object ( '$cursor' , jsonb_build_array ( "createTime" , "id" ) )),
-        '$ref', array[${options.table}, "id"], '$ver', ${nowTimestamp}
+        '$ref', jsonb_build_array(${
+          options.table
+        }::text, "id"), '$ver', ${nowTimestamp}
       )
       FROM "user" ORDER BY "createTime" ASC, "id" ASC LIMIT ${10}
     `;
@@ -74,7 +78,9 @@ describe('select_sql', () => {
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object(
         '$key', (jsonb_build_object ('$order', jsonb_build_array ( "createTime" , "id" ))
         || jsonb_build_object ( '$cursor' , jsonb_build_array ( "createTime" , "id" ) )),
-        '$ref', array[${options.table}, "id"], '$ver', ${nowTimestamp}
+        '$ref', jsonb_build_array(${
+          options.table
+        }::text, "id"), '$ver', ${nowTimestamp}
       )
       FROM "user"  WHERE "createTime" < ${2} OR "createTime" = ${2} AND ( "id" < ${3} )ORDER BY "createTime" ASC, "id" ASC LIMIT ${4096}
     `;

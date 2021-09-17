@@ -26,7 +26,7 @@ export function encode(path) {
 
   if (!isPlainObject(path[path.length - 1])) return path.map(encodeSegment);
 
-  const [page, filter] = splitArgs(path[path.length - 1]);
+  const [page, filter = {}] = splitArgs(path[path.length - 1]);
   if (!page) return path.map(encodeSegment);
 
   return path.slice(0, -1).concat([filter]).map(encodeSegment);
