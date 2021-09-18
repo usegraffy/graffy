@@ -23,6 +23,10 @@ export default function getSql(filter, getLookupSql) {
         return sql`${lhs(ast[1])} > ${ast[2]}`;
       case '$gte':
         return sql`${lhs(ast[1])} >= ${ast[2]}`;
+      case '$re':
+        return sql`${lhs(ast[1])} ~ ${ast[2]}`;
+      case '$ire':
+        return sql`${lhs(ast[1])} ~* ${ast[2]}`;
       case '$in':
         return sql`${lhs(ast[1])} IN (${join(ast[2])})`;
       case '$nin':

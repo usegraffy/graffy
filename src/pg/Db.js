@@ -12,6 +12,7 @@ import {
   isEmpty,
   isRange,
   decodeGraph,
+  mergeObject,
 } from '@graffy/common';
 import { linkResult } from './link/index.js';
 import { selectByArgs, selectByIds } from './sql/select';
@@ -131,8 +132,13 @@ export default class Db {
         );
       }
 
-      const object = decodeGraph(node.children);
       const arg = decodeArgs(node);
+      const object = decodeGraph(node.children);
+      if (isPlainObject(arg)) {
+        mergeObject(object, arg);
+      } else {
+        object.id = arg;
+      }
 
       if (object.$put && object.$put !== true) {
         throw Error('pg_write.partial_put_unsupported');
@@ -146,9 +152,9 @@ export default class Db {
     const result = [];
     await Promise.all(
       sqls.map((sql) =>
-        this.writeSql(sql).then((object) =>
-          merge(result, encodeGraph(wrapObject(object, prefix))),
-        ),
+        this.writeSql(sql).then((object) => {
+          merge(result, encodeGraph(wrapObject(object, prefix)));
+        }),
       ),
     );
     log('dbWrite', rootChange, result);

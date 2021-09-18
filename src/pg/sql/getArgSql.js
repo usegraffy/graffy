@@ -41,6 +41,11 @@ export default function getArgSql(
 
   if (!hasRangeArg) return { meta: meta(key), where, limit: 1 };
 
+  if (isEmpty(filter)) {
+    // TODO: Allow these.
+    throw Error('pg_arg.range_without_filter_unsupported in ' + prefix);
+  }
+
   const orderCols = ($order || [idCol]).map(lookup);
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([name, value]) => {
@@ -50,9 +55,7 @@ export default function getArgSql(
 
   const orderQuery =
     $order &&
-    getJsonBuildObject({
-      $order: sql`jsonb_build_array(${join($order.map(lookup))})`,
-    });
+    getJsonBuildObject({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
   const cursorQuery = getJsonBuildObject({
     $cursor: sql`jsonb_build_array(${join(orderCols)})`,
@@ -73,7 +76,7 @@ export default function getArgSql(
 
 function getBoundCond(orderCols, bound, kind) {
   if (!Array.isArray(bound)) {
-    throw Error('bad_query bound:' + JSON.stringify(bound));
+    throw Error('pg_arg.bad_query bound : ' + JSON.stringify(bound));
   }
 
   const lhs = orderCols[0];
