@@ -86,7 +86,12 @@ describe('pg_e2e', () => {
     expect(res3).toEqual({
       $key: { email: 'alice@acme.co' },
       $ref: ['users', id1], // The ID should be unchanged
-      // name: 'Alice Example', // TODO: Fix the returning clause
+      // name: 'Alice Example',
+
+      // Ideally, the current object should be echoed here.
+      // However, it gets stripped out by the store.write()
+      // unwrap result step. TODO: inter-link data before
+      // unwrap.
     });
 
     // Fourth, put a user Alan using a client-generated ID
