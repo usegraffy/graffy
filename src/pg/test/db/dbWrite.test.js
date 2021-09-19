@@ -79,7 +79,7 @@ describe('postgres', () => {
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test('with $put (insert on conflict)', async () => {
+  test('put_by_id_1', async () => {
     const data = {
       name: 'Alice',
       $put: true,
@@ -88,15 +88,16 @@ describe('postgres', () => {
     expect(mockQuery).toBeCalled();
 
     const sqlQuery = sql`
-      INSERT INTO "user" ("name", "updatedAt")
-      VALUES (${data.name}, ${nowTimestamp}) ON CONFLICT ("id") DO UPDATE SET
-      ("name", "updatedAt\") = (${data.name}, ${nowTimestamp})
+      INSERT INTO "user" ("name", "id", "updatedAt")
+      VALUES (${data.name}, ${'foo'}, ${nowTimestamp})
+      ON CONFLICT ("id") DO UPDATE SET
+      ("name", "id", "updatedAt") = (${data.name}, ${'foo'}, ${nowTimestamp})
       RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test('with $put, other table, (insert on conflict)', async () => {
+  test('put_by_args_1', async () => {
     const data = {
       $key: { userId: 'userId_01' },
       token: 'test',
@@ -105,19 +106,20 @@ describe('postgres', () => {
 
     await store.write('googleSession', data);
     const sqlQuery = sql`
-     INSERT INTO "googleSession" ( "token" , "version" )
-     VALUES ( ${
-       data.token
-     } , cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
-     DO UPDATE SET ( "token" , "version" ) = (  ${
-       data.token
-     } , cast ( extract ( epoch from now ( ) ) as integer ) )
-     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , jsonb_build_array(${`googleSession`}::text , "id") , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+      INSERT INTO "googleSession" ( "token", "userId", "version" )
+      VALUES (${data.token}, ${'userId_01'},
+        cast ( extract ( epoch from now ( ) ) as integer ) )
+      ON CONFLICT ( "userId" )
+      DO UPDATE SET ( "token", "userId", "version" ) =
+      (${data.token}, ${'userId_01'},
+        cast ( extract ( epoch from now ( ) ) as integer ) )
+      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , jsonb_build_array(${`googleSession`}::text , "id") , '$ver' ,
+        cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test('with $put, other table, (insert on conflict) v2', async () => {
+  test('put_by_args_2', async () => {
     const data = {
       userId: 'userId_01',
       token: 'test',
@@ -138,7 +140,7 @@ describe('postgres', () => {
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test('with $put, table with link, (insert on conflict)', async () => {
+  test('put_by_id_2', async () => {
     const data = {
       userId: 'userId_01',
       tenantId: 't1',
@@ -147,10 +149,13 @@ describe('postgres', () => {
 
     await store.write('email.e1', data);
     const sqlQuery = sql`
-     INSERT INTO "email" ( "tenantId" , "userId" , "version" )
-     VALUES ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
-     ON CONFLICT ( "id" ) DO UPDATE SET ( "tenantId" , "userId" , "version" ) = ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
-     RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+      INSERT INTO "email" ("tenantId", "userId", "id", "version" )
+      VALUES (${data.tenantId}, ${data.userId}, ${'e1'},
+      cast (extract (epoch from now() ) as integer ) )
+      ON CONFLICT ("id") DO UPDATE SET ("tenantId", "userId", "id", "version" ) =
+      ( ${data.tenantId} , ${data.userId} , ${'e1'},
+      cast ( extract ( epoch from now() ) as integer ) )
+      RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });

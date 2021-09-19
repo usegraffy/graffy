@@ -41,9 +41,9 @@ export default function getArgSql(
 
   if (!hasRangeArg) return { meta: meta(key), where, limit: 1 };
 
-  if (isEmpty(filter)) {
+  if (isEmpty(rest)) {
     // TODO: Allow these.
-    throw Error('pg_arg.range_without_filter_unsupported in ' + prefix);
+    throw Error('pg_arg.pagination_only_unsupported in ' + prefix);
   }
 
   const orderCols = ($order || [idCol]).map(lookup);
