@@ -31,12 +31,15 @@ export default function getSql(filter, getLookupSql) {
         return sql`${lhs(ast[1])} IN (${join(ast[2])})`;
       case '$nin':
         return sql`${lhs(ast[1])} NOT IN (${join(ast[2])})`;
+
+      // TODO: $any, $and and $has should have different cases based on
+      // column type (array vs. json)
       case '$cts':
         return sql`${lhs(ast[1])} @> ${ast[2]}`;
       case '$ctd':
         return sql`${lhs(ast[1])} <@ ${ast[2]}`;
-      case '$ovp':
-        return sql`${lhs(ast[1])} && ${ast[2]}`;
+      case '$ovl':
+        return sql`${lhs(ast[1])} @@ ${ast[2]}`;
       case '$and':
         return sql`(${join(
           ast[1].map((node) => getNodeSql(node)),

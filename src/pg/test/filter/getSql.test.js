@@ -19,117 +19,72 @@ test('or', () => {
   );
 });
 
-/* 
 test('or_root', () => {
-  expect(getSql([{ foo: 6 }, { bar: 7 }], lookup)).toEqual([
-    '$or',
-    [
-      ['$eq', 'foo', 6],
-      ['$eq', 'bar', 7],
-    ],
-  ]);
+  expect(getSql([{ foo: 6 }, { bar: 7 }], lookup)).toEqual(
+    sql`("foo" = ${6}) OR ("bar" = ${7})`,
+  );
 });
 
 test('not', () => {
-  expect(getSql({ foo: { $not: 6 } }, lookup)).toEqual(['$neq', 'foo', 6]);
+  expect(getSql({ foo: { $not: 6 } }, lookup)).toEqual(sql`"foo" <> ${6}`);
 });
 
 test('not_or', () => {
-  expect(getSql({ foo: { $not: [5, { $gt: 6 }] } }, lookup)).toEqual([
-    '$not',
-    [
-      '$or',
-      [
-        ['$eq', 'foo', 5],
-        ['$gt', 'foo', 6],
-      ],
-    ],
-  ]);
+  expect(getSql({ foo: { $not: [5, { $gt: 6 }] } }, lookup)).toEqual(
+    sql`NOT (("foo" = ${5}) OR ("foo" > ${6}))`,
+  );
 });
 
 test('logic_inversion', () => {
   expect(
     getSql(
-      {
-        $and: [{ $or: { foo: 5, bar: 6 } }, { $or: { baz: 7, qux: 4 } }],
-      },
+      { $and: [{ $or: { foo: 5, bar: 6 } }, { $or: { baz: 7, qux: 4 } }] },
       lookup,
     ),
-  ).toEqual([
-    '$and',
-    [
-      [
-        '$or',
-        [
-          ['$eq', 'foo', 5],
-          ['$eq', 'bar', 6],
-        ],
-      ],
-      [
-        '$or',
-        [
-          ['$eq', 'baz', 7],
-          ['$eq', 'qux', 4],
-        ],
-      ],
-    ],
-  ]);
+  ).toEqual(
+    sql`(("foo" = ${5}) OR ("bar" = ${6})) AND (("baz" = ${7}) OR ("qux" = ${4}))`,
+  );
 });
 
+// TODO: $any, $and and $has should have different cases based on
+// column type (array vs. json)
+
 test('any_ovl', () => {
-  expect(getSql({ tags: { $any: 'foo' } }, lookup)).toEqual([
-    '$ovl',
-    'tags',
-    ['foo'],
-  ]);
+  expect(getSql({ tags: { $any: 'foo' } }, lookup)).toEqual(
+    sql`"tags" @@ ${['foo']}`,
+  );
 });
 
 test('all_ctd', () => {
-  expect(getSql({ tags: { $all: ['foo', 'bar', 'baz'] } }, lookup)).toEqual([
-    '$ctd',
-    'tags',
-    ['foo', 'bar', 'baz'],
-  ]);
+  expect(getSql({ tags: { $all: ['foo', 'bar', 'baz'] } }, lookup)).toEqual(
+    sql`"tags" <@ ${['foo', 'bar', 'baz']}`,
+  );
 });
 
 test('has_cts', () => {
-  expect(getSql({ tags: { $has: ['foo', 'bar'] } }, lookup)).toEqual([
-    '$cts',
-    'tags',
-    ['foo', 'bar'],
-  ]);
+  expect(getSql({ tags: { $has: ['foo', 'bar'] } }, lookup)).toEqual(
+    sql`"tags" @> ${['foo', 'bar']}`,
+  );
 });
 
 test('any', () => {
-  expect(getSql({ tags: { $any: { $gte: 'm' } } }, lookup)).toEqual([
-    '$any',
-    'tags',
-    'el$0',
-    ['$gte', 'el$0', 'm'],
-  ]);
+  expect(getSql({ tags: { $any: { $gte: 'm' } } }, lookup)).toEqual(
+    sql`(SELECT bool_or("el$0" >= ${'m'}) FROM UNNEST("tags") "el$0")`,
+  );
 });
 
 test('has', () => {
   expect(
     getSql({ tags: { $has: [{ $gte: 'm' }, { $lt: 'b' }] } }, lookup),
-  ).toEqual([
-    '$has',
-    'tags',
-    'el$0',
-    [
-      ['$gte', 'el$0', 'm'],
-      ['$lt', 'el$0', 'b'],
-    ],
-  ]);
+  ).toEqual(
+    sql`(SELECT bool_or("el$0" >= ${'m'}) AND bool_or("el$0" < ${'b'}) FROM UNNEST("tags") "el$0")`,
+  );
 });
 
 test('all', () => {
-  expect(getSql({ tags: { $all: { $gte: 'm' } } }, lookup)).toEqual([
-    '$all',
-    'tags',
-    'el$0',
-    ['$gte', 'el$0', 'm'],
-  ]);
+  expect(getSql({ tags: { $all: { $gte: 'm' } } }, lookup)).toEqual(
+    sql`(SELECT bool_and("el$0" >= ${'m'}) FROM UNNEST("tags") "el$0")`,
+  );
 });
 
 /*
