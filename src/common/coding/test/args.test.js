@@ -34,3 +34,10 @@ test('filter_round_trip', () => {
   const decoded = decode(encoded);
   expect(decoded).toEqual(original);
 });
+
+test('empty_round_trip', () => {
+  const original = { $first: 12 };
+  const encoded = encode(original);
+  const decoded = decode(encoded);
+  expect(decoded).toEqual(original);
+});

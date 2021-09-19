@@ -14,7 +14,7 @@ import { getJsonBuildObject } from './clauses.js';
   @return {{ meta: Sql, where: Sql[], order?: Sql, limit: number }}
 */
 export default function getArgSql(
-  { $first, $last, $after, $before, $since, $until, $cursor: _, ...rest },
+  { $first, $last, $after, $before, $since, $until, $all, $cursor: _, ...rest },
   options,
 ) {
   const { $order, ...filter } = rest;
@@ -30,7 +30,7 @@ export default function getArgSql(
   const meta = (key) => getArgMeta(key, prefix, idCol);
 
   const hasRangeArg =
-    $before || $after || $since || $until || $first || $last || $order;
+    $before || $after || $since || $until || $first || $last || $all || $order;
 
   let key;
   const where = [];
@@ -41,19 +41,21 @@ export default function getArgSql(
 
   if (!hasRangeArg) return { meta: meta(key), where, limit: 1 };
 
+  if (isEmpty(rest)) {
+    // TODO: Allow these.
+    throw Error('pg_arg.pagination_only_unsupported in ' + prefix);
+  }
+
   const orderCols = ($order || [idCol]).map(lookup);
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([name, value]) => {
-      // if ($after) where.push(getBoundCond(orderCols, $after, '$after'));
       if (value) where.push(getBoundCond(orderCols, value, name));
     },
   );
 
   const orderQuery =
     $order &&
-    getJsonBuildObject({
-      $order: sql`jsonb_build_array(${join($order.map(lookup))})`,
-    });
+    getJsonBuildObject({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
   const cursorQuery = getJsonBuildObject({
     $cursor: sql`jsonb_build_array(${join(orderCols)})`,
@@ -74,7 +76,7 @@ export default function getArgSql(
 
 function getBoundCond(orderCols, bound, kind) {
   if (!Array.isArray(bound)) {
-    throw Error('bad_query bound:' + JSON.stringify(bound));
+    throw Error('pg_arg.bad_query bound : ' + JSON.stringify(bound));
   }
 
   const lhs = orderCols[0];

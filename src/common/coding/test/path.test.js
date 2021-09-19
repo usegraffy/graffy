@@ -32,3 +32,11 @@ test('decode', () => {
     { bar: 43 },
   ]);
 });
+
+test('encodeEmptyObject', () => {
+  expect(encode(['foo', { $first: 10 }])).toEqual(['foo', '\x000k']);
+});
+
+test('decodeEmptyObject', () => {
+  expect(decode(['foo', '\x000k'])).toEqual(['foo', {}]);
+});

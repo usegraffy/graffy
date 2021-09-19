@@ -10,8 +10,10 @@ export default function getSql(filter, getLookupSql) {
   function getNodeSql(ast) {
     switch (ast[0]) {
       case '$eq':
+        if (ast[2] === null) return sql`${lhs(ast[1])} IS NULL`;
         return sql`${lhs(ast[1])} = ${ast[2]}`;
-      case '$ne':
+      case '$neq':
+        if (ast[2] === null) return sql`${lhs(ast[1])} IS NOT NULL`;
         return sql`${lhs(ast[1])} <> ${ast[2]}`;
       case '$lt':
         return sql`${lhs(ast[1])} < ${ast[2]}`;
@@ -21,6 +23,10 @@ export default function getSql(filter, getLookupSql) {
         return sql`${lhs(ast[1])} > ${ast[2]}`;
       case '$gte':
         return sql`${lhs(ast[1])} >= ${ast[2]}`;
+      case '$re':
+        return sql`${lhs(ast[1])} ~ ${ast[2]}`;
+      case '$ire':
+        return sql`${lhs(ast[1])} ~* ${ast[2]}`;
       case '$in':
         return sql`${lhs(ast[1])} IN (${join(ast[2])})`;
       case '$nin':
@@ -56,6 +62,8 @@ export default function getSql(filter, getLookupSql) {
           ast[3].map((node) => getNodeSql(node)),
           `) AND bool_or(`,
         )}) FROM UNNEST(${lhs(ast[1])}) ${lhs(ast[2])})`;
+      default:
+        throw Error('pg.getSql_unknown_operator: ' + ast[0]);
     }
   }
 

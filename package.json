@@ -15,7 +15,7 @@
     "start": "node src/website/server.js",
     "typedef": "tsc --allowJs --declaration --emitDeclarationOnly",
     "test": "NODE_ENV=testing jest",
-    "utest": "jest --testPathIgnorePatterns=example"
+    "pg:clean": "docker rm -f graffypg"
   },
   "workspaces": [
     "src/*",
@@ -66,6 +66,7 @@
     "sql-template-tag": "^4.0.0",
     "text-encoder-lite": "^2.0.0",
     "typescript": "^4.3.5",
+    "uuid": "^8.3.2",
     "vite": "^2.5.0",
     "ws": "^7.0.0",
     "yargs": "^17.1.1"

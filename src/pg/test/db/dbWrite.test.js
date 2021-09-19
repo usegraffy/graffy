@@ -4,7 +4,12 @@ import expectSql from '../expectSql.js';
 import { pg } from '../../index.js';
 import { nowTimestamp } from '../../sql/clauses';
 
-let mockQuery = jest.fn();
+const mockQuery = jest.fn(() =>
+  Promise.resolve({
+    rowCount: 1,
+    rows: [[{}]],
+  }),
+);
 
 jest.mock('pg', () => ({
   __esModule: true,
@@ -53,7 +58,7 @@ describe('postgres', () => {
   });
 
   afterEach(async () => {
-    mockQuery.mockReset();
+    mockQuery.mockClear();
   });
 
   test('patch_by_id', async () => {
@@ -61,86 +66,67 @@ describe('postgres', () => {
       name: 'Alice',
     };
     const id = 'foo';
-    mockQuery.mockReturnValueOnce({
-      rowCount: 1,
-    });
-    const result = await store.write('user.foo', data);
+    await store.write('user.foo', data);
     expect(mockQuery).toBeCalled();
 
     const sqlQuery = sql`
       UPDATE "user" SET
         "name" = ${data.name},
         "updatedAt" = ${nowTimestamp}
-      WHERE "id" = ${id}
+      WHERE "id" = ${id} LIMIT 1
       RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
-    expect(result).toEqual({
-      name: 'Alice',
-    });
   });
 
-  test('with $put (insert on conflict)', async () => {
+  test('put_by_id_1', async () => {
     const data = {
       name: 'Alice',
       $put: true,
     };
-    mockQuery.mockReturnValueOnce({
-      rowCount: 1,
-    });
-    const result = await store.write('user.foo', data);
+    await store.write('user.foo', data);
     expect(mockQuery).toBeCalled();
 
     const sqlQuery = sql`
-      INSERT INTO "user" ("name", "updatedAt")
-      VALUES (${data.name}, ${nowTimestamp}) ON CONFLICT ("id") DO UPDATE SET
-      ("name", "updatedAt\") = (${data.name}, ${nowTimestamp})
+      INSERT INTO "user" ("name", "id", "updatedAt")
+      VALUES (${data.name}, ${'foo'}, ${nowTimestamp})
+      ON CONFLICT ("id") DO UPDATE SET
+      ("name", "id", "updatedAt") = (${data.name}, ${'foo'}, ${nowTimestamp})
       RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
-
-    expect(result).toEqual({
-      name: 'Alice',
-      $put: true,
-    });
   });
 
-  test('with $put, other table, (insert on conflict)', () => {
-    mockQuery.mockReturnValueOnce({
-      rowCount: 1,
-    });
-
+  test('put_by_args_1', async () => {
     const data = {
       $key: { userId: 'userId_01' },
       token: 'test',
       $put: true,
     };
 
-    store.write('googleSession', data);
+    await store.write('googleSession', data);
     const sqlQuery = sql`
-     INSERT INTO "googleSession" ( "token" , "version" )
-     VALUES ( ${
-       data.token
-     } , cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
-     DO UPDATE SET ( "token" , "version" ) = (  ${
-       data.token
-     } , cast ( extract ( epoch from now ( ) ) as integer ) )
-     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+      INSERT INTO "googleSession" ( "token", "userId", "version" )
+      VALUES (${data.token}, ${'userId_01'},
+        cast ( extract ( epoch from now ( ) ) as integer ) )
+      ON CONFLICT ( "userId" )
+      DO UPDATE SET ( "token", "userId", "version" ) =
+      (${data.token}, ${'userId_01'},
+        cast ( extract ( epoch from now ( ) ) as integer ) )
+      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , jsonb_build_array(${`googleSession`}::text , "id") , '$ver' ,
+        cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test('with $put, other table, (insert on conflict) v2', () => {
-    mockQuery.mockReturnValueOnce({
-      rowCount: 1,
-    });
+  test('put_by_args_2', async () => {
     const data = {
       userId: 'userId_01',
       token: 'test',
       $put: true,
     };
 
-    store.write(['googleSession', { userId: 'userId_01' }], data);
+    await store.write(['googleSession', { userId: 'userId_01' }], data);
     const sqlQuery = sql`
      INSERT INTO "googleSession" ( "token" , "userId", "version" )
      VALUES ( ${data.token} , ${
@@ -149,28 +135,27 @@ describe('postgres', () => {
      DO UPDATE SET ( "token" ,"userId", "version" ) = (  ${data.token}, ${
       data.userId
     }, cast ( extract ( epoch from now ( ) ) as integer ) )
-     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , array[${`googleSession`} , "id"] , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , jsonb_build_array(${`googleSession`}::text , "id") , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
-  test('with $put, table with link, (insert on conflict)', () => {
-    mockQuery.mockReturnValueOnce({
-      rowCount: 1,
-    });
+  test('put_by_id_2', async () => {
     const data = {
       userId: 'userId_01',
       tenantId: 't1',
       $put: true,
     };
 
-    store.write('email.e1', data);
-
+    await store.write('email.e1', data);
     const sqlQuery = sql`
-     INSERT INTO "email" ( "tenantId" , "userId" , "version" )
-     VALUES ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
-     ON CONFLICT ( "id" ) DO UPDATE SET ( "tenantId" , "userId" , "version" ) = ( ${data.tenantId} , ${data.userId} , cast ( extract ( epoch from now ( ) ) as integer ) )
-     RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
+      INSERT INTO "email" ("tenantId", "userId", "id", "version" )
+      VALUES (${data.tenantId}, ${data.userId}, ${'e1'},
+      cast (extract (epoch from now() ) as integer ) )
+      ON CONFLICT ("id") DO UPDATE SET ("tenantId", "userId", "id", "version" ) =
+      ( ${data.tenantId} , ${data.userId} , ${'e1'},
+      cast ( extract ( epoch from now() ) as integer ) )
+      RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });

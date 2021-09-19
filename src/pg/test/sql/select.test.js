@@ -6,7 +6,7 @@ import { nowTimestamp } from '../../sql/clauses';
 
 describe('select_sql', () => {
   test('selectByArgs_first', () => {
-    const arg = { $first: 10 };
+    const arg = { $order: ['name', 'id'], $first: 10 };
     const options = {
       table: 'user',
       prefix: ['user'],
@@ -14,11 +14,14 @@ describe('select_sql', () => {
       verCol: 'version',
     };
     const expectedResult = sql`
-      SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object(
-        '$key', (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
-        '$ref', array[${options.table}, "id"], '$ver', ${nowTimestamp}
+      SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
+        ( jsonb_build_object('$order', ${'["name","id"]'}::jsonb) ||
+          jsonb_build_object ('$cursor', jsonb_build_array("name","id"))),
+        '$ref', jsonb_build_array(${
+          options.table
+        }::text, "id"), '$ver', ${nowTimestamp}
       )
-      FROM "user" ORDER BY "id" ASC LIMIT ${10}
+      FROM "user" ORDER BY "name" ASC, "id" ASC LIMIT ${10}
     `;
 
     expectSql(selectByArgs(arg, options), expectedResult);
@@ -51,10 +54,12 @@ describe('select_sql', () => {
       verCol: 'version',
     };
     const expectedResult = sql`
-      SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object(
-        '$key', (jsonb_build_object ('$order', jsonb_build_array ( "createTime" , "id" ))
-        || jsonb_build_object ( '$cursor' , jsonb_build_array ( "createTime" , "id" ) )),
-        '$ref', array[${options.table}, "id"], '$ver', ${nowTimestamp}
+      SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
+        ( jsonb_build_object('$order', ${'["createTime","id"]'}::jsonb) ||
+          jsonb_build_object ('$cursor', jsonb_build_array("createTime","id"))),
+        '$ref', jsonb_build_array(${
+          options.table
+        }::text, "id"), '$ver', ${nowTimestamp}
       )
       FROM "user" ORDER BY "createTime" ASC, "id" ASC LIMIT ${10}
     `;
@@ -71,13 +76,17 @@ describe('select_sql', () => {
       verCol: 'version',
     };
     const expectedResult = sql`
-      SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object(
-        '$key', (jsonb_build_object ('$order', jsonb_build_array ( "createTime" , "id" ))
-        || jsonb_build_object ( '$cursor' , jsonb_build_array ( "createTime" , "id" ) )),
-        '$ref', array[${options.table}, "id"], '$ver', ${nowTimestamp}
-      )
-      FROM "user"  WHERE "createTime" < ${2} OR "createTime" = ${2} AND ( "id" < ${3} )ORDER BY "createTime" ASC, "id" ASC LIMIT ${4096}
-    `;
+    SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
+    ( jsonb_build_object('$order', ${'["createTime","id"]'}::jsonb) ||
+      jsonb_build_object ('$cursor', jsonb_build_array("createTime","id"))),
+    '$ref', jsonb_build_array(${
+      options.table
+    }::text, "id"), '$ver', ${nowTimestamp}
+  )
+  FROM "user"
+  WHERE \"createTime\" < ${2} OR \"createTime\" = ${2} AND ( \"id\" < ${3} )
+  ORDER BY "createTime" ASC, "id" ASC LIMIT ${4096}
+`;
 
     expectSql(selectByArgs(arg, options), expectedResult);
   });

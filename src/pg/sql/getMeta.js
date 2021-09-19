@@ -10,6 +10,8 @@ export const getIdMeta = ({ idCol }) =>
 export const getArgMeta = (key, prefix, idCol) =>
   getJsonBuildObject({
     $key: key,
-    $ref: sql`array[${join(prefix)}, "${raw(idCol)}"]`,
+    $ref: sql`jsonb_build_array(${join(
+      prefix.map((k) => sql`${k}::text`),
+    )}, "${raw(idCol)}")`,
     $ver: nowTimestamp,
   });

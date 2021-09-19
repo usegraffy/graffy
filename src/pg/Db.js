@@ -3,7 +3,6 @@ import {
   add,
   isPlainObject,
   decodeArgs,
-  wrap,
   unwrap,
   finalize,
   merge,
@@ -13,12 +12,13 @@ import {
   isEmpty,
   isRange,
   decodeGraph,
+  mergeObject,
 } from '@graffy/common';
 import { linkResult } from './link/index.js';
 import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch } from './sql/index.js';
 import debug from 'debug';
-const log = debug('graffy:pg:dbwrap');
+const log = debug('graffy:pg:db');
 
 export default class Db {
   constructor(connection) {
@@ -33,17 +33,16 @@ export default class Db {
     }
   }
 
-  async query(sqlQuery) {
-    const start = Date.now();
-    sqlQuery.rowMode = 'array';
-    const res = await this.client.query(sqlQuery);
-    const duration = Date.now() - start;
-    log('query', {
-      query: sqlQuery.text,
-      duration,
-      res,
-    });
-    return res;
+  async query(sql) {
+    sql.rowMode = 'array';
+    log('Making SQL query: ' + sql.text, sql.values);
+    try {
+      return await this.client.query(sql);
+    } catch (e) {
+      throw Error(
+        'pg.sql_error ' + e.message + ' in ' + sql.text + ' with ' + sql.values,
+      );
+    }
   }
 
   async readSql(sql) {
@@ -57,7 +56,10 @@ export default class Db {
   async writeSql(sql) {
     let res = await this.query(sql);
     log('Rows written', res.rowCount);
-    return res.rowCount;
+    if (!res.rowCount) {
+      throw Error('pg.nothing_written ' + sql.text + ' with ' + sql.values);
+    }
+    return res.rows[0][0];
   }
 
   async read(rootQuery, tableOptions) {
@@ -70,18 +72,9 @@ export default class Db {
     const getByArgs = async (args, subQuery) => {
       const result = await this.readSql(selectByArgs(args, tableOptions));
       add(refQuery, linkResult(result, subQuery, tableOptions));
-
-      const wrappedQuery = wrap(subQuery, [...prefix, args]);
       const wrappedGraph = encodeGraph(wrapObject(result, prefix));
-
-      log(
-        'getByArgs',
-        wrappedGraph,
-        wrappedQuery,
-        finalize(wrappedGraph, wrappedQuery),
-      );
-
-      merge(results, finalize(wrappedGraph, wrappedQuery));
+      log('getByArgs', wrappedGraph);
+      merge(results, wrappedGraph);
     };
 
     const getByIds = async () => {
@@ -92,17 +85,9 @@ export default class Db {
         const id = object[idCol];
         const subQuery = idQueries[id];
         add(refQuery, linkResult([object], subQuery, tableOptions));
-        const wrappedQuery = wrap(subQuery, [...prefix, id]);
         const wrappedGraph = encodeGraph(wrapObject(object, prefix));
-
-        log(
-          'getByIds',
-          wrappedGraph,
-          wrappedQuery,
-          finalize(wrappedGraph, wrappedQuery),
-        );
-
-        merge(results, finalize(wrappedGraph, wrappedQuery));
+        log('getByIds', wrappedGraph);
+        merge(results, wrappedGraph);
       });
     };
 
@@ -110,7 +95,16 @@ export default class Db {
     for (const node of query) {
       const args = decodeArgs(node);
       if (isPlainObject(args)) {
-        promises.push(getByArgs(args, node.children));
+        if (node.prefix) {
+          for (const childNode of node.children) {
+            const childArgs = decodeArgs(childNode);
+            promises.push(
+              getByArgs({ ...args, ...childArgs }, childNode.children),
+            );
+          }
+        } else {
+          promises.push(getByArgs(args, node.children));
+        }
       } else {
         idQueries[node.key] = node.children;
       }
@@ -120,7 +114,7 @@ export default class Db {
     await Promise.all(promises);
 
     log('dbRead', rootQuery, results);
-    return slice(results, rootQuery).known || [];
+    return slice(finalize(results, rootQuery), rootQuery).known || [];
   }
 
   async write(rootChange, tableOptions) {
@@ -138,18 +132,32 @@ export default class Db {
         );
       }
 
-      const object = decodeGraph(node.children);
       const arg = decodeArgs(node);
+      const object = decodeGraph(node.children);
+      if (isPlainObject(arg)) {
+        mergeObject(object, arg);
+      } else {
+        object.id = arg;
+      }
 
-      if (object.$put && object.$put !== true)
+      if (object.$put && object.$put !== true) {
         throw Error('pg_write.partial_put_unsupported');
+      }
 
       object.$put
         ? addToQuery(put(object, arg, tableOptions))
         : addToQuery(patch(object, arg, tableOptions));
     }
 
-    await Promise.all(sqls.map((sql) => this.writeSql(sql)));
-    return rootChange;
+    const result = [];
+    await Promise.all(
+      sqls.map((sql) =>
+        this.writeSql(sql).then((object) => {
+          merge(result, encodeGraph(wrapObject(object, prefix)));
+        }),
+      ),
+    );
+    log('dbWrite', rootChange, result);
+    return result;
   }
 }
