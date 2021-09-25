@@ -1,4 +1,5 @@
 import Db from './Db.js';
+import { Pool, Client } from 'pg';
 
 export const pg =
   ({ table, idCol, verCol, links, connection }) =>
@@ -29,24 +30,33 @@ export const pg =
     }
   };
 
-/*
-  TODO: Uncomment and test in another PR.
-  
-  export const transaction = ({ connection }) => {
-    store.on('write', (change, options, next) => {
+export const transaction =
+  ({ connection }) =>
+  async (store) => {
+    store.on('write', async (change, options, next) => {
+      let pool;
+      if (connection instanceof Pool) {
+        pool = connection;
+      } else if (connection instanceof Client) {
+        throw new Error('pg.transaction_mustBePool');
+      } else {
+        pool = new Pool(connection);
+      }
+
       const client = await pool.connect();
       await client.query('BEGIN');
-      const transactionDb = new Db(client);
+      const transactionDb = new Db(connection);
 
-      nextOptions = { ...options, transactionDb };
+      const nextOptions = { ...options, transactionDb };
       try {
         const response = await next(change, nextOptions);
         await client.query('COMMIT');
+        return response;
       } catch (e) {
-        await client.query('ROLLBACK')
+        await client.query('ROLLBACK');
+        throw e;
       } finally {
         await client.release();
       }
-    })
-  }
-*/
+    });
+  };

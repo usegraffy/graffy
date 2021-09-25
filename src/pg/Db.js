@@ -22,11 +22,7 @@ const log = debug('graffy:pg:db');
 
 export default class Db {
   constructor(connection) {
-    if (
-      typeof connection === 'object' &&
-      connection &&
-      (connection instanceof Pool || connection instanceof Client)
-    ) {
+    if (connection instanceof Pool || connection instanceof Client) {
       this.client = connection;
     } else {
       this.client = new Pool(connection);
