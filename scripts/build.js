@@ -38,6 +38,7 @@ export default async function build(name, version) {
         external: (id, _, isResolved) => !isResolved && id[0] !== '.',
       },
       brotliSize: false,
+      minify: false,
     },
     clearScreen: false,
     logLevel: 'warn',
