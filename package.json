@@ -9,7 +9,7 @@
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,css,html,json,md}' && eslint --fix scripts src pages",
+    "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,jsx,css,html,json,md}' && eslint --fix scripts src pages",
     "lint": "eslint scripts src pages",
     "package": "./scripts/package.js",
     "start": "node src/website/server.js",
@@ -48,8 +48,6 @@
     "express": "^4.17.1",
     "faker": "^5.1.0",
     "global": "^4.4.0",
-    "globby": "^12.0.1",
-    "is-builtin-module": "^3.1.0",
     "jest": "^27.0.6",
     "lodash": "^4.17.19",
     "merge-async-iterators": "^0.2.1",
@@ -61,7 +59,7 @@
     "puppeteer": "^10.2.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-test-renderer": "^17.0.1",
+    "react-test-renderer": "^17.0.2",
     "rimraf": "^3.0.2",
     "sql-template-tag": "^4.0.0",
     "text-encoder-lite": "^2.0.0",

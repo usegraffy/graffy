@@ -8,12 +8,12 @@ export default async function types(name) {
       'typedef',
       '--',
       src(name, 'index.js'),
-      '--outDir',
-      dst(name, 'types'),
+      '--outFile',
+      dst(name, 'index.d.ts'),
     );
-    console.log(`INFO [${name}] generated definitions`);
+    console.log(`INFO [${name}] generated declarations`);
   } catch (e) {
-    console.error(`INFO [${name}] generating definitions failed`);
+    console.error(`INFO [${name}] generating declarations failed`);
     console.error(e.message);
   }
 }

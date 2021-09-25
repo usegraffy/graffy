@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-import { mkdir } from 'fs/promises';
+import { mkdir, readdir } from 'fs/promises';
 import os from 'os';
 import mRimraf from 'rimraf';
-import { globby } from 'globby';
 import yargs from 'yargs';
 import pMap from 'p-map';
 
@@ -33,7 +32,10 @@ const argv = yargs(process.argv.slice(2))
   await rimraf(dst());
   await mkdir(dst());
 
-  let dirs = await globby('*', { cwd: src(), onlyDirectories: true });
+  let dirs = (await readdir(src(), { withFileTypes: true }))
+    .filter((dirent) => dirent.isDirectory())
+    .map(({ name }) => name);
+
   dirs = (
     await pMap(
       dirs,
