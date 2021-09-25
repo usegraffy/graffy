@@ -81,7 +81,7 @@ export default async function build(name, version) {
           require: './index.cjs',
         },
         module: './index.mjs',
-        types: './index.d.ts',
+        types: './types/index.d.ts',
         repository: {
           type: 'git',
           url: 'git+https://github.com/usegraffy/graffy.git',

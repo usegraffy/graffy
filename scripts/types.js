@@ -8,8 +8,8 @@ export default async function types(name) {
       'typedef',
       '--',
       src(name, 'index.js'),
-      '--outFile',
-      dst(name, 'index.d.ts'),
+      '--outDir',
+      dst(name, 'types'),
     );
     console.log(`INFO [${name}] generated declarations`);
   } catch (e) {
