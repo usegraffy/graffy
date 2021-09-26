@@ -5,11 +5,16 @@ export default async function types(name) {
   try {
     await yarnx(
       'run',
-      'typedef',
-      '--',
-      src(name, 'index.js'),
+      'tsc',
+      '--allowJs',
+      '--incremental',
+      '--tsBuildInfoFile',
+      src(name, '.tsbuildinfo'),
+      '--declaration',
+      '--emitDeclarationOnly',
       '--outDir',
       dst(name, 'types'),
+      src(name, 'index.js'),
     );
     console.log(`INFO [${name}] generated declarations`);
   } catch (e) {
