@@ -4,55 +4,30 @@ import ts from 'typescript';
 import { src, dst } from './utils.js';
 
 const { name, watch } = workerData;
+
+const options = {
+  allowJs: true,
+  declaration: true,
+  emitDeclarationOnly: true,
+  outDir: dst(name, 'types'),
+};
+
+if (watch) {
+  options.incremental = true;
+  options.tsBuildInfoFile = dst(name, '.tsbuildinfo');
+}
+
+// TODO: When rebuilding, specify individual files (instead of index.js) and
+// use the noResolve option to speed up rebuilding.
+
+console.log(`INFO [${name}] generating declarations`);
+
 try {
-  console.log('>>>Starting declarations:' + name);
-  (watch ? watchTypes : buildTypes)(name);
-  console.log(
-    `INFO [${name}] generated declarations${
-      watch ? ', watching for changes' : ''
-    }`,
-  );
+  const program = ts.createProgram([src(name, 'index.js')], options);
+  program.emit();
+  console.log(`INFO [${name}] generated declarations`);
   parentPort.postMessage(true);
 } catch (e) {
   console.error(`INFO [${name}] generating declarations failed`);
   console.error(e.message);
-}
-
-function buildTypes(name) {
-  const program = ts.createProgram([src(name, 'index.js')], {
-    allowJs: true,
-    declaration: true,
-    emitDeclarationOnly: true,
-    outDir: dst(name, 'types'),
-  });
-
-  program.emit();
-}
-
-function watchTypes(name) {
-  function reportDiagnostic(...args) {
-    console.error(`ERROR [${name}] Typescript diagnostic`, ...args);
-  }
-
-  function reportWatchStatus() {
-    console.error(`INFO [${name}] types updated`);
-  }
-
-  const host = ts.createWatchCompilerHost(
-    [src(name, 'index.js')],
-    {
-      watch: true,
-      preserveWatchOutput: true,
-      allowJs: true,
-      declaration: true,
-      emitDeclarationOnly: true,
-      outDir: dst(name, 'types'),
-    },
-    ts.sys,
-    ts.createEmitAndSemanticDiagnosticsBuilderProgram,
-    reportDiagnostic,
-    reportWatchStatus,
-  );
-
-  ts.createWatchProgram(host);
 }

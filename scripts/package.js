@@ -8,7 +8,7 @@ import yargs from 'yargs';
 import pMap from 'p-map';
 
 import version from './version.js';
-import build, { onUpdate } from './build.js';
+import build from './build.js';
 import publish from './publish.js';
 import link from './link.js';
 import interlink from './interlink.js';
@@ -30,6 +30,10 @@ if (argv.publish && argv.watch) {
   console.log("ERR Can't both --publish and --watch");
 }
 
+function onUpdate(name) {
+  return types(name, true);
+}
+
 (async function () {
   const ver = await version(argv._[0]);
   console.log(`INFO packaging version ${ver}`);
@@ -46,8 +50,8 @@ if (argv.publish && argv.watch) {
       dirs,
       async (name) => {
         console.log(`INFO [${name}] started`);
-        if (!(await build(name, ver, argv.watch))) return;
-        if (!argv.notypes) await types(name, argv.watch);
+        if (!(await build(name, ver, argv.watch, onUpdate))) return;
+        if (!argv.watch && !argv.notypes) await types(name, false);
         if (argv.publish) await publish(name, ver);
         if (argv.link) await link(name);
         return name;
@@ -58,8 +62,6 @@ if (argv.publish && argv.watch) {
 
   if (argv.link) await Promise.all(dirs.map((name) => interlink(name)));
   if (argv.publish) await tag(ver);
-
-  if (argv.watch) onUpdate(() => {});
 
   console.log(argv.watch ? 'INFO watching for changes' : 'INFO done');
 })();

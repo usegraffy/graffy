@@ -8,7 +8,7 @@ import { build as viteBuild } from 'vite';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 
-export default async function build(name, version, watch) {
+export default async function build(name, version, watch, onUpdate) {
   let packageName, description;
 
   // Copy the Readme file first. If there is no readme, skip this directory.
@@ -69,6 +69,12 @@ export default async function build(name, version, watch) {
         importsUpdated = false;
         await writePackageJson(imports);
       }
+
+      // We await this to ensure that we signal the initial build
+      // only after Typescript definitions are generated. This is
+      // required to limit the concurrent processes to the number
+      // of CPU cores.
+      if (onUpdate) await onUpdate(name);
 
       if (signalInitialBuild) {
         signalInitialBuild();
