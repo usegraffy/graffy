@@ -8,7 +8,7 @@ import yargs from 'yargs';
 import pMap from 'p-map';
 
 import version from './version.js';
-import build from './build.js';
+import build, { onUpdate } from './build.js';
 import publish from './publish.js';
 import link from './link.js';
 import interlink from './interlink.js';
@@ -19,11 +19,16 @@ import { src, dst } from './utils.js';
 const { sync: rimraf } = mRimraf;
 
 const argv = yargs(process.argv.slice(2))
-  .usage('$0 <version> [--publish] [--link] [--notypes]')
+  .usage('$0 <version> [--publish] [--link] [--watch] [--notypes]')
   .boolean('publish')
   .boolean('link')
+  .boolean('watch')
   .boolean('notypes')
   .demandCommand(1).argv;
+
+if (argv.publish && argv.watch) {
+  console.log("ERR Can't both --publish and --watch");
+}
 
 (async function () {
   const ver = await version(argv._[0]);
@@ -41,8 +46,8 @@ const argv = yargs(process.argv.slice(2))
       dirs,
       async (name) => {
         console.log(`INFO [${name}] started`);
-        if (!(await build(name, ver))) return;
-        if (!argv.notypes) await types(name);
+        if (!(await build(name, ver, argv.watch))) return;
+        if (!argv.notypes) await types(name, argv.watch);
         if (argv.publish) await publish(name, ver);
         if (argv.link) await link(name);
         return name;
@@ -54,5 +59,7 @@ const argv = yargs(process.argv.slice(2))
   if (argv.link) await Promise.all(dirs.map((name) => interlink(name)));
   if (argv.publish) await tag(ver);
 
-  console.log('INFO done');
+  if (argv.watch) onUpdate(() => {});
+
+  console.log(argv.watch ? 'INFO watching for changes' : 'INFO done');
 })();
