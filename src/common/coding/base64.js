@@ -31,7 +31,7 @@ export function encode(u8Arr) {
 }
 
 export function decode(string, start = 0) {
-  const buffer = new ArrayBuffer(Math.floor(((string.length - start) * 3) / 4));
+  const buffer = new ArrayBuffer(Math.ceil(((string.length - start) * 3) / 4));
   const view = new DataView(buffer);
 
   for (let i = start; i < string.length; i += 4) {
