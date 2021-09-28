@@ -22,3 +22,7 @@ export default function types(name, fileName) {
     worker.postMessage({ name, fileName });
   });
 }
+
+export function terminateWorkers() {
+  return Promise.all(workerPool.map((worker) => worker.terminate()));
+}

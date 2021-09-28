@@ -13,7 +13,7 @@ import publish from './publish.js';
 import link from './link.js';
 import interlink from './interlink.js';
 import tag from './tag.js';
-import types from './types.js';
+import types, { terminateWorkers } from './types.js';
 import { src, dst } from './utils.js';
 
 const { sync: rimraf } = mRimraf;
@@ -28,10 +28,11 @@ const argv = yargs(process.argv.slice(2))
 
 if (argv.publish && argv.watch) {
   console.log("ERR Can't both --publish and --watch");
+  process.exit(-1);
 }
 
 function onUpdate(name, fileName) {
-  types(name, fileName);
+  if (!argv.notypes) types(name, fileName);
 }
 
 (async function () {
@@ -63,5 +64,8 @@ function onUpdate(name, fileName) {
   if (argv.link) await Promise.all(dirs.map((name) => interlink(name)));
   if (argv.publish) await tag(ver);
 
-  console.log(argv.watch ? 'INFO watching for changes' : 'INFO done');
+  if (!argv.watch) {
+    await terminateWorkers();
+    console.log('INFO done');
+  }
 })();
