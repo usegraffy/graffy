@@ -30,8 +30,8 @@ if (argv.publish && argv.watch) {
   console.log("ERR Can't both --publish and --watch");
 }
 
-function onUpdate(name) {
-  return types(name, true);
+function onUpdate(name, fileName) {
+  types(name, fileName);
 }
 
 (async function () {
@@ -51,7 +51,7 @@ function onUpdate(name) {
       async (name) => {
         console.log(`INFO [${name}] started`);
         if (!(await build(name, ver, argv.watch, onUpdate))) return;
-        if (!argv.watch && !argv.notypes) await types(name, false);
+        if (!argv.notypes) await types(name);
         if (argv.publish) await publish(name, ver);
         if (argv.link) await link(name);
         return name;

@@ -58,6 +58,10 @@ export default async function build(name, version, watch, onUpdate) {
   if (watch) {
     let signalInitialBuild = null;
 
+    out.on('change', (fileName) => {
+      if (onUpdate) onUpdate(name, fileName);
+    });
+
     out.on('event', async (e) => {
       if (e.code !== 'BUNDLE_END') return;
 
@@ -69,12 +73,6 @@ export default async function build(name, version, watch, onUpdate) {
         importsUpdated = false;
         await writePackageJson(imports);
       }
-
-      // We await this to ensure that we signal the initial build
-      // only after Typescript definitions are generated. This is
-      // required to limit the concurrent processes to the number
-      // of CPU cores.
-      if (onUpdate) await onUpdate(name);
 
       if (signalInitialBuild) {
         signalInitialBuild();
