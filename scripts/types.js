@@ -10,6 +10,8 @@ export default function types(name, fileName) {
       workerPool.pop() || new Worker(root('scripts', 'tscworker.js'));
 
     const res = () => {
+      worker.off('error', reject);
+      worker.off('end', reject);
       resolve();
       workerPool.push(worker);
     };

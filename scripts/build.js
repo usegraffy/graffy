@@ -69,7 +69,7 @@ export default async function build(name, version, watch, onUpdate) {
         `INFO [${name}] updated${importsUpdated ? ' (new imports)' : ''}`,
       );
 
-      if (importsUpdated) {
+      if (importsUpdated || signalInitialBuild) {
         importsUpdated = false;
         await writePackageJson(imports);
       }
