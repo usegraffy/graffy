@@ -43,15 +43,18 @@ export default function Explore(options) {
   const [watching, setWatching] = useState(null);
   const store = useStore();
 
-  const onInputEnd = useCallback((event) => {
-    try {
-      setInput(evaluate(event.target.textContent));
-    } catch (e) {
-      setError(e.message);
-    }
-  });
+  const onInputEnd = useCallback(
+    (event) => {
+      try {
+        setInput(evaluate(event.target.textContent));
+      } catch (e) {
+        setError(e.message);
+      }
+    },
+    [setInput, setError],
+  );
 
-  const onInputStart = useCallback(() => setError(null));
+  const onInputStart = useCallback(() => setError(null), [setError]);
 
   const onReadClick = async () => {
     setWatching(false);

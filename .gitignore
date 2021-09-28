@@ -1,9 +1,7 @@
 node_modules
 coverage
 dist
-bundle.js
-bundle.mjs
-.next
+.tsbuildinfo
 
 # misc
 .DS_Store

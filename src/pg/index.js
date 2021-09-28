@@ -1,5 +1,9 @@
 import Db from './Db.js';
-
+/**
+ *
+ * @param {{table?: string, idCol?: string, verCol?: string, links?: object, connection?: any}} param0
+ * @returns
+ */
 export const pg =
   ({ table, idCol, verCol, links, connection }) =>
   (store) => {
