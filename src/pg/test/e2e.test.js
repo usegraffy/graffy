@@ -153,35 +153,57 @@ describe('pg_e2e', () => {
     exp5.$prev = null;
     expect(res5).toEqual(exp5);
 
-    // Sixth, get all users with names starting with "al" (case sensitive)
+    // Sixth, update Alan to Alain using email address
 
-    const res6 = await store.read(['users'], {
+    const res6 = await store.write(['users'], {
+      $key: { email: 'alan@acme.co' },
+      name: 'alain',
+    });
+
+    expect(res6).toEqual([
+      {
+        $key: { email: 'alan@acme.co' },
+        $ref: ['users', id2],
+      },
+      {
+        $key: id2,
+        id: id2,
+        name: 'alain',
+        email: 'alan@acme.co',
+        settings: null,
+        version: expect.any(Number),
+      },
+    ]);
+
+    // Seventh, get all users with names starting with "al" (case sensitive)
+
+    const res7 = await store.read(['users'], {
       $key: { $first: 10, name: { $re: '^al' }, $order: ['name', 'id'] },
       id: true,
       name: true,
       email: true,
     });
 
-    const exp6 = [
+    const exp7 = [
       {
         $key: {
-          $cursor: ['alan', id2],
+          $cursor: ['alain', id2],
           name: { $re: '^al' },
           $order: ['name', 'id'],
         },
         $ref: ['users', id2],
         id: id2,
-        name: 'alan',
+        name: 'alain',
         email: 'alan@acme.co',
       },
     ];
-    exp6.$page = {
+    exp7.$page = {
       $all: true,
       name: { $re: '^al' },
       $order: ['name', 'id'],
     };
-    exp6.$next = null;
-    exp6.$prev = null;
-    expect(res6).toEqual(exp6);
+    exp7.$next = null;
+    exp7.$prev = null;
+    expect(res7).toEqual(exp7);
   });
 });

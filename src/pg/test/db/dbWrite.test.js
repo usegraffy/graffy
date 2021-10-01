@@ -73,7 +73,7 @@ describe('postgres', () => {
       UPDATE "user" SET
         "name" = ${data.name},
         "updatedAt" = ${nowTimestamp}
-      WHERE "id" = ${id} LIMIT 1
+      WHERE "id" = ${id}
       RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
     `;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
