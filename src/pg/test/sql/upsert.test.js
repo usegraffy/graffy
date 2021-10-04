@@ -21,14 +21,17 @@ describe('byId', () => {
           type: 'post',
           name: 'hello',
           email: 'world',
+          config: { foo: 3 },
         },
         'post22',
         options,
       ),
-      sql`INSERT INTO "post" ("id", "type", "name", "email", "version")
-      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},  ${nowTimestamp})
-      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "version")
-        = (${'post22'}, ${'post'}, ${'hello'},${'world'},  ${nowTimestamp})
+      sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "version")
+      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, ${{ foo: 3 }},
+      ${nowTimestamp})
+      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "version")
+        = (${'post22'}, ${'post'}, ${'hello'},${'world'}, ${{ foo: 3 }},
+        ${nowTimestamp})
       RETURNING (to_jsonb("post") ||
         jsonb_build_object('$key', "id", '$ver',  ${nowTimestamp}))
     `,
@@ -43,6 +46,7 @@ describe('byId', () => {
           type: 'post',
           name: 'hello',
           email: 'world',
+          config: { foo: 3 },
         },
         'post22',
         options,
@@ -51,6 +55,7 @@ describe('byId', () => {
         "type" = ${'post'},
         "name" = ${'hello'},
         "email" = ${'world'},
+        "config" = "config" || ${{ foo: 3 }},
         "version" =  ${nowTimestamp}
       WHERE "id" = ${'post22'}
       RETURNING (to_jsonb("post") ||

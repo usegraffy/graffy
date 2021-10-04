@@ -42,13 +42,13 @@ describe('pg_e2e', () => {
     // First, upsert Alice user (it should do an insert)
     const res1 = await store.write(['users', { email: 'alice@acme.co' }], {
       name: 'Alice',
+      settings: { foo: 10 },
       $put: true,
     });
 
     expect(res1).toEqual({
       $key: { email: 'alice@acme.co' },
       $ref: ['users', expect.any(String)],
-      // name: 'Alice', // TODO: Fix the returning clause
     });
 
     const id1 = res1.$ref[1];
@@ -61,6 +61,7 @@ describe('pg_e2e', () => {
       id: true,
       name: true,
       email: true,
+      settings: { foo: true },
     });
 
     const exp2 = [
@@ -70,6 +71,7 @@ describe('pg_e2e', () => {
         id: id1,
         name: 'Alice',
         email: 'alice@acme.co',
+        settings: { foo: 10 },
       },
     ];
     exp2.$page = { $all: true, email: { $not: null } };
@@ -80,6 +82,7 @@ describe('pg_e2e', () => {
     // Third, upsert the same name person again with the name `Alice example`.
     const res3 = await store.write(['users', { email: 'alice@acme.co' }], {
       name: 'Alicia',
+      settings: { bar: 5 },
       $put: true,
     });
 
@@ -99,6 +102,7 @@ describe('pg_e2e', () => {
     const res4 = await store.write(['users', id2], {
       name: 'alan',
       email: 'alan@acme.co',
+      settings: { bar: 3 },
       $put: true,
     });
 
@@ -106,7 +110,7 @@ describe('pg_e2e', () => {
       id: id2,
       name: 'alan',
       email: 'alan@acme.co',
-      settings: null,
+      settings: { bar: 3, $put: true },
       version: expect.any(Number),
     });
 
@@ -118,6 +122,7 @@ describe('pg_e2e', () => {
       id: true,
       name: true,
       email: true,
+      settings: { foo: true, bar: true },
     });
 
     const exp5 = [
@@ -131,6 +136,7 @@ describe('pg_e2e', () => {
         id: id1,
         name: 'Alicia',
         email: 'alice@acme.co',
+        settings: { foo: null, bar: 5 },
       },
       {
         $key: {
@@ -142,6 +148,7 @@ describe('pg_e2e', () => {
         id: id2,
         name: 'alan',
         email: 'alan@acme.co',
+        settings: { foo: null, bar: 3 },
       },
     ];
     exp5.$page = {
@@ -158,6 +165,7 @@ describe('pg_e2e', () => {
     const res6 = await store.write(['users'], {
       $key: { email: 'alan@acme.co' },
       name: 'alain',
+      settings: { foo: 7 },
     });
 
     expect(res6).toEqual([
@@ -170,7 +178,7 @@ describe('pg_e2e', () => {
         id: id2,
         name: 'alain',
         email: 'alan@acme.co',
-        settings: null,
+        settings: { $put: true, foo: 7, bar: 3 },
         version: expect.any(Number),
       },
     ]);
