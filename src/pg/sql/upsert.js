@@ -15,8 +15,13 @@ export function patch(object, arg, options) {
 
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
-    WHERE ${join(where, ` AND `)}
-    LIMIT 1
+    WHERE ${
+      isPlainObject(arg)
+        ? sql`"${raw(idCol)}" = (
+            SELECT "${raw(idCol)}" FROM "${raw(table)}"
+            WHERE ${join(where, ` AND `)} LIMIT 1)`
+        : join(where, ` AND `)
+    }
     RETURNING (${getSelectCols(table)} || ${meta})`;
 }
 
