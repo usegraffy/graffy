@@ -1,15 +1,25 @@
-import sql, { raw, join, empty } from 'sql-template-tag';
+import sql, { Sql, raw, join, empty } from 'sql-template-tag';
 import { isEmpty } from '@graffy/common';
 
 export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
 
+/*
+  Important: This function assumes that the object's keys are from
+  trusted sources.
+*/
 export const getJsonBuildObject = (variadic) => {
   const args = join(
     Object.entries(variadic).map(([name, value]) => {
-      return sql`'${raw(name)}', ${value}`;
+      return sql`'${raw(name)}', ${getJsonBuildValue(value)}`;
     }),
   );
   return sql`jsonb_build_object(${args})`;
+};
+
+const getJsonBuildValue = (value) => {
+  if (value instanceof Sql) return value;
+  if (typeof value === 'string') return sql`${value}::text`;
+  return sql`${value}::jsonb`;
 };
 
 export const getSelectCols = (table) => {
@@ -56,14 +66,15 @@ function getJsonUpdate({ $put, ...object }, col, path) {
 
   return sql`(case jsonb_typeof(${curr})
     when 'object' then ${curr}
-    else '{}'::jsonb) ||
-  jsonb_build_object(${join(
+    else '{}'::jsonb
+  end) || jsonb_build_object(${join(
     Object.entries(object).map(
       ([key, value]) =>
-        sql`${key}, ${
+        /* Note: here we do not trust object keys */
+        sql`${key}::text, ${
           typeof value === 'object' && value
             ? getJsonUpdate(value, col, path.concat(key))
-            : value
+            : sql`${getJsonBuildValue(value)}`
         }`,
     ),
     ', ',

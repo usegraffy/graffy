@@ -79,7 +79,7 @@ describe('pg_e2e', () => {
     exp2.$prev = null;
     expect(res2).toEqual(exp2);
 
-    // Third, upsert the same name person again with the name `Alice example`.
+    // Third, upsert the same person again.
     const res3 = await store.write(['users', { email: 'alice@acme.co' }], {
       name: 'Alicia',
       settings: { bar: 5 },
@@ -102,7 +102,7 @@ describe('pg_e2e', () => {
     const res4 = await store.write(['users', id2], {
       name: 'alan',
       email: 'alan@acme.co',
-      settings: { bar: 3 },
+      settings: { bar: 3, baz: { x: 4, y: 5 } },
       $put: true,
     });
 
@@ -110,7 +110,7 @@ describe('pg_e2e', () => {
       id: id2,
       name: 'alan',
       email: 'alan@acme.co',
-      settings: { bar: 3, $put: true },
+      settings: { bar: 3, baz: { x: 4, y: 5, $put: true }, $put: true },
       version: expect.any(Number),
     });
 
@@ -122,7 +122,7 @@ describe('pg_e2e', () => {
       id: true,
       name: true,
       email: true,
-      settings: { foo: true, bar: true },
+      settings: { foo: true, bar: true, baz: { x: true, y: true } },
     });
 
     const exp5 = [
@@ -136,7 +136,7 @@ describe('pg_e2e', () => {
         id: id1,
         name: 'Alicia',
         email: 'alice@acme.co',
-        settings: { foo: null, bar: 5 },
+        settings: { foo: null, bar: 5, baz: { x: null, y: null } },
       },
       {
         $key: {
@@ -148,7 +148,7 @@ describe('pg_e2e', () => {
         id: id2,
         name: 'alan',
         email: 'alan@acme.co',
-        settings: { foo: null, bar: 3 },
+        settings: { foo: null, bar: 3, baz: { x: 4, y: 5 } },
       },
     ];
     exp5.$page = {
@@ -165,7 +165,7 @@ describe('pg_e2e', () => {
     const res6 = await store.write(['users'], {
       $key: { email: 'alan@acme.co' },
       name: 'alain',
-      settings: { foo: 7 },
+      settings: { foo: 7, baz: { x: null, y: 8 } },
     });
 
     expect(res6).toEqual([
@@ -178,7 +178,12 @@ describe('pg_e2e', () => {
         id: id2,
         name: 'alain',
         email: 'alan@acme.co',
-        settings: { $put: true, foo: 7, bar: 3 },
+        settings: {
+          $put: true,
+          foo: 7,
+          bar: 3,
+          baz: { x: null, y: 8, $put: true },
+        },
         version: expect.any(Number),
       },
     ]);
