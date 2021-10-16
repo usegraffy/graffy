@@ -1,4 +1,5 @@
-import sql, { raw, join } from 'sql-template-tag';
+import sql, { raw, join, empty } from 'sql-template-tag';
+import { isEmpty } from '@graffy/common';
 
 export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
 
@@ -38,7 +39,7 @@ export const getUpdates = (row, options) => {
       .map(([name, value]) => {
         return sql`"${raw(name)}" = ${
           typeof value === 'object' && value
-            ? sql`"${raw(name)}" || ${value}`
+            ? getJsonUpdate(value, name, [])
             : value
         }`;
       })
@@ -46,3 +47,25 @@ export const getUpdates = (row, options) => {
     ', ',
   );
 };
+
+function getJsonUpdate({ $put, ...object }, col, path) {
+  if ($put) return object;
+
+  const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
+  if (isEmpty(object)) return curr;
+
+  return sql`(case jsonb_typeof(${curr})
+    when 'object' then ${curr}
+    else '{}'::jsonb) ||
+  jsonb_build_object(${join(
+    Object.entries(object).map(
+      ([key, value]) =>
+        sql`${key}, ${
+          typeof value === 'object' && value
+            ? getJsonUpdate(value, col, path.concat(key))
+            : value
+        }`,
+    ),
+    ', ',
+  )})`;
+}
