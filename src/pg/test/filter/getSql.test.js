@@ -51,7 +51,7 @@ test('logic_inversion', () => {
 
 test('any_ovl', () => {
   expect(getSql({ tags: { $any: 'foo' } }, lookup)).toEqual(
-    sql`"tags" @@ ${['foo']}`,
+    sql`"tags" ?| ${['foo']}`,
   );
 });
 
@@ -85,6 +85,18 @@ test('all', () => {
   expect(getSql({ tags: { $all: { $gte: 'm' } } }, lookup)).toEqual(
     sql`(SELECT bool_and("el$0" >= ${'m'}) FROM UNNEST("tags") "el$0")`,
   );
+});
+
+test('cts', () => {
+  expect(
+    getSql({ emails: { $cts: { 'foo@bar.com': ['work'] } } }, lookup),
+  ).toEqual(sql`"emails" @> ${{ 'foo@bar.com': ['work'] }}`);
+});
+
+test('ctd', () => {
+  expect(
+    getSql({ emails: { $ctd: { 'foo@bar.com': ['work'] } } }, lookup),
+  ).toEqual(sql`"emails" <@ ${{ 'foo@bar.com': ['work'] }}`);
 });
 
 /*

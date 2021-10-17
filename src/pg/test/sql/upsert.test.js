@@ -55,7 +55,8 @@ describe('byId', () => {
         "type" = ${'post'},
         "name" = ${'hello'},
         "email" = ${'world'},
-        "config" = "config" || ${{ foo: 3 }},
+        "config" = jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
+          jsonb_build_object ( ${'foo'}::text , ${3}::jsonb)),
         "version" =  ${nowTimestamp}
       WHERE "id" = ${'post22'}
       RETURNING (to_jsonb("post") ||

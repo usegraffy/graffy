@@ -19,7 +19,7 @@ export const getJsonBuildObject = (variadic) => {
 const getJsonBuildValue = (value) => {
   if (value instanceof Sql) return value;
   if (typeof value === 'string') return sql`${value}::text`;
-  return sql`${value}::jsonb`;
+  return sql`${stripAttributes(value)}::jsonb`;
 };
 
 export const getSelectCols = (table) => {
@@ -48,9 +48,9 @@ export const getUpdates = (row, options) => {
       .filter(([name]) => name !== options.idCol && name[0] !== '$')
       .map(([name, value]) => {
         return sql`"${raw(name)}" = ${
-          typeof value === 'object' && value
-            ? getJsonUpdate(value, name, [])
-            : value
+          typeof value === 'object' && value && !value.$put
+            ? sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`
+            : stripAttributes(value)
         }`;
       })
       .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
@@ -79,4 +79,12 @@ function getJsonUpdate({ $put, ...object }, col, path) {
     ),
     ', ',
   )})`;
+}
+
+function stripAttributes(object) {
+  if (typeof object !== 'object' || !object || Array.isArray(object)) {
+    return object;
+  }
+  const { $put, ...rest } = object;
+  return rest;
 }

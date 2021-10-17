@@ -29,8 +29,8 @@ describe('slice', () => {
     });
   });
 
-  test('leaf_branch_mismatch', () => {
-    expect(() =>
+  test('gbranch_qleaf', () => {
+    expect(
       slice(
         [
           {
@@ -42,9 +42,51 @@ describe('slice', () => {
           },
         ],
         [{ key: 'bar', value: 1, version: 2 }],
-      ),
-    ).toThrow();
+      ).known,
+    ).toEqual([
+      {
+        key: 'bar',
+        children: [
+          { key: 'foo', value: 42, version: 3 },
+          { key: 'fuz', value: 43, version: 3 },
+        ],
+      },
+    ]);
   });
+});
+
+test('gleaf_qbranch', () => {
+  expect(
+    slice(
+      [
+        {
+          key: 'bar',
+          version: 3,
+          value: 'abc',
+        },
+      ],
+      [
+        {
+          key: 'bar',
+          value: 1,
+          children: [
+            { key: 'foo', value: 42, version: 2 },
+            { key: 'fuz', value: 43, version: 2 },
+          ],
+          version: 2,
+        },
+      ],
+    ).known,
+  ).toEqual([
+    {
+      key: 'bar',
+      version: 3,
+      children: [
+        { key: 'foo', end: 'foo', version: 3 },
+        { key: 'fuz', end: 'fuz', version: 3 },
+      ],
+    },
+  ]);
 });
 
 describe('range', () => {

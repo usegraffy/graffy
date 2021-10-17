@@ -182,7 +182,7 @@ describe('pg_e2e', () => {
           $put: true,
           foo: 7,
           bar: 3,
-          baz: { x: null, y: 8, $put: true },
+          baz: { y: 8, $put: true },
         },
         version: expect.any(Number),
       },
@@ -218,5 +218,149 @@ describe('pg_e2e', () => {
     exp7.$next = null;
     exp7.$prev = null;
     expect(res7).toEqual(exp7);
+  });
+
+  test('json_queries', async () => {
+    await store.write('users', [
+      {
+        $key: uuid(),
+        $put: true,
+        name: 'A',
+        email: 'a',
+        settings: { foo: [1, 2, 3] },
+      },
+      {
+        $key: uuid(),
+        $put: true,
+        name: 'B',
+        email: 'b',
+        settings: { foo: [3], bar: [4] },
+      },
+      {
+        $key: uuid(),
+        $put: true,
+        name: 'C',
+        email: 'c',
+        settings: { bar: [5, 6] },
+      },
+      { $key: uuid(), $put: true, name: 'D', email: 'd' },
+    ]);
+
+    const putArr = (arr) => {
+      arr.$put = true;
+      return arr;
+    };
+
+    // Verify all items
+
+    const res1 = await store.read(['users'], {
+      $key: { $order: ['email'], $all: true },
+      name: true,
+      email: true,
+      settings: true,
+    });
+    const exp1 = [
+      {
+        $key: { $order: ['email'], $cursor: ['a'] },
+        $ref: expect.any(Array),
+        name: 'A',
+        email: 'a',
+        settings: { $put: true, foo: putArr([1, 2, 3]) },
+      },
+      {
+        $key: { $order: ['email'], $cursor: ['b'] },
+        $ref: expect.any(Array),
+        name: 'B',
+        email: 'b',
+        settings: { $put: true, foo: putArr([3]), bar: putArr([4]) },
+      },
+      {
+        $key: { $order: ['email'], $cursor: ['c'] },
+        $ref: expect.any(Array),
+        name: 'C',
+        email: 'c',
+        settings: { $put: true, bar: putArr([5, 6]) },
+      },
+      {
+        $key: { $order: ['email'], $cursor: ['d'] },
+        $ref: expect.any(Array),
+        name: 'D',
+        email: 'd',
+        settings: null,
+      },
+    ];
+
+    exp1.$page = { $all: true, $order: ['email'] };
+    exp1.$next = null;
+    exp1.$prev = null;
+
+    expect(res1).toEqual(exp1);
+
+    // 2. Anything in array
+
+    const res2 = await store.read('users', {
+      $key: { settings: { $cts: { foo: [] } }, $order: ['email'], $all: true },
+      email: true,
+    });
+
+    const exp2 = [
+      {
+        $key: {
+          settings: { $cts: { foo: [] } },
+          $order: ['email'],
+          $cursor: [expect.any(String)],
+        },
+        $ref: expect.any(Array),
+        email: 'a',
+      },
+      {
+        $key: {
+          settings: { $cts: { foo: [] } },
+          $order: ['email'],
+          $cursor: [expect.any(String)],
+        },
+        $ref: expect.any(Array),
+        email: 'b',
+      },
+    ];
+
+    exp2.$page = {
+      settings: { $cts: { foo: [] } },
+      $order: ['email'],
+      $all: true,
+    };
+    exp2.$next = null;
+    exp2.$prev = null;
+
+    expect(res2).toEqual(exp2);
+
+    // 3. Specific value in array
+
+    const res3 = await store.read('users', {
+      $key: { settings: { $cts: { bar: [4] } }, $order: ['email'], $all: true },
+      email: true,
+    });
+
+    const exp3 = [
+      {
+        $key: {
+          settings: { $cts: { bar: [4] } },
+          $order: ['email'],
+          $cursor: [expect.any(String)],
+        },
+        $ref: expect.any(Array),
+        email: 'b',
+      },
+    ];
+
+    exp3.$page = {
+      settings: { $cts: { bar: [4] } },
+      $order: ['email'],
+      $all: true,
+    };
+    exp3.$next = null;
+    exp3.$prev = null;
+
+    expect(res3).toEqual(exp3);
   });
 });

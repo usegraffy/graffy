@@ -12,6 +12,9 @@ const valid = {
   $any: true,
   $all: true,
   $has: true,
+  $cts: true,
+  $ctd: true,
+  $ovl: true,
 };
 
 const inverse = {
@@ -38,7 +41,7 @@ export default function getAst(filter) {
 
 let counter;
 function construct(node, prop, op) {
-  if (!node || typeof node !== 'object') {
+  if (!node || typeof node !== 'object' || (prop && op)) {
     if (op && prop) return [op, prop, node];
     if (prop) return ['$eq', prop, node];
     throw Error('pgast.expected_prop_before:' + JSON.stringify(node));
@@ -72,7 +75,7 @@ function construct(node, prop, op) {
       }
       if (prop) {
         if (key[0] === '.') return construct(val, prop + key);
-        throw Error('pgast.unexpected_prop', key);
+        throw Error('pgast.unexpected_prop: ' + key);
       }
       return construct(val, key);
     }),
