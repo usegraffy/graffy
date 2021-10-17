@@ -23,7 +23,7 @@ export default function getArgSql(
   const lookup = (prop) => {
     const [prefix, ...suffix] = encodePath(prop);
     return suffix.length
-      ? sql`"${raw(prefix)}" #>> '{"${suffix.join('","')}"}'`
+      ? sql`"${raw(prefix)}" #> '{"${suffix.join('","')}"}'`
       : sql`"${raw(prefix)}"`;
   };
 

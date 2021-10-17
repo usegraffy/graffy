@@ -11,8 +11,6 @@ import { wrap } from './path.js';
 import merge from './merge.js';
 import add from './add.js';
 
-import { format } from '@graffy/testing';
-
 class Result {
   constructor(root) {
     // When linked queries are added, they are forwarded to the root.
@@ -46,7 +44,7 @@ export default function slice(graph, query, root) {
         sliceRange(graph, queryNode, result);
       } else {
         const key = queryNode.key;
-        index = findFirst(graph, key, index);
+        index = findFirst(graph, key);
         // console.log('Index', graph, key, index);
         sliceNode(graph[index], queryNode, result);
       }
@@ -98,17 +96,16 @@ function sliceNode(graph, query, result) {
         ),
       );
     }
-  } else if (isBranch(graph) && query.options && query.options.subtree) {
-    // This option allows a query to say "give me the subtree under this"
-    // without knowing specifically what's available. If using this, the
-    // value of "unknown" is no longer reliable. It is intended for use in
-    // optimistic updates.
+  } else if (isBranch(graph)) {
+    // The graph is a branch and query is requesting all children here.
     result.addKnown(graph);
-  } else if (isBranch(graph) || isBranch(query)) {
-    // One side is a branch while the other is a leaf; throw error.
-    throw new Error(
-      'slice.leaf_branch_mismatch:' + format(graph) + '\n' + format(query),
+  } else if (isBranch(query)) {
+    // One graph is a leaf while the query is a leaf; return null.
+    const { known } = slice(
+      [{ key: '', end: '\uffff', version: graph.version }],
+      query.children,
     );
+    result.addKnown({ key, version: graph.version, children: known });
   } else {
     result.addKnown(graph);
   }

@@ -1,7 +1,15 @@
 import sql, { join, raw } from 'sql-template-tag';
 import getAst from './getAst.js';
 
-export default function getSql(filter, getLookupSql) {
+function defaultColumnType() {
+  return 'jsonb';
+}
+
+export default function getSql(
+  filter,
+  getLookupSql,
+  getColumnType = defaultColumnType,
+) {
   function lhs(string) {
     if (string.substr(0, 3) === 'el$') return sql`"${raw(string)}"`;
     return getLookupSql(string);
@@ -39,7 +47,16 @@ export default function getSql(filter, getLookupSql) {
       case '$ctd':
         return sql`${lhs(ast[1])} <@ ${ast[2]}`;
       case '$ovl':
-        return sql`${lhs(ast[1])} @@ ${ast[2]}`;
+        switch (getColumnType(ast[1])) {
+          case 'jsonb':
+            return sql`${lhs(ast[1])} ?| ${
+              Array.isArray(ast[2]) ? ast[2] : Object.keys(ast[2])
+            }`;
+          case 'array':
+            return sql`${lhs(ast[1])} && ${ast[2]}`;
+          default:
+            throw Error('pg.getSql_ovl_unknown_column_type');
+        }
       case '$and':
         return sql`(${join(
           ast[1].map((node) => getNodeSql(node)),

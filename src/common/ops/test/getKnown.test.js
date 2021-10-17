@@ -18,14 +18,8 @@ test('getKnown', () => {
       key: 'foo',
       children: [
         { key: 'bar', value: 1, version: 0 },
-        {
-          key: 'bat',
-          end: 'baw',
-          value: 1,
-          version: 0,
-          options: { subtree: true },
-        },
-        { key: 'baz', value: 1, version: 0, options: { subtree: true } },
+        { key: 'bat', end: 'baw', value: 1, version: 0 },
+        { key: 'baz', value: 1, version: 0 },
       ],
       version: 0,
     },

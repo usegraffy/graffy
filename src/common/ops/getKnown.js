@@ -9,7 +9,7 @@ export default function getKnown(graph, version = 0) {
     const node = { key, version };
     if (end) {
       if (end !== key) node.end = end;
-      node.options = { subtree: true };
+      node.value = 1;
     }
     if (children) {
       node.children = getKnown(children);

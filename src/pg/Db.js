@@ -39,9 +39,17 @@ export default class Db {
     try {
       return await this.client.query(sql);
     } catch (e) {
-      throw Error(
-        'pg.sql_error ' + e.message + ' in ' + sql.text + ' with ' + sql.values,
-      );
+      const message = [
+        e.message,
+        e.detail,
+        e.hint,
+        e.where,
+        sql.text,
+        JSON.stringify(sql.values),
+      ]
+        .filter(Boolean)
+        .join('; ');
+      throw Error('pg.sql_error ' + message);
     }
   }
 

@@ -31,7 +31,7 @@ describe('clauses', () => {
     const query = getJsonBuildObject(data);
     expectSql(
       query,
-      sql`jsonb_build_object('a', ${data.a}, 'b', ${data.b}, 'version', ${nowTimestamp})`,
+      sql`jsonb_build_object('a', ${data.a}::jsonb, 'b', ${data.b}::jsonb, 'version', ${nowTimestamp})`,
     );
   });
 
