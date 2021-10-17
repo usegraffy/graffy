@@ -44,7 +44,7 @@ export default function slice(graph, query, root) {
         sliceRange(graph, queryNode, result);
       } else {
         const key = queryNode.key;
-        index = findFirst(graph, key, index);
+        index = findFirst(graph, key);
         // console.log('Index', graph, key, index);
         sliceNode(graph[index], queryNode, result);
       }
