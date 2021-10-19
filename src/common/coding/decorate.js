@@ -1,5 +1,9 @@
 import { decodeGraph } from './decodeTree.js';
-import { encode as encodePath, splitRef } from './path.js';
+import {
+  encode as encodePath,
+  decode as decodePath,
+  splitRef,
+} from './path.js';
 import {
   splitArgs,
   encode as encodeArgs,
@@ -95,7 +99,7 @@ export default function decorate(rootGraph, rootQuery) {
       }
     }
 
-    if (plumGraph[REF]) graph.$ref = plumGraph[REF];
+    if (plumGraph[REF]) graph.$ref = decodePath(plumGraph[REF]);
     return graph;
   }
 
