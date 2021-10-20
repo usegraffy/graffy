@@ -41,7 +41,7 @@ export function encode(arg) {
   if (!isPlainObject(arg)) return { key: maybeEncode(arg) };
 
   const [page, filter] = splitArgs(arg);
-  errIf('page_and_filter', page && filter);
+  errIf('page_and_filter', page && filter, arg);
 
   if (!page) return { key: maybeEncode(filter || {}) };
 
@@ -49,12 +49,12 @@ export function encode(arg) {
   const { $first, $all, $last, $after, $before, $since, $until } = range;
   const hasRange = !isEmpty(range);
 
-  errIf('first_and_last', isDef($first) && isDef($last));
-  errIf('all_and_last', isDef($all) && isDef($last));
-  errIf('all_and_first', isDef($first) && isDef($all));
-  errIf('after_and_since', isDef($after) && isDef($since));
-  errIf('before_and_until', isDef($before) && isDef($until));
-  errIf('cursor_and_range_arg', isDef($cursor) && hasRange);
+  errIf('first_and_last', isDef($first) && isDef($last), arg);
+  errIf('all_and_last', isDef($all) && isDef($last), arg);
+  errIf('all_and_first', isDef($first) && isDef($all), arg);
+  errIf('after_and_since', isDef($after) && isDef($since), arg);
+  errIf('before_and_until', isDef($before) && isDef($until), arg);
+  errIf('cursor_and_range_arg', isDef($cursor) && hasRange, arg);
 
   let [key, end] = hasRange ? ['', '\uffff'] : [];
 
