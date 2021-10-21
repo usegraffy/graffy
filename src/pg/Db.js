@@ -1,6 +1,5 @@
 import { Pool, Client } from 'pg';
 import {
-  add,
   isPlainObject,
   decodeArgs,
   unwrap,
@@ -14,7 +13,6 @@ import {
   decodeGraph,
   mergeObject,
 } from '@graffy/common';
-import { linkResult } from './link/index.js';
 import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch } from './sql/index.js';
 import debug from 'debug';
@@ -74,12 +72,10 @@ export default class Db {
     const idQueries = {};
     const promises = [];
     const results = [];
-    const refQuery = [];
-    const { idCol, prefix } = tableOptions;
+    const { prefix } = tableOptions;
 
-    const getByArgs = async (args, subQuery) => {
+    const getByArgs = async (args) => {
       const result = await this.readSql(selectByArgs(args, tableOptions));
-      add(refQuery, linkResult(result, subQuery, tableOptions));
       const wrappedGraph = encodeGraph(wrapObject(result, prefix));
       log('getByArgs', wrappedGraph);
       merge(results, wrappedGraph);
@@ -90,9 +86,6 @@ export default class Db {
         selectByIds(Object.keys(idQueries), tableOptions),
       );
       result.forEach((object) => {
-        const id = object[idCol];
-        const subQuery = idQueries[id];
-        add(refQuery, linkResult([object], subQuery, tableOptions));
         const wrappedGraph = encodeGraph(wrapObject(object, prefix));
         log('getByIds', wrappedGraph);
         merge(results, wrappedGraph);
@@ -106,12 +99,10 @@ export default class Db {
         if (node.prefix) {
           for (const childNode of node.children) {
             const childArgs = decodeArgs(childNode);
-            promises.push(
-              getByArgs({ ...args, ...childArgs }, childNode.children),
-            );
+            promises.push(getByArgs({ ...args, ...childArgs }));
           }
         } else {
-          promises.push(getByArgs(args, node.children));
+          promises.push(getByArgs(args));
         }
       } else {
         idQueries[node.key] = node.children;

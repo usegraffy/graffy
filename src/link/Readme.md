@@ -1,5 +1,5 @@
-# Graffy Cache
+# Graffy Link
 
-Graffy module providing in-memory caching.
+Graffy module for constructing links using an intuitive, declarative notation.
 
 See [Graffy documentation](https://aravindet.github.io/graffy/) for more.
