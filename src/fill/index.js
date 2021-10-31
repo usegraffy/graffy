@@ -1,6 +1,6 @@
 import { merge, slice } from '@graffy/common';
 import subscribe from './subscribe.js';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 import debug from 'debug';
 
 const log = debug('graffy:fill');
@@ -13,7 +13,7 @@ export default function fill(_) {
       let value = await next(query);
       if (options.skipFill) return value;
       if (!value || !value.length) {
-        log('No progress', format(query));
+        log('No progress', query);
         throw Error('fill.no_progress');
         // return null;
       }
@@ -32,7 +32,7 @@ export default function fill(_) {
       }
 
       if (!budget) {
-        log('fill.max_recursion', format(value), format(query));
+        log('fill.max_recursion', value, query);
         throw new Error('fill.max_recursion');
       }
       // console.log('Read', debug(query), 'returned', debug(value));

@@ -59,7 +59,7 @@ export const getUpdates = (row, options) => {
 };
 
 function getJsonUpdate({ $put, ...object }, col, path) {
-  if ($put) return object;
+  if ($put) return JSON.stringify(object);
 
   const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
   if (isEmpty(object)) return curr;
@@ -72,7 +72,7 @@ function getJsonUpdate({ $put, ...object }, col, path) {
       ([key, value]) =>
         /* Note: here we do not trust object keys */
         sql`${key}::text, ${
-          typeof value === 'object' && value
+          typeof value === 'object' && value && !Array.isArray(value)
             ? getJsonUpdate(value, col, path.concat(key))
             : sql`${getJsonBuildValue(value)}`
         }`,
@@ -82,9 +82,16 @@ function getJsonUpdate({ $put, ...object }, col, path) {
 }
 
 function stripAttributes(object) {
-  if (typeof object !== 'object' || !object || Array.isArray(object)) {
-    return object;
+  if (typeof object !== 'object' || !object) return object;
+  if (Array.isArray(object)) {
+    return JSON.stringify(object.map((item) => stripAttributes(item)));
   }
-  const { $put, ...rest } = object;
-  return rest;
+
+  return JSON.stringify(
+    Object.entries(object).reduce((out, [key, val]) => {
+      if (key === $put) return out;
+      out[key] = stripAttributes(val);
+      return out;
+    }, {}),
+  );
 }

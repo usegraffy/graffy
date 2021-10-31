@@ -71,7 +71,7 @@ export function remove(children, path) {
 
   // Recurse into the next slice.
   const filteredChildren = remove(node.children, path.slice(1));
-  if (filteredChildren === path.children) return children;
+  if (filteredChildren === children) return children;
   const filteredNode = filteredChildren.length
     ? { ...node, children: filteredChildren }
     : [];

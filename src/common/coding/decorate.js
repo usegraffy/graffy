@@ -76,7 +76,7 @@ export default function decorate(rootGraph, rootQuery) {
       });
       // .filter(Boolean);
 
-      addPageMeta(graph, pageKey);
+      if (pageKey) addPageMeta(graph, pageKey);
     } else if (typeof query === 'object') {
       graph = {};
       for (const prop in query) {

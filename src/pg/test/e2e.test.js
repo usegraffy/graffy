@@ -125,6 +125,8 @@ describe('pg_e2e', () => {
       settings: { foo: true, bar: true, baz: { x: true, y: true } },
     });
 
+    console.log(res5);
+
     const exp5 = [
       {
         $key: {

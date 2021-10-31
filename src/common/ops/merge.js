@@ -3,6 +3,7 @@ import { keyAfter, keyBefore } from './step.js';
 
 export default function merge(current, changes) {
   let index = 0;
+  if (typeof changes === 'undefined') return current;
   for (const change of changes) {
     index = isRange(change)
       ? insertRange(current, change, index)
@@ -74,7 +75,8 @@ function insertNodeIntoRange(current, index, change) {
   ].filter(Boolean);
   current.splice(index, 1, ...insertions);
 
-  return index + insertions.length;
+  // Subtract 1 to keep the final range in consideration for future insertions.
+  return index + insertions.length - 1;
 }
 
 function updateNode(current, index, change) {

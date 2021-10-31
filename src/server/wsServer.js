@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { serialize, deserialize } from '@graffy/common';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 import debug from 'debug';
 
 const log = debug('graffy:server:ws');
@@ -30,7 +30,7 @@ export default function server(store) {
               const result = await store.call(op, payload, options);
               ws.send(serialize([id, null, result]));
             } catch (e) {
-              log(op + 'error:' + e.message + ' ' + format(payload));
+              log(op + 'error:' + e.message + ' ' + payload);
               ws.send(serialize([id, e.message]));
             }
             break;
@@ -47,7 +47,7 @@ export default function server(store) {
                 ws.send(serialize([id, null, value]));
               }
             } catch (e) {
-              log(op + 'error:' + e.message + ' ' + format(payload));
+              log(op + 'error:' + e.message + ' ' + payload);
               ws.send(serialize([id, e.message]));
             }
             break;

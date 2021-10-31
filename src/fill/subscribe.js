@@ -1,7 +1,7 @@
 import { merge, slice, sieve, add, finalize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 import debug from 'debug';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 const log = debug('graffy:fill:subscribe');
 
@@ -15,7 +15,7 @@ export default function subscribe(store, originalQuery, { raw }) {
 
   const stream = makeStream((streamPush, streamEnd) => {
     push = (v) => {
-      log('Push', format(v));
+      log('Push', v);
       streamPush(v);
     };
     end = streamEnd;
@@ -29,14 +29,14 @@ export default function subscribe(store, originalQuery, { raw }) {
   async function resubscribe(unknown) {
     try {
       const changed = add(query, unknown);
-      log(changed ? 'Resubscribing' : 'Not resubscribing', format(unknown));
+      log(changed ? 'Resubscribing' : 'Not resubscribing', unknown);
       if (!changed) return;
 
       if (upstream) upstream.return(); // Close the existing stream.
       upstream = store.call('watch', query, { skipFill: true });
 
       let { value } = await upstream.next();
-      log('First payload', typeof value, format(value));
+      log('First payload', typeof value, value);
 
       if (typeof value === 'undefined') {
         // The upstream is a change subscription, not a live query,
@@ -45,7 +45,7 @@ export default function subscribe(store, originalQuery, { raw }) {
         // TODO: Get a version corresponding to the subscription's start
         // and verify that the store.read response is newer.
         value = await store.call('read', unknown, { skipCache: true });
-        log('Read initial value', format(value));
+        log('Read initial value', value);
       }
       // value = value && slice(value, unknown).known;
       putValue(value, false);
@@ -82,7 +82,7 @@ export default function subscribe(store, originalQuery, { raw }) {
     // added to payload.
     // if (!isChange) merge(data, [{ key: '', end: '\uffff', version: -1 }]);
 
-    // log('Data before sieve', format(data));
+    // log('Data before sieve', (data));
 
     let sieved;
     if (isChange) {
@@ -91,12 +91,12 @@ export default function subscribe(store, originalQuery, { raw }) {
       sieved = slice(value, query).known;
       if (sieved) merge(data, sieved);
     }
-    log('Sieved: ', sieved && format(sieved));
+    log('Sieved: ', sieved && sieved);
 
     if (raw && sieved) {
-      // log('Payload before adding sieved', format(payload));
+      // log('Payload before adding sieved', (payload));
       merge(payload, sieved);
-      // log('Payload after adding sieved', format(payload));
+      // log('Payload after adding sieved', (payload));
     }
 
     // The new value might have removed a link, making parts of
@@ -106,8 +106,8 @@ export default function subscribe(store, originalQuery, { raw }) {
     let { known, unknown } = slice(data, originalQuery);
     data = known || empty();
 
-    log('Data and unknown', format(data), unknown && format(unknown));
-    log('Payload and value', format(payload), value && format(value));
+    log('Data and unknown', data, unknown && unknown);
+    log('Payload and value', payload, value && value);
 
     if (isChange && value && unknown) {
       // The sieve may have removed some necessary data (that we weren't aware

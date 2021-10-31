@@ -33,7 +33,7 @@ describe('byId', () => {
         = (${'post22'}, ${'post'}, ${'hello'},${'world'}, ${{ foo: 3 }},
         ${nowTimestamp})
       RETURNING (to_jsonb("post") ||
-        jsonb_build_object('$key', "id", '$ver',  ${nowTimestamp}))
+        jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
     `,
     );
   });

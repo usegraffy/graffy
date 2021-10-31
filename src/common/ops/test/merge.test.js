@@ -287,18 +287,82 @@ describe('addRange', () => {
   });
 });
 
-// test('fillEmpty', () => {
-//   const original = [{ key: '', end: '\uffff', version: 0 }];
-//   expect(
-//     merge(original, [
-//       {
-//         key: 'foo',
-//         children: [{ key: 'bar', value: 33, version: 0 }],
-//         version: 0,
-//       },
-//     ]),
-//   ).toEqual([{}]);
-// });
+test('fillEmpty', () => {
+  const original = [{ key: '', end: '\uffff', version: 0 }];
+  expect(
+    merge(original, [
+      {
+        key: 'foo',
+        children: [{ key: 'bar', value: 33, version: 0 }],
+        version: 0,
+      },
+    ]),
+  ).toEqual([
+    { key: '', end: 'fon\uffff', version: 0 },
+    {
+      key: 'foo',
+      children: [
+        { key: '', end: 'baq\uffff', version: 0 },
+        { key: 'bar', value: 33, version: 0 },
+        { key: 'bar\0', end: '\uffff', version: 0 },
+      ],
+      version: 0,
+    },
+    { key: 'foo\0', end: '\uffff', version: 0 },
+  ]);
+});
+
+test('prefixFill', () => {
+  const original = [{ key: '', end: '\uffff', version: 0 }];
+  expect(
+    merge(original, [
+      {
+        key: '\0abc',
+        children: [
+          {
+            key: '\0def',
+            path: ['foo'],
+            version: 0,
+          },
+        ],
+        version: 0,
+        prefix: true,
+      },
+      {
+        key: 'foo',
+        children: [{ key: 'bar', value: 33, version: 0 }],
+        version: 0,
+      },
+    ]),
+  ).toEqual([
+    { key: '', end: '\0abb\uffff', version: 0 },
+    {
+      key: '\0abc',
+      children: [
+        { key: '', end: '\0dee\uffff', version: 0 },
+        {
+          key: '\0def',
+          path: ['foo'],
+          version: 0,
+        },
+        { key: '\0def\0', end: '\uffff', version: 0 },
+      ],
+      version: 0,
+      prefix: true,
+    },
+    { key: '\0abc\0', end: 'fon\uffff', version: 0 },
+    {
+      key: 'foo',
+      children: [
+        { key: '', end: 'baq\uffff', version: 0 },
+        { key: 'bar', value: 33, version: 0 },
+        { key: 'bar\0', end: '\uffff', version: 0 },
+      ],
+      version: 0,
+    },
+    { key: 'foo\0', end: '\uffff', version: 0 },
+  ]);
+});
 
 // describe('errors', () => {
 //   test('versionCollisionError', () => {
