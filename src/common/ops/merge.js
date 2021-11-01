@@ -30,7 +30,7 @@ export function insertRange(current, change, start = 0) {
   }
 
   current.splice(keyIx, endIx - keyIx, ...insertions);
-  return keyIx + insertions.length;
+  return keyIx + insertions.length - 1;
 }
 
 function mergeRanges(base, node) {
