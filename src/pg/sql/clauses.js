@@ -19,7 +19,7 @@ export const getJsonBuildObject = (variadic) => {
 const getJsonBuildValue = (value) => {
   if (value instanceof Sql) return value;
   if (typeof value === 'string') return sql`${value}::text`;
-  return sql`${stripAttributes(value)}::jsonb`;
+  return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
 export const getSelectCols = (table) => {
@@ -36,7 +36,11 @@ export const getInsert = (row, options) => {
     .concat([[options.verCol, nowTimestamp]])
     .forEach(([col, val]) => {
       cols.push(sql`"${raw(col)}"`);
-      vals.push(val);
+      vals.push(
+        val instanceof Sql || typeof val !== 'object' || !val
+          ? val
+          : sql`${JSON.stringify(stripAttributes(val))}::jsonb`,
+      );
     });
 
   return { cols: join(cols, ', '), vals: join(vals, ', ') };
@@ -48,9 +52,11 @@ export const getUpdates = (row, options) => {
       .filter(([name]) => name !== options.idCol && name[0] !== '$')
       .map(([name, value]) => {
         return sql`"${raw(name)}" = ${
-          typeof value === 'object' && value && !value.$put
+          value instanceof Sql || typeof value !== 'object' || !value
+            ? value
+            : !value.$put
             ? sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`
-            : stripAttributes(value)
+            : sql`${JSON.stringify(stripAttributes(value))}::jsonb`
         }`;
       })
       .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
@@ -84,14 +90,12 @@ function getJsonUpdate({ $put, ...object }, col, path) {
 function stripAttributes(object) {
   if (typeof object !== 'object' || !object) return object;
   if (Array.isArray(object)) {
-    return JSON.stringify(object.map((item) => stripAttributes(item)));
+    return object.map((item) => stripAttributes(item));
   }
 
-  return JSON.stringify(
-    Object.entries(object).reduce((out, [key, val]) => {
-      if (key === $put) return out;
-      out[key] = stripAttributes(val);
-      return out;
-    }, {}),
-  );
+  return Object.entries(object).reduce((out, [key, val]) => {
+    if (key === '$put') return out;
+    out[key] = stripAttributes(val);
+    return out;
+  }, {});
 }

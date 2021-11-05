@@ -60,7 +60,6 @@ export default class Db {
   }
 
   async writeSql(sql) {
-    console.log('Writing', sql);
     let res = await this.query(sql);
     log('Rows written', res.rowCount);
     if (!res.rowCount) {

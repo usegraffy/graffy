@@ -27,11 +27,11 @@ describe('byId', () => {
         options,
       ),
       sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "version")
-      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, ${{ foo: 3 }},
-      ${nowTimestamp})
+      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},
+      ${JSON.stringify({ foo: 3 })}::jsonb, ${nowTimestamp})
       ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "version")
-        = (${'post22'}, ${'post'}, ${'hello'},${'world'}, ${{ foo: 3 }},
-        ${nowTimestamp})
+        = (${'post22'}, ${'post'}, ${'hello'},${'world'},
+        ${JSON.stringify({ foo: 3 })}::jsonb, ${nowTimestamp})
       RETURNING (to_jsonb("post") ||
         jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
     `,
@@ -56,7 +56,7 @@ describe('byId', () => {
         "name" = ${'hello'},
         "email" = ${'world'},
         "config" = jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
-          jsonb_build_object ( ${'foo'}::text , ${3}::jsonb)),
+          jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)),
         "version" =  ${nowTimestamp}
       WHERE "id" = ${'post22'}
       RETURNING (to_jsonb("post") ||
