@@ -1,11 +1,16 @@
 import { find } from '../util.js';
 
-export function findFirst(children, target) {
-  return find(children, ({ key, end }) => {
-    if (key === target || (end && key < target && end >= target)) return 0;
-    if (key < target) return -1;
-    return 1;
-  });
+export function findFirst(children, target, first, last) {
+  return find(
+    children,
+    ({ key, end }) => {
+      if (key === target || (end && key < target && end >= target)) return 0;
+      if (key < target) return -1;
+      return 1;
+    },
+    first,
+    last,
+  );
 }
 
 export function findLast(children, end, first, last) {

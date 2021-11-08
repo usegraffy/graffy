@@ -33,12 +33,12 @@ test('remove_null', async () => {
   });
 });
 
-test('leaf_branch_mismatch', async () => {
-  g.onRead('foo', () => ({ bar: 45, baz: { bad: 3 }, f: 3 }));
-  expect(
-    async () => await g.read({ foo: { bar: 1, baz: 1 } }),
-  ).rejects.toThrow();
-});
+// test('leaf_branch_mismatch', async () => {
+//   g.onRead('foo', () => ({ bar: 45, baz: { bad: 3 }, f: 3 }));
+//   expect(
+//     async () => await g.read({ foo: { bar: 1, baz: 1 } }),
+//   ).rejects.toThrow();
+// });
 
 test('getKnown', async () => {
   g.use((graffy) => {

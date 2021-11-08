@@ -23,8 +23,15 @@ export default function getArgSql(
   const lookup = (prop) => {
     const [prefix, ...suffix] = encodePath(prop);
     return suffix.length
-      ? sql`"${raw(prefix)}" #> '{"${suffix.join('","')}"}'`
+      ? sql`"${raw(prefix)}" #> ${suffix}`
       : sql`"${raw(prefix)}"`;
+  };
+
+  const getType = (prop) => {
+    const [_prefix, ...suffix] = encodePath(prop);
+    // TODO: Get the actual type using the information_schema
+    // and initialization time and stop using any.
+    return suffix.length ? 'jsonb' : 'any';
   };
 
   const meta = (key) => getArgMeta(key, prefix, idCol);
@@ -35,7 +42,7 @@ export default function getArgSql(
   let key;
   const where = [];
   if (!isEmpty(filter)) {
-    where.push(getFilterSql(filter, lookup));
+    where.push(getFilterSql(filter, lookup, getType));
     key = sql`${JSON.stringify(filter)}::jsonb`;
   }
 

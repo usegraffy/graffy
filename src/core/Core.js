@@ -1,6 +1,6 @@
 import { unwrap } from '@graffy/common';
 import debug from 'debug';
-import { format } from '@graffy/testing';
+// import { format } from '@graffy/testing';
 
 const log = debug('graffy:core');
 
@@ -20,10 +20,8 @@ function resolve(handlers, firstPayload, options) {
       if (nextCalled) {
         throw Error('resolve.duplicate_next_call: ' + handlers[i].name);
       }
-      if (typeof nextPayload === 'undefined') {
-        throw Error('resolve.next_without_payload: ' + handlers[i].name);
-      }
       nextCalled = true;
+      if (typeof nextPayload === 'undefined' || !nextPayload.length) return;
       return run(i + 1, nextPayload);
     });
   }
@@ -42,7 +40,7 @@ export default class Core {
   }
 
   call(type, payload, options = {}) {
-    log('call', type, format(payload));
+    log('call', type, payload);
     return resolve(this.handlers[type], payload, options);
   }
 }

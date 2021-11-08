@@ -81,7 +81,7 @@ export function insertRange(current, change, result, start = 0) {
   // console.log('Sieve:insertions', debug(insertions));
 
   current.splice(keyIx, endIx - keyIx, ...insertions);
-  return keyIx + insertions.length;
+  return keyIx + insertions.length - 1;
 }
 
 function mergeRanges(base, node) {
@@ -129,7 +129,7 @@ function insertNodeIntoRange(current, index, change, result) {
   ].filter(Boolean);
   current.splice(index, 1, ...insertions);
 
-  return index + insertions.length;
+  return index + insertions.length - 1;
 }
 
 function updateNode(current, index, change, result) {

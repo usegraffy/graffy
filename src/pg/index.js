@@ -1,3 +1,4 @@
+import { remove, merge } from '@graffy/common';
 import Db from './Db.js';
 /**
  *
@@ -22,14 +23,29 @@ export const pg =
 
     const defaultDb = new Db(connection);
 
-    function read(query, options) {
+    function read(query, options, next) {
       const { transactionDb = defaultDb, ...readOpts } = options;
-      return transactionDb.read(query, tableOpts, readOpts);
+      const readPromise = transactionDb.read(query, tableOpts, readOpts);
+      const remainingQuery = remove(query, prefix);
+      const nextPromise = next(remainingQuery);
+
+      return Promise.all([readPromise, nextPromise]).then(
+        ([readRes, nextRes]) => {
+          // console.log({ readRes, nextRes });
+          return merge(readRes, nextRes);
+        },
+      );
     }
 
-    function write(change, options) {
+    function write(change, options, next) {
       const { transactionDb = defaultDb, ...writeOpts } = options;
-      return transactionDb.write(change, tableOpts, writeOpts);
+      const writePromise = transactionDb.write(change, tableOpts, writeOpts);
+      const remainingChange = remove(change, prefix);
+      const nextPromise = next(remainingChange);
+
+      return Promise.all([writePromise, nextPromise]).then(
+        ([writeRes, nextRes]) => merge(writeRes, nextRes),
+      );
     }
   };
 

@@ -85,11 +85,7 @@ function decode(nodes = [], { isGraph } = {}) {
     }
 
     if (isGraph && putRanges.length) {
-      if (
-        putRanges.length === 1 &&
-        putRanges[0].key === '' &&
-        putRanges[0].end === '\uffff'
-      ) {
+      if (putRanges[0].key === '' && putRanges[0].end === '\uffff') {
         result.$put = true;
       } else {
         result.$put = putRanges.map((rNode) => decodeArgs(rNode));

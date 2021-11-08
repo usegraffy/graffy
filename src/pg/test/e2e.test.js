@@ -110,7 +110,7 @@ describe('pg_e2e', () => {
       id: id2,
       name: 'alan',
       email: 'alan@acme.co',
-      settings: { bar: 3, baz: { x: 4, y: 5, $put: true }, $put: true },
+      settings: { bar: 3, baz: { x: 4, y: 5 } },
       version: expect.any(Number),
     });
 
@@ -124,6 +124,8 @@ describe('pg_e2e', () => {
       email: true,
       settings: { foo: true, bar: true, baz: { x: true, y: true } },
     });
+
+    // console.log(res5);
 
     const exp5 = [
       {
@@ -179,10 +181,9 @@ describe('pg_e2e', () => {
         name: 'alain',
         email: 'alan@acme.co',
         settings: {
-          $put: true,
           foo: 7,
           bar: 3,
-          baz: { y: 8, $put: true },
+          baz: { y: 8 },
         },
         version: expect.any(Number),
       },
