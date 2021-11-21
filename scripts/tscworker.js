@@ -2,6 +2,7 @@
 import { parentPort } from 'worker_threads';
 import ts from 'typescript';
 import { src, dst } from './utils.js';
+import { dirname } from 'path';
 
 parentPort.on('message', (message) => {
   const { name, fileName } = message;
@@ -46,7 +47,7 @@ function getFileArgs(name, fileName) {
     declaration: true,
     emitDeclarationOnly: true,
     noResolve: true,
-    outFile: dst(name, 'types', filePath),
+    outDir: dirname(dst(name, 'types', filePath)),
   };
 
   return [[fileName], options];
