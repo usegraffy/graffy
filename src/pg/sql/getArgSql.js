@@ -20,10 +20,11 @@ export default function getArgSql(
   const { $order, ...filter } = rest;
   const { prefix, idCol } = options;
 
-  const lookup = (prop) => {
+  const lookup = (prop, type) => {
     const [prefix, ...suffix] = encodePath(prop);
+    const op = type === 'text' ? sql`#>>` : sql`#>`;
     return suffix.length
-      ? sql`"${raw(prefix)}" #> ${suffix}`
+      ? sql`"${raw(prefix)}" ${op} ${suffix}`
       : sql`"${raw(prefix)}"`;
   };
 

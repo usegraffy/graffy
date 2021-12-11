@@ -121,4 +121,8 @@ describe('alias', () => {
       },
     ]);
   });
+
+  test('emptyNestedObjects', () => {
+    expect(encodeQuery({ foo: { bar: { baz: {} } } }, 0)).toEqual([]);
+  });
 });

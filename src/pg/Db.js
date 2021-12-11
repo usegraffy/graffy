@@ -2,6 +2,7 @@ import { Pool, Client } from 'pg';
 import {
   isPlainObject,
   decodeArgs,
+  wrap,
   unwrap,
   finalize,
   merge,
@@ -113,7 +114,7 @@ export default class Db {
     await Promise.all(promises);
 
     log('dbRead', rootQuery, results);
-    return slice(finalize(results, rootQuery), rootQuery).known || [];
+    return slice(finalize(results, wrap(query, prefix)), rootQuery).known || [];
   }
 
   async write(rootChange, tableOptions) {

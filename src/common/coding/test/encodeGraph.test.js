@@ -280,3 +280,7 @@ test('ranges', () => {
     { key: 'foo', version: 0, children: [{ key: '', end: 'a', version: 0 }] },
   ]);
 });
+
+test('emptyNestedObjects', () => {
+  expect(encodeGraph({ foo: { bar: { baz: {} } } }, 0)).toEqual([]);
+});

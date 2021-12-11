@@ -7,8 +7,7 @@ const ROOT_KEY = Symbol();
 
 /**
   @param {InTree} value
-  @param {number} options.version
-  @param {boolean} options.isGraph
+  @param {{version?: number, isGraph?: boolean}} options
 */
 function encode(value, { version, isGraph } = {}) {
   const links = [];
@@ -146,8 +145,14 @@ function encode(value, { version, isGraph } = {}) {
       if (children.length) {
         node.children = children;
       } else if (isGraph) {
+        // Some inconsistency here.
+        // { foo: {} } === undefined (we know nothing)
+        // but { $key: 'foo' }] === { foo: null } (we know foo doesn't exist)
+        // This is because when using the $key notation, we can't use null.
+        if (!isDef($key) && !isDef($put)) return;
         if (node.key && !node.end) node.end = node.key;
       } else {
+        if (!isDef($key)) return;
         node.value = 1;
       }
     }

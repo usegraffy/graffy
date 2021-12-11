@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, v4 } from 'uuid';
 import Graffy from '@graffy/core';
 import { pg } from '../index.js';
 import {
@@ -31,6 +31,15 @@ describe('pg_e2e', () => {
       'users',
       pg({
         table: 'users',
+        idCol: 'id',
+        verCol: 'version',
+        connection: getPool(),
+      }),
+    );
+    store.use(
+      'posts',
+      pg({
+        table: 'posts',
         idCol: 'id',
         verCol: 'version',
         connection: getPool(),
@@ -221,7 +230,7 @@ describe('pg_e2e', () => {
     expect(res7).toEqual(exp7);
   });
 
-  test('json_queries', async () => {
+  test('json_with_array', async () => {
     await store.write('users', [
       {
         $key: uuid(),
@@ -363,5 +372,82 @@ describe('pg_e2e', () => {
     exp3.$prev = null;
 
     expect(res3).toEqual(exp3);
+  });
+
+  test('pass_through', async () => {
+    const uid = v4();
+    const pid = v4();
+    const res1 = await store.write({
+      users: { [uid]: { name: 'Alice', $put: true } },
+      posts: { [pid]: { title: 'A story', authorId: uid, $put: true } },
+    });
+
+    const exp1 = {
+      users: {
+        [uid]: {
+          id: uid,
+          name: 'Alice',
+          email: null,
+          settings: null,
+          version: expect.any(Number),
+        },
+      },
+      posts: {
+        [pid]: {
+          id: pid,
+          title: 'A story',
+          authorId: uid,
+          version: expect.any(Number),
+        },
+      },
+    };
+
+    expect(res1).toEqual(exp1);
+
+    const res2 = await store.read({
+      users: { [uid]: { name: true } },
+      posts: { [pid]: { title: true } },
+    });
+
+    const exp2 = {
+      users: { [uid]: { name: 'Alice' } },
+      posts: { [pid]: { title: 'A story' } },
+    };
+
+    expect(res2).toEqual(exp2);
+  });
+
+  test('dot_operator', async () => {
+    const uid = v4();
+    await store.write({
+      users: {
+        [uid]: { name: 'Alice', settings: { foo: 'f', bar: 9 }, $put: true },
+      },
+    });
+
+    const res1 = await store.read(['users'], {
+      $key: { 'settings.foo': 'f' },
+      name: true,
+    });
+
+    const exp1 = [{ $ref: ['users', uid], name: 'Alice' }];
+    expect(res1).toEqual(exp1);
+
+    const res2 = await store.read(['users'], {
+      $key: { 'settings.bar': 9, $all: true },
+      name: true,
+    });
+
+    const exp2 = [
+      {
+        $key: { 'settings.bar': 9, $cursor: [uid] },
+        $ref: ['users', uid],
+        name: 'Alice',
+      },
+    ];
+    exp2.$page = { 'settings.bar': 9, $all: true };
+    exp2.$next = null;
+    exp2.$prev = null;
+    expect(res2).toEqual(exp2);
   });
 });
