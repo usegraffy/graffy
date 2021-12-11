@@ -18,9 +18,9 @@ export default function getSql(
   getLookupSql,
   getColumnType = defaultColumnType,
 ) {
-  function lookup(string) {
+  function lookup(string, type) {
     if (string.substr(0, 3) === 'el$') return sql`"${raw(string)}"`;
-    return getLookupSql(string);
+    return getLookupSql(string, type);
   }
 
   function binop(op, left, right) {
@@ -29,7 +29,7 @@ export default function getSql(
     if (lType === 'any' || rType === 'any' || rType === lType) {
       return sql`${lookup(left)} ${raw(op)} ${right}`;
     } else {
-      return sql`(${lookup(left)})::${raw(rType)} ${raw(op)} ${right}`;
+      return sql`(${lookup(left, rType)})::${raw(rType)} ${raw(op)} ${right}`;
     }
   }
 

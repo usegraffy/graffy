@@ -1,6 +1,5 @@
 import { unwrap } from '@graffy/common';
 import debug from 'debug';
-// import { format } from '@graffy/testing';
 
 const log = debug('graffy:core');
 

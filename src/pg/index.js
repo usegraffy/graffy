@@ -31,7 +31,6 @@ export const pg =
 
       return Promise.all([readPromise, nextPromise]).then(
         ([readRes, nextRes]) => {
-          // console.log({ readRes, nextRes });
           return merge(readRes, nextRes);
         },
       );
@@ -44,7 +43,9 @@ export const pg =
       const nextPromise = next(remainingChange);
 
       return Promise.all([writePromise, nextPromise]).then(
-        ([writeRes, nextRes]) => merge(writeRes, nextRes),
+        ([writeRes, nextRes]) => {
+          return merge(writeRes, nextRes);
+        },
       );
     }
   };
