@@ -64,7 +64,6 @@ export default function server(store) {
         const payload = deserialize(Buffer.concat(chunks).toString());
         const value = await store.call(op, payload, options);
         res.writeHead(200);
-        console.log('Responding with', value);
         res.end(serialize(value));
       } catch (e) {
         res.writeHead(400);
