@@ -1,11 +1,4 @@
-import {
-  merge,
-  unwrap,
-  isBranch,
-  findFirst,
-  encodePath,
-  splitRef,
-} from '@graffy/common';
+import { merge, unwrap, findFirst, encodePath, splitRef } from '@graffy/common';
 
 /* Adds links to a graph, using the provided link definitions.
    Modifies the graph in-place. */
@@ -13,7 +6,7 @@ export default function linkGraph(rootGraph, defs) {
   for (const { path, def } of defs) linkGraphDef(rootGraph, path, def);
   return rootGraph;
 
-  function linkGraphDef(graph, path, def, vars = {}, version = 0) {
+  function linkGraphDef(graph, path, def, version = 0) {
     const [key, ...rest] = path;
     if (rest.length === 0) {
       const ref = makeRef(def);
@@ -24,39 +17,23 @@ export default function linkGraph(rootGraph, defs) {
       return;
     }
 
-    if (key[0] !== '$') {
-      let node = graph[findFirst(graph, key)];
+    let node = graph[findFirst(graph, key)];
 
-      if (!node || node.key !== key || node.end) {
-        // We want to add a branch node with no children (yet).
-        // Unfortunately merge does not like this, and we have
-        // to work around it by inserting a leaf node and then
-        // converting it to a branch.
-        node = { key, version, value: 1 };
-        merge(graph, [node]);
-        delete node.value;
-        node.children = [];
-      }
-
-      if (!node.children) {
-        throw Error('linkGraph.unexpected_leaf ' + key);
-      }
-      linkGraphDef(node.children, rest, def, vars, node.version);
-    } else {
-      for (const node of graph) {
-        if (!isBranch(node)) continue;
-        linkGraphDef(
-          node.children,
-          rest,
-          def,
-          {
-            ...vars,
-            [key.slice(1)]: node.key,
-          },
-          node.version,
-        );
-      }
+    if (!node || node.key !== key || node.end) {
+      // We want to add a branch node with no children (yet).
+      // Unfortunately merge does not like this, and we have
+      // to work around it by inserting a leaf node and then
+      // converting it to a branch.
+      node = { key, version, value: 1 };
+      merge(graph, [node]);
+      delete node.value;
+      node.children = [];
     }
+
+    if (!node.children) {
+      throw Error('linkGraph.unexpected_leaf ' + key);
+    }
+    linkGraphDef(node.children, rest, def, node.version);
   }
 
   function makeRef(def) {
@@ -79,6 +56,3 @@ export default function linkGraph(rootGraph, defs) {
     return ref;
   }
 }
-
-// lookup: $$;
-// substitute: $;

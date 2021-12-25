@@ -38,9 +38,8 @@ describe('link', () => {
               { $key: { id: 'p03' }, $ref: ['post', 'p03'] },
             ],
           },
-
           {
-            $key: { $all: true, authorId: 'bob', tag: 'x' },
+            $key: { $all: true, authorId: 'bob' },
             $chi: [
               { $key: { id: 'p02' }, $ref: ['post', 'p02'] },
               { $key: { id: 'p04' }, $ref: ['post', 'p04'] },
@@ -70,10 +69,7 @@ describe('link', () => {
   test('read_multi_backward_link', async () => {
     const res = await store.read('user', {
       ali: { name: true, posts: { $key: { tag: 'z', $last: 1 }, title: true } },
-      bob: {
-        name: true,
-        posts: { $key: { tag: 'x', $first: 1 }, title: true },
-      },
+      bob: { name: true, posts: { $key: { $first: 1 }, title: true } },
     });
 
     const exp = {
@@ -91,7 +87,7 @@ describe('link', () => {
         name: 'Robert',
         posts: [
           {
-            $key: { $cursor: { id: 'p02' }, tag: 'x' },
+            $key: { id: 'p02' },
             $ref: ['post', 'p02'],
             title: 'Post 2 B',
           },
@@ -106,8 +102,8 @@ describe('link', () => {
     });
 
     Object.assign(exp.bob.posts, {
-      $page: { $all: true, $until: { id: 'p02' }, tag: 'x' },
-      $next: { $first: 1, $after: { id: 'p02' }, tag: 'x' },
+      $page: { $all: true, $until: { id: 'p02' } },
+      $next: { $first: 1, $after: { id: 'p02' } },
       $prev: null,
     });
 
