@@ -85,7 +85,8 @@ export default class Graffy {
   }
 
   use(...args) {
-    const [path, provider] = validateOn(...args);
+    const [pathArg, provider] = validateOn(...args);
+    const path = this.path.concat(pathArg);
     provider(new Graffy(path, this.core));
   }
 

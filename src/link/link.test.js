@@ -32,13 +32,12 @@ describe('link', () => {
 
           // Results to the queries we're going to be making
           {
-            $key: { $all: true, authorId: 'ali' },
+            $key: { $all: true, authorId: 'ali', tag: 'z' },
             $chi: [
               { $key: { id: 'p01' }, $ref: ['post', 'p01'] },
               { $key: { id: 'p03' }, $ref: ['post', 'p03'] },
             ],
           },
-
           {
             $key: { $all: true, authorId: 'bob' },
             $chi: [
@@ -69,36 +68,43 @@ describe('link', () => {
 
   test('read_multi_backward_link', async () => {
     const res = await store.read('user', {
-      ali: { name: true, posts: { $key: { $last: 1 }, title: true } },
+      ali: { name: true, posts: { $key: { tag: 'z', $last: 1 }, title: true } },
       bob: { name: true, posts: { $key: { $first: 1 }, title: true } },
     });
+
     const exp = {
       ali: {
         name: 'Alicia',
         posts: [
-          { $key: { id: 'p03' }, $ref: ['post', 'p03'], title: 'Post 3 a' },
+          {
+            $key: { $cursor: { id: 'p03' }, tag: 'z' },
+            $ref: ['post', 'p03'],
+            title: 'Post 3 a',
+          },
         ],
       },
       bob: {
         name: 'Robert',
         posts: [
-          { $key: { id: 'p02' }, $ref: ['post', 'p02'], title: 'Post 2 B' },
+          {
+            $key: { id: 'p02' },
+            $ref: ['post', 'p02'],
+            title: 'Post 2 B',
+          },
         ],
       },
     };
 
     Object.assign(exp.ali.posts, {
-      $page: { $all: true, $since: { id: 'p03' } },
+      $page: { $all: true, $since: { id: 'p03' }, tag: 'z' },
       $next: null,
-      $prev: { $last: 1, $before: { id: 'p03' } },
-      $ref: ['post', { authorId: 'ali' }],
+      $prev: { $last: 1, $before: { id: 'p03' }, tag: 'z' },
     });
 
     Object.assign(exp.bob.posts, {
       $page: { $all: true, $until: { id: 'p02' } },
       $next: { $first: 1, $after: { id: 'p02' } },
       $prev: null,
-      $ref: ['post', { authorId: 'bob' }],
     });
 
     expect(res).toEqual(exp);

@@ -41,8 +41,16 @@ test('prepQueryLinks', () => {
 
   expect(usedDefs).toEqual([
     {
-      path: ['members', '$pid', 'person'],
-      def: ['persons', '$$members.$pid.personId'],
+      path: ['members', 'a', 'person'],
+      def: ['persons', '$$members.a.personId'],
+    },
+    {
+      path: ['members', 'b', 'person'],
+      def: ['persons', '$$members.b.personId'],
+    },
+    {
+      path: ['members', 'c', 'person'],
+      def: ['persons', '$$members.c.personId'],
     },
   ]);
 });
