@@ -100,33 +100,65 @@ In all three, `ix` is a computed column of type TSVector.
 // Query
 {
   books: [{
-    $key: { published { $gte: '2000-01-01' }, $agg: true },
-    genre: true,
+    $key: {
+      published { $lt: '2000-01-01' },
+      $group: ['genre', 'authorId'],
+    },
     author: { name: true },
     $count: true,
     $sum: {
-      price: true
+      copiesSold: true
     }
   }]
 }
-
 ```
 
 This is converted into some SQL like:
 
 ```sql
 SELECT
-  genre,
-  authorId, -- used to construct the author link
-  count(id) count,
-  sum(price) sum_price
+  genre, -- used to populate the cursor
+  authorId, -- also to construct the author link
+  count(id),
+  sum(copiesSold)
 FROM
   books
 WHERE
-  published >= '2000-01-01'
+  published < '2000-01-01'
 GROUP BY
   genre,
   authorId;
 ```
 
 
+```js
+// Result
+{
+  books: [
+    {
+      $key: {
+        published { $lt: '2000-01-01' },
+        $group: ['genre', 'authorId'],
+        $cursor: ['sci-fi', '432432334']
+      },
+      author: { name: 'Arthur C Clarke' },
+      $count: 4,
+      $sum: {
+        copiesSold: 7483
+      }
+    },
+    {
+      $key: {
+        published { $lt: '2000-01-01' },
+        $group: ['genre', 'authorId'],
+        $cursor: ['sci-fi', '8943554']
+      },
+      author: { name: 'Jules Verne' },
+      $count: 8,
+      $sum: {
+        copiesSold: 3423
+      }
+    },
+  ]
+}
+```
