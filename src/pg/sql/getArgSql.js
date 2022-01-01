@@ -1,7 +1,7 @@
 import sql, { join, raw } from 'sql-template-tag';
 import { isEmpty, encodePath } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
-import { getArgMeta } from './getMeta';
+import { getArgMeta, getAggMeta } from './getMeta';
 import { getJsonBuildObject } from './clauses.js';
 
 /**
@@ -11,14 +11,19 @@ import { getJsonBuildObject } from './clauses.js';
   @param {object} options
 
   @typedef { import('sql-template-tag').Sql } Sql
-  @return {{ meta: Sql, where: Sql[], order?: Sql, limit: number }}
+  @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number }}
 */
 export default function getArgSql(
   { $first, $last, $after, $before, $since, $until, $all, $cursor: _, ...rest },
   options,
 ) {
-  const { $order, ...filter } = rest;
+  const { $order, $group, ...filter } = rest;
   const { prefix, idCol } = options;
+
+  if ($order && $group) {
+    // TODO: Allow this.
+    throw Error('pg_arg.order_and_group_unsupported in ' + prefix);
+  }
 
   const lookup = (prop, type) => {
     const [prefix, ...suffix] = encodePath(prop);
@@ -35,7 +40,15 @@ export default function getArgSql(
     return suffix.length ? 'jsonb' : 'any';
   };
 
-  const meta = (key) => getArgMeta(key, prefix, idCol);
+  const meta = (key) =>
+    $group ? getAggMeta(key, $group) : getArgMeta(key, prefix, idCol);
+
+  const groupCols =
+    Array.isArray($group) && $group.length
+      ? $group.map((col) => lookup(col))
+      : undefined;
+
+  const group = groupCols ? join(groupCols, ', ') : undefined;
 
   const hasRangeArg =
     $before || $after || $since || $until || $first || $last || $all || $order;
@@ -47,7 +60,7 @@ export default function getArgSql(
     key = sql`${JSON.stringify(filter)}::jsonb`;
   }
 
-  if (!hasRangeArg) return { meta: meta(key), where, limit: 1 };
+  if (!hasRangeArg) return { meta: meta(key), where, group, limit: 1 };
 
   if (isEmpty(rest)) {
     // TODO: Allow these.
@@ -66,7 +79,7 @@ export default function getArgSql(
     getJsonBuildObject({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
   const cursorQuery = getJsonBuildObject({
-    $cursor: sql`jsonb_build_array(${join(orderCols)})`,
+    $cursor: sql`jsonb_build_array(${join(groupCols || orderCols)})`,
   });
 
   key = sql`(${join([key, orderQuery, cursorQuery].filter(Boolean), ` || `)})`;
@@ -74,10 +87,13 @@ export default function getArgSql(
   return {
     meta: meta(key),
     where,
-    order: join(
-      orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
-      `, `,
-    ),
+    order:
+      $order &&
+      join(
+        orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
+        `, `,
+      ),
+    group,
     limit: $first || $last,
   };
 }

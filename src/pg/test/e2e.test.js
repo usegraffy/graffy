@@ -450,4 +450,70 @@ describe('pg_e2e', () => {
     exp2.$prev = null;
     expect(res2).toEqual(exp2);
   });
+
+  describe('aggregations', () => {
+    beforeEach(async () => {
+      await store.write('users', [
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: { foo: [1, 2, 3] },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'B',
+          email: 'b',
+          settings: { foo: [3], bar: [4] },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'C',
+          email: 'c',
+          settings: { bar: [5, 6] },
+        },
+        { $key: uuid(), $put: true, name: 'C', email: 'c2' },
+      ]);
+    });
+
+    test('count', async () => {
+      const res1 = await store.read('users', {
+        $key: { name: { $not: null }, $group: [] },
+        $count: true,
+      });
+
+      expect(res1[0].$count).toEqual(4);
+    });
+
+    test('card', async () => {
+      const res1 = await store.read('users', {
+        $key: { $group: [] },
+        $card: { name: true },
+      });
+
+      expect(res1[0].$card.name).toEqual(3);
+    });
+
+    test('grouped_card', async () => {
+      const res1 = await store.read('users', {
+        $key: { $group: ['name'], $all: true },
+        $card: { email: true },
+      });
+
+      const exp1 = [
+        { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['A'] } },
+        { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['B'] } },
+        { $card: { email: 2 }, $key: { $group: ['name'], $cursor: ['C'] } },
+      ];
+
+      exp1.$page = { $group: ['name'], $all: true };
+      exp1.$prev = null;
+      exp1.$next = null;
+
+      expect(res1).toEqual(exp1);
+    });
+  });
 });

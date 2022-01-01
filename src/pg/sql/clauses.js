@@ -22,9 +22,33 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
-export const getSelectCols = (table) => {
-  // TODO: When we have a query object, get only the requested columns.
-  return sql`to_jsonb("${raw(table)}")`;
+const aggSql = {
+  $sum: (prop) => sql`sum("${raw(prop)}")`,
+  $card: (prop) => sql`count(distinct("${raw(prop)}"))`,
+  $avg: (prop) => sql`sum("${raw(prop)}")`,
+  $max: (prop) => sql`sum("${raw(prop)}")`,
+  $min: (prop) => sql`sum("${raw(prop)}")`,
+};
+
+export const getSelectCols = (table, projection = null) => {
+  if (!projection) return sql`to_jsonb("${raw(table)}")`;
+
+  const sqls = [];
+  for (const key in projection) {
+    if (key === '$count') {
+      sqls.push(sql`'$count', count(*)`);
+    } else if (aggSql[key]) {
+      const subSqls = [];
+      for (const prop in projection[key]) {
+        subSqls.push(sql`${prop}::text, ${aggSql[key](prop)}`);
+      }
+      sqls.push(sql`${key}::text, jsonb_build_object(${join(subSqls, ', ')})`);
+    } else {
+      sqls.push(sql`${key}::text, "${raw(key)}"`);
+    }
+  }
+
+  return sql`jsonb_build_object(${join(sqls, ', ')})`;
 };
 
 export const getInsert = (row, options) => {

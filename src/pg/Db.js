@@ -13,6 +13,7 @@ import {
   isRange,
   decodeGraph,
   mergeObject,
+  decodeQuery,
 } from '@graffy/common';
 import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch } from './sql/index.js';
@@ -75,16 +76,21 @@ export default class Db {
     const results = [];
     const { prefix } = tableOptions;
 
-    const getByArgs = async (args) => {
-      const result = await this.readSql(selectByArgs(args, tableOptions));
+    const getByArgs = async (args, projection) => {
+      const result = await this.readSql(
+        selectByArgs(args, projection, tableOptions),
+      );
       const wrappedGraph = encodeGraph(wrapObject(result, prefix));
       log('getByArgs', wrappedGraph);
       merge(results, wrappedGraph);
     };
 
     const getByIds = async () => {
+      // TODO: Calculate a combined projection.
+      // Bonus: Strategically split into multiple read operations
+      // based on projection.
       const result = await this.readSql(
-        selectByIds(Object.keys(idQueries), tableOptions),
+        selectByIds(Object.keys(idQueries), null, tableOptions),
       );
       result.forEach((object) => {
         const wrappedGraph = encodeGraph(wrapObject(object, prefix));
@@ -100,10 +106,15 @@ export default class Db {
         if (node.prefix) {
           for (const childNode of node.children) {
             const childArgs = decodeArgs(childNode);
-            promises.push(getByArgs({ ...args, ...childArgs }));
+            const projection = childNode.children
+              ? decodeQuery(childNode.children)
+              : true;
+
+            promises.push(getByArgs({ ...args, ...childArgs }, projection));
           }
         } else {
-          promises.push(getByArgs(args));
+          const projection = node.children ? decodeQuery(node.children) : true;
+          promises.push(getByArgs(args, projection));
         }
       } else {
         idQueries[node.key] = node.children;
