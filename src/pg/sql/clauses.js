@@ -1,5 +1,5 @@
 import sql, { Sql, raw, join, empty } from 'sql-template-tag';
-import { isEmpty } from '@graffy/common';
+import { encodePath, isEmpty } from '@graffy/common';
 
 export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
 
@@ -22,12 +22,27 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
+export const lookup = (prop, type) => {
+  const [prefix, ...suffix] = encodePath(prop);
+  const op = type === 'text' ? sql`#>>` : sql`#>`;
+  return suffix.length
+    ? sql`"${raw(prefix)}" ${op} ${suffix}`
+    : sql`"${raw(prefix)}"`;
+};
+
+export const getType = (prop) => {
+  const [_prefix, ...suffix] = encodePath(prop);
+  // TODO: Get the actual type using the information_schema
+  // and initialization time and stop using any.
+  return suffix.length ? 'jsonb' : 'any';
+};
+
 const aggSql = {
-  $sum: (prop) => sql`sum("${raw(prop)}")`,
-  $card: (prop) => sql`count(distinct("${raw(prop)}"))`,
-  $avg: (prop) => sql`sum("${raw(prop)}")`,
-  $max: (prop) => sql`sum("${raw(prop)}")`,
-  $min: (prop) => sql`sum("${raw(prop)}")`,
+  $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
+  $avg: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $max: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $min: (prop) => sql`sum((${lookup(prop)})::numeric)`,
 };
 
 export const getSelectCols = (table, projection = null) => {

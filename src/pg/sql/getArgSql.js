@@ -2,7 +2,7 @@ import sql, { join, raw } from 'sql-template-tag';
 import { isEmpty, encodePath } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
 import { getArgMeta, getAggMeta } from './getMeta';
-import { getJsonBuildObject } from './clauses.js';
+import { getJsonBuildObject, lookup, getType } from './clauses.js';
 
 /**
   Uses the args object (typically passed in the $key attribute)
@@ -24,21 +24,6 @@ export default function getArgSql(
     // TODO: Allow this.
     throw Error('pg_arg.order_and_group_unsupported in ' + prefix);
   }
-
-  const lookup = (prop, type) => {
-    const [prefix, ...suffix] = encodePath(prop);
-    const op = type === 'text' ? sql`#>>` : sql`#>`;
-    return suffix.length
-      ? sql`"${raw(prefix)}" ${op} ${suffix}`
-      : sql`"${raw(prefix)}"`;
-  };
-
-  const getType = (prop) => {
-    const [_prefix, ...suffix] = encodePath(prop);
-    // TODO: Get the actual type using the information_schema
-    // and initialization time and stop using any.
-    return suffix.length ? 'jsonb' : 'any';
-  };
 
   const meta = (key) =>
     $group ? getAggMeta(key, $group) : getArgMeta(key, prefix, idCol);

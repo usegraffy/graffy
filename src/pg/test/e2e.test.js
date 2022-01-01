@@ -497,6 +497,15 @@ describe('pg_e2e', () => {
       expect(res1[0].$card.name).toEqual(3);
     });
 
+    test('sum', async () => {
+      const res1 = await store.read('users', {
+        $key: { $group: [] },
+        $sum: { 'settings.foo.0': true },
+      });
+
+      expect(res1[0].$sum['settings.foo.0']).toEqual(4);
+    });
+
     test('grouped_card', async () => {
       const res1 = await store.read('users', {
         $key: { $group: ['name'], $all: true },
