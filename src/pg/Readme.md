@@ -10,7 +10,7 @@ import pg from '@graffy/pg';
 graffyStore.use(pg(options));
 ```
 
-Connection parameters should be set in environment variables. Uses the [pg](https://github.com/brianc/node-postgres) library.
+Uses the [pg](https://github.com/brianc/node-postgres) library.
 
 ### Query filters
 
@@ -80,85 +80,67 @@ Every tag must be one of *foo*, *bar* or *baz*.
 
 ### Order by
 
-The root of the Graffy filter object must be an object. (Use `$or` if required.) The property `order` specifies the order. This means `order` cannot be used as the name of a column, just as with `before`, `last` etc.
-
-Its value may be a single property name, an array of property names, or an object containing a `$text` filter to sort by the match relevance.
+The root of the Graffy filter object must be an object. (Use `$or` if required.) The property `$order` specifies the order. Its value must be an array of order specifiers, each of which may be a string property name or an object with property names, sort direction, collation and text search relevance. (TBD)
 
 ### Full Text Search
 
 A full-text search query typically has three requirements:
 
-- Filter: `{ ix: { $text: 'query' } }`. Return only results that match.
-- Order: `{ $order: { $text: ['ix', 'query'] }, ... }`. Sort results by relevance.
-- Projection: `{ ix: { query: true } }`. Return snippets of the document surrounding matches.
+- Filter: `{ tsv: { $text: 'query' } }`. Return only results that match.
+- Order: `{ $order: [{ $text: ['tsv', 'query'] }], ... }`. Sort results by relevance.
+- Projection: `{ tsv: { query: true } }`. Return snippets of the document surrounding matches.
 
-In all three, `ix` is a computed column of type TSVector.
+In all three, `tsv` is a computed column of type TSVector.
 
 ### Aggregations
 
+In Graffy PG, aggregations are specified using the `$group` argument in $key, and special properties like `$count`, `$sum` etc. in the projection. `$group` may be `true` or an array.
+
+Consider a table of books with columns `authorId` and `copiesSold`. We want the to compute aggregates on the `copiesSold` column.
+
+#### Without Group By
+
+Let's say we want the total copies sold of all the books in our database. We use `$group: true`, like:
+
 ```js
-// Query
 {
-  books: [{
-    $key: {
-      published { $lt: '2000-01-01' },
-      $group: ['genre', 'authorId'],
-    },
-    author: { name: true },
-    $count: true,
-    $sum: {
-      copiesSold: true
-    }
-  }]
+  books: {
+  $key: { $group: true },
+  $sum: { copiesSold: true }
 }
 ```
 
-This is converted into some SQL like:
+Note how the field to sum is specified; this way, multiple fields may be specified.
 
-```sql
-SELECT
-  genre, -- used to populate the cursor
-  authorId, -- also to construct the author link
-  count(id),
-  sum(copiesSold)
-FROM
-  books
-WHERE
-  published < '2000-01-01'
-GROUP BY
-  genre,
-  authorId;
-```
-
+As always, the result will mirror the query:
 
 ```js
-// Result
+books: [{
+  $key: { $group: true },
+  $sum: { copiesSold: 12345 }
+}]
+```
+
+#### With Group By
+
+Now let's say we want the separate totals for each author. As we might have a very large number of authors, we might need to paginate over the results.
+
+The grouping properties (e.g. `authorId`) may also be included in the projection, and these values may even be used to construct links.
+
+```js
 {
-  books: [
-    {
-      $key: {
-        published { $lt: '2000-01-01' },
-        $group: ['genre', 'authorId'],
-        $cursor: ['sci-fi', '432432334']
-      },
-      author: { name: 'Arthur C Clarke' },
-      $count: 4,
-      $sum: {
-        copiesSold: 7483
-      }
-    },
-    {
-      $key: {
-        published { $lt: '2000-01-01' },
-        $group: ['genre', 'authorId'],
-        $cursor: ['sci-fi', '8943554']
-      },
-      author: { name: 'Jules Verne' },
-      $count: 8,
-      $sum: {
-        copiesSold: 3423
-      }
-    },
-  ]
+  books: {
+  $key: { $group: ['authorId'], $first: 30 },
+  authorId: true,
+  author: { namme: true }, // Link to ['users', authorId]
+  $sum: { copiesSold: true }
 }
 ```
+
+#### Aggregate functions
+
+Graffy supports the following aggregate functions.
+
+- `$count` of rows; this is just specified as `$count: true`, without any fields under it. (All other aggregate functions require fields to be specified.)
+- `$sum`, `$avg`, `$max`, `$min`
+- `$card` (cardinality), or the number of unique values in a column
