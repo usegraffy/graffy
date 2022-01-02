@@ -2,11 +2,11 @@ import { remove, merge } from '@graffy/common';
 import Db from './Db.js';
 /**
  *
- * @param {{table?: string, idCol?: string, verCol?: string, links?: object, connection?: any}} param0
+ * @param {{table?: string, idCol?: string, verCol?: string, connection?: any}} param0
  * @returns
  */
 export const pg =
-  ({ table, idCol, verCol, links, connection }) =>
+  ({ table, idCol, verCol, connection }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
@@ -18,14 +18,14 @@ export const pg =
       table: table || prefix[prefix.length - 1] || 'default',
       idCol: idCol || 'id',
       verCol: verCol || 'updatedAt',
-      links: links || {},
     };
 
     const defaultDb = new Db(connection);
 
     function read(query, options, next) {
-      const { transactionDb = defaultDb, ...readOpts } = options;
-      const readPromise = transactionDb.read(query, tableOpts, readOpts);
+      const { pgClient } = options;
+      const db = pgClient ? new Db(pgClient) : defaultDb;
+      const readPromise = db.read(query, tableOpts);
       const remainingQuery = remove(query, prefix);
       const nextPromise = next(remainingQuery);
 
@@ -37,8 +37,9 @@ export const pg =
     }
 
     function write(change, options, next) {
-      const { transactionDb = defaultDb, ...writeOpts } = options;
-      const writePromise = transactionDb.write(change, tableOpts, writeOpts);
+      const { pgClient } = options;
+      const db = pgClient ? new Db(pgClient) : defaultDb;
+      const writePromise = db.write(change, tableOpts);
       const remainingChange = remove(change, prefix);
       const nextPromise = next(remainingChange);
 
@@ -57,9 +58,9 @@ export const pg =
     store.on('write', (change, options, next) => {
       const client = await pool.connect();
       await client.query('BEGIN');
-      const transactionDb = new Db(client);
+      const db = new Db(client);
 
-      nextOptions = { ...options, transactionDb };
+      nextOptions = { ...options, db };
       try {
         const response = await next(change, nextOptions);
         await client.query('COMMIT');

@@ -547,4 +547,60 @@ describe('pg_e2e', () => {
       expect(res1).toEqual(exp1);
     });
   });
+
+  test('without_transaction', async () => {
+    const id = uuid();
+
+    try {
+      await store.write({
+        users: {
+          $key: id,
+          $put: true,
+          name: 'A',
+          email: 'a',
+        },
+        posts: {
+          $key: 'nevermind',
+          title: 'Fail',
+        },
+      });
+    } catch (_) {
+      /* Do nothing. */
+    }
+
+    const res = await store.read(['users', id], { name: true });
+    expect(res).toEqual({ name: 'A' });
+  });
+
+  test('with_transaction', async () => {
+    const id = uuid();
+    const pgClient = await getPool().connect();
+    await pgClient.query('BEGIN');
+
+    try {
+      await store.write(
+        {
+          users: {
+            $key: id,
+            $put: true,
+            name: 'A',
+            email: 'a',
+          },
+          posts: {
+            $key: 'nevermind',
+            title: 'Fail',
+          },
+        },
+        { pgClient },
+      );
+      await pgClient.query('COMMIT');
+    } catch (_) {
+      await pgClient.query('ROLLBACK');
+    }
+
+    await pgClient.release();
+
+    const res = await store.read(['users', id], { name: true });
+    expect(res).toEqual({ name: null });
+  });
 });
