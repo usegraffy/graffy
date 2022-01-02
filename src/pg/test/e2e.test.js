@@ -451,6 +451,28 @@ describe('pg_e2e', () => {
     expect(res2).toEqual(exp2);
   });
 
+  test('delete', async () => {
+    const uid = v4();
+    const res1 = await store.write(['users', uid], {
+      name: 'Alice',
+      $put: true,
+    });
+
+    const exp1 = {
+      id: uid,
+      name: 'Alice',
+      email: null,
+      settings: null,
+      version: expect.any(Number),
+    };
+
+    expect(res1).toEqual(exp1);
+
+    const res2 = await store.write(['users'], { [uid]: null });
+
+    expect(res2).toEqual({ [uid]: null });
+  });
+
   describe('aggregations', () => {
     beforeEach(async () => {
       await store.write('users', [

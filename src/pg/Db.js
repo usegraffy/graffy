@@ -16,7 +16,7 @@ import {
   decodeQuery,
 } from '@graffy/common';
 import { selectByArgs, selectByIds } from './sql/select';
-import { put, patch } from './sql/index.js';
+import { put, patch, del } from './sql/index.js';
 import debug from 'debug';
 const log = debug('graffy:pg:db');
 
@@ -129,21 +129,20 @@ export default class Db {
   }
 
   async write(rootChange, tableOptions) {
-    const sqls = [];
-    const addToQuery = (sql) => sqls.push(sql);
+    // const sqls = [];
+    // const addToQuery = (sql) => sqls.push(sql);
     const { prefix } = tableOptions;
 
     const change = unwrap(rootChange, prefix);
-    for (const node of change) {
+
+    const sqls = change.map((node) => {
+      const arg = decodeArgs(node);
+
       if (isRange(node)) {
-        throw Error(
-          node.key === node.end
-            ? 'pg_write.delete_unsupported'
-            : 'pg_write.write_range_unsupported',
-        );
+        if (node.key === node.end) return del(arg, tableOptions);
+        throw Error('pg_write.write_range_unsupported');
       }
 
-      const arg = decodeArgs(node);
       const object = decodeGraph(node.children);
       if (isPlainObject(arg)) {
         mergeObject(object, arg);
@@ -155,10 +154,10 @@ export default class Db {
         throw Error('pg_write.partial_put_unsupported');
       }
 
-      object.$put
-        ? addToQuery(put(object, arg, tableOptions))
-        : addToQuery(patch(object, arg, tableOptions));
-    }
+      return object.$put
+        ? put(object, arg, tableOptions)
+        : patch(object, arg, tableOptions);
+    });
 
     const result = [];
     await Promise.all(
