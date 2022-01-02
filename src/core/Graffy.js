@@ -8,7 +8,6 @@ import {
   encodeGraph,
   encodeQuery,
   finalize,
-  wrap,
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';
 import { validateCall, validateOn } from './validate.js';
