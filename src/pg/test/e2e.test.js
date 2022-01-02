@@ -468,9 +468,9 @@ describe('pg_e2e', () => {
 
     expect(res1).toEqual(exp1);
 
-    const res2 = await store.write(['users'], { [uid]: null });
+    const res2 = await store.write(['users', uid], null);
 
-    expect(res2).toEqual({ [uid]: null });
+    expect(res2).toEqual(null);
   });
 
   describe('aggregations', () => {

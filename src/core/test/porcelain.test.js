@@ -306,3 +306,33 @@ test('query_forwarding', async () => {
 
   expect(result).toEqual(expected);
 });
+
+test('read_leaf', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 44 }));
+  store.onRead('foo', provider);
+  const res = await store.read('foo.bar', true);
+
+  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(res).toBe(44);
+});
+
+test('write_leaf', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 45 }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo.bar', 45);
+
+  expect(provider).toHaveBeenCalledWith({ bar: 45 }, {});
+  expect(res).toBe(45);
+});
+
+test('delete_leaf', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: null }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo.bar', null);
+
+  expect(provider).toHaveBeenCalledWith({ bar: null }, {});
+  expect(res).toBe(null);
+});

@@ -114,7 +114,7 @@ export default class Graffy {
 
   async write(...args) {
     const [path, porcelainChange, options] = validateCall(...args);
-    const change = wrap(encodeGraph(porcelainChange), path);
+    const change = encodeGraph(wrapObject(porcelainChange, path));
     const writtenChange = await this.core.call('write', change, options || {});
     return unwrapObject(decodeGraph(writtenChange), decodePath(path));
   }
