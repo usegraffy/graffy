@@ -1,5 +1,5 @@
-import sql, { join, raw } from 'sql-template-tag';
-import { isEmpty, encodePath } from '@graffy/common';
+import sql, { join } from 'sql-template-tag';
+import { isEmpty } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
 import { getArgMeta, getAggMeta } from './getMeta';
 import { getJsonBuildObject, lookup, getType } from './clauses.js';
