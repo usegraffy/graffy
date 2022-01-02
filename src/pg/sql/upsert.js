@@ -34,23 +34,14 @@ function getSingleSql(arg, options) {
 }
 
 export function patch(object, arg, options) {
-  const { table, idCol } = options;
-  const { where, meta } = isPlainObject(arg)
-    ? getArgSql(arg, options)
-    : { where: [sql`"${raw(idCol)}" = ${arg}`], meta: getIdMeta(options) };
-  if (!where || !where.length) throw Error('pg_write.no_condition');
+  const { table } = options;
+  const { where, meta } = getSingleSql(arg, options);
 
   const row = object; // objectToRow(object, options);
 
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
-    WHERE ${
-      isPlainObject(arg)
-        ? sql`"${raw(idCol)}" = (
-            SELECT "${raw(idCol)}" FROM "${raw(table)}"
-            WHERE ${join(where, ` AND `)} LIMIT 1)`
-        : join(where, ` AND `)
-    }
+    WHERE ${where}
     RETURNING (${getSelectCols(table)} || ${meta})`;
 }
 
