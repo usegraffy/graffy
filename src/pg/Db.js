@@ -108,12 +108,12 @@ export default class Db {
             const childArgs = decodeArgs(childNode);
             const projection = childNode.children
               ? decodeQuery(childNode.children)
-              : true;
+              : null;
 
             promises.push(getByArgs({ ...args, ...childArgs }, projection));
           }
         } else {
-          const projection = node.children ? decodeQuery(node.children) : true;
+          const projection = node.children ? decodeQuery(node.children) : null;
           promises.push(getByArgs(args, projection));
         }
       } else {
