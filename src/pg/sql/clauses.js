@@ -1,5 +1,5 @@
 import sql, { Sql, raw, join, empty } from 'sql-template-tag';
-import { isEmpty } from '@graffy/common';
+import { encodePath, isEmpty } from '@graffy/common';
 
 export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
 
@@ -22,9 +22,48 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
-export const getSelectCols = (table) => {
-  // TODO: When we have a query object, get only the requested columns.
-  return sql`to_jsonb("${raw(table)}")`;
+export const lookup = (prop, type) => {
+  const [prefix, ...suffix] = encodePath(prop);
+  const op = type === 'text' ? sql`#>>` : sql`#>`;
+  return suffix.length
+    ? sql`"${raw(prefix)}" ${op} ${suffix}`
+    : sql`"${raw(prefix)}"`;
+};
+
+export const getType = (prop) => {
+  const [_prefix, ...suffix] = encodePath(prop);
+  // TODO: Get the actual type using the information_schema
+  // and initialization time and stop using any.
+  return suffix.length ? 'jsonb' : 'any';
+};
+
+const aggSql = {
+  $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
+  $avg: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $max: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $min: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+};
+
+export const getSelectCols = (table, projection = null) => {
+  if (!projection) return sql`to_jsonb("${raw(table)}")`;
+
+  const sqls = [];
+  for (const key in projection) {
+    if (key === '$count') {
+      sqls.push(sql`'$count', count(*)`);
+    } else if (aggSql[key]) {
+      const subSqls = [];
+      for (const prop in projection[key]) {
+        subSqls.push(sql`${prop}::text, ${aggSql[key](prop)}`);
+      }
+      sqls.push(sql`${key}::text, jsonb_build_object(${join(subSqls, ', ')})`);
+    } else {
+      sqls.push(sql`${key}::text, "${raw(key)}"`);
+    }
+  }
+
+  return sql`jsonb_build_object(${join(sqls, ', ')})`;
 };
 
 export const getInsert = (row, options) => {

@@ -103,8 +103,10 @@ function encode(value, { version, isGraph } = {}) {
     if (object === null) {
       node.end = node.key;
     } else if (isDef($key) && isDef(key) && key !== $key) {
-      // An array has been skipped because there is only one child.
+      // An array has been omitted because there is only one child.
       node.children = [makeNode(object, undefined, ver)].filter(Boolean);
+      // We don't want to add a $put at this level.
+      return node;
     } else if ($ref) {
       pushLink($ref, node.version, props, $val, $chi);
       if (!isGraph) return; // Drop query aliases from encoded format

@@ -15,3 +15,9 @@ export const getArgMeta = (key, prefix, idCol) =>
     )}, "${raw(idCol)}")`,
     $ver: nowTimestamp,
   });
+
+export const getAggMeta = (key, $group) =>
+  getJsonBuildObject({
+    $key: join([key, getJsonBuildObject({ $group })].filter(Boolean), ' || '),
+    $ver: nowTimestamp,
+  });

@@ -306,3 +306,83 @@ test('query_forwarding', async () => {
 
   expect(result).toEqual(expected);
 });
+
+test('read_leaf', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 44 }));
+  store.onRead('foo', provider);
+  const res = await store.read('foo.bar', true);
+
+  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(res).toBe(44);
+});
+
+test('write_leaf', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 45 }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo.bar', 45);
+
+  expect(provider).toHaveBeenCalledWith({ bar: 45 }, {});
+  expect(res).toBe(45);
+});
+
+test('delete_leaf', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: null }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo.bar', null);
+
+  expect(provider).toHaveBeenCalledWith({ bar: null }, {});
+  expect(res).toBe(null);
+});
+
+test('read_key', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 44 }));
+  store.onRead('foo', provider);
+  const res = await store.read('foo', { $key: 'bar' });
+
+  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(res).toEqual([44]); // Can't add $key:bar on the number 44
+});
+
+test('read_array_key', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 44 }));
+  store.onRead('foo', provider);
+  const res = await store.read('foo', [{ $key: 'bar' }]);
+
+  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(res).toEqual([44]);
+});
+
+test('write_key', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 44 }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo', { $key: 'bar', $val: 44 });
+
+  expect(provider).toHaveBeenCalledWith({ bar: 44 }, {});
+  expect(res).toEqual({ bar: 44 });
+});
+
+test('write_array_key', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: 44 }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo', [{ $key: 'bar', $val: 44 }]);
+
+  expect(provider).toHaveBeenCalledWith({ bar: 44 }, {});
+  expect(res).toEqual({ bar: 44 });
+});
+
+test('write_key_put', async () => {
+  const store = new Graffy();
+  const provider = jest.fn(() => ({ bar: { baz: 4, $put: true } }));
+  store.onWrite('foo', provider);
+  const res = await store.write('foo', { $key: 'bar', $put: true, baz: 4 });
+
+  expect(provider).toHaveBeenCalledWith({ bar: { $put: true, baz: 4 } }, {});
+  expect(res).toEqual({ bar: { baz: 4, $put: true } });
+});

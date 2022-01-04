@@ -24,7 +24,7 @@ describe('select_sql', () => {
       FROM "user" ORDER BY "name" ASC, "id" ASC LIMIT ${10}
     `;
 
-    expectSql(selectByArgs(arg, options), expectedResult);
+    expectSql(selectByArgs(arg, null, options), expectedResult);
   });
 
   test('selectById', () => {
@@ -42,7 +42,7 @@ describe('select_sql', () => {
       )
       FROM "user" WHERE "id" IN (${ids[0]}, ${ids[1]})
     `;
-    expectSql(selectByIds(ids, options), expectedResult);
+    expectSql(selectByIds(ids, null, options), expectedResult);
   });
 
   test('selectByArgs_order_first', () => {
@@ -64,7 +64,7 @@ describe('select_sql', () => {
       FROM "user" ORDER BY "createTime" ASC, "id" ASC LIMIT ${10}
     `;
 
-    expectSql(selectByArgs(arg, options), expectedResult);
+    expectSql(selectByArgs(arg, null, options), expectedResult);
   });
 
   test('selectByArgs_order_before', () => {
@@ -88,7 +88,7 @@ describe('select_sql', () => {
   ORDER BY "createTime" ASC, "id" ASC LIMIT ${4096}
 `;
 
-    expectSql(selectByArgs(arg, options), expectedResult);
+    expectSql(selectByArgs(arg, null, options), expectedResult);
   });
 
   // test('selectByArgs_json manipulation', () => {});

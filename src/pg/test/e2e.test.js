@@ -450,4 +450,158 @@ describe('pg_e2e', () => {
     exp2.$prev = null;
     expect(res2).toEqual(exp2);
   });
+
+  test('delete', async () => {
+    const uid = v4();
+    const res1 = await store.write(['users', uid], {
+      name: 'Alice',
+      $put: true,
+    });
+
+    const exp1 = {
+      id: uid,
+      name: 'Alice',
+      email: null,
+      settings: null,
+      version: expect.any(Number),
+    };
+
+    expect(res1).toEqual(exp1);
+
+    const res2 = await store.write(['users', uid], null);
+
+    expect(res2).toEqual(null);
+  });
+
+  describe('aggregations', () => {
+    beforeEach(async () => {
+      await store.write('users', [
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: { foo: [1, 2, 3] },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'B',
+          email: 'b',
+          settings: { foo: [3], bar: [4] },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'C',
+          email: 'c',
+          settings: { bar: [5, 6] },
+        },
+        { $key: uuid(), $put: true, name: 'C', email: 'c2' },
+      ]);
+    });
+
+    test('count', async () => {
+      const res1 = await store.read('users', {
+        $key: { name: { $not: null }, $group: [] },
+        $count: true,
+      });
+
+      expect(res1[0].$count).toEqual(4);
+    });
+
+    test('card', async () => {
+      const res1 = await store.read('users', {
+        $key: { $group: [] },
+        $card: { name: true },
+      });
+
+      expect(res1[0].$card.name).toEqual(3);
+    });
+
+    test('sum', async () => {
+      const res1 = await store.read('users', {
+        $key: { $group: [] },
+        $sum: { 'settings.foo.0': true },
+      });
+
+      expect(res1[0].$sum['settings.foo.0']).toEqual(4);
+    });
+
+    test('grouped_card', async () => {
+      const res1 = await store.read('users', {
+        $key: { $group: ['name'], $all: true },
+        $card: { email: true },
+      });
+
+      const exp1 = [
+        { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['A'] } },
+        { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['B'] } },
+        { $card: { email: 2 }, $key: { $group: ['name'], $cursor: ['C'] } },
+      ];
+
+      exp1.$page = { $group: ['name'], $all: true };
+      exp1.$prev = null;
+      exp1.$next = null;
+
+      expect(res1).toEqual(exp1);
+    });
+  });
+
+  /* Skipping until we figure out why it's flaky. */
+  test.skip('without_transaction', async () => {
+    const id = uuid();
+
+    try {
+      await store.write({
+        users: {
+          $key: id,
+          $put: true,
+          name: 'A',
+          email: 'a',
+        },
+        posts: {
+          $key: 'nevermind',
+          title: 'Fail',
+        },
+      });
+    } catch (_) {
+      /* Do nothing. */
+    }
+
+    const res = await store.read(['users', id], { name: true });
+    expect(res).toEqual({ name: 'A' });
+  });
+
+  test('with_transaction', async () => {
+    const id = uuid();
+    const pgClient = await getPool().connect();
+    await pgClient.query('BEGIN');
+
+    try {
+      await store.write(
+        {
+          users: {
+            $key: id,
+            $put: true,
+            name: 'A',
+            email: 'a',
+          },
+          posts: {
+            $key: 'nevermind',
+            title: 'Fail',
+          },
+        },
+        { pgClient },
+      );
+      await pgClient.query('COMMIT');
+    } catch (_) {
+      await pgClient.query('ROLLBACK');
+    }
+
+    await pgClient.release();
+
+    const res = await store.read(['users', id], { name: true });
+    expect(res).toEqual({ name: null });
+  });
 });

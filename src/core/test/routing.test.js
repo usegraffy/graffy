@@ -113,3 +113,17 @@ test('plumbing_module_provider_miss', async () => {
 
   expect(provider).not.toBeCalled();
 });
+
+test('option_update', async () => {
+  const provider1 = jest.fn((payload, options, next) => {
+    return next(payload, { ...options, opt: 1 });
+  });
+
+  const provider2 = jest.fn(() => ({ foo: 3 }));
+
+  g.on('read', provider1);
+  g.onRead(provider2);
+
+  g.read({ foo: true });
+  expect(provider2).toBeCalledWith({ foo: true }, { opt: 1 });
+});

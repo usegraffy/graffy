@@ -13,9 +13,10 @@ import {
   isRange,
   decodeGraph,
   mergeObject,
+  decodeQuery,
 } from '@graffy/common';
 import { selectByArgs, selectByIds } from './sql/select';
-import { put, patch } from './sql/index.js';
+import { put, patch, del } from './sql/index.js';
 import debug from 'debug';
 const log = debug('graffy:pg:db');
 
@@ -75,16 +76,21 @@ export default class Db {
     const results = [];
     const { prefix } = tableOptions;
 
-    const getByArgs = async (args) => {
-      const result = await this.readSql(selectByArgs(args, tableOptions));
+    const getByArgs = async (args, projection) => {
+      const result = await this.readSql(
+        selectByArgs(args, projection, tableOptions),
+      );
       const wrappedGraph = encodeGraph(wrapObject(result, prefix));
       log('getByArgs', wrappedGraph);
       merge(results, wrappedGraph);
     };
 
     const getByIds = async () => {
+      // TODO: Calculate a combined projection.
+      // Bonus: Strategically split into multiple read operations
+      // based on projection.
       const result = await this.readSql(
-        selectByIds(Object.keys(idQueries), tableOptions),
+        selectByIds(Object.keys(idQueries), null, tableOptions),
       );
       result.forEach((object) => {
         const wrappedGraph = encodeGraph(wrapObject(object, prefix));
@@ -100,10 +106,15 @@ export default class Db {
         if (node.prefix) {
           for (const childNode of node.children) {
             const childArgs = decodeArgs(childNode);
-            promises.push(getByArgs({ ...args, ...childArgs }));
+            const projection = childNode.children
+              ? decodeQuery(childNode.children)
+              : null;
+
+            promises.push(getByArgs({ ...args, ...childArgs }, projection));
           }
         } else {
-          promises.push(getByArgs(args));
+          const projection = node.children ? decodeQuery(node.children) : null;
+          promises.push(getByArgs(args, projection));
         }
       } else {
         idQueries[node.key] = node.children;
@@ -118,21 +129,20 @@ export default class Db {
   }
 
   async write(rootChange, tableOptions) {
-    const sqls = [];
-    const addToQuery = (sql) => sqls.push(sql);
+    // const sqls = [];
+    // const addToQuery = (sql) => sqls.push(sql);
     const { prefix } = tableOptions;
 
     const change = unwrap(rootChange, prefix);
-    for (const node of change) {
+
+    const sqls = change.map((node) => {
+      const arg = decodeArgs(node);
+
       if (isRange(node)) {
-        throw Error(
-          node.key === node.end
-            ? 'pg_write.delete_unsupported'
-            : 'pg_write.write_range_unsupported',
-        );
+        if (node.key === node.end) return del(arg, tableOptions);
+        throw Error('pg_write.write_range_unsupported');
       }
 
-      const arg = decodeArgs(node);
       const object = decodeGraph(node.children);
       if (isPlainObject(arg)) {
         mergeObject(object, arg);
@@ -144,10 +154,10 @@ export default class Db {
         throw Error('pg_write.partial_put_unsupported');
       }
 
-      object.$put
-        ? addToQuery(put(object, arg, tableOptions))
-        : addToQuery(patch(object, arg, tableOptions));
-    }
+      return object.$put
+        ? put(object, arg, tableOptions)
+        : patch(object, arg, tableOptions);
+    });
 
     const result = [];
     await Promise.all(
