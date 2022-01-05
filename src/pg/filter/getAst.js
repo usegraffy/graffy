@@ -124,12 +124,11 @@ function simplify(node) {
   }
 
   // unwrap $and / $or with only one limb
-  if (op === '$and' || op === '$or') {
-    if (!node[1].length) throw Error('pgast.expected_children:' + op);
-    return node[1].length === 1 ? node[1][0] : node;
+  if ((op === '$and' || op === '$or') && node[1].length === 1) {
+    return node[1][0];
   }
 
-  // $not with $eq -> $neq, with $in -> $nin etc.
+  // $not $eq -> $neq, $in -> $nin etc.
   if (op === '$not') {
     const [subop, ...subargs] = node[1];
     const invop = inverse[subop];

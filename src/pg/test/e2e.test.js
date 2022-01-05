@@ -1,4 +1,4 @@
-import { v4 as uuid, v4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import Graffy from '@graffy/core';
 import { pg } from '../index.js';
 import {
@@ -375,8 +375,8 @@ describe('pg_e2e', () => {
   });
 
   test('pass_through', async () => {
-    const uid = v4();
-    const pid = v4();
+    const uid = uuid();
+    const pid = uuid();
     const res1 = await store.write({
       users: { [uid]: { name: 'Alice', $put: true } },
       posts: { [pid]: { title: 'A story', authorId: uid, $put: true } },
@@ -398,6 +398,8 @@ describe('pg_e2e', () => {
           title: 'A story',
           authorId: uid,
           version: expect.any(Number),
+          commenters: null,
+          scores: null,
         },
       },
     };
@@ -418,7 +420,7 @@ describe('pg_e2e', () => {
   });
 
   test('dot_operator', async () => {
-    const uid = v4();
+    const uid = uuid();
     await store.write({
       users: {
         [uid]: { name: 'Alice', settings: { foo: 'f', bar: 9 }, $put: true },
@@ -452,7 +454,7 @@ describe('pg_e2e', () => {
   });
 
   test('delete', async () => {
-    const uid = v4();
+    const uid = uuid();
     const res1 = await store.write(['users', uid], {
       name: 'Alice',
       $put: true,
@@ -603,5 +605,26 @@ describe('pg_e2e', () => {
 
     const res = await store.read(['users', id], { name: true });
     expect(res).toEqual({ name: null });
+  });
+
+  test('complex_types', async () => {
+    const pid1 = uuid();
+    const res1 = await store.write(['posts', pid1], {
+      title: 'Post One',
+      commenters: ['alice', 'bob', 'charlie'],
+      scores: [5, 10, 0],
+      $put: true,
+    });
+
+    console.log(res1);
+
+    expect(res1).toEqual({
+      id: pid1,
+      authorId: null,
+      title: 'Post One',
+      commenters: ['alice', 'bob', 'charlie'],
+      scores: '(5, 10, 0)', // We won't actually be reading these. Ever.
+      version: expect.any(Number),
+    });
   });
 });

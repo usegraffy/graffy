@@ -29,12 +29,12 @@ export const lookup = (prop) => {
     : sql`"${raw(prefix)}"`;
 };
 
-export const getType = (prop) => {
-  const [_prefix, ...suffix] = encodePath(prop);
-  // TODO: Get the actual type using the information_schema
-  // and initialization time and stop using any.
-  return suffix.length ? 'jsonb' : 'any';
-};
+// export const getType = (prop) => {
+//   const [_prefix, ...suffix] = encodePath(prop);
+//   // TODO: Get the actual type using the information_schema
+//   // and initialization time and stop using any.
+//   return suffix.length ? 'jsonb' : 'any';
+// };
 
 const aggSql = {
   $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
@@ -65,20 +65,55 @@ export const getSelectCols = (table, projection = null) => {
   return sql`jsonb_build_object(${join(sqls, ', ')})`;
 };
 
+export function vertexSql(array) {
+  return sql`array[${join(
+    array.map((num) =>
+      num === Infinity
+        ? sql`'Infinity'`
+        : num === -Infinity
+        ? sql`'-Infinity'`
+        : num,
+    ),
+  )}]::float8[]`;
+}
+
+function castValue(value, type, name) {
+  if (!type) throw Error('pg.write_no_column ' + name);
+  if (value instanceof Sql) return value;
+  if (value === null) return sql`NULL`;
+
+  if (type === 'jsonb') {
+    return value.$put
+      ? JSON.stringify(stripAttributes(value))
+      : sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`;
+  }
+
+  if (type === 'cube') {
+    if (
+      !Array.isArray(value) ||
+      !value.length ||
+      (Array.isArray(value[0]) && value.length !== 2)
+    ) {
+      throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
+    }
+    return Array.isArray(value[0])
+      ? sql`cube(${vertexSql(value[0])}, ${vertexSql(value[1])})`
+      : sql`cube(${vertexSql(value)})`;
+  }
+
+  return value;
+}
+
 export const getInsert = (row, options) => {
   const cols = [];
   const vals = [];
 
   Object.entries(row)
-    .filter(([name]) => name !== options.verCol && name[0] !== '$')
+    .filter(([col]) => col !== options.verCol && col[0] !== '$')
     .concat([[options.verCol, nowTimestamp]])
     .forEach(([col, val]) => {
       cols.push(sql`"${raw(col)}"`);
-      vals.push(
-        val instanceof Sql || typeof val !== 'object' || !val
-          ? val
-          : sql`${JSON.stringify(stripAttributes(val))}::jsonb`,
-      );
+      vals.push(castValue(val, options.schema.types[col], col));
     });
 
   return { cols: join(cols, ', '), vals: join(vals, ', ') };
@@ -87,16 +122,15 @@ export const getInsert = (row, options) => {
 export const getUpdates = (row, options) => {
   return join(
     Object.entries(row)
-      .filter(([name]) => name !== options.idCol && name[0] !== '$')
-      .map(([name, value]) => {
-        return sql`"${raw(name)}" = ${
-          value instanceof Sql || typeof value !== 'object' || !value
-            ? value
-            : !value.$put
-            ? sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`
-            : sql`${JSON.stringify(stripAttributes(value))}::jsonb`
-        }`;
-      })
+      .filter(([col]) => col !== options.idCol && col[0] !== '$')
+      .map(
+        ([col, val]) =>
+          sql`"${raw(col)}" = ${castValue(
+            val,
+            options.schema.types[col],
+            col,
+          )}`,
+      )
       .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
     ', ',
   );

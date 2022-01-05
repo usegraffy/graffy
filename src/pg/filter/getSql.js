@@ -1,6 +1,7 @@
 import sql, { join, raw } from 'sql-template-tag';
 import getAst from './getAst.js';
 import { encodePath } from '@graffy/common';
+import { vertexSql } from '../sql/clauses.js';
 
 const opSql = {
   $and: `AND`, // Not SQL as these are used as delimiters
@@ -38,12 +39,14 @@ function castValue(value, type, op) {
   if (type === 'cube') {
     if (
       !Array.isArray(value) ||
-      value.length !== 2 ||
-      !Array.isArray(value[0])
+      !value.length ||
+      (Array.isArray(value[0]) && value.length !== 2)
     ) {
       throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
     }
-    return sql`${sqlOp} cube(${join(value)})`;
+    return Array.isArray(value[0])
+      ? sql`cube(${vertexSql(value[0])}, ${vertexSql(value[1])})`
+      : sql`cube(${vertexSql(value)})`;
   }
 
   return sql`${sqlOp} ${value}`;

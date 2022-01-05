@@ -26,14 +26,19 @@ describe('postgres', () => {
 
   beforeEach(async () => {
     store = new Graffy();
-    store.use('user', pg({ schema: { types: {} } }));
+    store.use(
+      'user',
+      pg({
+        schema: { types: { id: 'uuid', name: 'text', updatedAt: 'int8' } },
+      }),
+    );
     store.use(
       'googleSession',
       pg({
         table: 'googleSession',
         idCol: 'id',
         verCol: 'version',
-        schema: { types: { userId: 'uuid' } },
+        schema: { types: { userId: 'uuid', token: 'text', version: 'int8' } },
       }),
     );
 
@@ -43,7 +48,14 @@ describe('postgres', () => {
         table: 'email',
         idCol: 'id',
         verCol: 'version',
-        schema: { types: {} },
+        schema: {
+          types: {
+            id: 'uuid',
+            userId: 'uuid',
+            tenantId: 'uuid',
+            version: 'int8',
+          },
+        },
       }),
     );
     store.use(
