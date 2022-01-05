@@ -1,4 +1,5 @@
 import { Pool, Client } from 'pg';
+import sqlTag from 'sql-template-tag';
 import {
   isPlainObject,
   decodeArgs,
@@ -54,15 +55,14 @@ export default class Db {
   }
 
   async readSql(sql) {
-    let result = await this.query(sql);
+    const result = (await this.query(sql)).rows.flat();
     // Each row is an array, as there is only one column returned.
-    result = result.rows.flat();
     log('Read result', result);
     return result;
   }
 
   async writeSql(sql) {
-    let res = await this.query(sql);
+    const res = await this.query(sql);
     log('Rows written', res.rowCount);
     if (!res.rowCount) {
       throw Error('pg.nothing_written ' + sql.text + ' with ' + sql.values);
@@ -70,11 +70,46 @@ export default class Db {
     return res.rows[0][0];
   }
 
+  /*
+    Adds .schema to tableOptions if it doesn't exist yet.
+    It mutates the argument, to "persist" the results and
+    avoid this query in every operation. 
+  */
+  async ensureSchema(tableOptions) {
+    if (tableOptions.schema) return;
+    const { table } = tableOptions;
+
+    const types = (
+      await this.query(
+        sqlTag`SELECT jsonb_object_agg(
+          column_name,
+          udt_name
+      )
+      FROM information_schema.columns
+      WHERE
+          table_name = ${table} AND
+          table_schema = (
+              SELECT table_schema
+              FROM information_schema.tables
+              WHERE table_name = ${table}
+              ORDER BY array_position(current_schemas(false)::text[], table_schema::text) ASC
+              LIMIT 1)`,
+      )
+    ).rows[0][0];
+
+    if (!types) throw Error(`pg.missing_table ${table}`);
+
+    log('ensureSchema', types);
+    tableOptions.schema = { types };
+  }
+
   async read(rootQuery, tableOptions) {
     const idQueries = {};
     const promises = [];
     const results = [];
     const { prefix } = tableOptions;
+
+    await this.ensureSchema(tableOptions);
 
     const getByArgs = async (args, projection) => {
       const result = await this.readSql(
@@ -129,9 +164,9 @@ export default class Db {
   }
 
   async write(rootChange, tableOptions) {
-    // const sqls = [];
-    // const addToQuery = (sql) => sqls.push(sql);
     const { prefix } = tableOptions;
+
+    await this.ensureSchema(tableOptions);
 
     const change = unwrap(rootChange, prefix);
 

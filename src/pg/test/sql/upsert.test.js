@@ -9,6 +9,7 @@ const options = {
   prefix: ['post'],
   idCol: 'id',
   verCol: 'version',
+  schema: { types: { email: 'text' } },
 };
 
 describe('byId', () => {

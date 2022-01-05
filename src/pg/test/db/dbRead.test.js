@@ -19,7 +19,10 @@ describe('postgres', () => {
   let store;
   beforeEach(async () => {
     store = new Graffy();
-    store.use('user', pg({ idCol: 'id', verCol: 'version' }));
+    store.use(
+      'user',
+      pg({ idCol: 'id', verCol: 'version', schema: { types: {} } }),
+    );
   });
 
   afterEach(async () => {

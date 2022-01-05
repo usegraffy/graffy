@@ -22,11 +22,10 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
-export const lookup = (prop, type) => {
+export const lookup = (prop) => {
   const [prefix, ...suffix] = encodePath(prop);
-  const op = type === 'text' ? sql`#>>` : sql`#>`;
   return suffix.length
-    ? sql`"${raw(prefix)}" ${op} ${suffix}`
+    ? sql`"${raw(prefix)}" #> ${suffix}`
     : sql`"${raw(prefix)}"`;
 };
 
