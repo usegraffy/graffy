@@ -77,13 +77,14 @@ export function vertexSql(array) {
   )}]::float8[]`;
 }
 
-function castValue(value, type, name) {
+function castValue(value, type, name, isPut) {
   if (!type) throw Error('pg.write_no_column ' + name);
   if (value instanceof Sql) return value;
   if (value === null) return sql`NULL`;
 
   if (type === 'jsonb') {
-    return value.$put
+    console.log('jsonb', value, type, name);
+    return isPut
       ? JSON.stringify(stripAttributes(value))
       : sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`;
   }
@@ -113,7 +114,7 @@ export const getInsert = (row, options) => {
     .concat([[options.verCol, nowTimestamp]])
     .forEach(([col, val]) => {
       cols.push(sql`"${raw(col)}"`);
-      vals.push(castValue(val, options.schema.types[col], col));
+      vals.push(castValue(val, options.schema.types[col], col, row.$put));
     });
 
   return { cols: join(cols, ', '), vals: join(vals, ', ') };
@@ -129,6 +130,7 @@ export const getUpdates = (row, options) => {
             val,
             options.schema.types[col],
             col,
+            row.$put,
           )}`,
       )
       .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
