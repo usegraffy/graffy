@@ -2,7 +2,7 @@ import sql, { join } from 'sql-template-tag';
 import { isEmpty } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
 import { getArgMeta, getAggMeta } from './getMeta';
-import { getJsonBuildObject, lookup, getType } from './clauses.js';
+import { getJsonBuildObject, lookup } from './clauses.js';
 
 /**
   Uses the args object (typically passed in the $key attribute)
@@ -29,9 +29,7 @@ export default function getArgSql(
     $group ? getAggMeta(key, $group) : getArgMeta(key, prefix, idCol);
 
   const groupCols =
-    Array.isArray($group) && $group.length
-      ? $group.map((col) => lookup(col))
-      : undefined;
+    Array.isArray($group) && $group.length && $group.map(lookup);
 
   const group = groupCols ? join(groupCols, ', ') : undefined;
 
@@ -41,7 +39,7 @@ export default function getArgSql(
   let key;
   const where = [];
   if (!isEmpty(filter)) {
-    where.push(getFilterSql(filter, lookup, getType));
+    where.push(getFilterSql(filter, options));
     key = sql`${JSON.stringify(filter)}::jsonb`;
   }
 

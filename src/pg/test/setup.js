@@ -67,9 +67,8 @@ export async function teardownPgServer() {
 export async function resetTables() {
   if (!pool) throw Error('No pool; Did not setup PG or already torn down.');
 
-  await pool.query(sql`
-    CREATE EXTENSION IF NOT EXISTS "pgcrypto"
-  `);
+  await pool.query(sql`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`);
+  await pool.query(sql`CREATE EXTENSION IF NOT EXISTS "cube"`);
 
   await pool.query(sql`
     DROP TABLE IF EXISTS "users";
@@ -94,6 +93,8 @@ export async function resetTables() {
       "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
       "title" text,
       "authorId" text,
+      "commenters" text[],
+      "scores" cube,
       "version" int8 NOT NULL
     );
   `);

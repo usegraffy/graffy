@@ -2,11 +2,17 @@ import { remove, merge } from '@graffy/common';
 import Db from './Db.js';
 /**
  *
- * @param {{table?: string, idCol?: string, verCol?: string, connection?: any}} param0
+ * @param {{
+ *    table?: string,
+ *    idCol?: string,
+ *    verCol?: string,
+ *    connection?: any,
+ *    schema?: any
+ * }} options
  * @returns
  */
 export const pg =
-  ({ table, idCol, verCol, connection }) =>
+  ({ table, idCol, verCol, connection, schema }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
@@ -18,6 +24,7 @@ export const pg =
       table: table || prefix[prefix.length - 1] || 'default',
       idCol: idCol || 'id',
       verCol: verCol || 'updatedAt',
+      schema,
     };
 
     const defaultDb = new Db(connection);
@@ -50,25 +57,3 @@ export const pg =
       );
     }
   };
-
-/*
-  TODO: Uncomment and test in another PR.
-  
-  export const transaction = ({ connection }) => {
-    store.on('write', (change, options, next) => {
-      const client = await pool.connect();
-      await client.query('BEGIN');
-      const db = new Db(client);
-
-      nextOptions = { ...options, db };
-      try {
-        const response = await next(change, nextOptions);
-        await client.query('COMMIT');
-      } catch (e) {
-        await client.query('ROLLBACK')
-      } finally {
-        await client.release();
-      }
-    })
-  }
-*/

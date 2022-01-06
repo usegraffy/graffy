@@ -1,4 +1,4 @@
-import { v4 as uuid, v4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import Graffy from '@graffy/core';
 import { pg } from '../index.js';
 import {
@@ -375,8 +375,8 @@ describe('pg_e2e', () => {
   });
 
   test('pass_through', async () => {
-    const uid = v4();
-    const pid = v4();
+    const uid = uuid();
+    const pid = uuid();
     const res1 = await store.write({
       users: { [uid]: { name: 'Alice', $put: true } },
       posts: { [pid]: { title: 'A story', authorId: uid, $put: true } },
@@ -398,6 +398,8 @@ describe('pg_e2e', () => {
           title: 'A story',
           authorId: uid,
           version: expect.any(Number),
+          commenters: null,
+          scores: null,
         },
       },
     };
@@ -418,7 +420,7 @@ describe('pg_e2e', () => {
   });
 
   test('dot_operator', async () => {
-    const uid = v4();
+    const uid = uuid();
     await store.write({
       users: {
         [uid]: { name: 'Alice', settings: { foo: 'f', bar: 9 }, $put: true },
@@ -452,7 +454,7 @@ describe('pg_e2e', () => {
   });
 
   test('delete', async () => {
-    const uid = v4();
+    const uid = uuid();
     const res1 = await store.write(['users', uid], {
       name: 'Alice',
       $put: true,
@@ -603,5 +605,122 @@ describe('pg_e2e', () => {
 
     const res = await store.read(['users', id], { name: true });
     expect(res).toEqual({ name: null });
+  });
+
+  test('complex_types', async () => {
+    const pid1 = uuid();
+    const pid2 = uuid();
+    const res1 = await store.write('posts', {
+      [pid1]: {
+        title: 'Post One',
+        commenters: ['alice', 'bob', 'charlie'],
+        scores: [5, 10, 0],
+        $put: true,
+      },
+      [pid2]: {
+        title: 'Post Two',
+        commenters: ['alice', 'debra'],
+        scores: [-1, 3, 0],
+        $put: true,
+      },
+    });
+
+    const exp1 = {
+      [pid1]: {
+        id: pid1,
+        authorId: null,
+        title: 'Post One',
+        commenters: ['alice', 'bob', 'charlie'],
+        scores: '(5, 10, 0)', // We won't actually be reading these. Ever.
+        version: expect.any(Number),
+      },
+      [pid2]: {
+        id: pid2,
+        authorId: null,
+        title: 'Post Two',
+        commenters: ['alice', 'debra'],
+        scores: '(-1, 3, 0)',
+        version: expect.any(Number),
+      },
+    };
+
+    // Implicit array $put
+    exp1[pid1].commenters.$put = [{ $since: 0, $until: Infinity }];
+    exp1[pid2].commenters.$put = [{ $since: 0, $until: Infinity }];
+
+    expect(res1[pid1].commenters).toEqual(exp1[pid1].commenters);
+
+    // Case 2: Cube query
+
+    const res2 = await store.read('posts', {
+      $key: {
+        $all: true,
+        scores: {
+          $ctd: [
+            [0, 0, 0],
+            [20, 20, 0],
+          ],
+        },
+      },
+      title: true,
+    });
+
+    const exp2 = [
+      {
+        title: 'Post One',
+        $ref: ['posts', pid1],
+        $key: {
+          scores: {
+            $ctd: [
+              [0, 0, 0],
+              [20, 20, 0],
+            ],
+          },
+          $cursor: [pid1],
+        },
+      },
+    ];
+    exp2.$page = {
+      $all: true,
+      scores: {
+        $ctd: [
+          [0, 0, 0],
+          [20, 20, 0],
+        ],
+      },
+    };
+    exp2.$prev = null;
+    exp2.$next = null;
+
+    expect(res2).toEqual(exp2);
+
+    // Case 3: Array query
+
+    const res3 = await store.read('posts', {
+      $key: {
+        $all: true,
+        commenters: { $cts: ['bob'] },
+      },
+      title: true,
+    });
+
+    const exp3 = [
+      {
+        title: 'Post One',
+        $ref: ['posts', pid1],
+        $key: {
+          commenters: { $cts: ['bob'] },
+          $cursor: [pid1],
+        },
+      },
+    ];
+    exp3.$page = {
+      $all: true,
+      commenters: { $cts: ['bob'] },
+    };
+    exp3.$prev = null;
+    exp3.$next = null;
+
+    expect(res3).toEqual(exp3);
   });
 });

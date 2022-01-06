@@ -14,7 +14,6 @@ const valid = {
   $has: true,
   $cts: true,
   $ctd: true,
-  $ovl: true,
 };
 
 const inverse = {
@@ -29,7 +28,6 @@ const inverse = {
 };
 
 export default function getAst(filter) {
-  counter = 0;
   return simplify(construct(filter));
 }
 
@@ -39,7 +37,6 @@ export default function getAst(filter) {
    Important: The counter is best reset before calling construct() for the
    root filter, but this must not happen during recursive calls. */
 
-let counter;
 function construct(node, prop, op) {
   if (!node || typeof node !== 'object' || (prop && op)) {
     if (op && prop) return [op, prop, node];
@@ -57,14 +54,6 @@ function construct(node, prop, op) {
       }
       if (key === '$not') {
         return [key, construct(val, prop, op)];
-      }
-      if (key === '$any' || key === '$all') {
-        const elkey = 'el$' + counter++;
-        return [key, prop, elkey, construct(val, elkey)];
-      }
-      if (key === '$has') {
-        const elkey = 'el$' + counter++;
-        return [key, prop, elkey, construct(val, elkey)[1]];
       }
 
       if (key[0] === '$') {
@@ -90,10 +79,19 @@ function simplify(node) {
     node[1] = node[1].map((subnode) => simplify(subnode));
   } else if (op === '$not') {
     node[1] = simplify(node[1]);
-  } else if (op === '$all' || op === '$any') {
-    node[3] = simplify(node[3]);
-  } else if (op === '$has') {
-    node[3] = node[3].map((subnode) => simplify(subnode));
+  }
+
+  // Handle empty $and/$or and booleans
+  if (op === '$and') {
+    if (!node[1].length) return true;
+    if (node[1].includes(false)) return false;
+    node[1] = node[1].filter((item) => item !== true);
+  } else if (op === '$or') {
+    if (!node[1].length) return false;
+    if (node[1].includes(true)) return true;
+    node[1] = node[1].filter((item) => item !== false);
+  } else if (op === '$not' && typeof node[1] === 'boolean') {
+    return !node[1];
   }
 
   // $or with multiple $eq limbs with same prop -> $in
@@ -126,34 +124,15 @@ function simplify(node) {
   }
 
   // unwrap $and / $or with only one limb
-  if (op === '$and' || op === '$or') {
-    if (!node[1].length) throw Error('pgast.expected_children:' + op);
-    return node[1].length === 1 ? node[1][0] : node;
+  if ((op === '$and' || op === '$or') && node[1].length === 1) {
+    return node[1][0];
   }
 
-  // $not with $eq -> $nin, with $in -> $nin etc.
+  // $not $eq -> $neq, $in -> $nin etc.
   if (op === '$not') {
     const [subop, ...subargs] = node[1];
     const invop = inverse[subop];
     return invop ? [invop, ...subargs] : node;
-  }
-
-  // $any with $eq or $in -> $ovp
-  // $all with $eq or $in -> $ctd
-  if (op === '$any' || op === '$all') {
-    const [_, list, elkey, subnode] = node;
-    const [subop, elk, val] = subnode;
-    return (subop === '$eq' || subop === '$in') && elkey === elk
-      ? [op === '$any' ? '$ovl' : '$ctd', list, subop === '$eq' ? [val] : val]
-      : node;
-  }
-
-  // $has with only $eq -> $cts
-  if (op === '$has') {
-    const [_, list, elkey, limbs] = node;
-    return limbs.every(([subop, elk]) => subop === '$eq' && elk === elkey)
-      ? ['$cts', list, limbs.map(([_op, _prop, val]) => val)]
-      : node;
   }
 
   return node;

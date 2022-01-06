@@ -9,6 +9,16 @@ const options = {
   prefix: ['post'],
   idCol: 'id',
   verCol: 'version',
+  schema: {
+    types: {
+      id: 'text',
+      name: 'text',
+      type: 'text',
+      email: 'text',
+      config: 'jsonb',
+      version: 'int8',
+    },
+  },
 };
 
 describe('byId', () => {
@@ -28,10 +38,10 @@ describe('byId', () => {
       ),
       sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "version")
       VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},
-      ${JSON.stringify({ foo: 3 })}::jsonb, ${nowTimestamp})
+      ${JSON.stringify({ foo: 3 })}, ${nowTimestamp})
       ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "version")
         = (${'post22'}, ${'post'}, ${'hello'},${'world'},
-        ${JSON.stringify({ foo: 3 })}::jsonb, ${nowTimestamp})
+        ${JSON.stringify({ foo: 3 })}, ${nowTimestamp})
       RETURNING (to_jsonb("post") ||
         jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
     `,

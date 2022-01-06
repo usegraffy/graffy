@@ -12,13 +12,20 @@ describe('clauses', () => {
   const data = { a: 1, b: 1 };
 
   test('insert', () => {
-    const { cols, vals } = getInsert(data, { verCol: 'version' });
+    const { cols, vals } = getInsert(data, {
+      verCol: 'version',
+      schema: { types: { a: 'int8', b: 'float', version: 'int8' } },
+    });
     expectSql(cols, sql`"a", "b", "version"`);
     expectSql(vals, sql`${data.a} , ${data.b} , ${nowTimestamp}`);
   });
 
   test('updates', () => {
-    const options = { id: 'id', verCol: 'version' };
+    const options = {
+      idCol: 'id',
+      verCol: 'version',
+      schema: { types: { a: 'int8', b: 'float', version: 'int8' } },
+    };
     const update = getUpdates(data, options);
     expectSql(
       update,

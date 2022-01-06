@@ -12,6 +12,7 @@ describe('select_sql', () => {
       prefix: ['user'],
       idCol: 'id',
       verCol: 'version',
+      schema: { types: {} },
     };
     const expectedResult = sql`
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
