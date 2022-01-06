@@ -83,7 +83,6 @@ function castValue(value, type, name, isPut) {
   if (value === null) return sql`NULL`;
 
   if (type === 'jsonb') {
-    console.log('jsonb', value, type, name);
     return isPut
       ? JSON.stringify(stripAttributes(value))
       : sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`;
