@@ -609,22 +609,118 @@ describe('pg_e2e', () => {
 
   test('complex_types', async () => {
     const pid1 = uuid();
-    const res1 = await store.write(['posts', pid1], {
-      title: 'Post One',
-      commenters: ['alice', 'bob', 'charlie'],
-      scores: [5, 10, 0],
-      $put: true,
+    const pid2 = uuid();
+    const res1 = await store.write('posts', {
+      [pid1]: {
+        title: 'Post One',
+        commenters: ['alice', 'bob', 'charlie'],
+        scores: [5, 10, 0],
+        $put: true,
+      },
+      [pid2]: {
+        title: 'Post Two',
+        commenters: ['alice', 'debra'],
+        scores: [-1, 3, 0],
+        $put: true,
+      },
     });
 
-    console.log(res1);
+    const exp1 = {
+      [pid1]: {
+        id: pid1,
+        authorId: null,
+        title: 'Post One',
+        commenters: ['alice', 'bob', 'charlie'],
+        scores: '(5, 10, 0)', // We won't actually be reading these. Ever.
+        version: expect.any(Number),
+      },
+      [pid2]: {
+        id: pid2,
+        authorId: null,
+        title: 'Post Two',
+        commenters: ['alice', 'debra'],
+        scores: '(-1, 3, 0)',
+        version: expect.any(Number),
+      },
+    };
 
-    expect(res1).toEqual({
-      id: pid1,
-      authorId: null,
-      title: 'Post One',
-      commenters: ['alice', 'bob', 'charlie'],
-      scores: '(5, 10, 0)', // We won't actually be reading these. Ever.
-      version: expect.any(Number),
+    // Implicit array $put
+    exp1[pid1].commenters.$put = [{ $since: 0, $until: Infinity }];
+    exp1[pid2].commenters.$put = [{ $since: 0, $until: Infinity }];
+
+    expect(res1[pid1].commenters).toEqual(exp1[pid1].commenters);
+
+    // Case 2: Cube query
+
+    const res2 = await store.read('posts', {
+      $key: {
+        $all: true,
+        scores: {
+          $ctd: [
+            [0, 0, 0],
+            [20, 20, 0],
+          ],
+        },
+      },
+      title: true,
     });
+
+    const exp2 = [
+      {
+        title: 'Post One',
+        $ref: ['posts', pid1],
+        $key: {
+          scores: {
+            $ctd: [
+              [0, 0, 0],
+              [20, 20, 0],
+            ],
+          },
+          $cursor: [pid1],
+        },
+      },
+    ];
+    exp2.$page = {
+      $all: true,
+      scores: {
+        $ctd: [
+          [0, 0, 0],
+          [20, 20, 0],
+        ],
+      },
+    };
+    exp2.$prev = null;
+    exp2.$next = null;
+
+    expect(res2).toEqual(exp2);
+
+    // Case 3: Array query
+
+    const res3 = await store.read('posts', {
+      $key: {
+        $all: true,
+        commenters: { $cts: ['bob'] },
+      },
+      title: true,
+    });
+
+    const exp3 = [
+      {
+        title: 'Post One',
+        $ref: ['posts', pid1],
+        $key: {
+          commenters: { $cts: ['bob'] },
+          $cursor: [pid1],
+        },
+      },
+    ];
+    exp3.$page = {
+      $all: true,
+      commenters: { $cts: ['bob'] },
+    };
+    exp3.$prev = null;
+    exp3.$next = null;
+
+    expect(res3).toEqual(exp3);
   });
 });

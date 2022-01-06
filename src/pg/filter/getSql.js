@@ -45,8 +45,8 @@ function castValue(value, type, op) {
       throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
     }
     return Array.isArray(value[0])
-      ? sql`cube(${vertexSql(value[0])}, ${vertexSql(value[1])})`
-      : sql`cube(${vertexSql(value)})`;
+      ? sql`${sqlOp} cube(${vertexSql(value[0])}, ${vertexSql(value[1])})`
+      : sql`${sqlOp} cube(${vertexSql(value)})`;
   }
 
   return sql`${sqlOp} ${value}`;
