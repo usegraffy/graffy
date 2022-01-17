@@ -16,6 +16,7 @@ const options = {
       type: 'text',
       email: 'text',
       config: 'jsonb',
+      tags: 'jsonb',
       version: 'int8',
     },
   },
@@ -32,16 +33,18 @@ describe('byId', () => {
           name: 'hello',
           email: 'world',
           config: { foo: 3 },
+          tags: [1, 2],
         },
         'post22',
         options,
       ),
-      sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "version")
+      sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "tags", "version")
       VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},
-      ${JSON.stringify({ foo: 3 })}, ${nowTimestamp})
-      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "version")
+      ${JSON.stringify({ foo: 3 })}, ${JSON.stringify([1, 2])}, ${nowTimestamp})
+      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "tags", "version")
         = (${'post22'}, ${'post'}, ${'hello'},${'world'},
-        ${JSON.stringify({ foo: 3 })}, ${nowTimestamp})
+        ${JSON.stringify({ foo: 3 })},
+        ${JSON.stringify([1, 2])}, ${nowTimestamp})
       RETURNING (to_jsonb("post") ||
         jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
     `,
@@ -57,6 +60,7 @@ describe('byId', () => {
           name: 'hello',
           email: 'world',
           config: { foo: 3 },
+          tags: [1, 2, 3],
         },
         'post22',
         options,
@@ -67,6 +71,7 @@ describe('byId', () => {
         "email" = ${'world'},
         "config" = jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
           jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)),
+        "tags" = jsonb_strip_nulls(${JSON.stringify([1, 2, 3])}::jsonb),
         "version" =  ${nowTimestamp}
       WHERE "id" = ${'post22'}
       RETURNING (to_jsonb("post") ||

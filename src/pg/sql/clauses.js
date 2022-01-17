@@ -7,7 +7,7 @@ export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
   Important: This function assumes that the object's keys are from
   trusted sources.
 */
-export const getJsonBuildObject = (variadic) => {
+export const getJsonBuildTrusted = (variadic) => {
   const args = join(
     Object.entries(variadic).map(([name, value]) => {
       return sql`'${raw(name)}', ${getJsonBuildValue(value)}`;
@@ -137,8 +137,15 @@ export const getUpdates = (row, options) => {
   );
 };
 
-function getJsonUpdate({ $put, ...object }, col, path) {
-  if ($put) return JSON.stringify(object);
+function getJsonUpdate(object, col, path) {
+  if (
+    !object ||
+    typeof object !== 'object' ||
+    Array.isArray(object) ||
+    object.$put
+  ) {
+    return getJsonBuildValue(object);
+  }
 
   const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
   if (isEmpty(object)) return curr;
@@ -150,11 +157,7 @@ function getJsonUpdate({ $put, ...object }, col, path) {
     Object.entries(object).map(
       ([key, value]) =>
         /* Note: here we do not trust object keys */
-        sql`${key}::text, ${
-          typeof value === 'object' && value && !Array.isArray(value)
-            ? getJsonUpdate(value, col, path.concat(key))
-            : sql`${getJsonBuildValue(value)}`
-        }`,
+        sql`${key}::text, ${getJsonUpdate(value, col, path.concat(key))}`,
     ),
     ', ',
   )})`;
