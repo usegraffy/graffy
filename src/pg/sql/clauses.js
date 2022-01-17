@@ -29,13 +29,6 @@ export const lookup = (prop) => {
     : sql`"${raw(prefix)}"`;
 };
 
-// export const getType = (prop) => {
-//   const [_prefix, ...suffix] = encodePath(prop);
-//   // TODO: Get the actual type using the information_schema
-//   // and initialization time and stop using any.
-//   return suffix.length ? 'jsonb' : 'any';
-// };
-
 const aggSql = {
   $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
   $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
