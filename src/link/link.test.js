@@ -1,5 +1,5 @@
 import Graffy from '@graffy/core';
-import { encodeGraph } from '@graffy/common';
+import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import link from './index.js';
 
@@ -9,6 +9,7 @@ describe('link', () => {
   beforeEach(() => {
     store = new Graffy();
     backend = mockBackend();
+    backend.read = jest.fn(backend.read);
     store.use(
       link({
         'post.$pid.author': ['user', '$$post.$pid.authorId'],
@@ -44,6 +45,10 @@ describe('link', () => {
               { $key: { id: 'p02' }, $ref: ['post', 'p02'] },
               { $key: { id: 'p04' }, $ref: ['post', 'p04'] },
             ],
+          },
+          {
+            $key: { top: true },
+            $ref: ['post', 'p01'],
           },
         ],
       }),
@@ -106,6 +111,63 @@ describe('link', () => {
       $next: { $first: 1, $after: { id: 'p02' } },
       $prev: null,
     });
+
+    expect(res).toEqual(exp);
+  });
+
+  test('read_with_args', async () => {
+    const res = await store.read('post', [
+      {
+        $key: { top: true },
+        title: true,
+        author: { name: true },
+      },
+    ]);
+
+    expect(res).toEqual([
+      {
+        $ref: ['post', 'p01'],
+        title: 'Post 1 A',
+        author: { $ref: ['user', 'ali'], name: 'Alicia' },
+      },
+    ]);
+  });
+
+  test('read_with_page_args', async () => {
+    const res = await store.read('post', [
+      {
+        $key: { $first: 1, authorId: 'bob' },
+        title: true,
+        author: { name: true },
+      },
+    ]);
+
+    expect(backend.read).toBeCalledWith(
+      encodeQuery({
+        post: {
+          $key: { $first: 1, authorId: 'bob' },
+          title: true,
+          authorId: true,
+        },
+      }),
+      {},
+      expect.any(Function),
+    );
+
+    const exp = [
+      {
+        $key: { $cursor: { id: 'p02' }, authorId: 'bob' },
+        $ref: ['post', 'p02'],
+        title: 'Post 2 B',
+        author: {
+          $ref: ['user', 'bob'],
+          name: 'Robert',
+        },
+      },
+    ];
+    exp.$page = { $all: true, authorId: 'bob', $until: { id: 'p02' } };
+    exp.$next = { $first: 1, authorId: 'bob', $after: { id: 'p02' } };
+    exp.$prev = null;
 
     expect(res).toEqual(exp);
   });

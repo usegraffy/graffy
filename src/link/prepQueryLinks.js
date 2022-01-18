@@ -13,6 +13,11 @@ import {
     and add data properties required to construct the link.
   - returns an array of link definitions used in this query,
     along with the subQueries for each.
+  - as far as possible, placeholders in the returned defs are
+    replaced with actual keys from the query. In cases where
+    the keys are not known before the query is evaluated 
+    (i.e. pagination), placeholders are preserved to be
+    replaced in the linkGraph function.
 */
 
 export default function prepQueryLinks(rootQuery, defs) {
@@ -70,24 +75,38 @@ export default function prepQueryLinks(rootQuery, defs) {
     } else {
       for (const node of query) {
         if (!isBranch(node)) continue;
-        let usedHere = prepQueryDef(
-          node.children,
-          rest,
-          def,
-          {
-            ...vars,
-            [key.slice(1)]: node.key,
-          },
-          node.version,
-        );
+        let usedHere;
+        if (node.prefix) {
+          const pageToString = () => key;
+          usedHere = node.children.flatMap((subNode) => {
+            // We want the full decoded arg (with end, limit) for getting
+            // the defQuery, but we want only the key in prepareDef. As
+            // prepareDef assumes var values to be strings, we can use
+            // the toString function to hack this.
+            const pager = decodeArgs(subNode);
+            Object.defineProperty(pager, 'toString', { value: pageToString });
 
+            return prefixKey(
+              prepQueryDef(
+                subNode.children,
+                rest,
+                def,
+                { ...vars, [key.slice(1)]: [node.key, pager] },
+                node.version,
+              ),
+              key,
+            );
+          });
+        } else {
+          usedHere = prepQueryDef(
+            node.children,
+            rest,
+            def,
+            { ...vars, [key.slice(1)]: node.key },
+            node.version,
+          );
+        }
         usedHere = prefixKey(usedHere, node.key);
-
-        // Important: do not merge this with the previous line like:
-        // ```used = used || prepQueryDef(...)```
-        // `prepQueryDef` has side-effects (modifies the query), and
-        // the second argument after the `||` operator won't be
-        // called for any branch after `used` becomes true.
         used = used.concat(usedHere);
       }
     }
@@ -101,7 +120,7 @@ function getDefQuery(def, vars, version) {
   }
 
   function getPath(template) {
-    return template.split('.').map(getValue);
+    return template.split('.').flatMap(getValue);
   }
 
   const defQuery = [];
@@ -128,10 +147,10 @@ function prepareDef(def, vars) {
 
   function replacePlaceholders(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
-      return '$$' + key.slice(2).split('.').map(getValue).join('.');
+      return '$$' + key.slice(2).split('.').flatMap(getValue).join('.');
     }
     if (Array.isArray(key)) {
-      return key.map(replacePlaceholders);
+      return key.flatMap(replacePlaceholders);
     }
     if (typeof key === 'object' && key) {
       const result = {};
@@ -140,6 +159,5 @@ function prepareDef(def, vars) {
     }
     return getValue(key);
   }
-
-  return def.map(replacePlaceholders);
+  return def.flatMap(replacePlaceholders);
 }

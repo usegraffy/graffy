@@ -6,14 +6,32 @@ export default function linkGraph(rootGraph, defs) {
   for (const { path, def } of defs) linkGraphDef(rootGraph, path, def);
   return rootGraph;
 
-  function linkGraphDef(graph, path, def, version = 0) {
+  function findChildren(node) {
+    if (node.children) return node.children;
+    if (node.path) {
+      const linkedNode = unwrap(rootGraph, node.path);
+      if (Array.isArray(linkedNode)) return linkedNode;
+    }
+    throw Error('link.no_children ' + JSON.stringify(node));
+  }
+
+  function linkGraphDef(graph, path, def, vars = {}, version = 0) {
     const [key, ...rest] = path;
     if (rest.length === 0) {
-      const ref = makeRef(def);
+      const ref = makeRef(def, vars);
       const [range] = splitRef(def);
       const node = { key, path: encodePath(ref), version };
       if (range) node.prefix = true;
       merge(graph, [node]);
+      return;
+    }
+
+    if (key[0] === '$') {
+      for (const node of graph) {
+        if (node.end) continue;
+        const newVars = { ...vars, [key.slice(1)]: node.key };
+        linkGraphDef(findChildren(node), rest, def, newVars, node.version);
+      }
       return;
     }
 
@@ -29,17 +47,17 @@ export default function linkGraph(rootGraph, defs) {
       delete node.value;
       node.children = [];
     }
-
-    if (!node.children) {
-      throw Error('linkGraph.unexpected_leaf ' + key);
-    }
-    linkGraphDef(node.children, rest, def, node.version);
+    return linkGraphDef(findChildren(node), rest, def, vars, node.version);
   }
 
-  function makeRef(def) {
+  function makeRef(def, vars) {
+    function getValue(key) {
+      return key[0] === '$' ? vars[key.slice(1)] : key;
+    }
+
     function replacePlaceholders(key) {
       if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
-        return unwrap(rootGraph, key.slice(2).split('.'));
+        return unwrap(rootGraph, key.slice(2).split('.').map(getValue));
       }
       if (Array.isArray(key)) {
         return key.map(replacePlaceholders);
