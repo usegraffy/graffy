@@ -24,19 +24,12 @@ export default function prepQueryLinks(rootQuery, defs) {
   return defs.flatMap(({ path, def }) => prepQueryDef(rootQuery, path, def));
 
   function prepQueryDef(query, path, def, vars = {}, version = 0) {
-    const [key, ...rest] = path;
-    if (rest.length === 0) {
-      const ix = findFirst(query, key);
-      if (query[ix]?.key !== key) return []; // Not using this def
-
-      // Remove the request for the link itself.
-      const [{ children: subQuery }] = query.splice(ix, 1);
-
+    function addDefQuery(subQuery) {
       // Request the data we will need later to construct the link.
       add(rootQuery, getDefQuery(def, vars, version));
 
+      // Return the "used defs" for use by linkGraph
       const [range, filter] = splitRef(def);
-
       if (range && subQuery.length) {
         return subQuery.map((node) => {
           // console.log('Creating def', decodeArgs(node), path, def);
@@ -66,26 +59,43 @@ export default function prepQueryLinks(rootQuery, defs) {
       }));
     }
 
+    // When placeholders like $i match a pagination argument,
+    // We want it replaced with the full decoded arg (key, end,
+    // limit) in getDefQuery, but we want to preserve $i in
+    // prepareDef. Both do replacement from vars so this is tricky.
+    // Luckily, prepareDef assumes values to be strings while
+    // getDefQuery does not; we can override the the toString
+    // function to have the same value in vars appear differently
+    // to these two functions.
+    function makePager(pager) {
+      Object.defineProperty(pager, 'toString', { value: () => key });
+      return pager;
+    }
+
+    const [key, ...rest] = path;
+    if (rest.length === 0) {
+      if (key[0] === '$') {
+        return query.splice(0).flatMap((node) => {
+          vars[key.slice(1)] = makePager(decodeArgs(node));
+          return addDefQuery(node.children);
+        });
+      } else {
+        const ix = findFirst(query, key);
+        if (query[ix]?.key !== key) return []; // Not using this def
+        // Remove the request for the link itself.
+        const [{ children: subQuery }] = query.splice(ix, 1);
+        return addDefQuery(subQuery);
+      }
+    }
+
     let used = [];
-    if (key[0] !== '$') {
-      const node = query[findFirst(query, key)];
-      if (!node || node.key !== key || !node.children) return [];
-      used = prepQueryDef(node.children, rest, def, vars, node.version);
-      used = prefixKey(used, node.key);
-    } else {
+    if (key[0] === '$') {
       for (const node of query) {
         if (!isBranch(node)) continue;
         let usedHere;
         if (node.prefix) {
-          const pageToString = () => key;
           usedHere = node.children.flatMap((subNode) => {
-            // We want the full decoded arg (with end, limit) for getting
-            // the defQuery, but we want only the key in prepareDef. As
-            // prepareDef assumes var values to be strings, we can use
-            // the toString function to hack this.
-            const pager = decodeArgs(subNode);
-            Object.defineProperty(pager, 'toString', { value: pageToString });
-
+            const pager = makePager(decodeArgs(subNode));
             return prefixKey(
               prepQueryDef(
                 subNode.children,
@@ -108,6 +118,19 @@ export default function prepQueryLinks(rootQuery, defs) {
         }
         usedHere = prefixKey(usedHere, node.key);
         used = used.concat(usedHere);
+      }
+    } else {
+      const node = query[findFirst(query, key)];
+      if (!node || node.key !== key || !node.children) return [];
+      used = prepQueryDef(node.children, rest, def, vars, node.version);
+      used = prefixKey(used, node.key);
+    }
+
+    // Remove any childnodes whose children are now empty.
+    for (let i = 0; i < query.length; i++) {
+      if (query[i].children && query[i].children.length === 0) {
+        query.splice(i, 1);
+        i--;
       }
     }
     return used;
@@ -140,8 +163,11 @@ function getDefQuery(def, vars, version) {
   return defQuery;
 }
 
+// If you find yourself editing this function, you probably want
+// to edit makeRef in linkGraph too.
 function prepareDef(def, vars) {
   function getValue(key) {
+    if (typeof key !== 'string') return key;
     return key[0] === '$' ? vars[key.slice(1)] : key;
   }
 
@@ -159,5 +185,6 @@ function prepareDef(def, vars) {
     }
     return getValue(key);
   }
-  return def.flatMap(replacePlaceholders);
+  const ref = def.flatMap(replacePlaceholders);
+  return ref;
 }

@@ -4,6 +4,7 @@ import { merge, unwrap, findFirst, encodePath, splitRef } from '@graffy/common';
    Modifies the graph in-place. */
 export default function linkGraph(rootGraph, defs) {
   for (const { path, def } of defs) linkGraphDef(rootGraph, path, def);
+  // console.log('linked', rootGraph);
   return rootGraph;
 
   function findChildren(node) {
@@ -15,15 +16,34 @@ export default function linkGraph(rootGraph, defs) {
     throw Error('link.no_children ' + JSON.stringify(node));
   }
 
+  // TODO: Write a linkGraphDef that traverses using *def*, then makes
+  // refs at the corresponding path.
+
   function linkGraphDef(graph, path, def, vars = {}, version = 0) {
     const [key, ...rest] = path;
-    if (rest.length === 0) {
+
+    console.log('lGD', { key });
+
+    function addRef(k) {
       const ref = makeRef(def, vars);
       const [range] = splitRef(def);
-      const node = { key, path: encodePath(ref), version };
+      const node = { key: k, path: encodePath(ref), version };
       if (range) node.prefix = true;
       merge(graph, [node]);
       return;
+    }
+
+    if (rest.length === 0) {
+      if (key[0] === '$') {
+        for (const node of graph) {
+          if (node.end) continue;
+          console.log('Linking', key, node.key);
+          vars[key.slice(1)] = node.key;
+          addRef(node.key);
+        }
+      } else {
+        addRef(key);
+      }
     }
 
     if (key[0] === '$') {
@@ -50,8 +70,11 @@ export default function linkGraph(rootGraph, defs) {
     return linkGraphDef(findChildren(node), rest, def, vars, node.version);
   }
 
+  // If you find yourself editing this function, you probably want
+  // to edit prepareDef in prepQueryLinks too.
   function makeRef(def, vars) {
     function getValue(key) {
+      if (typeof key !== 'string') return key;
       return key[0] === '$' ? vars[key.slice(1)] : key;
     }
 

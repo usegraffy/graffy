@@ -14,6 +14,7 @@ describe('link', () => {
       link({
         'post.$pid.author': ['user', '$$post.$pid.authorId'],
         'user.$uid.posts': ['post', { $all: true, authorId: '$uid' }],
+        'user.$uid.friends.$i': ['user', '$$user.$uid.friendIds.$i'],
       }),
     );
     store.use(backend.middleware);
@@ -24,6 +25,7 @@ describe('link', () => {
         user: {
           ali: { name: 'Alicia' },
           bob: { name: 'Robert' },
+          carl: { name: 'Carl', friendIds: ['ali', 'bob'] },
         },
         post: [
           { $key: 'p01', title: 'Post 1 A', authorId: 'ali' },
@@ -169,6 +171,19 @@ describe('link', () => {
     exp.$next = { $first: 1, authorId: 'bob', $after: { id: 'p02' } };
     exp.$prev = null;
 
+    expect(res).toEqual(exp);
+  });
+
+  test('parallel_links', async () => {
+    const res = await store.read(['user', 'carl'], {
+      name: true,
+      friends: { $key: { $all: true }, name: true },
+    });
+    console.log(res);
+    const exp = {
+      name: 'Carl',
+      friends: [{ name: 'Alicia' }, { name: 'Robert ' }],
+    };
     expect(res).toEqual(exp);
   });
 });

@@ -54,3 +54,38 @@ test('prepQueryLinks', () => {
     },
   ]);
 });
+
+test('parallelLookups', () => {
+  const defs = [
+    {
+      path: ['foo', 'bars', '$i'],
+      def: ['bar', '$$foo.barIds.$i'],
+    },
+  ];
+
+  const query = encodeQuery({
+    foo: {
+      bars: {
+        $key: { $first: 10 },
+        prop: true,
+      },
+    },
+  });
+
+  const usedDefs = prepQueryLinks(query, defs);
+
+  expect(query).toEqual(
+    encodeQuery({
+      foo: {
+        barIds: { $key: { $first: 10 } },
+      },
+    }),
+  );
+
+  expect(usedDefs).toEqual([
+    {
+      path: ['foo', 'bars', '$i'],
+      def: ['bar', '$$foo.barIds.$i'],
+    },
+  ]);
+});
