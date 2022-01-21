@@ -179,11 +179,17 @@ describe('link', () => {
       name: true,
       friends: { $key: { $all: true }, name: true },
     });
-    console.log(res);
+    // console.log(res);
     const exp = {
       name: 'Carl',
-      friends: [{ name: 'Alicia' }, { name: 'Robert ' }],
+      friends: [
+        { $key: 0, $ref: ['user', 'ali'], name: 'Alicia' },
+        { $key: 1, $ref: ['user', 'bob'], name: 'Robert' },
+      ],
     };
+    exp.friends.$page = { $all: true };
+    exp.friends.$prev = null;
+    exp.friends.$next = null;
     expect(res).toEqual(exp);
   });
 });
