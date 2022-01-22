@@ -27,9 +27,10 @@ export function wrap(children, path, version = 0, prefix = false) {
   return children;
 }
 
-export function unwrap(children, path) {
+export function unwrap(tree, path) {
   if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
 
+  let children = tree;
   let node = { children };
   for (let i = 0; i < path.length; i++) {
     const { key } = encodeArgs(path[i]);
@@ -38,6 +39,7 @@ export function unwrap(children, path) {
     node = children[findFirst(children, key)];
     if (!node || node.key > key) return undefined; // We lack knowledge.
     if (isRange(node)) return null; // This is known to be null.
+    if (node.path) return unwrap(tree, node.path.concat(path.slice(i + 1)));
   }
 
   return getNodeValue(node);

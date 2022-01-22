@@ -4,7 +4,7 @@ import getArgSql from './getArgSql.js';
 import { getIdMeta } from './getMeta.js';
 import {
   getInsert,
-  getJsonBuildObject,
+  getJsonBuildTrusted,
   getSelectCols,
   getUpdates,
 } from './clauses.js';
@@ -73,5 +73,5 @@ export function del(arg, options) {
   return sql`
     DELETE FROM "${raw(table)}"
     WHERE ${where}
-    RETURNING (${getJsonBuildObject({ $key: arg })})`;
+    RETURNING (${getJsonBuildTrusted({ $key: arg })})`;
 }

@@ -1,6 +1,9 @@
-import { wrap, unwrap } from '@graffy/common';
+import { wrap, unwrap, finalize, add } from '@graffy/common';
 import linkGraph from './linkGraph.js';
 import prepQueryLinks from './prepQueryLinks.js';
+import debug from 'debug';
+
+const log = debug('graffy:link');
 
 export default (defs) => (store) => {
   const prefix = store.path;
@@ -13,12 +16,25 @@ export default (defs) => (store) => {
     const unwrappedQuery = clone(unwrap(query, prefix));
     const usedDefs = prepQueryLinks(unwrappedQuery, defEntries);
 
+    // Shortcut for queries that don't interact with any links
+    if (!usedDefs.length) return next(query, options);
+
     const result = await next(wrap(unwrappedQuery, prefix), options);
+    const version = result[0].version;
     const unwrappedResult = unwrap(result, prefix);
 
-    // unwrappedResult is still "inside" result and will be modified:
-    linkGraph(unwrappedResult, usedDefs);
-    return result;
+    // PrepQueryLinks have removed the parts of the query that are
+    // provided by links, so the result would not have "finalized"
+    // them.
+    add(unwrappedQuery, unwrap(query, prefix));
+
+    log('finalizing', prefix, unwrappedQuery);
+    const finalizedResult = finalize(unwrappedResult, unwrappedQuery, version);
+
+    log('beforeAddingLinks', prefix, finalizedResult);
+    linkGraph(finalizedResult, usedDefs);
+    log('afterAddingLinks', prefix, finalizedResult);
+    return wrap(finalizedResult, prefix, version);
   });
 };
 

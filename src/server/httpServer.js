@@ -48,7 +48,8 @@ export default function server(store) {
           throw Error('httpServer.get_unsupported');
         }
       } catch (e) {
-        log(e);
+        log(e.message);
+        log(e.stack);
         res.writeHead(400);
         res.end(`${e.message}`);
       }
@@ -66,6 +67,8 @@ export default function server(store) {
         res.writeHead(200);
         res.end(serialize(value));
       } catch (e) {
+        log(e.message);
+        log(e.stack);
         res.writeHead(400);
         res.end(`${e.message}`);
       }

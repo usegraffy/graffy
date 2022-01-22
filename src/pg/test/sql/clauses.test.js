@@ -4,7 +4,7 @@ import {
   getInsert,
   getUpdates,
   nowTimestamp,
-  getJsonBuildObject,
+  getJsonBuildTrusted,
   getSelectCols,
 } from '../../sql/clauses';
 
@@ -35,7 +35,7 @@ describe('clauses', () => {
 
   test('jsonBuildObject', () => {
     const data = { a: 1, b: 2, version: nowTimestamp };
-    const query = getJsonBuildObject(data);
+    const query = getJsonBuildTrusted(data);
     expectSql(
       query,
       sql`jsonb_build_object('a', ${'1'}::jsonb, 'b', ${'2'}::jsonb, 'version', ${nowTimestamp})`,

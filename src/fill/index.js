@@ -1,6 +1,5 @@
 import { merge, slice } from '@graffy/common';
 import subscribe from './subscribe.js';
-// import { format } from '@graffy/testing';
 import debug from 'debug';
 
 const log = debug('graffy:fill');
@@ -32,7 +31,7 @@ export default function fill(_) {
       }
 
       if (!budget) {
-        log('fill.max_recursion', value, query);
+        log('fill.max_recursion', slice(value, query).unknown);
         throw new Error('fill.max_recursion');
       }
       // console.log('Read', debug(query), 'returned', debug(value));

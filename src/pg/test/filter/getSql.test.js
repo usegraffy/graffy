@@ -69,3 +69,9 @@ test('ctd', () => {
     sql`"emails" <@ ${JSON.stringify({ 'foo@bar.com': ['work'] })}::jsonb`,
   );
 });
+
+test('regex', () => {
+  expect(
+    getSql({ 'data.Name': { $re: 'abc' } }, opt({ data: 'jsonb' })),
+  ).toEqual(sql`("data" #> ${['Name']})::text ~ ${'abc'}`);
+});

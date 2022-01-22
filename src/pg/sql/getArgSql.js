@@ -2,7 +2,7 @@ import sql, { join } from 'sql-template-tag';
 import { isEmpty } from '@graffy/common';
 import { getFilterSql } from '../filter/index.js';
 import { getArgMeta, getAggMeta } from './getMeta';
-import { getJsonBuildObject, lookup } from './clauses.js';
+import { getJsonBuildTrusted, lookup } from './clauses.js';
 
 /**
   Uses the args object (typically passed in the $key attribute)
@@ -59,9 +59,9 @@ export default function getArgSql(
 
   const orderQuery =
     $order &&
-    getJsonBuildObject({ $order: sql`${JSON.stringify($order)}::jsonb` });
+    getJsonBuildTrusted({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
-  const cursorQuery = getJsonBuildObject({
+  const cursorQuery = getJsonBuildTrusted({
     $cursor: sql`jsonb_build_array(${join(groupCols || orderCols)})`,
   });
 

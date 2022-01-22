@@ -1,4 +1,4 @@
-import { merge, makeWatcher } from '@graffy/common';
+import { merge, makeWatcher, slice } from '@graffy/common';
 // import debug from 'debug';
 
 // const log = debug('graffy:mockBackend');
@@ -9,7 +9,7 @@ export default function mockBackend(options = {}) {
 
   const backend = {
     state,
-    read: () => state,
+    read: (query) => slice(state, query).known,
     watch: () => watcher.watch(options.liveQuery ? state : undefined),
     write: (change) => {
       // change = setVersion(change, Date.now());

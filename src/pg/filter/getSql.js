@@ -1,7 +1,7 @@
 import sql, { join, raw } from 'sql-template-tag';
 import getAst from './getAst.js';
 import { encodePath } from '@graffy/common';
-import { vertexSql } from '../sql/clauses.js';
+import { vertexSql as vertex } from '../sql/clauses.js';
 
 const opSql = {
   $and: `AND`, // Not SQL as these are used as delimiters
@@ -21,19 +21,24 @@ const opSql = {
   $ctd: sql`<@`,
 };
 
-function castValue(value, type, op) {
-  if (value === null && op === '$eq') return sql`IS NULL`;
-  if (value === null && op === '$neq') return sql`IS NOT NULL`;
+function getBinarySql(lhs, type, op, value) {
+  if (value === null && op === '$eq') return sql`${lhs} IS NULL`;
+  if (value === null && op === '$neq') return sql`${lhs} IS NOT NULL`;
 
   const sqlOp = opSql[op];
   if (!sqlOp) throw Error('pg.getSql_unknown_operator ' + op);
 
   if (op === '$in' || op === '$nin') {
-    return sql`${sqlOp} (${join(value)})`;
+    return sql`${lhs} ${sqlOp} (${join(value)})`;
+  }
+
+  if (op === '$re' || op === '$ire') {
+    const castLhs = type === 'text' ? lhs : sql`(${lhs})::text`;
+    return sql`${castLhs} ${sqlOp} ${String(value)}`;
   }
 
   if (type === 'jsonb') {
-    return sql`${sqlOp} ${JSON.stringify(value)}::jsonb`;
+    return sql`${lhs} ${sqlOp} ${JSON.stringify(value)}::jsonb`;
   }
 
   if (type === 'cube') {
@@ -42,14 +47,14 @@ function castValue(value, type, op) {
       !value.length ||
       (Array.isArray(value[0]) && value.length !== 2)
     ) {
-      throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
+      throw Error('pg.getBinarySql_bad_cube' + JSON.stringify(value));
     }
     return Array.isArray(value[0])
-      ? sql`${sqlOp} cube(${vertexSql(value[0])}, ${vertexSql(value[1])})`
-      : sql`${sqlOp} cube(${vertexSql(value)})`;
+      ? sql`${lhs} ${sqlOp} cube(${vertex(value[0])}, ${vertex(value[1])})`
+      : sql`${lhs} ${sqlOp} cube(${vertex(value)})`;
   }
 
-  return sql`${sqlOp} ${value}`;
+  return sql`${lhs} ${sqlOp} ${value}`;
 }
 
 export default function getSql(filter, options) {
@@ -81,9 +86,7 @@ export default function getSql(filter, options) {
       ? [sql`"${raw(prefix)}" #> ${suffix}`, 'jsonb']
       : [sql`"${raw(prefix)}"`, types[prefix]];
 
-    const rhs = castValue(ast[2], type, op);
-
-    return sql`${lhs} ${rhs}`;
+    return getBinarySql(lhs, type, op, ast[2]);
   }
 
   return getNodeSql(getAst(filter));

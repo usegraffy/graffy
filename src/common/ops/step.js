@@ -27,7 +27,7 @@ export function keyBefore(key) {
 }
 
 export function keyAfter(key) {
-  if (key === '' || key === '\uffff' || key === '\0' || key === '\0\uffff') {
+  if (key === '\uffff' || key === '\0' || key === '\0\uffff') {
     return key;
   }
   const l = key.length - 1;
