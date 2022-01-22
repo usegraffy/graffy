@@ -25,8 +25,11 @@ export default function add(base, diff) {
 
     if (nodeIsBranch && itemIsBranch) {
       changed = add(item.children, node.children) || changed;
-    } else if (nodeIsBranch || itemIsBranch) {
-      throw new Error('add.branch_leaf_mismatch');
+    } else if (nodeIsBranch) {
+      continue;
+    } else if (itemIsBranch) {
+      item.value = node.value;
+      changed = true;
     } else {
       item.value += node.value;
     }
