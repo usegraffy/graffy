@@ -20,6 +20,7 @@ export default (defs) => (store) => {
     if (!usedDefs.length) return next(query, options);
 
     const result = await next(wrap(unwrappedQuery, prefix), options);
+    const version = result[0].version;
     const unwrappedResult = unwrap(result, prefix);
 
     // PrepQueryLinks have removed the parts of the query that are
@@ -28,12 +29,12 @@ export default (defs) => (store) => {
     add(unwrappedQuery, unwrap(query, prefix));
 
     log('finalizing', prefix, unwrappedQuery);
-    const finalizedResult = finalize(unwrappedResult, unwrappedQuery);
+    const finalizedResult = finalize(unwrappedResult, unwrappedQuery, version);
 
-    log('beforeAddingLinks', prefix, unwrappedResult);
-
+    log('beforeAddingLinks', prefix, finalizedResult);
     linkGraph(finalizedResult, usedDefs);
-    return wrap(finalizedResult, prefix);
+    log('afterAddingLinks', prefix, finalizedResult);
+    return wrap(finalizedResult, prefix, version);
   });
 };
 

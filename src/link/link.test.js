@@ -1,4 +1,5 @@
 import Graffy from '@graffy/core';
+import fill from '@graffy/fill';
 import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import link from './index.js';
@@ -8,6 +9,7 @@ describe('link', () => {
 
   beforeEach(() => {
     store = new Graffy();
+    store.use(fill());
     backend = mockBackend();
     backend.read = jest.fn(backend.read);
     store.use(
@@ -136,7 +138,7 @@ describe('link', () => {
   });
 
   test('read_with_page_args', async () => {
-    const res = await store.read('post', [
+    const resPromise = store.read('post', [
       {
         $key: { $first: 1, authorId: 'bob' },
         title: true,
@@ -155,6 +157,10 @@ describe('link', () => {
       {},
       expect.any(Function),
     );
+
+    // We do this because the query that backend.read is called with
+    // is modified afterwards.
+    const res = await resPromise;
 
     const exp = [
       {
