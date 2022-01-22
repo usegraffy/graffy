@@ -48,7 +48,7 @@
     "jest": "^27.0.6",
     "lodash": "^4.17.19",
     "merge-async-iterators": "^0.2.1",
-    "nanoid": "^3.1.25",
+    "nanoid": "^3.1.31",
     "p-map": "^5.1.0",
     "pg": "^8.7.1",
     "prettier": "^2.3.2",
