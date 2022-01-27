@@ -33,7 +33,7 @@ function getBinarySql(lhs, type, op, value) {
   }
 
   if (op === '$re' || op === '$ire') {
-    const castLhs = type === 'text' ? lhs : sql`(${lhs})::text`;
+    const castLhs = type === 'text' ? lhs : type === 'jsonb' ? sql`(${lhs})#>>'{}'` : sql`(${lhs})::text`;
     return sql`${castLhs} ${sqlOp} ${String(value)}`;
   }
 

@@ -70,7 +70,13 @@ test('ctd', () => {
   );
 });
 
-test('regex', () => {
+test('regex jsonb', () => {
+  expect(
+    getSql({ 'data.Name': { $re: 'abc' } }, opt({ data: 'jsonb' })),
+  ).toEqual(sql`("data" #> ${['Name']})#>>'{}' ~ ${'abc'}`);
+});
+
+test.skip('regex text', () => {
   expect(
     getSql({ 'data.Name': { $re: 'abc' } }, opt({ data: 'jsonb' })),
   ).toEqual(sql`("data" #> ${['Name']})::text ~ ${'abc'}`);
