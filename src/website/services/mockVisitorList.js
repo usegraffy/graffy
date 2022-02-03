@@ -1,4 +1,4 @@
-import faker from 'faker';
+import faker from '@faker-js/faker';
 import debug from 'debug';
 const log = debug('graffy:website:server');
 import { encodeGraph } from '@graffy/common';
