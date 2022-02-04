@@ -7,12 +7,13 @@ import Db from './Db.js';
  *    idCol?: string,
  *    verCol?: string,
  *    connection?: any,
- *    schema?: any
+ *    schema?: any,
+ *    verDefault?: string
  * }} options
  * @returns
  */
 export const pg =
-  ({ table, idCol, verCol, connection, schema }) =>
+  ({ table, idCol, verCol, connection, schema, verDefault }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
@@ -25,6 +26,7 @@ export const pg =
       idCol: idCol || 'id',
       verCol: verCol || 'updatedAt',
       schema,
+      verDefault,
     };
 
     const defaultDb = new Db(connection);

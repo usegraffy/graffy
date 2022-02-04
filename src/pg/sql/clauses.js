@@ -1,8 +1,6 @@
 import sql, { Sql, raw, join, empty } from 'sql-template-tag';
 import { encodePath, isEmpty } from '@graffy/common';
 
-export const nowTimestamp = sql`cast(extract(epoch from now()) as integer)`;
-
 /*
   Important: This function assumes that the object's keys are from
   trusted sources.
@@ -25,7 +23,8 @@ const getJsonBuildValue = (value) => {
 export const lookup = (prop) => {
   const [prefix, ...suffix] = encodePath(prop);
   return suffix.length
-    ? sql`"${raw(prefix)}" #> ${suffix}`
+    ? // @ts-ignore sql-template-tag typedef bug
+      sql`"${raw(prefix)}" #> ${suffix}`
     : sql`"${raw(prefix)}"`;
 };
 
@@ -103,7 +102,7 @@ export const getInsert = (row, options) => {
 
   Object.entries(row)
     .filter(([col]) => col !== options.verCol && col[0] !== '$')
-    .concat([[options.verCol, nowTimestamp]])
+    .concat([[options.verCol, sql`default`]])
     .forEach(([col, val]) => {
       cols.push(sql`"${raw(col)}"`);
       vals.push(castValue(val, options.schema.types[col], col, row.$put));
@@ -125,7 +124,7 @@ export const getUpdates = (row, options) => {
             row.$put,
           )}`,
       )
-      .concat(sql`"${raw(options.verCol)}" = ${nowTimestamp}`),
+      .concat(sql`"${raw(options.verCol)}" = default`),
     ', ',
   );
 };

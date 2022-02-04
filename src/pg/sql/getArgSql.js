@@ -26,7 +26,7 @@ export default function getArgSql(
   }
 
   const meta = (key) =>
-    $group ? getAggMeta(key, $group) : getArgMeta(key, prefix, idCol);
+    $group ? getAggMeta(key, $group, options) : getArgMeta(key, options);
 
   const groupCols =
     Array.isArray($group) && $group.length && $group.map(lookup);

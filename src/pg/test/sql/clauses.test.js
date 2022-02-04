@@ -3,7 +3,6 @@ import expectSql from '../expectSql';
 import {
   getInsert,
   getUpdates,
-  nowTimestamp,
   getJsonBuildTrusted,
   getSelectCols,
 } from '../../sql/clauses';
@@ -15,9 +14,10 @@ describe('clauses', () => {
     const { cols, vals } = getInsert(data, {
       verCol: 'version',
       schema: { types: { a: 'int8', b: 'float', version: 'int8' } },
+      verDefault: 'current_timestamp',
     });
     expectSql(cols, sql`"a", "b", "version"`);
-    expectSql(vals, sql`${data.a} , ${data.b} , ${nowTimestamp}`);
+    expectSql(vals, sql`${data.a} , ${data.b} , default`);
   });
 
   test('updates', () => {
@@ -25,20 +25,21 @@ describe('clauses', () => {
       idCol: 'id',
       verCol: 'version',
       schema: { types: { a: 'int8', b: 'float', version: 'int8' } },
+      verDefault: 'current_timestamp',
     };
     const update = getUpdates(data, options);
     expectSql(
       update,
-      sql`"a" = ${data.a}, "b" = ${data.b}, "version" =  ${nowTimestamp}`,
+      sql`"a" = ${data.a}, "b" = ${data.b}, "version" =  default`,
     );
   });
 
   test('jsonBuildObject', () => {
-    const data = { a: 1, b: 2, version: nowTimestamp };
+    const data = { a: 1, b: 2, version: sql`default` };
     const query = getJsonBuildTrusted(data);
     expectSql(
       query,
-      sql`jsonb_build_object('a', ${'1'}::jsonb, 'b', ${'2'}::jsonb, 'version', ${nowTimestamp})`,
+      sql`jsonb_build_object('a', ${'1'}::jsonb, 'b', ${'2'}::jsonb, 'version', default)`,
     );
   });
 

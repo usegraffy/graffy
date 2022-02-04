@@ -1,23 +1,23 @@
 import sql, { join, raw } from 'sql-template-tag';
-import { getJsonBuildTrusted, nowTimestamp } from './clauses';
+import { getJsonBuildTrusted } from './clauses';
 
-export const getIdMeta = ({ idCol }) =>
+export const getIdMeta = ({ idCol, verDefault }) =>
   getJsonBuildTrusted({
     $key: sql`"${raw(idCol)}"`,
-    $ver: nowTimestamp,
+    $ver: raw(verDefault),
   });
 
-export const getArgMeta = (key, prefix, idCol) =>
+export const getArgMeta = (key, { prefix, idCol, verDefault }) =>
   getJsonBuildTrusted({
     $key: key,
     $ref: sql`jsonb_build_array(${join(
       prefix.map((k) => sql`${k}::text`),
     )}, "${raw(idCol)}")`,
-    $ver: nowTimestamp,
+    $ver: raw(verDefault),
   });
 
-export const getAggMeta = (key, $group) =>
+export const getAggMeta = (key, $group, { verDefault }) =>
   getJsonBuildTrusted({
     $key: join([key, getJsonBuildTrusted({ $group })].filter(Boolean), ' || '),
-    $ver: nowTimestamp,
+    $ver: raw(verDefault),
   });

@@ -80,7 +80,7 @@ export async function resetTables() {
       "name" text,
       "settings" jsonb,
       "email" text UNIQUE,
-      "version" int8 NOT NULL
+      "version" int8 NOT NULL DEFAULT extract(epoch from current_timestamp) * 1000
     );
   `);
 
@@ -95,7 +95,7 @@ export async function resetTables() {
       "authorId" text,
       "commenters" text[],
       "scores" cube,
-      "version" int8 NOT NULL
+      "version" int8 NOT NULL DEFAULT extract(epoch from current_timestamp) * 1000
     );
   `);
 }

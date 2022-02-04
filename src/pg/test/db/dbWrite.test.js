@@ -2,7 +2,6 @@ import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
 import { pg } from '../../index.js';
-import { nowTimestamp } from '../../sql/clauses';
 
 const mockQuery = jest.fn(() =>
   Promise.resolve({
@@ -30,6 +29,7 @@ describe('postgres', () => {
       'user',
       pg({
         schema: { types: { id: 'uuid', name: 'text', updatedAt: 'int8' } },
+        verDefault: 'current_timestamp',
       }),
     );
     store.use(
@@ -39,6 +39,7 @@ describe('postgres', () => {
         idCol: 'id',
         verCol: 'version',
         schema: { types: { userId: 'uuid', token: 'text', version: 'int8' } },
+        verDefault: 'current_timestamp',
       }),
     );
 
@@ -56,6 +57,7 @@ describe('postgres', () => {
             version: 'int8',
           },
         },
+        verDefault: 'current_timestamp',
       }),
     );
     store.use(
@@ -65,6 +67,7 @@ describe('postgres', () => {
         idCol: 'id',
         verCol: 'version',
         schema: { types: {} },
+        verDefault: 'current_timestamp',
       }),
     );
   });
@@ -84,10 +87,10 @@ describe('postgres', () => {
     const sqlQuery = sql`
       UPDATE "user" SET
         "name" = ${data.name},
-        "updatedAt" = ${nowTimestamp}
+        "updatedAt" = default
       WHERE "id" = ${id}
-      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
-    `;
+      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object (
+        '$key' , "id" , '$ver' , current_timestamp ) )`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -101,11 +104,11 @@ describe('postgres', () => {
 
     const sqlQuery = sql`
       INSERT INTO "user" ("name", "id", "updatedAt")
-      VALUES (${data.name}, ${'foo'}, ${nowTimestamp})
+      VALUES (${data.name}, ${'foo'}, default)
       ON CONFLICT ("id") DO UPDATE SET
-      ("name", "id", "updatedAt") = (${data.name}, ${'foo'}, ${nowTimestamp})
-      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
-    `;
+      ("name", "id", "updatedAt") = (${data.name}, ${'foo'}, default)
+      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object (
+        '$key' , "id" , '$ver' , current_timestamp ) )`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -119,15 +122,14 @@ describe('postgres', () => {
     await store.write('googleSession', data);
     const sqlQuery = sql`
       INSERT INTO "googleSession" ( "token", "userId", "version" )
-      VALUES (${data.token}, ${'userId_01'},
-        cast ( extract ( epoch from now ( ) ) as integer ) )
+      VALUES (${data.token}, ${'userId_01'}, default)
       ON CONFLICT ( "userId" )
       DO UPDATE SET ( "token", "userId", "version" ) =
-      (${data.token}, ${'userId_01'},
-        cast ( extract ( epoch from now ( ) ) as integer ) )
-      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , jsonb_build_array(${`googleSession`}::text , "id") , '$ver' ,
-        cast ( extract ( epoch from now ( ) ) as integer ) ) )
-    `;
+      (${data.token}, ${'userId_01'}, default)
+      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object (
+        '$key' , ${`{"userId":"userId_01"}`}::jsonb ,
+        '$ref' , jsonb_build_array(${`googleSession`}::text , "id") ,
+        '$ver' , current_timestamp ) )`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -140,15 +142,14 @@ describe('postgres', () => {
 
     await store.write(['googleSession', { userId: 'userId_01' }], data);
     const sqlQuery = sql`
-     INSERT INTO "googleSession" ( "token" , "userId", "version" )
-     VALUES ( ${data.token} , ${
-      data.userId
-    }, cast ( extract ( epoch from now ( ) ) as integer ) ) ON CONFLICT ( "userId" )
-     DO UPDATE SET ( "token" ,"userId", "version" ) = (  ${data.token}, ${
-      data.userId
-    }, cast ( extract ( epoch from now ( ) ) as integer ) )
-     RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object ( '$key' , ${`{"userId":"userId_01"}`}::jsonb , '$ref' , jsonb_build_array(${`googleSession`}::text , "id") , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
-    `;
+      INSERT INTO "googleSession" ( "token" , "userId", "version" )
+      VALUES ( ${data.token} , ${data.userId}, default) ON CONFLICT ("userId")
+      DO UPDATE SET ( "token" ,"userId", "version" ) = 
+        (${data.token}, ${data.userId}, default)
+      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object (
+        '$key' , ${`{"userId":"userId_01"}`}::jsonb ,
+        '$ref' , jsonb_build_array(${`googleSession`}::text , "id") ,
+        '$ver' , current_timestamp ) )`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -162,13 +163,11 @@ describe('postgres', () => {
     await store.write('email.e1', data);
     const sqlQuery = sql`
       INSERT INTO "email" ("tenantId", "userId", "id", "version" )
-      VALUES (${data.tenantId}, ${data.userId}, ${'e1'},
-      cast (extract (epoch from now() ) as integer ) )
+      VALUES (${data.tenantId}, ${data.userId}, ${'e1'}, default)
       ON CONFLICT ("id") DO UPDATE SET ("tenantId", "userId", "id", "version" ) =
-      ( ${data.tenantId} , ${data.userId} , ${'e1'},
-      cast ( extract ( epoch from now() ) as integer ) )
-      RETURNING ( to_jsonb ( "email" ) || jsonb_build_object ( '$key' , "id" , '$ver' , cast ( extract ( epoch from now ( ) ) as integer ) ) )
-    `;
+        (${data.tenantId} , ${data.userId} , ${'e1'}, default)
+      RETURNING ( to_jsonb ( "email" ) || jsonb_build_object (
+        '$key' , "id" , '$ver' , current_timestamp ) )`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });

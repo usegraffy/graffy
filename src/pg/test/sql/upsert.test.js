@@ -2,7 +2,6 @@ import { put, patch } from '../../sql/upsert.js';
 
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import { nowTimestamp } from '../../sql/clauses';
 
 const options = {
   table: 'post',
@@ -20,6 +19,7 @@ const options = {
       version: 'int8',
     },
   },
+  verDefault: 'current_timestamp',
 };
 
 describe('byId', () => {
@@ -40,13 +40,13 @@ describe('byId', () => {
       ),
       sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "tags", "version")
       VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},
-      ${JSON.stringify({ foo: 3 })}, ${JSON.stringify([1, 2])}, ${nowTimestamp})
+      ${JSON.stringify({ foo: 3 })}, ${JSON.stringify([1, 2])}, default)
       ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "tags", "version")
         = (${'post22'}, ${'post'}, ${'hello'},${'world'},
         ${JSON.stringify({ foo: 3 })},
-        ${JSON.stringify([1, 2])}, ${nowTimestamp})
+        ${JSON.stringify([1, 2])}, default)
       RETURNING (to_jsonb("post") ||
-        jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
+        jsonb_build_object('$key', "id", '$ver', current_timestamp))
     `,
     );
   });
@@ -72,10 +72,10 @@ describe('byId', () => {
         "config" = jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
           jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)),
         "tags" = jsonb_strip_nulls(${JSON.stringify([1, 2, 3])}::jsonb),
-        "version" =  ${nowTimestamp}
+        "version" =  default
       WHERE "id" = ${'post22'}
       RETURNING (to_jsonb("post") ||
-        jsonb_build_object('$key', "id", '$ver', ${nowTimestamp}))
+        jsonb_build_object('$key', "id", '$ver', current_timestamp))
     `,
     );
   });
@@ -96,14 +96,14 @@ describe('byArg', () => {
         options,
       ),
       sql`INSERT INTO "post" ("id", "type", "name", "email", "version")
-      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, ${nowTimestamp})
+      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, default)
       ON CONFLICT ("email") DO UPDATE SET ("id", "type", "name", "email", "version")
-        = (${'post22'}, ${'post'}, ${'hello'},${'world'},  ${nowTimestamp})
+        = (${'post22'}, ${'post'}, ${'hello'},${'world'},  default)
       RETURNING (to_jsonb("post") ||
         jsonb_build_object(
           '$key', ${'{"email":"world"}'}::jsonb,
           '$ref', jsonb_build_array(${'post'}::text, "id"),
-          '$ver',  ${nowTimestamp}))`,
+          '$ver', current_timestamp))`,
     );
   });
 
@@ -123,13 +123,13 @@ describe('byArg', () => {
         "type" = ${'post'},
         "name" = ${'hello'},
         "email" = ${'world'},
-        "version" =  ${nowTimestamp}
+        "version" =  default
       WHERE "id" = (SELECT "id" FROM "post" WHERE "email" = ${'world'} LIMIT 1)
       RETURNING (to_jsonb("post") ||
         jsonb_build_object(
           '$key', ${'{"email":"world"}'}::jsonb,
           '$ref', jsonb_build_array(${'post'}::text, "id"),
-          '$ver',  ${nowTimestamp}))`,
+          '$ver', current_timestamp))`,
     );
   });
 });
