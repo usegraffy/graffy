@@ -1,4 +1,4 @@
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import { serialize, deserialize } from '@graffy/common';
 // import { format } from '@graffy/testing';
 import debug from 'debug';
@@ -10,7 +10,7 @@ const PING_INTERVAL = 30000;
 export default function server(store) {
   if (!store) throw new Error('server.store_undef');
 
-  const wss = new WebSocket.Server({ noServer: true });
+  const wss = new WebSocketServer({ noServer: true });
 
   wss.on('connection', function connection(ws) {
     ws.graffyStreams = {}; // We use this to keep track of streams to close.

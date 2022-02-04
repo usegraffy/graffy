@@ -95,7 +95,7 @@ export default function decorate(rootGraph, rootQuery) {
       } else if (Array.isArray(plumGraph)) {
         graph = decodeGraph(plumGraph);
       } else {
-        throw Error('decorate.unexpected_graph', plumGraph);
+        throw Error('decorate.unexpected_graph');
       }
     }
 
@@ -166,7 +166,7 @@ export default function decorate(rootGraph, rootQuery) {
     return result;
   }
 
-  const result = construct(rootGraph, rootQuery, []);
+  const result = construct(rootGraph, rootQuery);
   // console.log('Decorate', result, rootGraph, rootQuery);
   return result;
 }
