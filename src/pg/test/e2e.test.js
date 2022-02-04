@@ -256,9 +256,9 @@ describe('pg_e2e', () => {
       { $key: uuid(), $put: true, name: 'D', email: 'd' },
     ]);
 
-    const putArr = (arr) => {
-      arr.$put = true;
-      return arr;
+    const put = (obj) => {
+      Object.defineProperty(obj, '$put', { value: true });
+      return obj;
     };
 
     // Verify all items
@@ -275,21 +275,21 @@ describe('pg_e2e', () => {
         $ref: expect.any(Array),
         name: 'A',
         email: 'a',
-        settings: { $put: true, foo: putArr([1, 2, 3]) },
+        settings: put({ foo: put([1, 2, 3]) }),
       },
       {
         $key: { $order: ['email'], $cursor: ['b'] },
         $ref: expect.any(Array),
         name: 'B',
         email: 'b',
-        settings: { $put: true, foo: putArr([3]), bar: putArr([4]) },
+        settings: put({ foo: put([3]), bar: put([4]) }),
       },
       {
         $key: { $order: ['email'], $cursor: ['c'] },
         $ref: expect.any(Array),
         name: 'C',
         email: 'c',
-        settings: { $put: true, bar: putArr([5, 6]) },
+        settings: put({ bar: put([5, 6]) }),
       },
       {
         $key: { $order: ['email'], $cursor: ['d'] },
@@ -645,8 +645,12 @@ describe('pg_e2e', () => {
     };
 
     // Implicit array $put
-    exp1[pid1].commenters.$put = [{ $since: 0, $until: Infinity }];
-    exp1[pid2].commenters.$put = [{ $since: 0, $until: Infinity }];
+    Object.defineProperty(exp1[pid1].commenters, '$put', {
+      value: [{ $since: 0, $until: Infinity }],
+    });
+    Object.defineProperty(exp1[pid2].commenters, '$put', {
+      value: [{ $since: 0, $until: Infinity }],
+    });
 
     expect(res1[pid1].commenters).toEqual(exp1[pid1].commenters);
 

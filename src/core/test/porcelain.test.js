@@ -383,6 +383,7 @@ test('write_key_put', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', { $key: 'bar', $put: true, baz: 4 });
 
-  expect(provider).toHaveBeenCalledWith({ bar: { $put: true, baz: 4 } }, {});
-  expect(res).toEqual({ bar: { baz: 4, $put: true } });
+  expect(provider).toHaveBeenCalledWith({ bar: { baz: 4 } }, {});
+  expect(res).toEqual({ bar: { baz: 4 } });
+  expect(res.bar.$put).toBe(true);
 });

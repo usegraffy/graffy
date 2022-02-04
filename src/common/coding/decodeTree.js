@@ -69,13 +69,15 @@ function decode(nodes = [], { isGraph } = {}) {
             return collection;
           }
 
-          const { $key, $val, ...rest } = item;
+          const { $key, $val } = item;
+          delete item.$key;
+          delete item.$val;
 
           if (typeof $val === 'object') $val.$val = true;
           // prettier-ignore
           collection[$key] = (
             isDef($val) ? $val :
-            !isEmpty(rest) ? rest :
+            !isEmpty(item) ? item :
             isGraph ? null : true
           );
           return collection;
@@ -86,9 +88,11 @@ function decode(nodes = [], { isGraph } = {}) {
 
     if (isGraph && putRanges.length) {
       if (putRanges[0].key === '' && putRanges[0].end === '\uffff') {
-        result.$put = true;
+        Object.defineProperty(result, '$put', { value: true });
       } else {
-        result.$put = putRanges.map((rNode) => decodeArgs(rNode));
+        Object.defineProperty(result, '$put', {
+          value: putRanges.map((rNode) => decodeArgs(rNode)),
+        });
       }
     }
 

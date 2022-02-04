@@ -54,7 +54,9 @@ test('decodeGraph', () => {
       },
     ],
   };
-  expected.posts.$put = [{ $since: { title: '1984' } }];
+  Object.defineProperty(expected.posts, '$put', {
+    value: [{ $since: { title: '1984' } }],
+  });
   expect(decodedGraph.posts.$put).toEqual(expected.posts.$put);
   expect(decodedGraph).toEqual(expected);
 });
@@ -65,7 +67,9 @@ test('put_true', () => {
     { key: 'foo', value: 3, version: 0 },
     { key: 'foo\0', end: '\uffff', version: 0 },
   ]);
-  expect(result).toEqual({ foo: 3, $put: true });
+  const exp = { foo: 3 };
+  Object.defineProperty(exp, '$put', { value: true });
+  expect(result).toEqual(exp);
 });
 
 test('put_partial', () => {
@@ -74,7 +78,9 @@ test('put_partial', () => {
     { key: 'foo', value: 3, version: 0 },
     { key: 'foo\0', end: 'goo', version: 0 },
   ]);
-  expect(result).toEqual({ foo: 3, $put: [{ $until: 'goo' }] });
+  const exp = { foo: 3 };
+  Object.defineProperty(exp, '$put', { value: [{ $until: 'goo' }] });
+  expect(result).toEqual(exp);
 });
 
 test('empty', () => {
@@ -89,7 +95,9 @@ test('plain_array', () => {
     { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
   ]);
   const expected = ['js', 'css'];
-  expected.$put = [{ $since: 0, $until: Infinity }];
+  Object.defineProperty(expected, '$put', {
+    value: [{ $since: 0, $until: Infinity }],
+  });
   expect(result.$put).toEqual(expected.$put);
   expect(result).toEqual(expected);
 });
