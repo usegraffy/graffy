@@ -128,7 +128,7 @@ test('write array value', async () => {
 
   const provider = jest.fn((change) => {
     const expected = ['hello', 'world'];
-    expected.$val = true;
+    Object.defineProperty(expected, '$val', { value: true });
     expect(change).toEqual({ foo: expected });
     return { foo: { $val: ['hello', 'world'] } };
   });
