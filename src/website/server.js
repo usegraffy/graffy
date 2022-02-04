@@ -8,8 +8,6 @@ import memory from '@graffy/memory';
 import { httpServer, wsServer } from '@graffy/server';
 import mock from './services/mockVisitorList.js';
 
-process.env.NEXTJS = 1; // Use the Next.js babel config.
-
 const log = debug('graffy:website:server');
 const port = process.env.PORT || 3000;
 
