@@ -1,5 +1,6 @@
 import Graffy from '../Graffy.js';
 import GraffyFill from '@graffy/fill';
+import { ref } from '@graffy/testing';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -41,12 +42,12 @@ test('Porcelain read', async () => {
     {
       $key: ['1984'],
       title: '1984',
-      author: { $ref: ['users', 'orwell'], name: 'George Orwell' },
+      author: ref(['users', 'orwell'], { name: 'George Orwell' }),
     },
     {
       $key: ['2001'],
       title: '2001',
-      author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
+      author: ref(['users', 'clarke'], { name: 'Arthur C Clarke' }),
     },
   ];
   expectedResult.$page = { $all: true, $until: ['2001'] };
@@ -107,12 +108,12 @@ test('Porcelain subscription', async () => {
     {
       $key: ['1984'],
       title: '1984',
-      author: { $ref: ['users', 'orwell'], name: 'George Orwell' },
+      author: ref(['users', 'orwell'], { name: 'George Orwell' }),
     },
     {
       $key: ['2001'],
       title: '2001',
-      author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
+      author: ref(['users', 'clarke'], { name: 'Arthur C Clarke' }),
     },
   ];
   expectedResult.$page = { $all: true, $until: ['2001'] };
@@ -128,7 +129,7 @@ test('write array value', async () => {
 
   const provider = jest.fn((change) => {
     const expected = ['hello', 'world'];
-    expected.$val = true;
+    Object.defineProperty(expected, '$val', { value: true });
     expect(change).toEqual({ foo: expected });
     return { foo: { $val: ['hello', 'world'] } };
   });

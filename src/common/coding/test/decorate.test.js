@@ -1,6 +1,11 @@
 import decorate from '../decorate.js';
 import { encodeGraph } from '../encodeTree.js';
 
+const ref = (ref, obj) => {
+  Object.defineProperty(obj, '$ref', { value: ref });
+  return obj;
+};
+
 describe('references', () => {
   test('point', () => {
     const result = decorate(
@@ -12,7 +17,7 @@ describe('references', () => {
     );
 
     expect(result).toEqual({
-      foo: { $ref: ['bar'], baz: 10 },
+      foo: ref(['bar'], { baz: 10 }),
     });
   });
 });
@@ -131,14 +136,16 @@ test.skip('arrayCursor.decode', () => {
 });
 
 test('alias', () => {
-  const expectedArray = [
-    { x: 100, $key: { t: 3, $cursor: 1 } },
-    { x: 200, $key: { t: 3, $cursor: 2 } },
-  ];
+  const expectedArray = ref(
+    ['foo', { t: 3, $first: 2 }],
+    [
+      { x: 100, $key: { t: 3, $cursor: 1 } },
+      { x: 200, $key: { t: 3, $cursor: 2 } },
+    ],
+  );
   expectedArray.$page = { $all: true, $until: 2 };
   expectedArray.$next = { $first: 2, $after: 2 };
   expectedArray.$prev = null;
-  expectedArray.$ref = ['foo', { t: 3, $first: 2 }];
 
   const result = decorate(
     [

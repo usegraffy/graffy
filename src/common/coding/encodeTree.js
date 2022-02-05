@@ -6,7 +6,7 @@ import { merge, add, wrap, finalize } from '../ops/index.js';
 const ROOT_KEY = Symbol();
 
 /**
-  @param {InTree} value
+  @param {any} value
   @param {{version?: number, isGraph?: boolean}} options
 */
 function encode(value, { version, isGraph } = {}) {
@@ -37,8 +37,7 @@ function encode(value, { version, isGraph } = {}) {
     if (!isDef(object)) return;
     if (typeof object === 'object' && object && isEmpty(object)) return;
 
-    const { $key, $ver, ...data } = object || {};
-    const { $ref, $val, $chi, $put, ...props } = data;
+    const { $key, $ver, $ref, $val, $chi, $put, ...props } = object || {};
 
     if (isDef($ver)) ver = $ver;
 
@@ -65,7 +64,12 @@ function encode(value, { version, isGraph } = {}) {
         then add the "prefix" flag to the node.
       */
 
-      if (isGraph && page && !isDef(page.$cursor) && !isEmpty(data)) {
+      if (
+        isGraph &&
+        page &&
+        !isDef(page.$cursor) &&
+        ($ref || $val || $chi || $put || !isEmpty(props))
+      ) {
         // console.log('here');
         const node = makeNode({ ...object, $key: filter || '' }, key, ver);
         // if (!node) console.log(object, filter, key);

@@ -3,6 +3,7 @@ import fill from '@graffy/fill';
 import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import link from './index.js';
+import { ref, keyref } from '@graffy/testing';
 
 describe('link', () => {
   let store, backend;
@@ -39,21 +40,18 @@ describe('link', () => {
           {
             $key: { $all: true, authorId: 'ali', tag: 'z' },
             $chi: [
-              { $key: { id: 'p01' }, $ref: ['post', 'p01'] },
-              { $key: { id: 'p03' }, $ref: ['post', 'p03'] },
+              keyref({ id: 'p01' }, ['post', 'p01']),
+              keyref({ id: 'p03' }, ['post', 'p03']),
             ],
           },
           {
             $key: { $all: true, authorId: 'bob' },
             $chi: [
-              { $key: { id: 'p02' }, $ref: ['post', 'p02'] },
-              { $key: { id: 'p04' }, $ref: ['post', 'p04'] },
+              keyref({ id: 'p02' }, ['post', 'p02']),
+              keyref({ id: 'p04' }, ['post', 'p04']),
             ],
           },
-          {
-            $key: { top: true },
-            $ref: ['post', 'p01'],
-          },
+          keyref({ top: true }, ['post', 'p01']),
         ],
       }),
     );
@@ -71,7 +69,7 @@ describe('link', () => {
     });
     expect(res).toEqual({
       title: 'Post 1 A',
-      author: { $ref: ['user', 'ali'], name: 'Alicia' },
+      author: ref(['user', 'ali'], { name: 'Alicia' }),
     });
   });
 
@@ -85,22 +83,14 @@ describe('link', () => {
       ali: {
         name: 'Alicia',
         posts: [
-          {
-            $key: { $cursor: { id: 'p03' }, tag: 'z' },
-            $ref: ['post', 'p03'],
+          keyref({ $cursor: { id: 'p03' }, tag: 'z' }, ['post', 'p03'], {
             title: 'Post 3 a',
-          },
+          }),
         ],
       },
       bob: {
         name: 'Robert',
-        posts: [
-          {
-            $key: { id: 'p02' },
-            $ref: ['post', 'p02'],
-            title: 'Post 2 B',
-          },
-        ],
+        posts: [keyref({ id: 'p02' }, ['post', 'p02'], { title: 'Post 2 B' })],
       },
     };
 
@@ -129,11 +119,10 @@ describe('link', () => {
     ]);
 
     expect(res).toEqual([
-      {
-        $ref: ['post', 'p01'],
+      ref(['post', 'p01'], {
         title: 'Post 1 A',
-        author: { $ref: ['user', 'ali'], name: 'Alicia' },
-      },
+        author: ref(['user', 'ali'], { name: 'Alicia' }),
+      }),
     ]);
   });
 
@@ -163,15 +152,10 @@ describe('link', () => {
     const res = await resPromise;
 
     const exp = [
-      {
-        $key: { $cursor: { id: 'p02' }, authorId: 'bob' },
-        $ref: ['post', 'p02'],
+      keyref({ $cursor: { id: 'p02' }, authorId: 'bob' }, ['post', 'p02'], {
         title: 'Post 2 B',
-        author: {
-          $ref: ['user', 'bob'],
-          name: 'Robert',
-        },
-      },
+        author: ref(['user', 'bob'], { name: 'Robert' }),
+      }),
     ];
     exp.$page = { $all: true, authorId: 'bob', $until: { id: 'p02' } };
     exp.$next = { $first: 1, authorId: 'bob', $after: { id: 'p02' } };
@@ -189,8 +173,8 @@ describe('link', () => {
     const exp = {
       name: 'Carl',
       friends: [
-        { $key: 0, $ref: ['user', 'ali'], name: 'Alicia' },
-        { $key: 1, $ref: ['user', 'bob'], name: 'Robert' },
+        keyref(0, ['user', 'ali'], { name: 'Alicia' }),
+        keyref(1, ['user', 'bob'], { name: 'Robert' }),
       ],
     };
     exp.friends.$page = { $all: true };

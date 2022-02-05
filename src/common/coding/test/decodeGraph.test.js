@@ -1,6 +1,12 @@
 import { decodeGraph } from '../decodeTree.js';
 import { encode as key } from '../struct.js';
 import { keyAfter, keyBefore } from '../../ops/index.js';
+import { ref, keyref } from '@graffy/testing';
+
+const val = (obj) => {
+  Object.defineProperty(obj, '$val', { value: true });
+  return obj;
+};
 
 test('decodeGraph', () => {
   const decodedGraph = decodeGraph(
@@ -42,15 +48,15 @@ test('decodeGraph', () => {
         $key: { title: '1984' },
         title: '1984',
         body: 'Lorem ipsum',
-        options: { inStock: true, $val: true },
-        author: { $ref: ['users', '1'] },
+        options: val({ inStock: true }),
+        author: ref(['users', '1']),
       },
       {
         $key: { title: '2001' },
         title: '2001',
         body: 'Hello world',
-        options: { borrowed: true, $val: true },
-        author: { $ref: ['users', '2'] },
+        options: val({ borrowed: true }),
+        author: ref(['users', '2']),
       },
     ],
   };
@@ -120,10 +126,10 @@ test('rangeRef', () => {
   // console.log(JSON.stringify(result));
   expect(result).toEqual({
     foo: [
-      {
-        $key: { $all: true, tag: 'x' },
-        $ref: ['bar', { $all: true, tag: 'x', id: 'y' }],
-      },
+      keyref({ $all: true, tag: 'x' }, [
+        'bar',
+        { $all: true, tag: 'x', id: 'y' },
+      ]),
     ],
   });
 });

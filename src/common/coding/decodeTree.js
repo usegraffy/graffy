@@ -5,8 +5,8 @@ import { keyAfter } from '../ops/index.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
 /**
-  @param {Tree} node
-  @param {boolean} options.isGraph
+  @param {any[]} nodes
+  @param {{ isGraph?: boolean }} options
 */
 function decode(nodes = [], { isGraph } = {}) {
   function decodeChildren(nodes) {
@@ -73,11 +73,13 @@ function decode(nodes = [], { isGraph } = {}) {
           delete item.$key;
           delete item.$val;
 
-          if (typeof $val === 'object') $val.$val = true;
+          if (typeof $val === 'object') {
+            Object.defineProperty($val, '$val', { value: true });
+          }
           // prettier-ignore
           collection[$key] = (
             isDef($val) ? $val :
-            !isEmpty(item) ? item :
+            !isEmpty(item) || item.$ref || item.$put ? item :
             isGraph ? null : true
           );
           return collection;
@@ -114,7 +116,9 @@ function decode(nodes = [], { isGraph } = {}) {
         throw Error('decode.unencoded_prefix_ref: ' + node.path);
       }
       lastKey.$all = true;
-      return [{ $key: args, $ref }];
+      const linkObject = { $key: args };
+      Object.defineProperty(linkObject, '$ref', { value: $ref });
+      return [linkObject];
     }
 
     const children = decodeChildren(node.children);
@@ -157,7 +161,9 @@ function decode(nodes = [], { isGraph } = {}) {
   }
 
   function decodeLinkNode(node) {
-    return { $key: decodeArgs(node), $ref: decodePath(node.path) };
+    const linkObject = { $key: decodeArgs(node) };
+    Object.defineProperty(linkObject, '$ref', { value: decodePath(node.path) });
+    return linkObject;
   }
 
   return decodeChildren(nodes);

@@ -1,7 +1,7 @@
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
-
 import { splitArgs } from '@graffy/common';
+import { put, ref } from '@graffy/testing';
 
 describe('ref', () => {
   describe('author', () => {
@@ -45,7 +45,7 @@ describe('ref', () => {
         posts: {
           abc: {
             title: 'Title abc',
-            author: { $ref: ['users', 'uabc'], name: 'User uabc' },
+            author: ref(['users', 'uabc'], { name: 'User uabc' }),
           },
         },
       };
@@ -66,7 +66,7 @@ describe('ref', () => {
         },
       });
 
-      const posts = { $ref: ['posts', 'post-abc'], $put: true };
+      const posts = put(ref(['posts', 'post-abc']));
       const expected = {
         users: { abc: { id: 'abc', posts } },
         posts: { 'post-abc': posts },
@@ -186,7 +186,7 @@ describe('ref', () => {
         },
       });
 
-      const posts = { $ref: ['posts'], title: null };
+      const posts = ref(['posts'], { title: null });
       const expected = {
         users: { abc: { id: 'abc', posts } },
         posts,

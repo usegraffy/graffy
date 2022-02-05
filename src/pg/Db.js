@@ -77,30 +77,45 @@ export default class Db {
   */
   async ensureSchema(tableOptions) {
     if (tableOptions.schema) return;
-    const { table } = tableOptions;
+    const { table, verCol } = tableOptions;
+
+    const tableSchema = (
+      await this.query(sqlTag`
+        SELECT table_schema
+        FROM information_schema.tables
+        WHERE table_name = ${table}
+        ORDER BY array_position(current_schemas(false)::text[], table_schema::text) ASC
+        LIMIT 1`)
+    ).rows[0][0];
 
     const types = (
-      await this.query(
-        sqlTag`SELECT jsonb_object_agg(
-          column_name,
-          udt_name
-      )
-      FROM information_schema.columns
-      WHERE
+      await this.query(sqlTag`
+        SELECT jsonb_object_agg(column_name, udt_name)
+        FROM information_schema.columns
+        WHERE
           table_name = ${table} AND
-          table_schema = (
-              SELECT table_schema
-              FROM information_schema.tables
-              WHERE table_name = ${table}
-              ORDER BY array_position(current_schemas(false)::text[], table_schema::text) ASC
-              LIMIT 1)`,
-      )
+          table_schema = ${tableSchema}`)
     ).rows[0][0];
 
     if (!types) throw Error(`pg.missing_table ${table}`);
 
+    const verDefault = (
+      await this.query(sqlTag`
+        SELECT column_default
+        FROM information_schema.columns
+        WHERE
+          table_name = ${table} AND
+          table_schema = ${tableSchema} AND
+          column_name = ${verCol}`)
+    ).rows[0][0];
+
+    if (!verDefault) {
+      throw Error(`pg.verCol_without_default ${verCol}`);
+    }
+
     log('ensureSchema', types);
     tableOptions.schema = { types };
+    tableOptions.verDefault = verDefault;
   }
 
   async read(rootQuery, tableOptions) {

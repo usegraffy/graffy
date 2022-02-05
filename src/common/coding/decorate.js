@@ -36,7 +36,7 @@ export default function decorate(rootGraph, rootQuery) {
         targetPlumGraph,
         range ? { $key: range, ...props } : props,
       );
-      graph.$ref = $ref;
+      Object.defineProperty(graph, '$ref', { value: $ref });
     } else if (Array.isArray(query)) {
       let pageKey;
       graph = query.flatMap((item, i) => {
@@ -99,7 +99,9 @@ export default function decorate(rootGraph, rootQuery) {
       }
     }
 
-    if (plumGraph[REF]) graph.$ref = decodePath(plumGraph[REF]);
+    if (plumGraph[REF]) {
+      Object.defineProperty(graph, '$ref', decodePath(plumGraph[REF]));
+    }
     return graph;
   }
 
