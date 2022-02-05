@@ -38,4 +38,4 @@ This assumes:
 
 - Index and entity trees with the same structure as above
 
-See [Graffy documentation](https://aravindet.github.io/graffy/) for more.
+See [Graffy documentation](https://graffy.org) for more.
