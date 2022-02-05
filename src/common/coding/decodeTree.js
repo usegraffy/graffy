@@ -79,7 +79,7 @@ function decode(nodes = [], { isGraph } = {}) {
           // prettier-ignore
           collection[$key] = (
             isDef($val) ? $val :
-            !isEmpty(item) ? item :
+            !isEmpty(item) || item.$ref || item.$put ? item :
             isGraph ? null : true
           );
           return collection;
@@ -116,7 +116,9 @@ function decode(nodes = [], { isGraph } = {}) {
         throw Error('decode.unencoded_prefix_ref: ' + node.path);
       }
       lastKey.$all = true;
-      return [{ $key: args, $ref }];
+      const linkObject = { $key: args };
+      Object.defineProperty(linkObject, '$ref', { value: $ref });
+      return [linkObject];
     }
 
     const children = decodeChildren(node.children);
@@ -159,7 +161,9 @@ function decode(nodes = [], { isGraph } = {}) {
   }
 
   function decodeLinkNode(node) {
-    return { $key: decodeArgs(node), $ref: decodePath(node.path) };
+    const linkObject = { $key: decodeArgs(node) };
+    Object.defineProperty(linkObject, '$ref', { value: decodePath(node.path) });
+    return linkObject;
   }
 
   return decodeChildren(nodes);

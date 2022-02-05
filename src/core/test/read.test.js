@@ -1,5 +1,6 @@
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
+import { ref } from '@graffy/testing';
 
 let g;
 beforeEach(() => {
@@ -225,7 +226,7 @@ describe('link', () => {
 
   test('friendly', async () => {
     expect(await g.read({ foo: { x: { baz: 1 } } })).toEqual({
-      foo: { x: { $ref: ['bar'], baz: 3 } },
+      foo: { x: ref(['bar'], { baz: 3 }) },
     });
   });
 });
@@ -234,7 +235,7 @@ describe('alias', () => {
   test('simple', async () => {
     g.onRead('foo', () => ({ x: 100 }));
     expect(await g.read({ bar: { $ref: ['foo'], x: 1 } })).toEqual({
-      bar: { $ref: ['foo'], x: 100 },
+      bar: ref(['foo'], { x: 100 }),
     });
   });
 
@@ -247,14 +248,16 @@ describe('alias', () => {
     const result = await g.read({
       bar: { $ref: ['foo', { t: 3, $first: 2 }], x: 1 },
     });
-    const expectedArray = [
-      { $key: { t: 3, $cursor: 1 }, x: 100 },
-      { $key: { t: 3, $cursor: 2 }, x: 200 },
-    ];
+    const expectedArray = ref(
+      ['foo', { t: 3, $first: 2 }],
+      [
+        { $key: { t: 3, $cursor: 1 }, x: 100 },
+        { $key: { t: 3, $cursor: 2 }, x: 200 },
+      ],
+    );
     expectedArray.$page = { $all: true, $until: 2 };
     expectedArray.$next = { $first: 2, $after: 2 };
     expectedArray.$prev = null;
-    expectedArray.$ref = ['foo', { t: 3, $first: 2 }];
 
     expect(result).toEqual({
       bar: expectedArray,

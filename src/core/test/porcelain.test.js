@@ -1,5 +1,6 @@
 import Graffy from '../Graffy.js';
 import GraffyFill from '@graffy/fill';
+import { ref } from '@graffy/testing';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -41,12 +42,12 @@ test('Porcelain read', async () => {
     {
       $key: ['1984'],
       title: '1984',
-      author: { $ref: ['users', 'orwell'], name: 'George Orwell' },
+      author: ref(['users', 'orwell'], { name: 'George Orwell' }),
     },
     {
       $key: ['2001'],
       title: '2001',
-      author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
+      author: ref(['users', 'clarke'], { name: 'Arthur C Clarke' }),
     },
   ];
   expectedResult.$page = { $all: true, $until: ['2001'] };
@@ -107,12 +108,12 @@ test('Porcelain subscription', async () => {
     {
       $key: ['1984'],
       title: '1984',
-      author: { $ref: ['users', 'orwell'], name: 'George Orwell' },
+      author: ref(['users', 'orwell'], { name: 'George Orwell' }),
     },
     {
       $key: ['2001'],
       title: '2001',
-      author: { $ref: ['users', 'clarke'], name: 'Arthur C Clarke' },
+      author: ref(['users', 'clarke'], { name: 'Arthur C Clarke' }),
     },
   ];
   expectedResult.$page = { $all: true, $until: ['2001'] };
