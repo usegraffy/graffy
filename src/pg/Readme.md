@@ -2,19 +2,41 @@
 
 The standard Postgres module for Graffy. Each instance this module mounts a Postgres table as a Graffy subtree.
 
+Requires the [pg](https://github.com/brianc/node-postgres) library to be installed as a peer dependency.
+
 ## Usage
 
 ```js
 import pg from '@graffy/pg';
+import Graffy from '@graffy/core';
+import link from '@graffy/link';
 
-graffyStore.use(pg(options));
+const store = new Graffy();
+store.use(path, pg(options));
 ```
 
-Uses the [pg](https://github.com/brianc/node-postgres) library.
+### Options
 
-### Query filters
+- `table`, the name of the table. If not provided, the last segment of the `path` is used. This table must exist.
+- `idCol`: the name of the column to use as ID. Defaults to `id`. This column must exist and be the primary key or have a unique constraint.
+- `verCol`: the name of the column to store the Graffy version number. This column must exist, and must have a `DEFAULT` SQL expression defined - this expression is evaluated to calculate the version number. Graffy versions must monotonically increase, so this expression is typically based on `CURRENT_TIMESTAMP`.
+- `connection`: a [pg](https://github.com/brianc/node-postgres) Client or Pool object (recommended), or the arguments for constructing a new Pool object. Optional.
 
-Query filters are passed in `$key` and are JSON-based, somewhat like MongoDB.
+### Database connection
+
+Graffy Postgres can be configured to use a specific pg.Client object on a per-request basis, by including a `pgClient` property on the read or write options. This is useful for implementing transactions, partitioning, row-level security, etc.
+
+If no `pgClient` is provided for a particular operation, Graffy Postgres falls back to the "global" pg.Client or pg.Pool object defined in the `connection` parameter in the initialization options. If no `connection` parameter was passed, a new pg.Pool will be created using PSQL environment variables.
+
+## Data model
+
+Graffy Postgres interprets each property as the name of a column, except for `$count`, `$sum` etc. as described in the aggregation section below.
+
+It also interprets the `$key` as specifying filtering, sorting, pagination and aggregation parameters.
+
+### Filters
+
+Query filters are JSON-based, somewhat like MongoDB.
 
 1. Filters expressions follow a **property**, **operator**, **value** order. Values are scalar values (strings or numbers).
 2. Property names are always object keys. They may be strings with dots `.`.

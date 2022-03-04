@@ -40,4 +40,4 @@ definitions.
   dot-separated string paths (possibly including wildcards). These are replaced
   with values returned by downstream providers.
 
-See [Graffy documentation](https://aravindet.github.io/graffy/) for more.
+See [Graffy documentation](https://graffy.org) for more.
