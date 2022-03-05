@@ -52,10 +52,25 @@ function makeQuery(url, query) {
   return aggregateQueries[url].add(query);
 }
 
+/**
+ *
+ * @param {string} baseUrl
+ * @param {{
+ *    getOptions?: () => Promise<void>,
+ *    watch?: 'sse' | 'none' | 'hang',
+ *    connInfoPath?: string,
+ * } | undefined} options
+ * @returns {(store: any) => void}
+ */
+
 const httpClient =
   (
     baseUrl,
-    { getOptions = async () => {}, watch, connInfoPath = 'connection' } = {},
+    {
+      getOptions = async () => {},
+      watch = 'sse',
+      connInfoPath = 'connection',
+    } = {},
   ) =>
   (store) => {
     store.onWrite(connInfoPath, ({ url }) => {

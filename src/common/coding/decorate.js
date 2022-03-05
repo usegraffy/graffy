@@ -100,7 +100,9 @@ export default function decorate(rootGraph, rootQuery) {
     }
 
     if (plumGraph[REF]) {
-      Object.defineProperty(graph, '$ref', decodePath(plumGraph[REF]));
+      Object.defineProperty(graph, '$ref', {
+        value: decodePath(plumGraph[REF]),
+      });
     }
     return graph;
   }
@@ -181,6 +183,7 @@ function addPageMeta(graph, args) {
 
   const [{ $first, $last, ...bounds }, filter] = splitArgs(args);
   const count = $first || $last;
+  /** @type {any} */
   const $page = { ...filter, ...bounds, $all: true };
 
   if (graph.length === count) {
