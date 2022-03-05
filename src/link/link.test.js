@@ -107,6 +107,7 @@ describe('link', () => {
     });
 
     expect(res).toEqual(exp);
+    expect(res.ali.posts[0].$ref).toEqual(exp.ali.posts[0].$ref);
   });
 
   test('read_with_args', async () => {

@@ -85,6 +85,7 @@ describe('pg_e2e', () => {
     exp2.$next = null;
     exp2.$prev = null;
     expect(res2).toEqual(exp2);
+    expect(res2[0].$ref).toEqual(exp2[0].$ref);
 
     // Third, upsert the same person again.
     const res3 = await store.write(['users', { email: 'alice@acme.co' }], {

@@ -19,6 +19,7 @@ describe('references', () => {
     expect(result).toEqual({
       foo: ref(['bar'], { baz: 10 }),
     });
+    expect(result.foo.$ref).toEqual(['bar']);
   });
 });
 
@@ -183,4 +184,5 @@ test('alias', () => {
   );
 
   expect(result).toEqual({ bar: expectedArray });
+  expect(result.bar.$ref).toEqual(expectedArray.$ref);
 });

@@ -4,18 +4,27 @@ import debug from 'debug';
 
 const log = debug('graffy:server:http');
 
-export default function server(store) {
+/**
+ * @typedef {import('@graffy/core').default} GraffyStore
+ * @param {GraffyStore} store
+ * @param {{
+ *   auth?: (operation: string, payload: any, options: any) => Promise<boolean>
+ * } | undefined} options
+ * @returns
+ */
+export default function server(store, { auth } = {}) {
   if (!store) throw new Error('server.store_undef');
   return async (req, res) => {
     const parsed = url.parse(req.url, true);
-    const query = parsed.query.q && decodeUrl(parsed.query.q);
-    // TODO: Sanitize options for security.
+
     const options =
-      parsed.query.opts &&
-      !Array.isArray(parsed.query.opts) &&
-      deserialize(decodeURIComponent(parsed.query.opts));
+      (parsed.query.opts &&
+        !Array.isArray(parsed.query.opts) &&
+        deserialize(decodeURIComponent(parsed.query.opts))) ||
+      undefined;
 
     if (req.method === 'GET') {
+      const query = parsed.query.q && decodeUrl(parsed.query.q);
       try {
         if (req.headers['accept'] === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');
@@ -55,7 +64,7 @@ export default function server(store) {
       }
     } else if (req.method === 'POST') {
       try {
-        const op = req.query.op;
+        const op = parsed.query.op;
         if (op !== 'write' && op !== 'read') {
           throw Error('httpServer.unsupported_op: ' + op);
         }
@@ -63,6 +72,13 @@ export default function server(store) {
         const chunks = [];
         for await (const chunk of req) chunks.push(chunk);
         const payload = deserialize(Buffer.concat(chunks).toString());
+
+        if (auth && !(await auth(op, payload, options))) {
+          res.writeHead(401);
+          res.end('unauthorized');
+          return;
+        }
+
         const value = await store.call(op, payload, options);
         res.writeHead(200);
         res.end(serialize(value));
