@@ -176,7 +176,7 @@ function prepareDef(def, vars) {
       return '$$' + key.slice(2).split('.').flatMap(getValue).join('.');
     }
     if (Array.isArray(key)) {
-      return key.flatMap(replacePlaceholders);
+      return key.map(replacePlaceholders);
     }
     if (typeof key === 'object' && key) {
       const result = {};
@@ -185,6 +185,6 @@ function prepareDef(def, vars) {
     }
     return getValue(key);
   }
-  const ref = def.flatMap(replacePlaceholders);
+  const ref = def.map(replacePlaceholders);
   return ref;
 }
