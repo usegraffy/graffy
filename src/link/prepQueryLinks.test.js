@@ -89,3 +89,39 @@ test('parallelLookups', () => {
     },
   ]);
 });
+
+test('cube_args', () => {
+  /*
+  $id.prospect’: [
+                ‘prospect’,
+                { tenantId: ‘$$$id.tenantId’, $all: true },
+            ],
+  */
+  const defs = [
+    {
+      path: ['foo', '$id', 'prospect'],
+      def: ['prospect', { tenantId: '$$$id.tenantId', $all: true }],
+    },
+  ];
+
+  const quantities = {
+    $ctd: [
+      [-Infinity, -Infinity],
+      [Infinity, Infinity],
+    ],
+  };
+
+  const query = encodeQuery({
+    foo: {
+      abc: {
+        prospect: {
+          $key: { quantities },
+          name: true,
+        },
+      },
+    },
+  });
+
+  const usedDefs = prepQueryLinks(query, defs);
+  expect(usedDefs[0].def[1].quantities).toEqual(quantities);
+});
