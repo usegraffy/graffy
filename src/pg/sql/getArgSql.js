@@ -50,22 +50,27 @@ export default function getArgSql(
     throw Error('pg_arg.pagination_only_unsupported in ' + prefix);
   }
 
-  const orderCols = ($order || [idCol]).map(lookup);
+  const orderCols = ($order || [idCol]).map((orderItem) =>
+    orderItem[0] === '!'
+      ? sql`-(${lookup(orderItem.slice(1))})::float8`
+      : lookup(orderItem),
+  );
+
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([name, value]) => {
       if (value) where.push(getBoundCond(orderCols, value, name));
     },
   );
 
-  const orderQuery =
+  const orderKey =
     $order &&
     getJsonBuildTrusted({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
-  const cursorQuery = getJsonBuildTrusted({
+  const cursorKey = getJsonBuildTrusted({
     $cursor: sql`jsonb_build_array(${join(groupCols || orderCols)})`,
   });
 
-  key = sql`(${join([key, orderQuery, cursorQuery].filter(Boolean), ` || `)})`;
+  key = sql`(${join([key, orderKey, cursorKey].filter(Boolean), ` || `)})`;
 
   return {
     meta: meta(key),

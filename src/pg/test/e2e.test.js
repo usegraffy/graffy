@@ -465,6 +465,108 @@ describe('pg_e2e', () => {
     expect(res2).toEqual(null);
   });
 
+  describe('order', () => {
+    beforeEach(async () => {
+      await store.write('users', [
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: { x: 3 },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'B',
+          email: 'b',
+          settings: { x: 5 },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'C',
+          email: 'c',
+          settings: { x: 4 },
+        },
+      ]);
+    });
+
+    test('asc', async () => {
+      const res1 = await store.read('users', {
+        $key: { $order: ['settings.x'], $all: true },
+        name: true,
+      });
+
+      const exp1 = [
+        keyref(
+          { $cursor: [3], $order: ['settings.x'] },
+          ['users', expect.any(String)],
+          {
+            name: 'A',
+          },
+        ),
+        keyref(
+          { $cursor: [4], $order: ['settings.x'] },
+          ['users', expect.any(String)],
+          {
+            name: 'C',
+          },
+        ),
+        keyref(
+          { $cursor: [5], $order: ['settings.x'] },
+          ['users', expect.any(String)],
+          {
+            name: 'B',
+          },
+        ),
+      ];
+
+      exp1.$page = { $order: ['settings.x'], $all: true };
+      exp1.$prev = null;
+      exp1.$next = null;
+
+      expect(res1).toEqual(exp1);
+    });
+
+    test('desc', async () => {
+      const res1 = await store.read('users', {
+        $key: { $order: ['!settings.x'], $all: true },
+        name: true,
+      });
+
+      const exp1 = [
+        keyref(
+          { $cursor: [-5], $order: ['!settings.x'] },
+          ['users', expect.any(String)],
+          {
+            name: 'B',
+          },
+        ),
+        keyref(
+          { $cursor: [-4], $order: ['!settings.x'] },
+          ['users', expect.any(String)],
+          {
+            name: 'C',
+          },
+        ),
+        keyref(
+          { $cursor: [-3], $order: ['!settings.x'] },
+          ['users', expect.any(String)],
+          {
+            name: 'A',
+          },
+        ),
+      ];
+
+      exp1.$page = { $order: ['!settings.x'], $all: true };
+      exp1.$prev = null;
+      exp1.$next = null;
+
+      expect(res1).toEqual(exp1);
+    });
+  });
+
   describe('aggregations', () => {
     beforeEach(async () => {
       await store.write('users', [
@@ -541,7 +643,7 @@ describe('pg_e2e', () => {
   });
 
   /* Skipping until we figure out why it's flaky. */
-  test.skip('without_transaction', async () => {
+  test('without_transaction', async () => {
     const id = uuid();
 
     try {

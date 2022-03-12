@@ -102,7 +102,7 @@ Every tag must be one of *foo*, *bar* or *baz*.
 
 ### Order by
 
-The root of the Graffy filter object must be an object. (Use `$or` if required.) The property `$order` specifies the order. Its value must be an array of order specifiers, each of which may be a string property name or an object with property names, sort direction, collation and text search relevance. (TBD)
+The root of the Graffy filter object must be an object. (Use `$or` if required.) The property `$order` specifies the order. Its value must be an array of order specifiers, each of which may be a string property name. The order is ascending by default; property names may be prefixed with `!` to switch to descending.
 
 ### Full Text Search
 
