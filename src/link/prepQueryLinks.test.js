@@ -91,12 +91,6 @@ test('parallelLookups', () => {
 });
 
 test('cube_args', () => {
-  /*
-  $id.prospect’: [
-                ‘prospect’,
-                { tenantId: ‘$$$id.tenantId’, $all: true },
-            ],
-  */
   const defs = [
     {
       path: ['foo', '$id', 'prospect'],
@@ -115,7 +109,7 @@ test('cube_args', () => {
     foo: {
       abc: {
         prospect: {
-          $key: { quantities },
+          $key: { quantities, $first: 10 },
           name: true,
         },
       },
@@ -124,4 +118,73 @@ test('cube_args', () => {
 
   const usedDefs = prepQueryLinks(query, defs);
   expect(usedDefs[0].def[1].quantities).toEqual(quantities);
+});
+
+test('placeholder_in_key', () => {
+  const defs = [
+    {
+      path: ['person', '$i', 'prospect'],
+      def: ['prospect', { $all: true, persons: { '$$person.$i.id': true } }],
+    },
+  ];
+
+  const query = encodeQuery({
+    person: {
+      abcdef: {
+        prospect: {
+          $key: { $first: 10 },
+          title: true,
+        },
+      },
+    },
+  });
+
+  const usedDefs = prepQueryLinks(query, defs);
+  expect(usedDefs).toEqual([
+    {
+      path: ['person', 'abcdef', 'prospect', ''],
+      def: [
+        'prospect',
+        { $all: true, persons: { '$$person.abcdef.id': true } },
+      ],
+    },
+  ]);
+  expect(query).toEqual(
+    encodeQuery({
+      person: { abcdef: { id: true } },
+    }),
+  );
+});
+
+test('gate_pattern', () => {
+  const defs = [
+    {
+      path: ['$id', 'prospect'],
+      def: ['prospect', { $all: true, tenantId: '$$$id.tenantId' }],
+    },
+  ];
+
+  const query = encodeQuery({
+    abcdef: {
+      prospect: {
+        $key: { $first: 10, persons: { $cts: { bar: {} } } },
+        title: true,
+      },
+    },
+  });
+
+  const usedDefs = prepQueryLinks(query, defs);
+  expect(usedDefs).toEqual([
+    {
+      path: ['abcdef', 'prospect', '\x000kKkOM8nQqtn--R485CoRk-60L8WRV-6'],
+      def: [
+        'prospect',
+        {
+          tenantId: '$$abcdef.tenantId',
+          persons: { $cts: { bar: {} } },
+          $all: true,
+        },
+      ],
+    },
+  ]);
 });

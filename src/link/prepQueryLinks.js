@@ -32,17 +32,19 @@ export default function prepQueryLinks(rootQuery, defs) {
       const [range, filter] = splitRef(def);
       if (range && subQuery.length) {
         return subQuery.map((node) => {
-          // console.log('Creating def', decodeArgs(node), path, def);
-          // if (end || !prefix) {
-          //   throw Error('unexpected' + key + ' ' + end + ' ' + prefix);
-          // }
-
+          if (!node.prefix && !node.end) {
+            throw Error(
+              'link.range_expected: ' + path.concat(node.key).join('.'),
+            );
+          }
           return {
             path: path.concat(node.key),
             def: prepareDef(
-              def
-                .slice(0, -1)
-                .concat({ ...filter, ...decodeArgs(node), ...range }),
+              def.slice(0, -1).concat({
+                ...filter,
+                ...(node.prefix ? decodeArgs(node) : {}),
+                ...range,
+              }),
               vars,
             ),
           };
@@ -155,7 +157,10 @@ function getDefQuery(def, vars, version) {
       key.map(addDefQueries);
     }
     if (typeof key === 'object' && key) {
-      for (const prop in key) addDefQueries(key[prop]);
+      for (const prop in key) {
+        addDefQueries(prop);
+        addDefQueries(key[prop]);
+      }
     }
   }
 
@@ -168,7 +173,7 @@ function getDefQuery(def, vars, version) {
 function prepareDef(def, vars) {
   function getValue(key) {
     if (typeof key !== 'string') return key;
-    return key[0] === '$' ? vars[key.slice(1)] : key;
+    return key[0] === '$' && key.slice(1) in vars ? vars[key.slice(1)] : key;
   }
 
   function replacePlaceholders(key) {
@@ -180,7 +185,9 @@ function prepareDef(def, vars) {
     }
     if (typeof key === 'object' && key) {
       const result = {};
-      for (const prop in key) result[prop] = replacePlaceholders(key[prop]);
+      for (const prop in key) {
+        result[replacePlaceholders(prop)] = replacePlaceholders(key[prop]);
+      }
       return result;
     }
     return getValue(key);

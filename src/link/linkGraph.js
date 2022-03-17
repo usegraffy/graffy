@@ -5,31 +5,67 @@ import {
   findFirst,
   encodePath,
   splitRef,
+  splitArgs,
 } from '@graffy/common';
 
 export default function linkGraph(rootGraph, defs) {
   let version = rootGraph[0].version;
 
+  /*
+    Braids and Strands are different representations of the set of paths
+    you obtain by replacing placeholders in the path.
+
+    This is better explained using an example.
+
+    Say we have a blogging application. Posts have multiple authors identified by
+    authorId, and a single post category. Authors have different "taglines" for each
+    category. We want to add a link "tagline" from the post to the relevant author
+    tagline.
+    
+    We use the link definition:
+    'post.$i.authors.$j.tagline': [
+      'user',
+      '$$post.$i.authors.$j.id',
+      'taglines',
+      '$$post.$i.category
+    ]
+
+    By traversing the graph, we get all possible values of ($i, $j); say
+    they are (p0, 0), (p1, 0), (p1, 1).
+
+    We can replace the placeholders with these values to get the "braid":
+    [
+      [{ value: 'user', vars: {} }],
+      [
+        { value: u0, vars: {i: p0, j: 0} },
+        { value: u1, vars: {i: p1, j: 0} },
+        { value: u2, vars: {i: p1, j: 1} },
+      ],
+      [{ value: 'taglines', vars: {} }],
+      [
+        { value: 'cooking', vars: {i: p0} },
+        { value: 'fitness', vars: {i: p1} },
+      ]
+    ]
+
+    We then "unbraid" the "braid" into an array of "strands":
+
+    [
+      { value: ['user', u0, 'taglines', 'cooking'], vars: {p0, 0} },
+      { value: ['user', u1, 'taglines', 'fitness'], vars: {p1, 0} },
+      { value: ['user', u2, 'taglines', 'fitness'], vars: {p1, 1} },
+    ]
+
+    Note that combinations with incompatible vars such as are removed during
+    the unbraid operation (e.g. ['user', u0, 'taglines', 'fitness'])
+  */
+
   for (const { path, def } of defs) {
-    /** @type {{
-        value: any,
-        vars: Record<string, any>,
-        reqs: Record<string, true>,
-      }[][]} */
-    const braid = def.map(getKeyValues);
+    /** @type {{ value: any, vars: Record<string, any> }[][]} */
+    const braid = def.map(getChoices);
     const strands = unbraid(braid);
 
-    const pathReqs = path
-      .filter((key) => key[0] === '$')
-      .reduce((acc, key) => {
-        acc[key.slice(1)] = true;
-        return acc;
-      }, {});
-
-    outer: for (const { value, vars, reqs } of strands) {
-      for (const req in reqs) if (!(req in vars)) continue outer;
-      for (const req in pathReqs) if (!(req in vars)) continue outer;
-
+    for (const { value, vars } of strands) {
       const realPath = makeRef(path, vars);
       const realRef = makeRef(value, vars);
       const node = { key: realPath.pop(), path: encodePath(realRef), version };
@@ -55,33 +91,40 @@ export default function linkGraph(rootGraph, defs) {
     }
   }
 
-  // console.log(rootGraph);
   return rootGraph;
 
-  function getKeyValues(key) {
+  function getChoices(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
       return lookupValues(rootGraph, key.slice(2).split('.'));
     }
     if (Array.isArray(key)) {
-      return unbraid(key.map(getKeyValues));
+      if (!key.length) return [{ value: [], vars: {} }];
+      return unbraid(key.map(getChoices));
     }
     if (typeof key === 'object' && key) {
-      const values = unbraid(Object.values(key).map(getKeyValues));
-      const keys = Object.keys(key);
+      const [range = {}, filter = {}] = splitArgs(key);
+      const entries = Object.entries(filter).flat();
+      if (!entries.length) return [{ value: {}, vars: {} }];
+      const strands = unbraid(entries.map(getChoices));
 
-      return values.map(({ value, vars, reqs }) => ({
-        value: value.reduce((acc, val, i) => {
-          acc[keys[i]] = val;
-          return acc;
-        }, {}),
+      return strands.map(({ value, vars }) => ({
+        value: {
+          ...range,
+          ...Object.fromEntries(
+            value.reduce((acc, item, i) => {
+              if (i % 2) {
+                acc[acc.length - 1].push(item);
+              } else {
+                acc.push([item]);
+              }
+              return acc;
+            }, []),
+          ),
+        },
         vars,
-        reqs,
       }));
     }
-    if (typeof key === 'string' && key[0] === '$') {
-      return [{ value: key, vars: {}, reqs: { [key.slice(1)]: true } }];
-    }
-    return [{ value: key, vars: {}, reqs: {} }];
+    return [{ value: key, vars: {} }];
   }
 
   /**
@@ -108,7 +151,7 @@ export default function linkGraph(rootGraph, defs) {
   }
 
   function recurse(node, path, vars) {
-    if (!path.length) return [{ value: node.value, vars, reqs: {} }];
+    if (!path.length) return [{ value: node.value, vars }];
     if (node.children) return lookupValues(node.children, path, vars);
     if (node.path) {
       const linked = unwrap(rootGraph, node.path);
@@ -119,12 +162,12 @@ export default function linkGraph(rootGraph, defs) {
 }
 
 function unbraid(braid) {
+  if (!braid.length) return [];
   const [options, ...rest] = braid;
   if (!rest.length) {
     return options.map((option) => ({
       value: [option.value],
       vars: option.vars,
-      reqs: option.reqs,
     }));
   }
 
@@ -135,7 +178,6 @@ function unbraid(braid) {
       .map((strand) => ({
         value: [option.value, ...strand.value],
         vars: { ...option.vars, ...strand.vars },
-        reqs: { ...option.reqs, ...strand.reqs },
       })),
   );
 }
@@ -152,7 +194,7 @@ function isCompatible(oVars, sVars) {
 function makeRef(def, vars) {
   function getValue(key) {
     if (typeof key !== 'string') return key;
-    return key[0] === '$' ? vars[key.slice(1)] : key;
+    return key[0] === '$' && key.slice(1) in vars ? vars[key.slice(1)] : key;
   }
 
   function replacePlaceholders(key) {
@@ -161,7 +203,9 @@ function makeRef(def, vars) {
     }
     if (typeof key === 'object' && key) {
       const result = {};
-      for (const prop in key) result[prop] = replacePlaceholders(key[prop]);
+      for (const prop in key) {
+        result[replacePlaceholders(prop)] = replacePlaceholders(key[prop]);
+      }
       return result;
     }
     return getValue(key);
