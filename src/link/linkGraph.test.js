@@ -132,3 +132,41 @@ test('placeholder_in_key', () => {
     ),
   );
 });
+
+test('gate_pattern', () => {
+  const defs = [
+    {
+      path: ['abcdef', 'prospect', '\x000kKaQqw-0kJZNrGn--R4Na4m--R'],
+      def: [
+        'prospect',
+        {
+          tenantId: '$$abcdef.tenantId',
+          foo: { $cts: { bar: {} } },
+          $all: true,
+        },
+      ],
+    },
+  ];
+  const graph = encodeGraph({ abcdef: { tenantId: 'xyz' } }, 0);
+  const res = linkGraph(graph, defs);
+
+  expect(res).toEqual(
+    encodeGraph(
+      {
+        abcdef: {
+          tenantId: 'xyz',
+          prospect: [
+            {
+              $key: { $all: true, foo: { $cts: { bar: {} } } },
+              $ref: [
+                'prospect',
+                { foo: { $cts: { bar: {} } }, tenantId: 'xyz' },
+              ],
+            },
+          ],
+        },
+      },
+      0,
+    ),
+  );
+});

@@ -155,3 +155,36 @@ test('placeholder_in_key', () => {
     }),
   );
 });
+
+test('gate_pattern', () => {
+  const defs = [
+    {
+      path: ['$id', 'prospect'],
+      def: ['prospect', { $all: true, tenantId: '$$$id.tenantId' }],
+    },
+  ];
+
+  const query = encodeQuery({
+    abcdef: {
+      prospect: {
+        $key: { $first: 10, persons: { $cts: { bar: {} } } },
+        title: true,
+      },
+    },
+  });
+
+  const usedDefs = prepQueryLinks(query, defs);
+  expect(usedDefs).toEqual([
+    {
+      path: ['abcdef', 'prospect', '\x000kKkOM8nQqtn--R485CoRk-60L8WRV-6'],
+      def: [
+        'prospect',
+        {
+          tenantId: '$$abcdef.tenantId',
+          persons: { $cts: { bar: {} } },
+          $all: true,
+        },
+      ],
+    },
+  ]);
+});

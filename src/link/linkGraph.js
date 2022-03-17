@@ -98,13 +98,16 @@ export default function linkGraph(rootGraph, defs) {
       return lookupValues(rootGraph, key.slice(2).split('.'));
     }
     if (Array.isArray(key)) {
+      if (!key.length) return [{ value: [], vars: {} }];
       return unbraid(key.map(getChoices));
     }
     if (typeof key === 'object' && key) {
       const [range = {}, filter = {}] = splitArgs(key);
-      const entries = unbraid(Object.entries(filter).flat().map(getChoices));
+      const entries = Object.entries(filter).flat();
+      if (!entries.length) return [{ value: {}, vars: {} }];
+      const strands = unbraid(entries.map(getChoices));
 
-      return entries.map(({ value, vars }) => ({
+      return strands.map(({ value, vars }) => ({
         value: {
           ...range,
           ...Object.fromEntries(
