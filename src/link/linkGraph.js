@@ -11,26 +11,61 @@ import {
 export default function linkGraph(rootGraph, defs) {
   let version = rootGraph[0].version;
 
+  /*
+    Braids and Strands are different representations of the set of paths
+    you obtain by replacing placeholders in the path.
+
+    This is better explained using an example.
+
+    Say we have a blogging application. Posts have multiple authors identified by
+    authorId, and a single post category. Authors have different "taglines" for each
+    category. We want to add a link "tagline" from the post to the relevant author
+    tagline.
+    
+    We use the link definition:
+    'post.$i.authors.$j.tagline': [
+      'user',
+      '$$post.$i.authors.$j.id',
+      'taglines',
+      '$$post.$i.category
+    ]
+
+    By traversing the graph, we get all possible values of ($i, $j); say
+    they are (p0, 0), (p1, 0), (p1, 1).
+
+    We can replace the placeholders with these values to get the "braid":
+    [
+      [{ value: 'user', vars: {} }],
+      [
+        { value: u0, vars: {i: p0, j: 0} },
+        { value: u1, vars: {i: p1, j: 0} },
+        { value: u2, vars: {i: p1, j: 1} },
+      ],
+      [{ value: 'taglines', vars: {} }],
+      [
+        { value: 'cooking', vars: {i: p0} },
+        { value: 'fitness', vars: {i: p1} },
+      ]
+    ]
+
+    We then "unbraid" the "braid" into an array of "strands":
+
+    [
+      { value: ['user', u0, 'taglines', 'cooking'], vars: {p0, 0} },
+      { value: ['user', u1, 'taglines', 'fitness'], vars: {p1, 0} },
+      { value: ['user', u2, 'taglines', 'fitness'], vars: {p1, 1} },
+    ]
+
+    Note that combinations with incompatible vars such as are removed during
+    the unbraid operation (e.g. ['user', u0, 'taglines', 'fitness'])
+  */
+
   for (const { path, def } of defs) {
-    /** @type {{
-        value: any,
-        vars: Record<string, any>,
-        reqs: Record<string, true>,
-      }[][]} */
+    /** @type {{ value: any, vars: Record<string, any> }[][]} */
     const braid = def.map(getChoices);
     const strands = unbraid(braid);
 
-    const pathReqs = path
-      .filter((key) => key[0] === '$')
-      .reduce((acc, key) => {
-        acc[key.slice(1)] = true;
-        return acc;
-      }, {});
-
-    outer: for (const { value, vars, reqs } of strands) {
-      for (const req in reqs) if (!(req in vars)) continue outer;
-      for (const req in pathReqs) if (!(req in vars)) continue outer;
-
+    for (const { value, vars } of strands) {
       const realPath = makeRef(path, vars);
       const realRef = makeRef(value, vars);
       const node = { key: realPath.pop(), path: encodePath(realRef), version };
@@ -66,10 +101,10 @@ export default function linkGraph(rootGraph, defs) {
       return unbraid(key.map(getChoices));
     }
     if (typeof key === 'object' && key) {
-      const [range = {}, filter] = splitArgs(key);
+      const [range = {}, filter = {}] = splitArgs(key);
       const entries = unbraid(Object.entries(filter).flat().map(getChoices));
 
-      return entries.map(({ value, vars, reqs }) => ({
+      return entries.map(({ value, vars }) => ({
         value: {
           ...range,
           ...Object.fromEntries(
@@ -84,13 +119,9 @@ export default function linkGraph(rootGraph, defs) {
           ),
         },
         vars,
-        reqs,
       }));
     }
-    if (typeof key === 'string' && key[0] === '$') {
-      return [{ value: key, vars: {}, reqs: { [key.slice(1)]: true } }];
-    }
-    return [{ value: key, vars: {}, reqs: {} }];
+    return [{ value: key, vars: {} }];
   }
 
   /**
@@ -117,7 +148,7 @@ export default function linkGraph(rootGraph, defs) {
   }
 
   function recurse(node, path, vars) {
-    if (!path.length) return [{ value: node.value, vars, reqs: {} }];
+    if (!path.length) return [{ value: node.value, vars }];
     if (node.children) return lookupValues(node.children, path, vars);
     if (node.path) {
       const linked = unwrap(rootGraph, node.path);
@@ -134,7 +165,6 @@ function unbraid(braid) {
     return options.map((option) => ({
       value: [option.value],
       vars: option.vars,
-      reqs: option.reqs,
     }));
   }
 
@@ -145,7 +175,6 @@ function unbraid(braid) {
       .map((strand) => ({
         value: [option.value, ...strand.value],
         vars: { ...option.vars, ...strand.vars },
-        reqs: { ...option.reqs, ...strand.reqs },
       })),
   );
 }

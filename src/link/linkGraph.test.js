@@ -37,6 +37,68 @@ test('simple', () => {
   );
 });
 
+test('compat', () => {
+  const graph = encodeGraph(
+    {
+      post: {
+        p1: {
+          authors: [{ id: 'bob' }],
+          category: 'cooking',
+        },
+        bob: {
+          authors: [{ id: 'ali' }, { id: 'carl' }],
+          category: 'fitness',
+        },
+      },
+    },
+    0,
+  );
+
+  const defs = [
+    {
+      path: ['post', '$i', 'authors', '$j', 'tagline'],
+      def: [
+        'user',
+        '$$post.$i.authors.$j.id',
+        'taglines',
+        '$$post.$i.category',
+      ],
+    },
+  ];
+
+  expect(linkGraph(graph, defs)).toEqual(
+    encodeGraph(
+      {
+        post: {
+          p1: {
+            authors: [
+              {
+                id: 'bob',
+                tagline: { $ref: ['user', 'bob', 'taglines', 'cooking'] },
+              },
+            ],
+            category: 'cooking',
+          },
+          bob: {
+            authors: [
+              {
+                id: 'ali',
+                tagline: { $ref: ['user', 'ali', 'taglines', 'fitness'] },
+              },
+              {
+                id: 'carl',
+                tagline: { $ref: ['user', 'carl', 'taglines', 'fitness'] },
+              },
+            ],
+            category: 'fitness',
+          },
+        },
+      },
+      0,
+    ),
+  );
+});
+
 test('placeholder_in_key', () => {
   const defs = [
     {
