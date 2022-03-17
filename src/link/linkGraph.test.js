@@ -37,40 +37,34 @@ test('simple', () => {
   );
 });
 
-test.skip('complex', () => {
-  const graph = encodeGraph(
-    {
-      foo: [
-        { $key: 'two', x: 30 },
-        { $key: 'three', x: 33 },
-      ],
-    },
-    0,
-  );
-
+test('placeholder_in_key', () => {
   const defs = [
     {
-      path: ['bar', '$n', 'x'],
-      def: ['baz', '$$foo.$n.x', { number: '$n', $all: true }],
+      path: ['person', 'abcdef', 'prospect', ''],
+      def: [
+        'prospect',
+        { $all: true, persons: { '$$person.abcdef.id': true } },
+      ],
     },
   ];
-  expect(linkGraph(graph, defs)).toEqual(
+
+  const graph = encodeGraph({ person: { abcdef: { id: 'abcdef' } } }, 0);
+  const res = linkGraph(graph, defs);
+
+  expect(res).toEqual(
     encodeGraph(
       {
-        foo: [
-          { $key: 'two', x: 30 },
-          { $key: 'three', x: 33 },
-        ],
-        bar: [
-          {
-            $key: 'two',
-            x: { $ref: ['baz', 30, { number: 'two', $all: true }] },
+        person: {
+          abcdef: {
+            id: 'abcdef',
+            prospect: [
+              {
+                $key: { $all: true },
+                $ref: ['prospect', { persons: { abcdef: true } }],
+              },
+            ],
           },
-          {
-            $key: 'three',
-            x: { $ref: ['baz', 33, { number: 'three', $all: true }] },
-          },
-        ],
+        },
       },
       0,
     ),

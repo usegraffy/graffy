@@ -91,12 +91,6 @@ test('parallelLookups', () => {
 });
 
 test('cube_args', () => {
-  /*
-  $id.prospect’: [
-                ‘prospect’,
-                { tenantId: ‘$$$id.tenantId’, $all: true },
-            ],
-  */
   const defs = [
     {
       path: ['foo', '$id', 'prospect'],
@@ -115,7 +109,7 @@ test('cube_args', () => {
     foo: {
       abc: {
         prospect: {
-          $key: { quantities },
+          $key: { quantities, $first: 10 },
           name: true,
         },
       },
@@ -124,4 +118,40 @@ test('cube_args', () => {
 
   const usedDefs = prepQueryLinks(query, defs);
   expect(usedDefs[0].def[1].quantities).toEqual(quantities);
+});
+
+test('placeholder_in_key', () => {
+  const defs = [
+    {
+      path: ['person', '$i', 'prospect'],
+      def: ['prospect', { $all: true, persons: { '$$person.$i.id': true } }],
+    },
+  ];
+
+  const query = encodeQuery({
+    person: {
+      abcdef: {
+        prospect: {
+          $key: { $first: 10 },
+          title: true,
+        },
+      },
+    },
+  });
+
+  const usedDefs = prepQueryLinks(query, defs);
+  expect(usedDefs).toEqual([
+    {
+      path: ['person', 'abcdef', 'prospect', ''],
+      def: [
+        'prospect',
+        { $all: true, persons: { '$$person.abcdef.id': true } },
+      ],
+    },
+  ]);
+  expect(query).toEqual(
+    encodeQuery({
+      person: { abcdef: { id: true } },
+    }),
+  );
 });

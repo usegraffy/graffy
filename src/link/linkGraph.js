@@ -5,6 +5,7 @@ import {
   findFirst,
   encodePath,
   splitRef,
+  splitArgs,
 } from '@graffy/common';
 
 export default function linkGraph(rootGraph, defs) {
@@ -16,7 +17,7 @@ export default function linkGraph(rootGraph, defs) {
         vars: Record<string, any>,
         reqs: Record<string, true>,
       }[][]} */
-    const braid = def.map(getKeyValues);
+    const braid = def.map(getChoices);
     const strands = unbraid(braid);
 
     const pathReqs = path
@@ -55,25 +56,33 @@ export default function linkGraph(rootGraph, defs) {
     }
   }
 
-  // console.log(rootGraph);
   return rootGraph;
 
-  function getKeyValues(key) {
+  function getChoices(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
       return lookupValues(rootGraph, key.slice(2).split('.'));
     }
     if (Array.isArray(key)) {
-      return unbraid(key.map(getKeyValues));
+      return unbraid(key.map(getChoices));
     }
     if (typeof key === 'object' && key) {
-      const values = unbraid(Object.values(key).map(getKeyValues));
-      const keys = Object.keys(key);
+      const [range = {}, filter] = splitArgs(key);
+      const entries = unbraid(Object.entries(filter).flat().map(getChoices));
 
-      return values.map(({ value, vars, reqs }) => ({
-        value: value.reduce((acc, val, i) => {
-          acc[keys[i]] = val;
-          return acc;
-        }, {}),
+      return entries.map(({ value, vars, reqs }) => ({
+        value: {
+          ...range,
+          ...Object.fromEntries(
+            value.reduce((acc, item, i) => {
+              if (i % 2) {
+                acc[acc.length - 1].push(item);
+              } else {
+                acc.push([item]);
+              }
+              return acc;
+            }, []),
+          ),
+        },
         vars,
         reqs,
       }));
@@ -119,6 +128,7 @@ export default function linkGraph(rootGraph, defs) {
 }
 
 function unbraid(braid) {
+  if (!braid.length) return [];
   const [options, ...rest] = braid;
   if (!rest.length) {
     return options.map((option) => ({
@@ -152,7 +162,7 @@ function isCompatible(oVars, sVars) {
 function makeRef(def, vars) {
   function getValue(key) {
     if (typeof key !== 'string') return key;
-    return key[0] === '$' ? vars[key.slice(1)] : key;
+    return key[0] === '$' && key.slice(1) in vars ? vars[key.slice(1)] : key;
   }
 
   function replacePlaceholders(key) {
@@ -161,7 +171,9 @@ function makeRef(def, vars) {
     }
     if (typeof key === 'object' && key) {
       const result = {};
-      for (const prop in key) result[prop] = replacePlaceholders(key[prop]);
+      for (const prop in key) {
+        result[replacePlaceholders(prop)] = replacePlaceholders(key[prop]);
+      }
       return result;
     }
     return getValue(key);
