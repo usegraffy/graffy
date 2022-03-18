@@ -76,8 +76,8 @@ test('regex jsonb', () => {
   ).toEqual(sql`("data" #> ${['Name']})#>>'{}' ~ ${'abc'}`);
 });
 
-test.skip('regex text', () => {
-  expect(
-    getSql({ 'data.Name': { $re: 'abc' } }, opt({ data: 'jsonb' })),
-  ).toEqual(sql`("data" #> ${['Name']})::text ~ ${'abc'}`);
+test('regex text', () => {
+  expect(getSql({ name: { $re: 'abc' } }, opt({ name: 'text' }))).toEqual(
+    sql`"name" ~ ${'abc'}`,
+  );
 });

@@ -26,23 +26,4 @@ describe('dencorder', () => {
     let v = NaN;
     expect(isNaN(decode(encode(v)))).toBe(true);
   });
-
-  // test('string', () => {
-  //   let v = 'potato\0';
-  //   expect(v).toEqual(decodeString(encodeString(v)));
-  // });
-  //
-  // test('enc64', () => {
-  //   expect(enc64(encode(1746.5567))).toEqual('k8h9DVyF_fk');
-  // });
-  //
-  // test('dec64', () => {
-  //   expect(decode(dec64('k8h9DVyF_fk'))).toEqual(1746.5567);
-  // });
-  //
-  // test.skip('tuple', () => {
-  //   const t = [string, number, boolean];
-  //   const v = ['123', 3.1416, false];
-  //   expect(v).toEqual(decodeTuple(t, encodeTuple(t, v)));
-  // });
 });
