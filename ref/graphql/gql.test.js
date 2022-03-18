@@ -1,6 +1,6 @@
 import gql from './gql.js';
 
-test.skip('toQuery', () => {
+test('toQuery', () => {
   const userId = 123;
   expect(
     gql`

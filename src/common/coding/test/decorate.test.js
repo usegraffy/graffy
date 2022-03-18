@@ -128,12 +128,18 @@ describe('pagination', () => {
 
 // TODO: Test multi-hop links and loops.
 
-test.skip('arrayCursor.decode', () => {
-  expect(
-    decorate([{ key: '\x000VI-Ck--------', value: 25, version: 0 }], {
+test('arrayCursor.decode', () => {
+  const decorated = decorate(
+    [{ key: '\x000VI-Ck--------', value: 25, version: 0 }],
+    {
       $key: { $first: 3 },
-    }),
-  ).toEqual([25]);
+    },
+  );
+  const expected = [25];
+  expected.$page = { $all: true };
+  expected.$next = null;
+  expected.$prev = null;
+  expect(decorated).toEqual(expected);
 });
 
 test('alias', () => {

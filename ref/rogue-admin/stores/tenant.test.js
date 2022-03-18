@@ -2,7 +2,7 @@ import { createTenantStore } from './tenant.js';
 
 jest.mock('@graffy/rogue-db');
 
-test.skip('store must respond to protos', () => {
+test('store must respond to protos', () => {
   createTenantStore({
     user: {
       type: 'db',
