@@ -5,16 +5,20 @@ module.exports = {
     node: true,
     jest: true,
   },
-  extends: ['eslint:recommended', 'plugin:react/recommended', 'prettier'],
-  parser: '@babel/eslint-parser',
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:react/recommended',
+    'prettier'
+  ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2018,
+    ecmaFeatures: { jsx: true },
     sourceType: 'module',
-    babelOptions: {
-      configFile: './babel.config.cjs',
-    },
+    project: './tsconfig.json'
   },
-  plugins: ['react', 'prettier'],
+  plugins: ['@typescript-eslint', 'react', 'prettier'],
   rules: {
     'no-console': 'error',
     'no-unused-vars': [
@@ -30,6 +34,10 @@ module.exports = {
     'prettier/prettier': 'error',
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
   },
   settings: {
     react: {

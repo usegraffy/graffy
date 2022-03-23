@@ -8,7 +8,7 @@ import { getJsonBuildTrusted, lookup } from './clauses.js';
   Uses the args object (typically passed in the $key attribute)
 
   @param {object} args
-  @param {object} options
+  @param {{prefix: string, idCol: string}} options
 
   @typedef { import('sql-template-tag').Sql } Sql
   @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number }}
@@ -45,10 +45,10 @@ export default function getArgSql(
 
   if (!hasRangeArg) return { meta: meta(key), where, group, limit: 1 };
 
-  if (isEmpty(rest)) {
-    // TODO: Allow these.
-    throw Error('pg_arg.pagination_only_unsupported in ' + prefix);
-  }
+  // if (isEmpty(rest)) {
+  //   // TODO: Allow these.
+  //   throw Error('pg_arg.pagination_only_unsupported in ' + prefix);
+  // }
 
   const orderCols = ($order || [idCol]).map((orderItem) =>
     orderItem[0] === '!'
@@ -61,6 +61,17 @@ export default function getArgSql(
       if (value) where.push(getBoundCond(orderCols, value, name));
     },
   );
+
+  const order =
+    !$group &&
+    join(
+      ($order || [idCol]).map((orderItem) =>
+        orderItem[0] === '!'
+          ? sql`${lookup(orderItem.slice(1))} ${$last ? sql`ASC` : sql`DESC`}`
+          : sql`${lookup(orderItem)} ${$last ? sql`DESC` : sql`ASC`}`,
+      ),
+      `, `,
+    );
 
   const orderKey =
     $order &&
@@ -75,12 +86,7 @@ export default function getArgSql(
   return {
     meta: meta(key),
     where,
-    order:
-      $order &&
-      join(
-        orderCols.map((col) => sql`${col} ${$last ? sql`DESC` : sql`ASC`}`),
-        `, `,
-      ),
+    order,
     group,
     limit: $first || $last,
   };
