@@ -10,6 +10,9 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: 'module',
+    babelOptions: {
+      configFile: './babel.config.cjs',
+    },
   },
   plugins: ['react', 'prettier'],
   rules: {
