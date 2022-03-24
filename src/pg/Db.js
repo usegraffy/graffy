@@ -8,7 +8,6 @@ import {
   finalize,
   merge,
   wrapObject,
-  slice,
   encodeGraph,
   isEmpty,
   isRange,
