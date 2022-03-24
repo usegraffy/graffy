@@ -183,4 +183,25 @@ describe('link', () => {
     exp.friends.$next = null;
     expect(res).toEqual(exp);
   });
+
+  test('no_projection_id', async () => {
+    const res = await store.read(['user', 'carl'], true);
+    expect(res).toEqual({ name: 'Carl', friendIds: ['ali', 'bob'] });
+  });
+
+  test('no_projection_query', async () => {
+    const res = await store.read('post', [
+      { $key: { $first: 1, authorId: 'bob' } },
+    ]);
+    const exp = [
+      keyref({ $cursor: { id: 'p02' }, authorId: 'bob' }, ['post', 'p02'], {
+        title: 'Post 2 B',
+        authorId: 'bob',
+      }),
+    ];
+    exp.$page = { $all: true, authorId: 'bob', $until: { id: 'p02' } };
+    exp.$next = { $first: 1, authorId: 'bob', $after: { id: 'p02' } };
+    exp.$prev = null;
+    expect(res).toEqual(exp);
+  });
 });

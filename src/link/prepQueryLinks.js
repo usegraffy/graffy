@@ -74,6 +74,8 @@ export default function prepQueryLinks(rootQuery, defs) {
       return pager;
     }
 
+    if (!Array.isArray(query) || !query.length) return [];
+
     const [key, ...rest] = path;
     if (rest.length === 0) {
       if (key[0] === '$') {
