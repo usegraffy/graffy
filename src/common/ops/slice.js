@@ -45,7 +45,6 @@ export default function slice(graph, query, root) {
       } else {
         const key = queryNode.key;
         index = findFirst(graph, key);
-        // console.log('Index', graph, key, index);
         sliceNode(graph[index], queryNode, result);
       }
     }
@@ -118,8 +117,10 @@ export function sliceRange(graph, query, result) {
   // Prefixes are used to combine filtering and pagination. In schemas where
   // prefixes are expected but a particular graph does not have a filter, it
   // will have a prefix node with an empty string as key.
-  if (graph[0].key === '' && graph[0].prefix) {
-    sliceNode(graph[0], query, result);
+  if (graph[0].key === '' && graph[0].prefix && graph[0].children) {
+    const { known, unknown } = slice(graph[0].children, [query], result.root);
+    if (known) result.addKnown({ ...graph[0], children: known });
+    if (unknown) result.addUnknown({ ...query[0], children: unknown });
     return;
   }
 

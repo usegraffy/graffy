@@ -80,7 +80,12 @@ test('point_deletion', () => {
 test('point_in_range_deletion', () => {
   const version = 0;
   expect(encodeGraph([{ $key: { $cursor: ['foo'] } }], version)).toEqual([
-    { key: '\x000VKaQqw', end: '\x000VKaQqw', version },
+    {
+      key: '',
+      version,
+      prefix: true,
+      children: [{ key: '\x000VKaQqw', end: '\x000VKaQqw', version }],
+    },
   ]);
 });
 
@@ -143,6 +148,13 @@ test('plain_array', () => {
     { key: '\x0007----------\0', end: '\x000Azk-------,\uffff', version: 0 },
     { key: '\x000Azk--------', value: 'css', version: 0 },
     { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
+  ]);
+});
+
+test('array_update', () => {
+  const result = encodeGraph([{ $key: 0, $val: 'ts' }], 0);
+  expect(result).toEqual([
+    { key: '\x0007----------', value: 'ts', version: 0 },
   ]);
 });
 
@@ -283,4 +295,21 @@ test('ranges', () => {
 
 test('emptyNestedObjects', () => {
   expect(encodeGraph({ foo: { bar: { baz: {} } } }, 0)).toEqual([]);
+});
+
+test('cursor_only', () => {
+  expect(encodeGraph([{ $key: { $cursor: ['a'] }, name: 'A' }], 0)).toEqual([
+    {
+      key: '',
+      prefix: true,
+      version: 0,
+      children: [
+        {
+          key: '\x000VKW',
+          version: 0,
+          children: [{ key: 'name', version: 0, value: 'A' }],
+        },
+      ],
+    },
+  ]);
 });

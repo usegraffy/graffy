@@ -70,7 +70,6 @@ function encode(value, { version, isGraph } = {}) {
         !isDef(page.$cursor) &&
         ($ref || $val || $chi || $put || !isEmpty(props))
       ) {
-        // console.log('here');
         const node = makeNode({ ...object, $key: filter || '' }, key, ver);
         // if (!node) console.log(object, filter, key);
         // if (node.children) {
@@ -81,10 +80,14 @@ function encode(value, { version, isGraph } = {}) {
         return node;
       }
 
-      if ((!isDef(key) || Number.isInteger(key)) && page && filter) {
+      if (
+        (!isDef(key) || Number.isInteger(key)) &&
+        page &&
+        (filter || isDef(page.$cursor))
+      ) {
         const node = makeNode(
           {
-            $key: filter,
+            $key: filter || '',
             $chi: [
               { ...object, $key: isDef(page.$cursor) ? page.$cursor : page },
             ],
@@ -95,7 +98,8 @@ function encode(value, { version, isGraph } = {}) {
         node.prefix = true;
         return node;
       }
-      // console.log('$key is still', $key);
+
+      // console.log('No prefix made', { key, $key, object });
     }
 
     if (isDef($key) && (Number.isInteger(key) || !isDef(key))) key = $key;

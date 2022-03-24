@@ -642,7 +642,6 @@ describe('pg_e2e', () => {
     });
   });
 
-  /* Skipping until we figure out why it's flaky. */
   test('without_transaction', async () => {
     const id = uuid();
 
@@ -818,5 +817,26 @@ describe('pg_e2e', () => {
     exp3.$next = null;
 
     expect(res3).toEqual(exp3);
+  });
+
+  describe('no_filter', () => {
+    test('one_result', async () => {
+      await store.write('users', [
+        {
+          $key: uuid(),
+          name: 'A',
+          email: 'a@foo',
+          $put: true,
+        },
+      ]);
+      const res = await store.read('users', {
+        $key: { $all: true },
+        name: true,
+      });
+      const exp = [{ $key: [expect.any(String)], name: 'A' }];
+      (exp.$page = { $all: true }), (exp.$next = null);
+      exp.$prev = null;
+      expect(res).toEqual(exp);
+    });
   });
 });
