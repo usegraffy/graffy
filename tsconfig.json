@@ -67,9 +67,4 @@
   "include": [
     "src/**/*.js"
   ],
-  "exclude": [
-    "src/**/test/*",
-    "src/**/*.test.js",
-    "src/**/__mocks__/*"
-  ]
 }

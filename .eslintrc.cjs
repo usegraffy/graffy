@@ -1,22 +1,21 @@
 module.exports = {
   env: {
     browser: true,
-    es6: true,
+    es2022: true,
     node: true,
     jest: true,
   },
   extends: [
     'eslint:recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'prettier'
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 2018,
+    ecmaVersion: 13,
     ecmaFeatures: { jsx: true },
     sourceType: 'module',
-    project: './tsconfig.json'
   },
   plugins: ['@typescript-eslint', 'react', 'prettier'],
   rules: {
@@ -31,6 +30,16 @@ module.exports = {
         caughtErrorsIgnorePattern: '_',
       },
     ],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        ignoreRestSiblings: true,
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '_',
+      }
+     ],
     'prettier/prettier': 'error',
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
