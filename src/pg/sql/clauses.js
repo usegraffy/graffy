@@ -57,16 +57,26 @@ export const getSelectCols = (table, projection = null) => {
   return sql`jsonb_build_object(${join(sqls, ', ')})`;
 };
 
-export function vertexSql(array) {
+export function vertexSql(array, nullValue) {
   return sql`array[${join(
-    array.map((num) =>
-      num === Infinity
-        ? sql`'Infinity'`
-        : num === -Infinity
-        ? sql`'-Infinity'`
-        : num,
-    ),
+    array.map((num) => (num === null ? nullValue : num)),
   )}]::float8[]`;
+}
+
+export function cubeLiteralSql(value) {
+  if (
+    !Array.isArray(value) ||
+    !value.length ||
+    (Array.isArray(value[0]) && value.length !== 2)
+  ) {
+    throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
+  }
+  return Array.isArray(value[0])
+    ? sql`cube(${vertexSql(value[0], sql`'-Infinity'`)}, ${vertexSql(
+        value[1],
+        sql`'Infinity'`,
+      )})`
+    : sql`cube(${vertexSql(value, 0)})`;
 }
 
 function castValue(value, type, name, isPut) {
@@ -80,18 +90,7 @@ function castValue(value, type, name, isPut) {
       : sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`;
   }
 
-  if (type === 'cube') {
-    if (
-      !Array.isArray(value) ||
-      !value.length ||
-      (Array.isArray(value[0]) && value.length !== 2)
-    ) {
-      throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
-    }
-    return Array.isArray(value[0])
-      ? sql`cube(${vertexSql(value[0])}, ${vertexSql(value[1])})`
-      : sql`cube(${vertexSql(value)})`;
-  }
+  if (type === 'cube') return cubeLiteralSql(value);
 
   return value;
 }
