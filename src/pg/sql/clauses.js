@@ -57,7 +57,7 @@ export const getSelectCols = (table, projection = null) => {
   return sql`jsonb_build_object(${join(sqls, ', ')})`;
 };
 
-export function vertexSql(array, nullValue) {
+function vertexSql(array, nullValue) {
   return sql`array[${join(
     array.map((num) => (num === null ? nullValue : num)),
   )}]::float8[]`;
