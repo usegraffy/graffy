@@ -642,7 +642,6 @@ describe('pg_e2e', () => {
     });
   });
 
-  /* Skipping until we figure out why it's flaky. */
   test('without_transaction', async () => {
     const id = uuid();
 
@@ -753,8 +752,8 @@ describe('pg_e2e', () => {
         $all: true,
         scores: {
           $ctd: [
-            [0, 0, 0],
-            [20, 20, 0],
+            [0, null, 0],
+            [null, 20, 0],
           ],
         },
       },
@@ -766,8 +765,8 @@ describe('pg_e2e', () => {
         {
           scores: {
             $ctd: [
-              [0, 0, 0],
-              [20, 20, 0],
+              [0, null, 0],
+              [null, 20, 0],
             ],
           },
           $cursor: [pid1],
@@ -780,8 +779,8 @@ describe('pg_e2e', () => {
       $all: true,
       scores: {
         $ctd: [
-          [0, 0, 0],
-          [20, 20, 0],
+          [0, null, 0],
+          [null, 20, 0],
         ],
       },
     };
@@ -818,5 +817,88 @@ describe('pg_e2e', () => {
     exp3.$next = null;
 
     expect(res3).toEqual(exp3);
+  });
+
+  describe('no_filter', () => {
+    test('one_result', async () => {
+      await store.write('users', [
+        {
+          $key: uuid(),
+          name: 'A',
+          email: 'a@foo',
+          $put: true,
+        },
+      ]);
+      const res = await store.read('users', {
+        $key: { $all: true },
+        name: true,
+      });
+      const exp = [{ $key: [expect.any(String)], name: 'A' }];
+      (exp.$page = { $all: true }), (exp.$next = null);
+      exp.$prev = null;
+      expect(res).toEqual(exp);
+    });
+  });
+
+  describe('json_lookup_and_operators', () => {
+    beforeEach(async () => {
+      await resetTables();
+      await store.write('users', [
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: { str: 'hello', num: 10 },
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'B',
+          email: 'b',
+          settings: { str: 'world', num: 15 },
+        },
+      ]);
+    });
+
+    async function doTest(filter, results) {
+      const res = await store.read('users', {
+        $key: { ...filter, $all: true },
+        name: true,
+      });
+      const exp = results.map((name) =>
+        keyref(
+          { ...filter, $cursor: [expect.any(String)] },
+          ['users', expect.any(String)],
+          { name },
+        ),
+      );
+      exp.$page = { ...filter, $all: true };
+      exp.$next = null;
+      exp.$prev = null;
+
+      expect(res).toEqual(exp);
+    }
+
+    test('str_eq', async () => doTest({ 'settings.str': 'hello' }, ['A']));
+    test('str_neq', async () =>
+      doTest({ 'settings.str': { $not: 'world' } }, ['A']));
+    test('str_in', async () =>
+      doTest({ 'settings.str': ['hello', 'bonjour'] }, ['A']));
+    test('str_nin', async () =>
+      doTest({ 'settings.str': { $not: ['hello', 'bonjour'] } }, ['B']));
+    test('str_re', async () =>
+      doTest({ 'settings.str': { $re: 'h.*' } }, ['A']));
+    test('str_ire', async () =>
+      doTest({ 'settings.str': { $ire: 'H.*' } }, ['A']));
+
+    test('num_eq', async () => doTest({ 'settings.num': 10 }, ['A']));
+    test('num_neq', async () =>
+      doTest({ 'settings.num': { $not: 10 } }, ['B']));
+    test('num_in', async () => doTest({ 'settings.num': [9, 10, 11] }, ['A']));
+    test('num_nin', async () =>
+      doTest({ 'settings.num': { $not: [14, 15, 16] } }, ['A']));
+    test('num_lt', async () => doTest({ 'settings.num': { $lt: 12 } }, ['A']));
+    test('num_gt', async () => doTest({ 'settings.num': { $gt: 13 } }, ['B']));
   });
 });

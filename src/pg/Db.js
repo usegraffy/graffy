@@ -8,7 +8,6 @@ import {
   finalize,
   merge,
   wrapObject,
-  slice,
   encodeGraph,
   isEmpty,
   isRange,
@@ -175,7 +174,7 @@ export default class Db {
     await Promise.all(promises);
 
     log('dbRead', rootQuery, results);
-    return slice(finalize(results, wrap(query, prefix)), rootQuery).known || [];
+    return finalize(results, wrap(query, prefix));
   }
 
   async write(rootChange, tableOptions) {

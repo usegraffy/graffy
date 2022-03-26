@@ -58,6 +58,7 @@ export default function makeStream(init, options = {}) {
       return complete;
     },
 
+    /** @return {Promise<{ value: any, done: boolean }>} */
     throw(error) {
       complete = Promise.reject(error);
       payloads.length = 0;

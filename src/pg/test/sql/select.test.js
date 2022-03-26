@@ -95,5 +95,27 @@ describe('select_sql', () => {
     expectSql(selectByArgs(arg, null, options), expectedResult);
   });
 
+  test('selectByArgs_implicit_order', () => {
+    const arg = { $first: 10 };
+    const options = {
+      table: 'user',
+      prefix: ['user'],
+      idCol: 'id',
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+    };
+    const expectedResult = sql`
+      SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
+        (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
+        '$ref', jsonb_build_array(${
+          options.table
+        }::text, "id"), '$ver', current_timestamp
+      )
+      FROM "user" ORDER BY "id" ASC LIMIT ${10}
+    `;
+
+    expectSql(selectByArgs(arg, null, options), expectedResult);
+  });
+
   // test('selectByArgs_json manipulation', () => {});
 });

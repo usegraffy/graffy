@@ -1,7 +1,7 @@
 import sql, { join, raw } from 'sql-template-tag';
 import getAst from './getAst.js';
 import { encodePath } from '@graffy/common';
-import { vertexSql as vertex } from '../sql/clauses.js';
+import { cubeLiteralSql } from '../sql/clauses.js';
 
 const opSql = {
   $and: `AND`, // Not SQL as these are used as delimiters
@@ -21,7 +21,7 @@ const opSql = {
   $ctd: sql`<@`,
 };
 
-function getBinarySql(lhs, type, op, value) {
+function getBinarySql(lhs, type, op, value, textLhs) {
   if (value === null && op === '$eq') return sql`${lhs} IS NULL`;
   if (value === null && op === '$neq') return sql`${lhs} IS NOT NULL`;
 
@@ -29,35 +29,24 @@ function getBinarySql(lhs, type, op, value) {
   if (!sqlOp) throw Error('pg.getSql_unknown_operator ' + op);
 
   if (op === '$in' || op === '$nin') {
+    if (type === 'jsonb' && typeof value[0] === 'string') lhs = textLhs;
     return sql`${lhs} ${sqlOp} (${join(value)})`;
   }
 
   if (op === '$re' || op === '$ire') {
-    const castLhs =
-      type === 'text'
-        ? lhs
-        : type === 'jsonb'
-        ? sql`(${lhs})#>>'{}'`
-        : sql`(${lhs})::text`;
-    return sql`${castLhs} ${sqlOp} ${String(value)}`;
+    if (type === 'jsonb') {
+      lhs = textLhs;
+    } else if (type !== 'text') {
+      lhs = sql`(${lhs})::text`;
+    }
+    return sql`${lhs} ${sqlOp} ${String(value)}`;
   }
 
   if (type === 'jsonb') {
     return sql`${lhs} ${sqlOp} ${JSON.stringify(value)}::jsonb`;
   }
 
-  if (type === 'cube') {
-    if (
-      !Array.isArray(value) ||
-      !value.length ||
-      (Array.isArray(value[0]) && value.length !== 2)
-    ) {
-      throw Error('pg.getBinarySql_bad_cube' + JSON.stringify(value));
-    }
-    return Array.isArray(value[0])
-      ? sql`${lhs} ${sqlOp} cube(${vertex(value[0])}, ${vertex(value[1])})`
-      : sql`${lhs} ${sqlOp} cube(${vertex(value)})`;
-  }
+  if (type === 'cube') return sql`${lhs} ${sqlOp} ${cubeLiteralSql(value)}`;
 
   return sql`${lhs} ${sqlOp} ${value}`;
 }
@@ -83,15 +72,20 @@ export default function getSql(filter, options) {
     const [prefix, ...suffix] = encodePath(ast[1]);
     const { types } = options.schema;
     if (!types[prefix]) throw Error('pg.no_column ' + prefix);
-    if (suffix.length && types[prefix] !== 'jsonb') {
-      throw Error('pg.lookup_not_jsonb ' + prefix);
+
+    if (types[prefix] === 'jsonb') {
+      const [lhs, textLhs] = suffix.length
+        ? [
+            sql`"${raw(prefix)}" #> ${suffix}`,
+            sql`"${raw(prefix)}" #>> ${suffix}`,
+          ]
+        : [sql`"${raw(prefix)}"`, sql`"${raw(prefix)}" #>> '{}'`];
+
+      return getBinarySql(lhs, 'jsonb', op, ast[2], textLhs);
+    } else {
+      if (suffix.length) throw Error('pg.lookup_not_jsonb ' + prefix);
+      return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
     }
-
-    const [lhs, type] = suffix.length
-      ? [sql`"${raw(prefix)}" #> ${suffix}`, 'jsonb']
-      : [sql`"${raw(prefix)}"`, types[prefix]];
-
-    return getBinarySql(lhs, type, op, ast[2]);
   }
 
   return getNodeSql(getAst(filter));

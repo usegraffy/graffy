@@ -1,17 +1,23 @@
 module.exports = {
   env: {
     browser: true,
-    es6: true,
+    es2022: true,
     node: true,
     jest: true,
   },
-  extends: ['eslint:recommended', 'plugin:react/recommended', 'prettier'],
-  parser: '@babel/eslint-parser',
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'prettier'
+  ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 2018,
+    ecmaVersion: 13,
+    ecmaFeatures: { jsx: true },
     sourceType: 'module',
   },
-  plugins: ['react', 'prettier'],
+  plugins: ['@typescript-eslint', 'react', 'prettier'],
   rules: {
     'no-console': 'error',
     'no-unused-vars': [
@@ -24,9 +30,25 @@ module.exports = {
         caughtErrorsIgnorePattern: '_',
       },
     ],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        ignoreRestSiblings: true,
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '_',
+      }
+     ],
     'prettier/prettier': 'error',
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
   },
   settings: {
     react: {
