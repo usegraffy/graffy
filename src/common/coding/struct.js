@@ -69,6 +69,10 @@ export function encode(value) {
 
 const nextKey = new WeakMap();
 
+export function isEncodedKey(key) {
+  return key[0] === '\0';
+}
+
 export function decode(key) {
   let i = 0;
   const buffer = decodeB64(key, 0);
