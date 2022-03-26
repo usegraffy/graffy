@@ -73,7 +73,7 @@ test('ctd', () => {
 test('regex jsonb', () => {
   expect(
     getSql({ 'data.Name': { $re: 'abc' } }, opt({ data: 'jsonb' })),
-  ).toEqual(sql`("data" #> ${['Name']})#>>'{}' ~ ${'abc'}`);
+  ).toEqual(sql`"data" #>> ${['Name']} ~ ${'abc'}`);
 });
 
 test('regex text', () => {
