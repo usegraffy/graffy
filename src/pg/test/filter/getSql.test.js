@@ -81,3 +81,15 @@ test('regex text', () => {
     sql`"name" ~ ${'abc'}`,
   );
 });
+
+test('jsonb eq number', () => {
+  expect(getSql({ 'data.Score': 3 }, opt({ data: 'jsonb' }))).toEqual(
+    sql`"data" #> ${['Score']} = ${'3'}::jsonb`,
+  );
+});
+
+test('jsonb eq text', () => {
+  expect(getSql({ 'data.Name': 'Bob' }, opt({ data: 'jsonb' }))).toEqual(
+    sql`"data" #>> ${['Name']} = ${'Bob'}`,
+  );
+});
