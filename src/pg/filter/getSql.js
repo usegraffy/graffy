@@ -43,6 +43,9 @@ function getBinarySql(lhs, type, op, value, textLhs) {
   }
 
   if (type === 'jsonb') {
+    if (typeof value === 'string') {
+      return sql`${textLhs} ${sqlOp} ${value}`;
+    }
     return sql`${lhs} ${sqlOp} ${JSON.stringify(value)}::jsonb`;
   }
 
