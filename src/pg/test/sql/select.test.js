@@ -28,6 +28,65 @@ describe('select_sql', () => {
     expectSql(selectByArgs(arg, null, options), expectedResult);
   });
 
+  test('selectByArgs_group', () => {
+    const arg = { $group: true, $all: true };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+    };
+    const expectedResult = sql`
+      SELECT
+          jsonb_build_object('$count', count(*)) || jsonb_build_object(
+              '$key',
+              jsonb_build_object('$group', ${'true'}::jsonb),
+              '$ver',
+              current_timestamp
+          )
+      FROM
+          "prospect"
+      LIMIT
+        ${4096}
+    `;
+
+    expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
+  });
+
+  test('selectByArgs_group_by', () => {
+    const arg = { $group: ['isDeleted'], $all: true, tenantId: 'tenant-id' };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      schema: { types: { tenantId: true } },
+      verDefault: 'current_timestamp',
+    };
+    const expectedResult = sql`
+    SELECT
+        jsonb_build_object('$count', count(*)) || jsonb_build_object(
+            '$key',
+            (
+                ${`{"tenantId":"tenant-id","$group":["isDeleted"]}`}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))
+            ) || jsonb_build_object('$group', ${`["isDeleted"]`}::jsonb),
+            '$ver',
+            current_timestamp
+        )
+    FROM
+        "prospect"
+    WHERE
+        "tenantId" = ${`tenant-id`}
+    GROUP BY
+        "isDeleted"
+    LIMIT
+        ${4096}
+    `;
+
+    expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
+  });
+
   test('selectById', () => {
     const ids = ['1', '2'];
     const options = {

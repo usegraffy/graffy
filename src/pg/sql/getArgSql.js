@@ -38,9 +38,11 @@ export default function getArgSql(
 
   let key;
   const where = [];
-  if (!isEmpty(filter)) {
-    where.push(getFilterSql(filter, options));
-    key = sql`${JSON.stringify(filter)}::jsonb`;
+  if (!isEmpty(filter) || $group === true) {
+    if (!isEmpty(filter)) {
+      where.push(getFilterSql(filter, options));
+    }
+    key = sql`${JSON.stringify({ ...filter, $group })}::jsonb`;
   }
 
   if (!hasRangeArg) return { meta: meta(key), where, group, limit: 1 };
@@ -72,9 +74,11 @@ export default function getArgSql(
     $order &&
     getJsonBuildTrusted({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
-  const cursorKey = getJsonBuildTrusted({
-    $cursor: sql`jsonb_build_array(${join(groupCols || orderCols)})`,
-  });
+  const cursorKey =
+    $group !== true &&
+    getJsonBuildTrusted({
+      $cursor: sql`jsonb_build_array(${join(groupCols || orderCols)})`,
+    });
 
   key = sql`(${join([key, orderKey, cursorKey].filter(Boolean), ` || `)})`;
 
