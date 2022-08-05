@@ -31,9 +31,9 @@ export const lookup = (prop) => {
 const aggSql = {
   $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
   $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
-  $avg: (prop) => sql`sum((${lookup(prop)})::numeric)`,
-  $max: (prop) => sql`sum((${lookup(prop)})::numeric)`,
-  $min: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $avg: (prop) => sql`avg((${lookup(prop)})::numeric)`,
+  $max: (prop) => sql`max((${lookup(prop)})::numeric)`,
+  $min: (prop) => sql`min((${lookup(prop)})::numeric)`,
 };
 
 export const getSelectCols = (table, projection = null) => {
