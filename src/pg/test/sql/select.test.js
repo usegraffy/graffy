@@ -97,6 +97,7 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
+    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
         jsonb_build_object(
@@ -105,7 +106,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 sum(
                     (
-                        "data" #> ${['Amount']})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
@@ -132,6 +133,7 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
+    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
         jsonb_build_object(
@@ -140,7 +142,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 avg(
                     (
-                        "data" #> ${['Amount']})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
@@ -167,6 +169,7 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
+    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
         jsonb_build_object(
@@ -175,7 +178,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 max(
                     (
-                        "data" #> ${['Amount']})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
@@ -202,6 +205,7 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
+    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
         jsonb_build_object(
@@ -210,7 +214,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 min(
                     (
-                        "data" #> ${['Amount']})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
