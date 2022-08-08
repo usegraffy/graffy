@@ -21,9 +21,6 @@ export const getAggMeta = (key, $group, { verDefault }) => {
     [key, getJsonBuildTrusted({ $group })].filter(Boolean),
     ' || ',
   );
-  if ($group === true) {
-    $key = join([getJsonBuildTrusted({ $group })].filter(Boolean), ' || ');
-  }
   return getJsonBuildTrusted({
     $key,
     $ver: raw(verDefault),

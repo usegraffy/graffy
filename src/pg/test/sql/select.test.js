@@ -29,7 +29,7 @@ describe('select_sql', () => {
   });
 
   test('selectByArgs_count', () => {
-    const arg = { $group: true, $all: true };
+    const arg = { $group: true };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -48,7 +48,36 @@ describe('select_sql', () => {
       FROM
           "prospect"
       LIMIT
-        ${4096}
+        ${1}
+    `;
+
+    expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
+  });
+
+  test('selectByArgs_count_filter', () => {
+    const arg = { $group: true, tenantId: 'tenant-id' };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      schema: { types: { tenantId: true } },
+      verDefault: 'current_timestamp',
+    };
+    const expectedResult = sql`
+      SELECT
+          jsonb_build_object ('$count', count (*)) || jsonb_build_object (
+              '$key',
+              ${`{"tenantId":"tenant-id"}`}::jsonb || jsonb_build_object ('$group', ${`true`}::jsonb),
+              '$ver',
+              current_timestamp
+          )
+      FROM
+          "prospect"
+      WHERE
+          "tenantId" = ${`tenant-id`}
+      LIMIT
+          ${1}
     `;
 
     expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
@@ -69,7 +98,7 @@ describe('select_sql', () => {
           jsonb_build_object('$count', count(*)) || jsonb_build_object(
               '$key',
               (
-                  ${`{"tenantId":"tenant-id","$group":["isDeleted"]}`}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))
+                  ${`{"tenantId":"tenant-id"}`}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))
               ) || jsonb_build_object('$group', ${`["isDeleted"]`}::jsonb),
               '$ver',
               current_timestamp
@@ -106,7 +135,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 sum(
                     (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
@@ -142,7 +171,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 avg(
                     (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
@@ -178,7 +207,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 max(
                     (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
@@ -214,7 +243,7 @@ describe('select_sql', () => {
                 ${'data.Amount'}::text,
                 min(
                     (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id","$group":["isDeleted"]}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
+                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
                         FROM
                             "prospect"
                         WHERE
