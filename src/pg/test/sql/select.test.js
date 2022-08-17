@@ -117,5 +117,161 @@ describe('select_sql', () => {
     expectSql(selectByArgs(arg, null, options), expectedResult);
   });
 
+  test('selectByArgs_group_count_sum', () => {
+    const arg = { $first: 1, $group: ['isDeleted'], isDeleted: false };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+      schema: { types: { isDeleted: 1 } },
+    };
+    const expectedResult = sql`
+      SELECT
+      jsonb_build_object (
+          '$count',
+          count (*),
+          ${`$sum`}::text,
+          jsonb_build_object (
+              ${`data.Amount`}::text,
+              sum (
+                  (
+                      CASE
+                          WHEN (
+                              "data" #> ${[
+                                'Amount',
+                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+      'Amount',
+    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${1}
+    `;
+
+    expectSql(
+      selectByArgs(
+        arg,
+        { $count: true, $sum: { 'data.Amount': true } },
+        options,
+      ),
+      expectedResult,
+    );
+  });
+
+  test('selectByArgs_group_count_avg', () => {
+    const arg = { $all: true, $group: ['isDeleted'], isDeleted: false };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+      schema: { types: { isDeleted: 1 } },
+    };
+    const expectedResult = sql`
+      SELECT
+      jsonb_build_object (
+          '$count',
+          count (*),
+          ${`$avg`}::text,
+          jsonb_build_object (
+              ${`data.Amount`}::text,
+              avg (
+                  (
+                      CASE
+                          WHEN (
+                              "data" #> ${[
+                                'Amount',
+                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+      'Amount',
+    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
+    `;
+
+    expectSql(
+      selectByArgs(
+        arg,
+        { $count: true, $avg: { 'data.Amount': true } },
+        options,
+      ),
+      expectedResult,
+    );
+  });
+
+  test('selectByArgs_group_count_max', () => {
+    const arg = { $all: true, $group: ['isDeleted'], isDeleted: false };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+      schema: { types: { isDeleted: 1 } },
+    };
+    const expectedResult = sql`
+      SELECT
+      jsonb_build_object (
+          '$count',
+          count (*),
+          ${`$max`}::text,
+          jsonb_build_object (
+              ${`data.Amount`}::text,
+              max (
+                  (
+                      CASE
+                          WHEN (
+                              "data" #> ${[
+                                'Amount',
+                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+      'Amount',
+    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
+    `;
+
+    expectSql(
+      selectByArgs(
+        arg,
+        { $count: true, $max: { 'data.Amount': true } },
+        options,
+      ),
+      expectedResult,
+    );
+  });
+
+  test('selectByArgs_group_count_min', () => {
+    const arg = { $all: true, $group: ['isDeleted'], isDeleted: false };
+    const options = {
+      table: 'prospect',
+      prefix: ['prospect'],
+      idCol: 'id',
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+      schema: { types: { isDeleted: 1 } },
+    };
+    const expectedResult = sql`
+      SELECT
+      jsonb_build_object (
+          '$count',
+          count (*),
+          ${`$min`}::text,
+          jsonb_build_object (
+              ${`data.Amount`}::text,
+              min (
+                  (
+                      CASE
+                          WHEN (
+                              "data" #> ${[
+                                'Amount',
+                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+      'Amount',
+    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
+    `;
+
+    expectSql(
+      selectByArgs(
+        arg,
+        { $count: true, $min: { 'data.Amount': true } },
+        options,
+      ),
+      expectedResult,
+    );
+  });
+
   // test('selectByArgs_json manipulation', () => {});
 });
