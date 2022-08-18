@@ -4,6 +4,9 @@ import sql, { raw } from 'sql-template-tag';
 import expectSql from '../expectSql.js';
 
 describe('select_sql', () => {
+  const tenantId = 'tenant-id';
+  const $group = ['isDeleted'];
+
   test('selectByArgs_first', () => {
     const arg = { $order: ['name', 'id'], $first: 10 };
     const options = {
@@ -39,23 +42,17 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT
-          jsonb_build_object('$count', count(*)) || jsonb_build_object(
-              '$key',
-              jsonb_build_object('$group', ${'true'}::jsonb),
-              '$ver',
-              current_timestamp
-          )
+          jsonb_build_object('$count', count(*)) || jsonb_build_object('$key', ${`null`}::jsonb, '$ver', current_timestamp)
       FROM
           "prospect"
-      LIMIT
-        ${1}
+      LIMIT ${1}
     `;
 
     expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
   });
 
   test('selectByArgs_count_filter', () => {
-    const arg = { $group: true, tenantId: 'tenant-id' };
+    const arg = { $group: true, tenantId };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -66,25 +63,21 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT
-          jsonb_build_object ('$count', count (*)) || jsonb_build_object (
-              '$key',
-              ${`{"tenantId":"tenant-id"}`}::jsonb || jsonb_build_object ('$group', ${`true`}::jsonb),
-              '$ver',
-              current_timestamp
-          )
+          jsonb_build_object('$count', count(*)) || jsonb_build_object('$key', ${JSON.stringify(
+            { tenantId },
+          )}::jsonb, '$ver', current_timestamp)
       FROM
           "prospect"
       WHERE
-          "tenantId" = ${`tenant-id`}
-      LIMIT
-          ${1}
+          "tenantId" = ${tenantId}
+      LIMIT ${1}
     `;
 
     expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
   });
 
   test('selectByArgs_count_group_by', () => {
-    const arg = { $group: ['isDeleted'], $all: true, tenantId: 'tenant-id' };
+    const arg = { $group, $all: true, tenantId };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -95,29 +88,25 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT
-          jsonb_build_object('$count', count(*)) || jsonb_build_object(
-              '$key',
-              (
-                  ${`{"tenantId":"tenant-id"}`}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))
-              ) || jsonb_build_object('$group', ${`["isDeleted"]`}::jsonb),
-              '$ver',
-              current_timestamp
-          )
+          jsonb_build_object('$count', count(*)) || jsonb_build_object('$key', (${JSON.stringify(
+            { tenantId },
+          )}::jsonb || jsonb_build_object('$group', ${JSON.stringify(
+      $group,
+    )}::jsonb) || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))), '$ver', current_timestamp)
       FROM
           "prospect"
       WHERE
-          "tenantId" = ${`tenant-id`}
+          "tenantId" = ${tenantId}
       GROUP BY
           "isDeleted"
-      LIMIT
-          ${4096}
+      LIMIT ${4096}
     `;
 
     expectSql(selectByArgs(arg, { $count: true }, options), expectedResult);
   });
 
   test('selectByArgs_sum', () => {
-    const arg = { $group: ['isDeleted'], $all: true, tenantId: 'tenant-id' };
+    const arg = { $group, $all: true, tenantId };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -126,24 +115,22 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
-    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
-        jsonb_build_object(
-            ${`$sum`}::text,
-            jsonb_build_object(
-                ${'data.Amount'}::text,
-                sum(
-                    (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
-                        FROM
-                            "prospect"
-                        WHERE
-                            "tenantId" = ${'tenant-id'}
-                        GROUP BY
-                            "isDeleted"
-                        LIMIT
-                            ${4096}
+          jsonb_build_object(${`$sum`}::text, jsonb_build_object(${`data.Amount`}::text, sum(("data" #> ${[
+      'Amount',
+    ]})::numeric))) || jsonb_build_object('$key', (${JSON.stringify({
+      tenantId,
+    })}::jsonb || jsonb_build_object('$group', ${JSON.stringify(
+      $group,
+    )}::jsonb) || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))), '$ver', current_timestamp)
+      FROM
+          "prospect"
+      WHERE
+          "tenantId" = ${tenantId}
+      GROUP BY
+          "isDeleted"
+      LIMIT ${4096}
     `;
 
     expectSql(
@@ -153,7 +140,7 @@ describe('select_sql', () => {
   });
 
   test('selectByArgs_avg', () => {
-    const arg = { $group: ['isDeleted'], $all: true, tenantId: 'tenant-id' };
+    const arg = { $group, $all: true, tenantId };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -162,24 +149,22 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
-    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
-        jsonb_build_object(
-            ${`$avg`}::text,
-            jsonb_build_object(
-                ${'data.Amount'}::text,
-                avg(
-                    (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
-                        FROM
-                            "prospect"
-                        WHERE
-                            "tenantId" = ${'tenant-id'}
-                        GROUP BY
-                            "isDeleted"
-                        LIMIT
-                            ${4096}
+          jsonb_build_object(${`$avg`}::text, jsonb_build_object(${`data.Amount`}::text, avg(("data" #> ${[
+      'Amount',
+    ]})::numeric))) || jsonb_build_object('$key', (${JSON.stringify({
+      tenantId,
+    })}::jsonb || jsonb_build_object('$group', ${JSON.stringify(
+      $group,
+    )}::jsonb) || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))), '$ver', current_timestamp)
+      FROM
+          "prospect"
+      WHERE
+          "tenantId" = ${tenantId}
+      GROUP BY
+          "isDeleted"
+      LIMIT ${4096}
     `;
 
     expectSql(
@@ -189,7 +174,7 @@ describe('select_sql', () => {
   });
 
   test('selectByArgs_max', () => {
-    const arg = { $group: ['isDeleted'], $all: true, tenantId: 'tenant-id' };
+    const arg = { $group, $all: true, tenantId };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -198,24 +183,22 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
-    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
-        jsonb_build_object(
-            ${`$max`}::text,
-            jsonb_build_object(
-                ${'data.Amount'}::text,
-                max(
-                    (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
-                        FROM
-                            "prospect"
-                        WHERE
-                            "tenantId" = ${'tenant-id'}
-                        GROUP BY
-                            "isDeleted"
-                        LIMIT
-                            ${4096}
+          jsonb_build_object(${`$max`}::text, jsonb_build_object(${`data.Amount`}::text, max(("data" #> ${[
+      'Amount',
+    ]})::numeric))) || jsonb_build_object('$key', (${JSON.stringify({
+      tenantId,
+    })}::jsonb || jsonb_build_object('$group', ${JSON.stringify(
+      $group,
+    )}::jsonb) || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))), '$ver', current_timestamp)
+      FROM
+          "prospect"
+      WHERE
+          "tenantId" = ${tenantId}
+      GROUP BY
+          "isDeleted"
+      LIMIT ${4096}
     `;
 
     expectSql(
@@ -225,7 +208,7 @@ describe('select_sql', () => {
   });
 
   test('selectByArgs_min', () => {
-    const arg = { $group: ['isDeleted'], $all: true, tenantId: 'tenant-id' };
+    const arg = { $group, $all: true, tenantId };
     const options = {
       table: 'prospect',
       prefix: ['prospect'],
@@ -234,24 +217,22 @@ describe('select_sql', () => {
       schema: { types: { tenantId: true } },
       verDefault: 'current_timestamp',
     };
-    const amount = ['Amount'];
     const expectedResult = sql`
       SELECT
-        jsonb_build_object(
-            ${`$min`}::text,
-            jsonb_build_object(
-                ${'data.Amount'}::text,
-                min(
-                    (
-                        "data" #> ${amount})::numeric))) || jsonb_build_object('$key', (${'{"tenantId":"tenant-id"}'}::jsonb || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))) || jsonb_build_object('$group', ${'["isDeleted"]'}::jsonb),'$ver', current_timestamp)
-                        FROM
-                            "prospect"
-                        WHERE
-                            "tenantId" = ${'tenant-id'}
-                        GROUP BY
-                            "isDeleted"
-                        LIMIT
-                            ${4096}
+          jsonb_build_object(${`$min`}::text, jsonb_build_object(${`data.Amount`}::text, min(("data" #> ${[
+      'Amount',
+    ]})::numeric))) || jsonb_build_object('$key', (${JSON.stringify({
+      tenantId,
+    })}::jsonb || jsonb_build_object('$group', ${JSON.stringify(
+      $group,
+    )}::jsonb) || jsonb_build_object('$cursor', jsonb_build_array("isDeleted"))), '$ver', current_timestamp)
+      FROM
+          "prospect"
+      WHERE
+          "tenantId" = ${tenantId}
+      GROUP BY
+          "isDeleted"
+      LIMIT ${4096}
     `;
 
     expectSql(
