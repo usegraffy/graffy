@@ -24,6 +24,14 @@ export const lookup = (prop) => {
   const [prefix, ...suffix] = encodePath(prop);
   return suffix.length
     ? // @ts-ignore sql-template-tag typedef bug
+      sql`"${raw(prefix)}" #> ${suffix}`
+    : sql`"${raw(prefix)}"`;
+};
+
+export const lookupNumeric = (prop) => {
+  const [prefix, ...suffix] = encodePath(prop);
+  return suffix.length
+    ? // @ts-ignore sql-template-tag typedef bug
       sql`CASE WHEN "${raw(
         prefix,
       )}" #> ${suffix} = 'null'::jsonb THEN 0 ELSE ("${raw(
@@ -33,11 +41,11 @@ export const lookup = (prop) => {
 };
 
 const aggSql = {
-  $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $sum: (prop) => sql`sum((${lookupNumeric(prop)})::numeric)`,
   $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
-  $avg: (prop) => sql`avg((${lookup(prop)})::numeric)`,
-  $max: (prop) => sql`max((${lookup(prop)})::numeric)`,
-  $min: (prop) => sql`min((${lookup(prop)})::numeric)`,
+  $avg: (prop) => sql`avg((${lookupNumeric(prop)})::numeric)`,
+  $max: (prop) => sql`max((${lookupNumeric(prop)})::numeric)`,
+  $min: (prop) => sql`min((${lookupNumeric(prop)})::numeric)`,
 };
 
 export const getSelectCols = (table, projection = null) => {
