@@ -138,12 +138,12 @@ describe('select_sql', () => {
               sum (
                   (
                       CASE
-                          WHEN (
+                          WHEN 
                               "data" #> ${[
                                 'Amount',
-                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+                              ]} = 'null'::jsonb THEN 0 ELSE ("data" #> ${[
       'Amount',
-    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${1}
+    ]})::numeric END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${1}
     `;
 
     expectSql(
@@ -177,12 +177,12 @@ describe('select_sql', () => {
               avg (
                   (
                       CASE
-                          WHEN (
+                          WHEN 
                               "data" #> ${[
                                 'Amount',
-                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+                              ]} = 'null'::jsonb THEN 0 ELSE ("data" #> ${[
       'Amount',
-    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
+    ]})::numeric END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
     `;
 
     expectSql(
@@ -216,12 +216,12 @@ describe('select_sql', () => {
               max (
                   (
                       CASE
-                          WHEN (
+                          WHEN 
                               "data" #> ${[
                                 'Amount',
-                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+                              ]} = 'null'::jsonb THEN 0 ELSE ("data" #> ${[
       'Amount',
-    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
+    ]})::numeric END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
     `;
 
     expectSql(
@@ -255,12 +255,12 @@ describe('select_sql', () => {
               min (
                   (
                       CASE
-                          WHEN (
+                          WHEN 
                               "data" #> ${[
                                 'Amount',
-                              ]} )::text = 'null' THEN '0'::JSONB ELSE "data" #> ${[
+                              ]} = 'null'::jsonb THEN 0 ELSE ("data" #> ${[
       'Amount',
-    ]} END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
+    ]})::numeric END )::numeric ) ) ) || jsonb_build_object ( '$key' , ( ${`{"isDeleted":false}`}::jsonb || jsonb_build_object ( '$cursor' , jsonb_build_array ( "isDeleted" ) ) ) || jsonb_build_object ( '$group' , ${`["isDeleted"]`}::jsonb ) , '$ver' , current_timestamp ) FROM "prospect" WHERE "isDeleted" = ${false} GROUP BY "isDeleted" LIMIT ${4096}
     `;
 
     expectSql(

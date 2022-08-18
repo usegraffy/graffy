@@ -24,11 +24,11 @@ export const lookup = (prop) => {
   const [prefix, ...suffix] = encodePath(prop);
   return suffix.length
     ? // @ts-ignore sql-template-tag typedef bug
-      sql`CASE WHEN ("${raw(
+      sql`CASE WHEN "${raw(
         prefix,
-      )}" #> ${suffix})::text = 'null' THEN '0'::JSONB ELSE "${raw(
+      )}" #> ${suffix} = 'null'::jsonb THEN 0 ELSE ("${raw(
         prefix,
-      )}" #> ${suffix} END`
+      )}" #> ${suffix})::numeric END`
     : sql`"${raw(prefix)}"`;
 };
 
