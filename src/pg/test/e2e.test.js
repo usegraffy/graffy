@@ -38,6 +38,15 @@ describe('pg_e2e', () => {
       }),
     );
     store.use(
+      'prospect',
+      pg({
+        table: 'prospect',
+        idCol: 'id',
+        verCol: 'version',
+        connection: getPool(),
+      }),
+    );
+    store.use(
       'posts',
       pg({
         table: 'posts',
@@ -591,7 +600,38 @@ describe('pg_e2e', () => {
           email: 'c',
           settings: { bar: [5, 6] },
         },
-        { $key: uuid(), $put: true, name: 'C', email: 'c2' },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'C',
+          email: 'c2',
+        },
+      ]);
+      await store.write('prospect', [
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 10 },
+          isDeleted: true,
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 100 },
+          isDeleted: false,
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 1000 },
+          isDeleted: true,
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 10000 },
+          isDeleted: false,
+        },
       ]);
     });
 
@@ -639,6 +679,78 @@ describe('pg_e2e', () => {
       exp1.$next = null;
 
       expect(res1).toEqual(exp1);
+    });
+
+    test('group_count_sum', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$sum['data.Amount']).toEqual(10100);
+    });
+
+    test('group_count_avg', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $avg: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$avg['data.Amount']).toEqual(5050);
+    });
+
+    test('group_count_max', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $max: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$max['data.Amount']).toEqual(10000);
+    });
+
+    test('group_count_min', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $min: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$min['data.Amount']).toEqual(100);
+    });
+
+    test('group_true_filter', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { isDeleted: false, $group: true },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$sum['data.Amount']).toEqual(10100);
+    });
+
+    test('group_all', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $group: ['isDeleted'], $all: true },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      const map = {};
+      for (const prospect of res1) {
+        map[prospect.$sum['data.Amount']] = true;
+      }
+
+      expect(res1.length).toEqual(2);
+      expect(map[10100]).toEqual(true);
+      expect(map[1010]).toEqual(true);
     });
   });
 

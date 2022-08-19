@@ -85,6 +85,19 @@ export async function resetTables() {
   `);
 
   await pool.query(sql`
+    DROP TABLE IF EXISTS "prospect";
+  `);
+
+  await pool.query(sql`
+    CREATE UNLOGGED TABLE "prospect" (
+      "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+      "version" int8 NOT NULL DEFAULT extract(epoch from current_timestamp) * 1000,
+      "data" jsonb,
+      "isDeleted" boolean
+    );
+  `);
+
+  await pool.query(sql`
     DROP TABLE IF EXISTS "posts";
   `);
 
