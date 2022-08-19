@@ -72,11 +72,12 @@ export default function getArgSql(
     $order &&
     getJsonBuildTrusted({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
-  const cursorKey =
-    $group !== true &&
-    getJsonBuildTrusted({
-      $cursor: sql`jsonb_build_array(${join(groupCols || orderCols)})`,
-    });
+  const cursorKey = getJsonBuildTrusted({
+    $cursor:
+      $group === true
+        ? sql`jsonb_build_array('')`
+        : sql`jsonb_build_array(${join(groupCols || orderCols)})`,
+  });
 
   const groupKey =
     Array.isArray($group) &&

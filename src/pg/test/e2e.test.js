@@ -736,6 +736,17 @@ describe('pg_e2e', () => {
       expect(res1[0].$sum['data.Amount']).toEqual(10100);
     });
 
+    test('group_true_range', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { isDeleted: false, $group: true, $first: 1 },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$sum['data.Amount']).toEqual(10100);
+    });
+
     test('group_all', async () => {
       const res1 = await store.read('prospect', {
         $key: { $group: ['isDeleted'], $all: true },
