@@ -16,8 +16,8 @@ export const getArgMeta = (key, { prefix, idCol, verDefault }) =>
     $ver: raw(verDefault),
   });
 
-export const getAggMeta = (key, { verDefault }) =>
+export const getAggMeta = (key, $group, { verDefault }) =>
   getJsonBuildTrusted({
-    $key: key,
+    $key: join([key, getJsonBuildTrusted({ $group })].filter(Boolean), ' || '),
     $ver: raw(verDefault),
   });
