@@ -44,7 +44,7 @@ export default function getArgSql(
   }
 
   if (!hasRangeArg && !$group)
-    return { meta: meta(filterKey), where, group, limit: 1 };
+    return { meta: meta(filterKey), where, limit: 1 };
 
   const orderCols = ($order || [idCol]).map((orderItem) =>
     orderItem[0] === '!'
