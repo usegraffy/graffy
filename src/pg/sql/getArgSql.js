@@ -26,7 +26,7 @@ export default function getArgSql(
   }
 
   const meta = (key) =>
-    $group ? getAggMeta(key, $group, options) : getArgMeta(key, options);
+    $group ? getAggMeta(key, options) : getArgMeta(key, options);
 
   const groupCols =
     Array.isArray($group) && $group.length && $group.map(lookup);
@@ -43,7 +43,8 @@ export default function getArgSql(
     filterKey = sql`${JSON.stringify(filter)}::jsonb`;
   }
 
-  if (!hasRangeArg) return { meta: meta(filterKey), where, group, limit: 1 };
+  if (!hasRangeArg && !$group)
+    return { meta: meta(filterKey), where, group, limit: 1 };
 
   const orderCols = ($order || [idCol]).map((orderItem) =>
     orderItem[0] === '!'
@@ -72,12 +73,16 @@ export default function getArgSql(
     $order &&
     getJsonBuildTrusted({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
-  const cursorKey = getJsonBuildTrusted({
-    $cursor:
-      $group === true
-        ? sql`''`
-        : sql`jsonb_build_array(${join(groupCols || orderCols)})`,
-  });
+  const cursorKey =
+    ($group === true || (Array.isArray($group) && $group.length === 0)) &&
+    !hasRangeArg
+      ? undefined
+      : getJsonBuildTrusted({
+          $cursor:
+            $group === true
+              ? sql`''`
+              : sql`jsonb_build_array(${join(groupCols || orderCols)})`,
+        });
 
   const groupKey =
     $group &&
