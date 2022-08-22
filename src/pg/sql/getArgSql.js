@@ -25,7 +25,7 @@ export default function getArgSql(
     throw Error('pg_arg.order_and_group_unsupported in ' + prefix);
   }
 
-  const meta = (key = null) =>
+  const meta = (key) =>
     $group ? getAggMeta(key, $group, options) : getArgMeta(key, options);
 
   const groupCols =
@@ -75,12 +75,12 @@ export default function getArgSql(
   const cursorKey = getJsonBuildTrusted({
     $cursor:
       $group === true
-        ? sql`jsonb_build_array('')`
+        ? sql`''`
         : sql`jsonb_build_array(${join(groupCols || orderCols)})`,
   });
 
   const groupKey =
-    Array.isArray($group) &&
+    $group &&
     getJsonBuildTrusted({ $group: sql`${JSON.stringify($group)}::jsonb` });
 
   const key = sql`(${join(
