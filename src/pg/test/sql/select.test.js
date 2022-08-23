@@ -16,7 +16,7 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
-        ( jsonb_build_object('$order', ${'["name","id"]'}::jsonb) ||
+        ( ${JSON.stringify({ $order: ['name', 'id'] })}::jsonb ||
           jsonb_build_object ('$cursor', jsonb_build_array("name","id"))),
         '$ref', jsonb_build_array(${
           options.table
@@ -58,7 +58,7 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
-        ( jsonb_build_object('$order', ${'["createTime","id"]'}::jsonb) ||
+        ( ${JSON.stringify({ $order: ['createTime', 'id'] })}::jsonb ||
           jsonb_build_object ('$cursor', jsonb_build_array("createTime","id"))),
         '$ref', jsonb_build_array(${
           options.table
@@ -81,7 +81,7 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
     SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
-    ( jsonb_build_object('$order', ${'["createTime","id"]'}::jsonb) ||
+    ( ${JSON.stringify({ $order: ['createTime', 'id'] })}::jsonb ||
       jsonb_build_object ('$cursor', jsonb_build_array("createTime","id"))),
     '$ref', jsonb_build_array(${
       options.table
@@ -106,7 +106,7 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT to_jsonb("${raw(options.table)}") || jsonb_build_object('$key',
-        (jsonb_build_object ('$cursor', jsonb_build_array("id"))),
+        (${`{}`}::jsonb || jsonb_build_object ('$cursor', jsonb_build_array("id"))),
         '$ref', jsonb_build_array(${
           options.table
         }::text, "id"), '$ver', current_timestamp
