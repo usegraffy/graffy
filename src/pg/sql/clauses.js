@@ -28,12 +28,24 @@ export const lookup = (prop) => {
     : sql`"${raw(prefix)}"`;
 };
 
+export const lookupNumeric = (prop) => {
+  const [prefix, ...suffix] = encodePath(prop);
+  return suffix.length
+    ? // @ts-ignore sql-template-tag typedef bug
+      sql`CASE WHEN "${raw(
+        prefix,
+      )}" #> ${suffix} = 'null'::jsonb THEN 0 ELSE ("${raw(
+        prefix,
+      )}" #> ${suffix})::numeric END`
+    : sql`"${raw(prefix)}"`;
+};
+
 const aggSql = {
-  $sum: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $sum: (prop) => sql`sum((${lookupNumeric(prop)})::numeric)`,
   $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
-  $avg: (prop) => sql`sum((${lookup(prop)})::numeric)`,
-  $max: (prop) => sql`sum((${lookup(prop)})::numeric)`,
-  $min: (prop) => sql`sum((${lookup(prop)})::numeric)`,
+  $avg: (prop) => sql`avg((${lookupNumeric(prop)})::numeric)`,
+  $max: (prop) => sql`max((${lookupNumeric(prop)})::numeric)`,
+  $min: (prop) => sql`min((${lookupNumeric(prop)})::numeric)`,
 };
 
 export const getSelectCols = (table, projection = null) => {

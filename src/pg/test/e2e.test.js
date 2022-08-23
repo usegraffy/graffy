@@ -9,6 +9,10 @@ import {
   getPool,
 } from './setup.js';
 
+/**
+ * @typedef {any[] & { $next?: any, $prev?: any, $page?: any }} GraffyRangeResult
+ */
+
 const uuidV4Regex =
   /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 
@@ -32,6 +36,15 @@ describe('pg_e2e', () => {
       'users',
       pg({
         table: 'users',
+        idCol: 'id',
+        verCol: 'version',
+        connection: getPool(),
+      }),
+    );
+    store.use(
+      'prospect',
+      pg({
+        table: 'prospect',
         idCol: 'id',
         verCol: 'version',
         connection: getPool(),
@@ -73,6 +86,7 @@ describe('pg_e2e', () => {
       settings: { foo: true },
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref({ $cursor: [id1], email: { $not: null } }, ['users', id1], {
         id: id1,
@@ -138,6 +152,7 @@ describe('pg_e2e', () => {
 
     // console.log(res5);
 
+    /** @type {GraffyRangeResult} */
     const exp5 = [
       keyref(
         {
@@ -210,6 +225,7 @@ describe('pg_e2e', () => {
       email: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp7 = [
       keyref(
         {
@@ -269,6 +285,7 @@ describe('pg_e2e', () => {
       email: true,
       settings: true,
     });
+    /** @type {GraffyRangeResult} */
     const exp1 = [
       keyref({ $order: ['email'], $cursor: ['a'] }, expect.any(Array), {
         name: 'A',
@@ -305,6 +322,7 @@ describe('pg_e2e', () => {
       email: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref(
         {
@@ -343,6 +361,7 @@ describe('pg_e2e', () => {
       email: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp3 = [
       keyref(
         {
@@ -432,6 +451,7 @@ describe('pg_e2e', () => {
       name: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref({ 'settings.bar': 9, $cursor: [uid] }, ['users', uid], {
         name: 'Alice',
@@ -498,6 +518,7 @@ describe('pg_e2e', () => {
         name: true,
       });
 
+      /** @type {GraffyRangeResult} */
       const exp1 = [
         keyref(
           { $cursor: [3], $order: ['settings.x'] },
@@ -535,6 +556,7 @@ describe('pg_e2e', () => {
         name: true,
       });
 
+      /** @type {GraffyRangeResult} */
       const exp1 = [
         keyref(
           { $cursor: [-5], $order: ['!settings.x'] },
@@ -591,13 +613,44 @@ describe('pg_e2e', () => {
           email: 'c',
           settings: { bar: [5, 6] },
         },
-        { $key: uuid(), $put: true, name: 'C', email: 'c2' },
+        {
+          $key: uuid(),
+          $put: true,
+          name: 'C',
+          email: 'c2',
+        },
+      ]);
+      await store.write('prospect', [
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 10 },
+          isDeleted: true,
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 100 },
+          isDeleted: false,
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 1000 },
+          isDeleted: true,
+        },
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 10000 },
+          isDeleted: false,
+        },
       ]);
     });
 
     test('count', async () => {
       const res1 = await store.read('users', {
-        $key: { name: { $not: null }, $group: [] },
+        $key: { name: { $not: null }, $group: true },
         $count: true,
       });
 
@@ -606,7 +659,7 @@ describe('pg_e2e', () => {
 
     test('card', async () => {
       const res1 = await store.read('users', {
-        $key: { $group: [] },
+        $key: { $group: true },
         $card: { name: true },
       });
 
@@ -615,7 +668,7 @@ describe('pg_e2e', () => {
 
     test('sum', async () => {
       const res1 = await store.read('users', {
-        $key: { $group: [] },
+        $key: { $group: true },
         $sum: { 'settings.foo.0': true },
       });
 
@@ -628,6 +681,7 @@ describe('pg_e2e', () => {
         $card: { email: true },
       });
 
+      /** @type {GraffyRangeResult} */
       const exp1 = [
         { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['A'] } },
         { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['B'] } },
@@ -639,6 +693,89 @@ describe('pg_e2e', () => {
       exp1.$next = null;
 
       expect(res1).toEqual(exp1);
+    });
+
+    test('group_count_sum', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$sum['data.Amount']).toEqual(10100);
+    });
+
+    test('group_count_avg', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $avg: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$avg['data.Amount']).toEqual(5050);
+    });
+
+    test('group_count_max', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $max: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$max['data.Amount']).toEqual(10000);
+    });
+
+    test('group_count_min', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $first: 1, isDeleted: false, $group: ['isDeleted'] },
+        $count: true,
+        $min: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$min['data.Amount']).toEqual(100);
+    });
+
+    test('group_true_filter', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { isDeleted: false, $group: true },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$sum['data.Amount']).toEqual(10100);
+    });
+
+    test('group_true_range', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { isDeleted: false, $group: true, $first: 1 },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      expect(res1[0].$count).toEqual(2);
+      expect(res1[0].$sum['data.Amount']).toEqual(10100);
+    });
+
+    test('group_all', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $group: ['isDeleted'], $all: true },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      const map = {};
+      for (const prospect of res1) {
+        map[prospect.$sum['data.Amount']] = true;
+      }
+
+      expect(res1.length).toEqual(2);
+      expect(map[10100]).toEqual(true);
+      expect(map[1010]).toEqual(true);
     });
   });
 
@@ -760,6 +897,7 @@ describe('pg_e2e', () => {
       title: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref(
         {
@@ -799,6 +937,7 @@ describe('pg_e2e', () => {
       title: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp3 = [
       keyref(
         {
@@ -833,6 +972,7 @@ describe('pg_e2e', () => {
         $key: { $all: true },
         name: true,
       });
+      /** @type {GraffyRangeResult} */
       const exp = [{ $key: [expect.any(String)], name: 'A' }];
       (exp.$page = { $all: true }), (exp.$next = null);
       exp.$prev = null;
