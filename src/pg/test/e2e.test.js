@@ -9,6 +9,10 @@ import {
   getPool,
 } from './setup.js';
 
+/**
+ * @typedef {any[] & { $next?: any, $prev?: any, $page?: any }} GraffyRangeResult
+ */
+
 const uuidV4Regex =
   /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 
@@ -82,6 +86,7 @@ describe('pg_e2e', () => {
       settings: { foo: true },
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref({ $cursor: [id1], email: { $not: null } }, ['users', id1], {
         id: id1,
@@ -147,6 +152,7 @@ describe('pg_e2e', () => {
 
     // console.log(res5);
 
+    /** @type {GraffyRangeResult} */
     const exp5 = [
       keyref(
         {
@@ -219,6 +225,7 @@ describe('pg_e2e', () => {
       email: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp7 = [
       keyref(
         {
@@ -278,6 +285,7 @@ describe('pg_e2e', () => {
       email: true,
       settings: true,
     });
+    /** @type {GraffyRangeResult} */
     const exp1 = [
       keyref({ $order: ['email'], $cursor: ['a'] }, expect.any(Array), {
         name: 'A',
@@ -314,6 +322,7 @@ describe('pg_e2e', () => {
       email: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref(
         {
@@ -352,6 +361,7 @@ describe('pg_e2e', () => {
       email: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp3 = [
       keyref(
         {
@@ -441,6 +451,7 @@ describe('pg_e2e', () => {
       name: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref({ 'settings.bar': 9, $cursor: [uid] }, ['users', uid], {
         name: 'Alice',
@@ -507,6 +518,7 @@ describe('pg_e2e', () => {
         name: true,
       });
 
+      /** @type {GraffyRangeResult} */
       const exp1 = [
         keyref(
           { $cursor: [3], $order: ['settings.x'] },
@@ -544,6 +556,7 @@ describe('pg_e2e', () => {
         name: true,
       });
 
+      /** @type {GraffyRangeResult} */
       const exp1 = [
         keyref(
           { $cursor: [-5], $order: ['!settings.x'] },
@@ -668,6 +681,7 @@ describe('pg_e2e', () => {
         $card: { email: true },
       });
 
+      /** @type {GraffyRangeResult} */
       const exp1 = [
         { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['A'] } },
         { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['B'] } },
@@ -883,6 +897,7 @@ describe('pg_e2e', () => {
       title: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp2 = [
       keyref(
         {
@@ -922,6 +937,7 @@ describe('pg_e2e', () => {
       title: true,
     });
 
+    /** @type {GraffyRangeResult} */
     const exp3 = [
       keyref(
         {
@@ -956,6 +972,7 @@ describe('pg_e2e', () => {
         $key: { $all: true },
         name: true,
       });
+      /** @type {GraffyRangeResult} */
       const exp = [{ $key: [expect.any(String)], name: 'A' }];
       (exp.$page = { $all: true }), (exp.$next = null);
       exp.$prev = null;
