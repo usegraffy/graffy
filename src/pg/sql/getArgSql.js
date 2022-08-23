@@ -74,8 +74,7 @@ export default function getArgSql(
     getJsonBuildTrusted({ $order: sql`${JSON.stringify($order)}::jsonb` });
 
   const cursorKey =
-    ($group === true || (Array.isArray($group) && $group.length === 0)) &&
-    !hasRangeArg
+    $group === true && !hasRangeArg
       ? undefined
       : getJsonBuildTrusted({
           $cursor:

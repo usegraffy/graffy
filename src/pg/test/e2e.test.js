@@ -637,7 +637,7 @@ describe('pg_e2e', () => {
 
     test('count', async () => {
       const res1 = await store.read('users', {
-        $key: { name: { $not: null }, $group: [] },
+        $key: { name: { $not: null }, $group: true },
         $count: true,
       });
 
@@ -646,7 +646,7 @@ describe('pg_e2e', () => {
 
     test('card', async () => {
       const res1 = await store.read('users', {
-        $key: { $group: [] },
+        $key: { $group: true },
         $card: { name: true },
       });
 
@@ -655,7 +655,7 @@ describe('pg_e2e', () => {
 
     test('sum', async () => {
       const res1 = await store.read('users', {
-        $key: { $group: [] },
+        $key: { $group: true },
         $sum: { 'settings.foo.0': true },
       });
 
