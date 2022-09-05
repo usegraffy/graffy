@@ -93,6 +93,14 @@ export default class Graffy {
     return this.core.call(type, payload, options);
   }
 
+  /**
+   * @template {import('@graffy/types').Query} Q
+   * @param  {...(
+   *    [import('@graffy/types').Path, Q, import('@graffy/types').Options?] |
+   *    [Q, import('@graffy/types').Options?]
+   * )} args
+   * @returns {Promise<import('@graffy/types').Result<Q>>}
+   */
   async read(...args) {
     const [path, porcelainQuery, options] = validateCall(...args);
     const rootQuery = wrapObject(porcelainQuery, path);

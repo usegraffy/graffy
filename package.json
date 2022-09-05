@@ -17,8 +17,7 @@
     "pg:clean": "docker rm -f graffypg"
   },
   "workspaces": [
-    "src/*",
-    "example"
+    "src/*"
   ],
   "author": "aravindet",
   "license": "Apache-2.0",
