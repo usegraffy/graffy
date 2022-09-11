@@ -1,4 +1,4 @@
-import sql, { raw } from 'sql-template-tag';
+import sql from 'sql-template-tag';
 import expectSql from '../expectSql';
 import {
   getInsert,
@@ -46,6 +46,6 @@ describe('clauses', () => {
   test('selectCols', () => {
     const table = 'test';
     const query = getSelectCols(table);
-    expectSql(query, sql`to_jsonb("${raw(table)}")`);
+    expectSql(query, sql`*`);
   });
 });

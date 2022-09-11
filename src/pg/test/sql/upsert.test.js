@@ -45,8 +45,7 @@ describe('byId', () => {
         = (${'post22'}, ${'post'}, ${'hello'},${'world'},
         ${JSON.stringify({ foo: 3 })},
         ${JSON.stringify([1, 2])}, default)
-      RETURNING (to_jsonb("post") ||
-        jsonb_build_object('$key', "id", '$ver', current_timestamp))
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"
     `,
     );
   });
@@ -74,8 +73,7 @@ describe('byId', () => {
         "tags" = jsonb_strip_nulls(${JSON.stringify([1, 2, 3])}::jsonb),
         "version" =  default
       WHERE "id" = ${'post22'}
-      RETURNING (to_jsonb("post") ||
-        jsonb_build_object('$key', "id", '$ver', current_timestamp))
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"
     `,
     );
   });
@@ -99,11 +97,10 @@ describe('byArg', () => {
       VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, default)
       ON CONFLICT ("email") DO UPDATE SET ("id", "type", "name", "email", "version")
         = (${'post22'}, ${'post'}, ${'hello'},${'world'},  default)
-      RETURNING (to_jsonb("post") ||
-        jsonb_build_object(
-          '$key', ${'{"email":"world"}'}::jsonb,
-          '$ref', jsonb_build_array(${'post'}::text, "id"),
-          '$ver', current_timestamp))`,
+      RETURNING *,
+        ${'{"email":"world"}'}::jsonb AS "$key",
+        current_timestamp AS "$ver",
+        array[ ${'post'}::text, "id" ]::text[] AS "$ref"`,
     );
   });
 
@@ -125,11 +122,10 @@ describe('byArg', () => {
         "email" = ${'world'},
         "version" =  default
       WHERE "id" = (SELECT "id" FROM "post" WHERE "email" = ${'world'} LIMIT 1)
-      RETURNING (to_jsonb("post") ||
-        jsonb_build_object(
-          '$key', ${'{"email":"world"}'}::jsonb,
-          '$ref', jsonb_build_array(${'post'}::text, "id"),
-          '$ver', current_timestamp))`,
+      RETURNING *,
+        ${'{"email":"world"}'}::jsonb AS "$key",
+        current_timestamp AS "$ver",
+        array[ ${'post'}::text, "id" ]::text[] AS "$ref"`,
     );
   });
 });

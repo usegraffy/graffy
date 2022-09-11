@@ -3,10 +3,19 @@ import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
 import { pg } from '../../index.js';
 
+/**
+ * Jest type definition incorrectly says mock.calls
+ * must be an empty array.
+ *
+ * @type {(() => Promise<any>) & {
+ *  mock: { calls: any[][] },
+ *  mockClear: () => void
+ * }}
+ */
 const mockQuery = jest.fn(() =>
   Promise.resolve({
     rowCount: 1,
-    rows: [[{}]],
+    rows: [{}],
   }),
 );
 
@@ -89,8 +98,7 @@ describe('postgres', () => {
         "name" = ${data.name},
         "updatedAt" = default
       WHERE "id" = ${id}
-      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object (
-        '$key' , "id" , '$ver' , current_timestamp ) )`;
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -107,8 +115,7 @@ describe('postgres', () => {
       VALUES (${data.name}, ${'foo'}, default)
       ON CONFLICT ("id") DO UPDATE SET
       ("name", "id", "updatedAt") = (${data.name}, ${'foo'}, default)
-      RETURNING ( to_jsonb ( "user" ) || jsonb_build_object (
-        '$key' , "id" , '$ver' , current_timestamp ) )`;
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -126,10 +133,10 @@ describe('postgres', () => {
       ON CONFLICT ( "userId" )
       DO UPDATE SET ( "token", "userId", "version" ) =
       (${data.token}, ${'userId_01'}, default)
-      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object (
-        '$key' , ${`{"userId":"userId_01"}`}::jsonb ,
-        '$ref' , jsonb_build_array(${`googleSession`}::text , "id") ,
-        '$ver' , current_timestamp ) )`;
+      RETURNING *,
+        ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
+        current_timestamp AS "$ver",
+        array[ ${`googleSession`}::text , "id" ]::text[] AS "$ref"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -146,10 +153,10 @@ describe('postgres', () => {
       VALUES ( ${data.token} , ${data.userId}, default) ON CONFLICT ("userId")
       DO UPDATE SET ( "token" ,"userId", "version" ) = 
         (${data.token}, ${data.userId}, default)
-      RETURNING ( to_jsonb ( "googleSession" ) || jsonb_build_object (
-        '$key' , ${`{"userId":"userId_01"}`}::jsonb ,
-        '$ref' , jsonb_build_array(${`googleSession`}::text , "id") ,
-        '$ver' , current_timestamp ) )`;
+      RETURNING *,
+        ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
+        current_timestamp AS "$ver",
+        array[ ${`googleSession`}::text , "id" ]::text[] AS "$ref"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -166,8 +173,7 @@ describe('postgres', () => {
       VALUES (${data.tenantId}, ${data.userId}, ${'e1'}, default)
       ON CONFLICT ("id") DO UPDATE SET ("tenantId", "userId", "id", "version" ) =
         (${data.tenantId} , ${data.userId} , ${'e1'}, default)
-      RETURNING ( to_jsonb ( "email" ) || jsonb_build_object (
-        '$key' , "id" , '$ver' , current_timestamp ) )`;
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });

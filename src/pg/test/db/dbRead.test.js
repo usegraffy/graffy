@@ -48,8 +48,8 @@ describe('postgres', () => {
     expect(mockQuery).toBeCalled();
     expectSql(
       mockQuery.mock.calls[0][0],
-      sql`SELECT to_jsonb ("user") || jsonb_build_object ( '$key' , "id" , '$ver' , current_timestamp )
-       FROM "user" WHERE "id" IN ( ${'foo'} )`,
+      sql`SELECT *, "id" AS "$key", current_timestamp AS "$ver"
+        FROM "user" WHERE "id" IN ( ${'foo'} )`,
     );
 
     expect(result).toEqual({
