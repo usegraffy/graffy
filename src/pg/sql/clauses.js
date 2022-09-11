@@ -31,10 +31,10 @@ export const lookup = (prop) => {
 export const lookupNumeric = (prop) => {
   const [prefix, ...suffix] = encodePath(prop);
   return suffix.length
-    ? // @ts-ignore sql-template-tag typedef bug
-      sql`CASE WHEN "${raw(
-        prefix,
-      )}" #> ${suffix} = 'null'::jsonb THEN 0 ELSE ("${raw(
+    ? sql`CASE WHEN "${raw(prefix)}" #> ${
+        // @ts-ignore sql-template-tag typedef bug
+        suffix
+      } = 'null'::jsonb THEN 0 ELSE ("${raw(
         prefix,
       )}" #> ${suffix})::numeric END`
     : sql`"${raw(prefix)}"`;
@@ -49,24 +49,26 @@ const aggSql = {
 };
 
 export const getSelectCols = (table, projection = null) => {
-  if (!projection) return sql`to_jsonb("${raw(table)}")`;
+  if (!projection) return sql`*`;
 
   const sqls = [];
   for (const key in projection) {
     if (key === '$count') {
-      sqls.push(sql`'$count', count(*)`);
+      sqls.push(sql`count(*) AS "$count"`);
     } else if (aggSql[key]) {
       const subSqls = [];
       for (const prop in projection[key]) {
         subSqls.push(sql`${prop}::text, ${aggSql[key](prop)}`);
       }
-      sqls.push(sql`${key}::text, jsonb_build_object(${join(subSqls, ', ')})`);
+      sqls.push(
+        sql`jsonb_build_object(${join(subSqls, ', ')}) AS "${raw(key)}"`,
+      );
     } else {
-      sqls.push(sql`${key}::text, "${raw(key)}"`);
+      sqls.push(sql`"${raw(key)}"`);
     }
   }
 
-  return sql`jsonb_build_object(${join(sqls, ', ')})`;
+  return join(sqls, ', ');
 };
 
 function vertexSql(array, nullValue) {

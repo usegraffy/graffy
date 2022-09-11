@@ -1,4 +1,4 @@
-import { Pool, Client } from 'pg';
+import { Pool, Client, types } from 'pg';
 import sqlTag from 'sql-template-tag';
 import {
   isPlainObject,
@@ -34,9 +34,16 @@ export default class Db {
   }
 
   async query(sql) {
-    sql.rowMode = 'array';
     log('Making SQL query: ' + sql.text, sql.values);
     try {
+      sql.types = {
+        getTypeParser: (oid, format) => {
+          if (oid === types.builtins.INT8) {
+            return (value) => parseInt(value, 10);
+          }
+          return types.getTypeParser(oid, format);
+        },
+      };
       return await this.client.query(sql);
     } catch (e) {
       const message = [
@@ -54,7 +61,7 @@ export default class Db {
   }
 
   async readSql(sql) {
-    const result = (await this.query(sql)).rows.flat();
+    const result = (await this.query(sql)).rows;
     // Each row is an array, as there is only one column returned.
     log('Read result', result);
     return result;
@@ -66,7 +73,7 @@ export default class Db {
     if (!res.rowCount) {
       throw Error('pg.nothing_written ' + sql.text + ' with ' + sql.values);
     }
-    return res.rows[0][0];
+    return res.rows[0];
   }
 
   /*
@@ -85,16 +92,16 @@ export default class Db {
         WHERE table_name = ${table}
         ORDER BY array_position(current_schemas(false)::text[], table_schema::text) ASC
         LIMIT 1`)
-    ).rows[0][0];
+    ).rows[0].table_schema;
 
     const types = (
       await this.query(sqlTag`
-        SELECT jsonb_object_agg(column_name, udt_name)
+        SELECT jsonb_object_agg(column_name, udt_name) AS column_types
         FROM information_schema.columns
         WHERE
           table_name = ${table} AND
           table_schema = ${tableSchema}`)
-    ).rows[0][0];
+    ).rows[0].column_types;
 
     if (!types) throw Error(`pg.missing_table ${table}`);
 
@@ -106,7 +113,7 @@ export default class Db {
           table_name = ${table} AND
           table_schema = ${tableSchema} AND
           column_name = ${verCol}`)
-    ).rows[0][0];
+    ).rows[0].column_default;
 
     if (!verDefault) {
       throw Error(`pg.verCol_without_default ${verCol}`);
