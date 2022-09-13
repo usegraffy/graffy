@@ -2,12 +2,7 @@ import sql, { raw, join } from 'sql-template-tag';
 import { isPlainObject } from '@graffy/common';
 import getArgSql from './getArgSql.js';
 import { getIdMeta } from './getMeta.js';
-import {
-  getInsert,
-  getJsonBuildTrusted,
-  getSelectCols,
-  getUpdates,
-} from './clauses.js';
+import { getInsert, getSelectCols, getUpdates } from './clauses.js';
 
 function getSingleSql(arg, options) {
   const { table, idCol } = options;
@@ -42,7 +37,7 @@ export function patch(object, arg, options) {
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
     WHERE ${where}
-    RETURNING (${getSelectCols(table)} || ${meta})`;
+    RETURNING ${getSelectCols(table)}, ${meta}`;
 }
 
 export function put(object, arg, options) {
@@ -63,7 +58,7 @@ export function put(object, arg, options) {
   return sql`
     INSERT INTO "${raw(table)}" (${cols}) VALUES (${vals})
     ON CONFLICT (${conflictTarget}) DO UPDATE SET (${cols}) = (${vals})
-    RETURNING (${getSelectCols(table)} || ${meta})`;
+    RETURNING ${getSelectCols(table)}, ${meta}`;
 }
 
 export function del(arg, options) {
@@ -73,5 +68,5 @@ export function del(arg, options) {
   return sql`
     DELETE FROM "${raw(table)}"
     WHERE ${where}
-    RETURNING (${getJsonBuildTrusted({ $key: arg })})`;
+    RETURNING ${arg} "$key"`;
 }

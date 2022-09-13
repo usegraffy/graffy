@@ -50,7 +50,7 @@ export async function setupPgServer() {
       throw e;
     }
 
-  while (!(await isPgReady(connOptions.port))) await sleep(200);
+  while (!(await isPgReady())) await sleep(200);
   // console.log('Postgres is up in', Date.now() - start, 'ms');
 
   pool = new Pool(connOptions);

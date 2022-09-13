@@ -880,7 +880,7 @@ describe('pg_e2e', () => {
       value: [{ $since: 0, $until: Infinity }],
     });
 
-    expect(res1[pid1].commenters).toEqual(exp1[pid1].commenters);
+    expect(res1).toEqual(exp1);
 
     // Case 2: Cube query
 

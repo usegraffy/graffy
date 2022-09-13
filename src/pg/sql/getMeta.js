@@ -1,23 +1,17 @@
 import sql, { join, raw } from 'sql-template-tag';
-import { getJsonBuildTrusted } from './clauses';
 
 export const getIdMeta = ({ idCol, verDefault }) =>
-  getJsonBuildTrusted({
-    $key: sql`"${raw(idCol)}"`,
-    $ver: raw(verDefault),
-  });
+  sql`"${raw(idCol)}" AS "$key", ${raw(verDefault)} AS "$ver"`;
 
 export const getArgMeta = (key, { prefix, idCol, verDefault }) =>
-  getJsonBuildTrusted({
-    $key: key,
-    $ref: sql`jsonb_build_array(${join(
-      prefix.map((k) => sql`${k}::text`),
-    )}, "${raw(idCol)}")`,
-    $ver: raw(verDefault),
-  });
+  sql`
+    ${key} AS "$key",
+    ${raw(verDefault)} AS "$ver",
+    array[
+      ${join(prefix.map((k) => sql`${k}::text`))},
+      "${raw(idCol)}"
+    ]::text[] AS "$ref"
+  `;
 
 export const getAggMeta = (key, { verDefault }) =>
-  getJsonBuildTrusted({
-    $key: key,
-    $ver: raw(verDefault),
-  });
+  sql`${key} AS "$key", ${raw(verDefault)} AS "$ver"`;

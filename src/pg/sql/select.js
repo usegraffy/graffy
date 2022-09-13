@@ -11,7 +11,7 @@ export function selectByArgs(args, projection, options) {
   const clampedLimit = Math.min(MAX_LIMIT, limit || MAX_LIMIT);
   return sql`
     SELECT
-    ${getSelectCols(table, projection)} || ${meta}
+    ${getSelectCols(table, projection)}, ${meta}
     FROM "${raw(table)}"
     ${where.length ? sql`WHERE ${join(where, ` AND `)}` : empty}
     ${group ? sql`GROUP BY ${group}` : empty}
@@ -24,7 +24,7 @@ export function selectByIds(ids, projection, options) {
   const { table, idCol } = options;
   return sql`
     SELECT
-    ${getSelectCols(table, projection)} || ${getIdMeta(options)}
+    ${getSelectCols(table, projection)}, ${getIdMeta(options)}
     FROM "${raw(table)}"
     WHERE "${raw(idCol)}" IN (${join(ids)})
   `;
