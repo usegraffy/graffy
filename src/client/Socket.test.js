@@ -1,4 +1,4 @@
-// import WebSocket from 'ws';
+import { jest } from '@jest/globals';
 import Socket from './Socket.js';
 
 class MockWebSocket {
@@ -12,19 +12,22 @@ class MockWebSocket {
 
 describe('Socket', () => {
   let socket, ws;
+  let actualWebSocket;
 
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    jest.useFakeTimers();
     MockWebSocket.instances.splice(0);
-    global.WebSocket = MockWebSocket;
-    socket = new Socket('ws://localhost:3684');
+    actualWebSocket = globalThis.WebSocket;
+    // @ts-ignore
+    globalThis.WebSocket = MockWebSocket;
+    socket = Socket('ws://localhost:3684');
     ws = MockWebSocket.instances[0];
   });
 
   afterEach(async () => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    delete global.WebSocket;
+    globalThis.WebSocket = actualWebSocket;
   });
 
   test('connect', () => {

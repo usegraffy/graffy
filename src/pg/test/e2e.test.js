@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { v4 as uuid } from 'uuid';
 import Graffy from '@graffy/core';
 import { put, ref, keyref } from '@graffy/testing';

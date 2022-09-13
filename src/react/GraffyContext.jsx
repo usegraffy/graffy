@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const { createContext } = React;
-const GraffyContext = createContext();
+const GraffyContext = createContext(null);
 
 export default GraffyContext;
 export function GraffyProvider({ store, children }) {

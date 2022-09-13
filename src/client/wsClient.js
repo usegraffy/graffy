@@ -3,11 +3,18 @@ import { makeWatcher } from '@graffy/common';
 import Socket from './Socket.js';
 
 const wsClient =
-  (url, { getOptions = () => {}, watch, connInfoPath = 'connection' } = {}) =>
+  (
+    url,
+    {
+      getOptions = (..._) => false,
+      watch = undefined,
+      connInfoPath = 'connection',
+    } = {},
+  ) =>
   (store) => {
     if (!WebSocket) throw Error('client.websocket.unavailable');
 
-    const socket = new Socket(url, { onUnhandled, onStatusChange });
+    const socket = Socket(url, { onUnhandled, onStatusChange });
     let status = false;
     const statusWatcher = makeWatcher();
 

@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
 import Graffy from '@graffy/core';
@@ -20,6 +21,7 @@ describe('useQuery', () => {
     await g.write('demo', { value });
 
     wrapper = function _Wrapper({ children }) {
+      console.log('Wrapper rendered with store', g);
       return <GraffyProvider store={g}>{children}</GraffyProvider>;
     };
   });
@@ -42,9 +44,7 @@ describe('useQuery', () => {
     const data = { demo: { value } };
     const { result, waitForValueToChange } = renderHook(
       () => useQuery({ demo: { value: 1 } }, { once: true }),
-      {
-        wrapper,
-      },
+      { wrapper },
     );
 
     const refetch = expect.any(Function);

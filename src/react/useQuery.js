@@ -50,9 +50,22 @@ const retrieveResult = async (promise, setState) => {
   }
 };
 
-export default function useQuery(query, { once, ...other } = {}) {
+/**
+ *
+ * @param {any} query
+ * @param {any} options
+ * @returns {{
+ *  data?: any,
+ *  loading: boolean,
+ *  error?: any,
+ *  refetch?: () => void
+ * }}
+ */
+export default function useQuery(query, { once = false, ...other } = {}) {
   const store = useContext(GraffyContext);
   const queryRef = useRef(null);
+
+  if (!store) throw Error('graffy_react.no_store_in_context');
 
   const queryHasChanged = !isEqual(queryRef.current, query);
   if (queryHasChanged) {

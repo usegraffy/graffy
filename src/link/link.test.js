@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
 import { encodeGraph, encodeQuery } from '@graffy/common';

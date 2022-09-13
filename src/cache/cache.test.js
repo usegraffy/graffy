@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import Cache from './index.js';
 

@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { fork } from 'child_process';
 import puppeteer from 'puppeteer';
 
@@ -10,7 +11,7 @@ describe('integration', () => {
     return Promise.all([
       new Promise((resolve, reject) => {
         server = fork(`${__dirname + '/server.js'}`, {
-          env: { PORT },
+          env: { PORT: String(PORT) },
           silent: true,
         });
         server.on('error', reject);

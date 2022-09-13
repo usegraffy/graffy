@@ -1,6 +1,6 @@
+import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import { pg } from '../../index.js';
 import expectSql from '../expectSql';
 
 let mockQuery = jest.fn();
@@ -14,6 +14,8 @@ jest.mock('pg', () => ({
     query = mockQuery;
   },
 }));
+
+const { pg } = await import('../../index.js');
 
 describe('postgres', () => {
   let store;

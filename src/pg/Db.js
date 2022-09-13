@@ -1,4 +1,4 @@
-import { Pool, Client, types } from 'pg';
+import pg from 'pg';
 import sqlTag from 'sql-template-tag';
 import {
   isPlainObject,
@@ -19,6 +19,7 @@ import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch, del } from './sql/index.js';
 import debug from 'debug';
 const log = debug('graffy:pg:db');
+const { Pool, Client, types } = pg;
 
 export default class Db {
   constructor(connection) {

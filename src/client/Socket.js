@@ -24,7 +24,10 @@ const INTERVAL = 2000;
 const PING_TIMEOUT = 40000; // Make this greater than server interval.
 const RESET_TIMEOUT = 10000;
 
-export default function Socket(url, { onUnhandled, onStatusChange } = {}) {
+export default function Socket(
+  url,
+  { onUnhandled = undefined, onStatusChange = undefined } = {},
+) {
   const handlers = {};
   const buffer = [];
   let isOpen = false;
@@ -58,7 +61,7 @@ export default function Socket(url, { onUnhandled, onStatusChange } = {}) {
     lastAttempt = Date.now();
     attempts++;
 
-    socket = new WebSocket(url);
+    socket = new globalThis.WebSocket(url);
     socket.onmessage = received;
     socket.onerror = closed;
     socket.onclose = closed;
