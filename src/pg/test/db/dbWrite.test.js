@@ -19,13 +19,14 @@ const mockQuery = jest.fn(() =>
   }),
 );
 
-jest.mock('pg', () => ({
-  __esModule: true,
-  Pool: class {
-    query = mockQuery;
-  },
-  Client: class {
-    query = mockQuery;
+jest.unstable_mockModule('pg', () => ({
+  default: {
+    Pool: class {
+      query = mockQuery;
+    },
+    Client: class {
+      query = mockQuery;
+    },
   },
 }));
 

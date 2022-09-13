@@ -1,6 +1,11 @@
 import { jest } from '@jest/globals';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { fork } from 'child_process';
 import puppeteer from 'puppeteer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PORT = 1025 + Math.floor(Math.random() * 30000);
 jest.setTimeout(120000);
