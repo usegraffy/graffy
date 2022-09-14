@@ -2,9 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const { createContext } = React;
-const GraffyContext = createContext(null);
+export const GraffyContext = createContext(null);
 
-export default GraffyContext;
 export function GraffyProvider({ store, children }) {
   return (
     <GraffyContext.Provider value={store}>{children}</GraffyContext.Provider>

@@ -65,6 +65,7 @@
     "strict": false
   },
   "include": [
-    "src/**/*.js"
+    "src/**/*.js",
+    "src/**/*.jsx"
   ],
 }

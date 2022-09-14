@@ -21,7 +21,6 @@ describe('useQuery', () => {
     await g.write('demo', { value });
 
     wrapper = function _Wrapper({ children }) {
-      console.log('Wrapper rendered with store', g);
       return <GraffyProvider store={g}>{children}</GraffyProvider>;
     };
   });

@@ -38,8 +38,8 @@ export default async function build(name, version, watch, onUpdate) {
       outDir: dst(name),
       emptyOutDir: false,
       rollupOptions: {
-        external: (id, _, isResolved) => {
-          if (isResolved || id[0] === '.') return false;
+        external: (id, _parentId, _isResolved) => {
+          if (id[0] === '/' || id[0] === '.') return false;
           if (!imports[id]) {
             imports[id] = true;
             importsUpdated = true;

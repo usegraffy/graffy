@@ -15,4 +15,5 @@ module.exports = {
   transform: {
     '\\.[jt]sx?$': path.resolve(__dirname, './scripts/jestBabelTransform.js'),
   },
+  extensionsToTreatAsEsm: ['.jsx'],
 };
