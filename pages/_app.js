@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 /* global __navMenu */
 
 import React from 'react';

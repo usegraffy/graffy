@@ -1,7 +1,9 @@
 import { execFile as execFileCb } from 'child_process';
 import { promisify } from 'util';
 import sql from 'sql-template-tag';
-import { Pool, Client } from 'pg';
+import pg from 'pg';
+
+const { Pool, Client } = pg;
 
 const connOptions = {
   host: 'localhost',

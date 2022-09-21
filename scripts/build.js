@@ -8,6 +8,10 @@ import { build as viteBuild } from 'vite';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 
+// ESM-only deps are built into the bundle rather than
+// keeping them external, to prevent
+const esmOnlyDeps = ['sql-template-tag', 'nanoid'];
+
 export default async function build(name, version, watch, onUpdate) {
   let packageName, description;
 
@@ -38,8 +42,11 @@ export default async function build(name, version, watch, onUpdate) {
       outDir: dst(name),
       emptyOutDir: false,
       rollupOptions: {
-        external: (id, _, isResolved) => {
-          if (isResolved || id[0] === '.') return false;
+        external: (id, _parentId, _isResolved) => {
+          if (id[0] === '/' || id[0] === '.') return false;
+          const dep = id.match(depPattern)[0];
+          if (esmOnlyDeps.includes(dep)) return false;
+
           if (!imports[id]) {
             imports[id] = true;
             importsUpdated = true;

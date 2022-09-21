@@ -8,8 +8,9 @@
 */
 
 module.exports = {
-  presets: [
-    ['@babel/preset-env', { targets: ['current node'] }],
-    '@babel/preset-react',
-  ],
+  presets: [['@babel/preset-env', { modules: false }], '@babel/preset-react'],
+  targets: {
+    browsers: 'last 2 versions',
+    esmodules: true,
+  },
 };

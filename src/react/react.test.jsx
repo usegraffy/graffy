@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
 import Graffy from '@graffy/core';
@@ -42,9 +43,7 @@ describe('useQuery', () => {
     const data = { demo: { value } };
     const { result, waitForValueToChange } = renderHook(
       () => useQuery({ demo: { value: 1 } }, { once: true }),
-      {
-        wrapper,
-      },
+      { wrapper },
     );
 
     const refetch = expect.any(Function);

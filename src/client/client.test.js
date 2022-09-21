@@ -1,10 +1,8 @@
+import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import { encodeUrl } from '@graffy/common';
-import client from './index.js';
-import MockSocket from './Socket.js'; // The mock is below, but gets hoisted.
 
-jest.mock('./Socket', () => ({
-  __esModule: true,
+jest.unstable_mockModule('./Socket', () => ({
   default: jest.fn(() => ({
     start: jest.fn(),
     stop: jest.fn(),
@@ -12,8 +10,12 @@ jest.mock('./Socket', () => ({
   })),
 }));
 
+const client = (await import('./index.js')).default;
+const MockSocket = (await import('./Socket.js')).default;
+
 describe('wsClient', () => {
-  global.WebSocket = {};
+  // @ts-ignore
+  globalThis.WebSocket = function () {};
 
   let store;
 
@@ -77,7 +79,9 @@ describe('httpClient connInfoPath', () => {
 
 // async refers to the getOptions implementation
 describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
-  global.fetch = jest.fn().mockResolvedValue({ status: 200, json: jest.fn() });
+  globalThis.fetch = jest
+    .fn()
+    .mockResolvedValue({ status: 200, json: jest.fn() });
 
   let store, getOptions;
   const connectionUrl = 'http://example';

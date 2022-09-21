@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
 import { splitArgs } from '@graffy/common';

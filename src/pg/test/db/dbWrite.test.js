@@ -1,7 +1,7 @@
+import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
-import { pg } from '../../index.js';
 
 /**
  * Jest type definition incorrectly says mock.calls
@@ -19,15 +19,18 @@ const mockQuery = jest.fn(() =>
   }),
 );
 
-jest.mock('pg', () => ({
-  __esModule: true,
-  Pool: class {
-    query = mockQuery;
-  },
-  Client: class {
-    query = mockQuery;
+jest.unstable_mockModule('pg', () => ({
+  default: {
+    Pool: class {
+      query = mockQuery;
+    },
+    Client: class {
+      query = mockQuery;
+    },
   },
 }));
+
+const { pg } = await import('../../index.js');
 
 describe('postgres', () => {
   let store;
