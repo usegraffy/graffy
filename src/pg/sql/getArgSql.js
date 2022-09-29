@@ -17,14 +17,18 @@ export default function getArgSql(
   { $first, $last, $after, $before, $since, $until, $all, $cursor: _, ...rest },
   options,
 ) {
-  const { $order, $group, ...filter } = rest;
   const { prefix, idCol } = options;
+  const hasRangeArg =
+    $before || $after || $since || $until || $first || $last || $all;
+
+  const {
+    $group,
+    $order = hasRangeArg && !$group && [idCol],
+    ...filter
+  } = rest;
 
   const meta = (key) =>
     $group ? getAggMeta(key, options) : getArgMeta(key, options);
-
-  const hasRangeArg =
-    $before || $after || $since || $until || $first || $last || $all;
 
   if ($order && $group) {
     // TODO: Allow this.
@@ -47,11 +51,13 @@ export default function getArgSql(
 
   const group = groupCols ? join(groupCols, ', ') : undefined;
 
-  const orderCols = ($order || [idCol]).map((orderItem) =>
-    orderItem[0] === '!'
-      ? sql`-(${lookup(orderItem.slice(1))})::float8`
-      : lookup(orderItem),
-  );
+  const orderCols =
+    $order &&
+    $order.map((orderItem) =>
+      orderItem[0] === '!'
+        ? sql`-(${lookup(orderItem.slice(1))})::float8`
+        : lookup(orderItem),
+    );
 
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([name, value]) => {
@@ -61,8 +67,9 @@ export default function getArgSql(
 
   const order =
     !$group &&
+    $order &&
     join(
-      ($order || [idCol]).map((orderItem) =>
+      $order.map((orderItem) =>
         orderItem[0] === '!'
           ? sql`${lookup(orderItem.slice(1))} ${$last ? sql`ASC` : sql`DESC`}`
           : sql`${lookup(orderItem)} ${$last ? sql`DESC` : sql`ASC`}`,
