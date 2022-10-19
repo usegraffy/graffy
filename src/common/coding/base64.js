@@ -27,7 +27,7 @@ export function encode(u8Arr) {
     str += gstr;
   }
 
-  return str.substr(0, Math.ceil((view.byteLength * 4) / 3));
+  return str.substring(0, Math.ceil((view.byteLength * 4) / 3));
 }
 
 export function decode(string, start = 0) {

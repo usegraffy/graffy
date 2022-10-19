@@ -9,7 +9,7 @@ describe('encode', () => {
   });
 
   test('filter', () => {
-    expect(encode({ foo: 42 })).toEqual({ key: '\x000kKaQqw-0B04--------' });
+    expect(encode({ foo: 42 })).toEqual({ key: '\x000kKaQqw-0B04' });
   });
 });
 
@@ -24,7 +24,7 @@ describe('decode', () => {
   });
 
   test('filter', () => {
-    expect(decode({ key: '\x000kKaQqw-0B04--------' })).toEqual({ foo: 42 });
+    expect(decode({ key: '\x000kKaQqw-0B04' })).toEqual({ foo: 42 });
   });
 });
 

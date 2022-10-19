@@ -97,7 +97,7 @@ test('plain_range', () => {
 
 test('arrayCursor.encode', () => {
   expect(encodeGraph([{ $key: [23], $val: 25 }], 0)).toEqual([
-    { key: '\x000VI-Ck--------', value: 25, version: 0 },
+    { key: '\x000VI-Ck', value: 25, version: 0 },
   ]);
 });
 
@@ -144,18 +144,16 @@ test('empty3', () => {
 test('plain_array', () => {
   const result = encodeGraph(['js', 'css'], 0);
   expect(result).toEqual([
-    { key: '\x0007----------', value: 'js', version: 0 },
-    { key: '\x0007----------\0', end: '\x000Azk-------,\uffff', version: 0 },
-    { key: '\x000Azk--------', value: 'css', version: 0 },
-    { key: '\x000Azk--------\0', end: '\x000Ezk--------', version: 0 },
+    { key: '\x0007-', value: 'js', version: 0 },
+    { key: '\x0007-\0', end: '\x000Azj\uffff', version: 0 },
+    { key: '\x000Azk', value: 'css', version: 0 },
+    { key: '\x000Azk\0', end: '\x000Ezk', version: 0 },
   ]);
 });
 
 test('array_update', () => {
   const result = encodeGraph([{ $key: 0, $val: 'ts' }], 0);
-  expect(result).toEqual([
-    { key: '\x0007----------', value: 'ts', version: 0 },
-  ]);
+  expect(result).toEqual([{ key: '\x0007-', value: 'ts', version: 0 }]);
 });
 
 test('refWithProperties', () => {
@@ -228,9 +226,9 @@ test('rangeRefChi', () => {
       version: 0,
       children: [
         // Planned; not yet implemented
-        // { key: '', end: '\u00000kKd--Hzw--------,\uffff', version: 0 },
+        // { key: '', end: '\u00000kKd--Hzw,\uffff', version: 0 },
         {
-          key: '\u00000kKd--Hzw---------',
+          key: '\u00000kKd--Hzw-',
           version: 0,
           children: [{ key: 'foo', version: 0, value: 1 }],
         },
@@ -241,7 +239,7 @@ test('rangeRefChi', () => {
         //   version: 0,
         // },
         {
-          key: '\u00000kKd--I-----------',
+          key: '\u00000kKd--I-',
           version: 0,
           children: [{ key: 'foo', version: 0, value: 2 }],
         },
@@ -264,12 +262,12 @@ test('rangeRefCursor', () => {
       version: 0,
       children: [
         {
-          key: '\u00000kKd--Hzw---------',
+          key: '\u00000kKd--Hzw-',
           version: 0,
           children: [{ key: 'foo', version: 0, value: 1 }],
         },
         {
-          key: '\u00000kKd--I-----------',
+          key: '\u00000kKd--I-',
           version: 0,
           children: [{ key: 'foo', version: 0, value: 2 }],
         },

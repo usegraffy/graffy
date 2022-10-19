@@ -161,23 +161,23 @@ test('alias', () => {
         version: 0,
         children: [
           {
-            key: '\x000kKo--I-1---------',
+            key: '\x000kKo--I-1-',
             version: 0,
             prefix: true,
             children: [
-              { key: '', end: '\x000Azk-------,￿', version: 1628955868126 },
+              { key: '', end: '\x000Azj￿', version: 1628955868126 },
               {
-                key: '\x000Azk--------',
+                key: '\x000Azk',
                 version: 1628955868126,
                 children: [{ key: 'x', version: 1628955868126, value: 100 }],
               },
               {
-                key: '\x000Azk--------\x00',
-                end: '\x000B---------,￿',
+                key: '\x000Azk\x00',
+                end: '\x000B,￿',
                 version: 1628955868126,
               },
               {
-                key: '\x000B----------',
+                key: '\x000B-',
                 version: 1628955868126,
                 children: [{ key: 'x', version: 1628955868126, value: 200 }],
               },

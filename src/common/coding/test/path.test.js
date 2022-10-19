@@ -13,24 +13,18 @@ test('encode_array', () => {
 });
 
 test('encode_object', () => {
-  expect(encode(['foo', { bar: 43 }])).toEqual([
-    'foo',
-    '\x000kKXNM7-0B04V-------',
-  ]);
+  expect(encode(['foo', { bar: 43 }])).toEqual(['foo', '\x000kKXNM7-0B04V-']);
 });
 
 test('double_encode', () => {
-  expect(encode(['foo', '\x000kKXNM7-0B04V-------'])).toEqual([
+  expect(encode(['foo', '\x000kKXNM7-0B04V-'])).toEqual([
     'foo',
-    '\x000kKXNM7-0B04V-------',
+    '\x000kKXNM7-0B04V-',
   ]);
 });
 
 test('decode', () => {
-  expect(decode(['foo', '\x000kKXNM7-0B04V-------'])).toEqual([
-    'foo',
-    { bar: 43 },
-  ]);
+  expect(decode(['foo', '\x000kKXNM7-0B04V-'])).toEqual(['foo', { bar: 43 }]);
 });
 
 test('encodeEmptyObject', () => {
