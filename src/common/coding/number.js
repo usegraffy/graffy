@@ -21,7 +21,9 @@ export function encode(number) {
 }
 
 export function decode(u8Arr) {
-  const { buffer, byteOffset, byteLength } = u8Arr;
+  const copy = new Uint8Array(8);
+  copy.set(u8Arr, 0);
+  const { buffer, byteOffset, byteLength } = copy;
   const view = new DataView(buffer, byteOffset, byteLength);
   const high = view.getUint8(0);
 

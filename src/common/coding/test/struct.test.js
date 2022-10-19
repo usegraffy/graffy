@@ -33,6 +33,7 @@ test('sink', () => {
 });
 
 test('num', () => tryValue(123));
+test('str', () => tryValue('potatoes'));
 
 test('arrayorder', () => {
   expect(encode([15.6, 'abc']) < encode([15.7])).toBe(true);

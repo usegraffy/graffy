@@ -12,19 +12,13 @@ export const ARR = 6;
 export const OBJ = 7;
 
 function encodeArray(array) {
-  return [
-    ARR,
-    // encodeInteger(array.length),
-    ...array.flatMap((value) => encodeParts(value)),
-    END,
-  ];
+  return [ARR, ...array.flatMap((value) => encodeParts(value)), END];
 }
 
 function encodeObject(object) {
   const keys = Object.keys(object).sort();
   return [
     OBJ,
-    // encodeInteger(keys.length),
     ...keys.flatMap((key) => [
       STR,
       encodeString(key),
@@ -48,7 +42,19 @@ function encodeParts(value) {
 
 export function encode(value) {
   const parts = encodeParts(value);
+
+  // Remove trailing zeros, so keyBefore() can work.
+  // decode() handles this by assuming as many trailing
+  // zeros as necessary.
   while (parts[parts.length - 1] === END) parts.pop();
+
+  const lastPart = parts[parts.length - 1];
+  if (typeof lastPart !== 'number') {
+    let end = lastPart.length - 1;
+    while (end && !lastPart[end]) end--;
+    parts[parts.length - 1] = lastPart.slice(0, end + 1);
+  }
+
   const length = parts.reduce(
     (sum, part) => sum + (typeof part === 'number' ? 1 : part.length),
     0,
