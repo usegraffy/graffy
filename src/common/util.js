@@ -1,3 +1,14 @@
+export const MIN_KEY = new Uint8Array();
+export const MAX_KEY = new Uint8Array([0xff]);
+
+export function isMinKey(key) {
+  return key.length === 0;
+}
+
+export function isMaxKey(key) {
+  return key.length === 1 && key[0] === 0xff;
+}
+
 export function err(message, { cause, ...args } = {}) {
   const e = new Error(message + (args ? ' ' + JSON.stringify(args) : ''));
   e.cause = cause;
@@ -18,7 +29,12 @@ export function isDef(value) {
 }
 
 export function isPlainObject(arg) {
-  return typeof arg === 'object' && arg && !Array.isArray(arg);
+  return (
+    typeof arg === 'object' &&
+    arg &&
+    !Array.isArray(arg) &&
+    !ArrayBuffer.isView(arg)
+  );
 }
 
 export function isEncodedKey(str) {

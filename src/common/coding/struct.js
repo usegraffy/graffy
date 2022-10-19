@@ -29,6 +29,13 @@ function encodeObject(object) {
   ];
 }
 
+const stringifyDescriptor = {
+  value: function () {
+    if (this[0] === STR) return decodeString(this.subarray(1));
+    return '\0' + encodeB64(this);
+  },
+};
+
 function encodeParts(value) {
   if (value === null) return [NULL];
   if (value === false) return [FALSE];
@@ -70,14 +77,19 @@ export function encode(value) {
       i += part.length;
     }
   }
-  return encodeB64(buffer);
+
+  Object.defineProperties(buffer, {
+    toJSON: stringifyDescriptor,
+    toString: stringifyDescriptor,
+  });
+
+  return buffer;
 }
 
 const nextKey = new WeakMap();
 
-export function decode(key) {
+export function decode(buffer) {
   let i = 0;
-  const buffer = decodeB64(key, 0);
 
   /** @type {Array<{ [prop: string]: any }|Array>} */
   const stack = [[]];

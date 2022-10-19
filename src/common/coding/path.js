@@ -18,7 +18,7 @@ export function encode(path) {
   }
 
   function encodeSegment(seg) {
-    if (typeof seg === 'string') return seg;
+    if (typeof seg === 'string' || ArrayBuffer.isView(seg)) return seg;
     const { key, end } = encodeArgs(seg);
     if (end) throw 'encodePath.unexpected_range_key';
     return key;

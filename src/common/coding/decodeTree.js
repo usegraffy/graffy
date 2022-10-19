@@ -1,6 +1,6 @@
 import { decode as decodeArgs, splitArgs } from './args.js';
 import { decode as decodePath } from './path.js';
-import { isEmpty, isDef } from '../util.js';
+import { isEmpty, isDef, isMinKey, isMaxKey } from '../util.js';
 import { keyAfter } from '../ops/index.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
@@ -89,7 +89,7 @@ function decode(nodes = [], { isGraph } = {}) {
     }
 
     if (isGraph && putRanges.length) {
-      if (putRanges[0].key === '' && putRanges[0].end === '\uffff') {
+      if (isMinKey(putRanges[0].key) && isMaxKey(putRanges[0].end)) {
         Object.defineProperty(result, '$put', { value: true });
       } else {
         Object.defineProperty(result, '$put', {

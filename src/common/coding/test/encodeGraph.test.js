@@ -1,4 +1,30 @@
 import { encodeGraph } from '../encodeTree.js';
+import { encode as encodeString } from '../string.js';
+import { decode as b64decode } from '../base64.js';
+import { MAX_KEY, MIN_KEY } from '../../util.js';
+
+/** @type {Record<string, any>} */
+const e = new Proxy(
+  {},
+  {
+    get: (_target, prop) => {
+      const stringifyDescriptor = {
+        value: function () {
+          return prop;
+        },
+      };
+
+      const uarr = new Uint8Array([5, ...encodeString(prop)]);
+      Object.defineProperties(uarr, {
+        toJSON: stringifyDescriptor,
+        toString: stringifyDescriptor,
+      });
+      return uarr;
+    },
+  },
+);
+
+const d = (str) => b64decode(str.slice(1));
 
 test('simple', () => {
   const users = [
@@ -12,32 +38,32 @@ test('simple', () => {
 
   expect(encodeGraph({ users, posts, tags }, version)).toEqual([
     {
-      key: 'tags',
+      key: e.tags,
       version,
       children: [
-        { key: 'a', value: true, version },
-        { key: 'b', value: true, version },
+        { key: e.a, value: true, version },
+        { key: e.b, value: true, version },
       ],
     },
     {
-      key: 'users',
+      key: e.users,
       version,
       children: [
         {
-          key: '1',
+          key: e['1'],
           version,
           children: [
-            { key: 'name', value: 'Alice', version },
-            { key: 'settings', value: ['hi'], version },
+            { key: e.name, value: 'Alice', version },
+            { key: e.settings, value: ['hi'], version },
           ],
         },
         {
-          key: '2',
+          key: e['2'],
           version,
           children: [
-            { key: 'foo', end: 'foo', version },
-            { key: 'manager', path: ['users', '1'], version },
-            { key: 'name', value: 'Bob', version },
+            { key: e.foo, end: 'foo', version },
+            { key: e.manager, path: ['users', '1'], version },
+            { key: e.name, value: 'Bob', version },
           ],
         },
       ],
@@ -51,15 +77,15 @@ test('skipped_array', () => {
     encodeGraph({ foo: { $key: { email: 'a' }, name: 'x' } }, version),
   ).toEqual([
     {
-      key: 'foo',
+      key: e.foo,
       version,
       children: [
         {
-          key: '\x000kK_QL4dQ--4NF',
+          key: d('0kK_QL4dQ--4NF'),
           version,
           children: [
             {
-              key: 'name',
+              key: e.name,
               version,
               value: 'x',
             },
@@ -73,7 +99,7 @@ test('skipped_array', () => {
 test('point_deletion', () => {
   const version = 0;
   expect(encodeGraph({ foo: null }, version)).toEqual([
-    { key: 'foo', end: 'foo', version },
+    { key: e.foo, end: 'foo', version },
   ]);
 });
 
@@ -81,47 +107,47 @@ test('point_in_range_deletion', () => {
   const version = 0;
   expect(encodeGraph([{ $key: { $cursor: ['foo'] } }], version)).toEqual([
     {
-      key: '',
+      key: MIN_KEY,
       version,
       prefix: true,
-      children: [{ key: '\x000VKaQqw', end: '\x000VKaQqw', version }],
+      children: [{ key: d('0VKaQqw'), end: d('0VKaQqw'), version }],
     },
   ]);
 });
 
 test('plain_range', () => {
   expect(encodeGraph({ $put: { $before: ['a'] } }, 0)).toEqual([
-    { key: '', end: '\x000VKV\uffff', version: 0 },
+    { key: MIN_KEY, end: d('0VKV\uffff'), version: 0 },
   ]);
 });
 
 test('arrayCursor.encode', () => {
   expect(encodeGraph([{ $key: [23], $val: 25 }], 0)).toEqual([
-    { key: '\x000VI-Ck', value: 25, version: 0 },
+    { key: d('0VI-Ck'), value: 25, version: 0 },
   ]);
 });
 
 test('bounded_range', () => {
   const result = encodeGraph({ $put: { $after: ['a'], $before: ['b'] } }, 0);
   expect(result).toEqual([
-    { key: '\x000VKW\0', end: '\x000VKW\uffff', version: 0 },
+    { key: d('0VKW\0'), end: d('0VKW\uffff'), version: 0 },
   ]);
 });
 
 test('put_true', () => {
   const result = encodeGraph({ foo: 3, $put: true }, 0);
   expect(result).toEqual([
-    { key: '', end: 'fon\uffff', version: 0 },
-    { key: 'foo', value: 3, version: 0 },
-    { key: 'foo\0', end: '\uffff', version: 0 },
+    { key: MIN_KEY, end: 'fon\uffff', version: 0 },
+    { key: e.foo, value: 3, version: 0 },
+    { key: 'foo\0', end: MAX_KEY, version: 0 },
   ]);
 });
 
 test('put_partial', () => {
   const result = encodeGraph({ foo: 3, $put: [{ $until: 'goo' }] }, 0);
   expect(result).toEqual([
-    { key: '', end: 'fon\uffff', version: 0 },
-    { key: 'foo', value: 3, version: 0 },
+    { key: MIN_KEY, end: 'fon\uffff', version: 0 },
+    { key: e.foo, value: 3, version: 0 },
     { key: 'foo\0', end: 'goo', version: 0 },
   ]);
 });
@@ -144,16 +170,16 @@ test('empty3', () => {
 test('plain_array', () => {
   const result = encodeGraph(['js', 'css'], 0);
   expect(result).toEqual([
-    { key: '\x0007-', value: 'js', version: 0 },
-    { key: '\x0007-\0', end: '\x000Azj\uffff', version: 0 },
-    { key: '\x000Azk', value: 'css', version: 0 },
-    { key: '\x000Azk\0', end: '\x000Ezk', version: 0 },
+    { key: d('07-'), value: 'js', version: 0 },
+    { key: d('07-\0'), end: d('0Azj\uffff'), version: 0 },
+    { key: d('0Azk'), value: 'css', version: 0 },
+    { key: d('0Azk\0'), end: d('0Ezk'), version: 0 },
   ]);
 });
 
 test('array_update', () => {
   const result = encodeGraph([{ $key: 0, $val: 'ts' }], 0);
-  expect(result).toEqual([{ key: '\x0007-', value: 'ts', version: 0 }]);
+  expect(result).toEqual([{ key: d('07-'), value: 'ts', version: 0 }]);
 });
 
 test('refWithProperties', () => {
@@ -161,11 +187,11 @@ test('refWithProperties', () => {
 
   expect(result).toEqual([
     {
-      key: 'bar',
-      children: [{ key: 'baz', value: 42, version: 0 }],
+      key: e.bar,
+      children: [{ key: e.baz, value: 42, version: 0 }],
       version: 0,
     },
-    { key: 'foo', path: ['bar'], version: 0 },
+    { key: e.foo, path: ['bar'], version: 0 },
   ]);
 });
 
@@ -173,8 +199,8 @@ test('refWithValue', () => {
   const result = encodeGraph({ foo: { $ref: ['bar'], $val: 42 } }, 0);
 
   expect(result).toEqual([
-    { key: 'bar', value: 42, version: 0 },
-    { key: 'foo', path: ['bar'], version: 0 },
+    { key: e.bar, value: 42, version: 0 },
+    { key: e.foo, path: ['bar'], version: 0 },
   ]);
 });
 
@@ -190,10 +216,10 @@ test('rangeRef', () => {
     },
     0,
   );
-  // console.log(JSON.stringify(result));
+  // consolkey: e.log(JSON.stringify(result));
   expect(result).toEqual([
     {
-      key: 'foo',
+      key: e.foo,
       version: 0,
       children: [
         {
@@ -226,11 +252,11 @@ test('rangeRefChi', () => {
       version: 0,
       children: [
         // Planned; not yet implemented
-        // { key: '', end: '\u00000kKd--Hzw,\uffff', version: 0 },
+        // { key: MIN_KEY, end: '\u00000kKd--Hzw,\uffff', version: 0 },
         {
           key: '\u00000kKd--Hzw-',
           version: 0,
-          children: [{ key: 'foo', version: 0, value: 1 }],
+          children: [{ key: e.foo, version: 0, value: 1 }],
         },
         // Planned; not yet implemented
         // {
@@ -241,7 +267,7 @@ test('rangeRefChi', () => {
         {
           key: '\u00000kKd--I-',
           version: 0,
-          children: [{ key: 'foo', version: 0, value: 2 }],
+          children: [{ key: e.foo, version: 0, value: 2 }],
         },
       ],
       prefix: true,
@@ -264,12 +290,12 @@ test('rangeRefCursor', () => {
         {
           key: '\u00000kKd--Hzw-',
           version: 0,
-          children: [{ key: 'foo', version: 0, value: 1 }],
+          children: [{ key: e.foo, version: 0, value: 1 }],
         },
         {
           key: '\u00000kKd--I-',
           version: 0,
-          children: [{ key: 'foo', version: 0, value: 2 }],
+          children: [{ key: e.foo, version: 0, value: 2 }],
         },
       ],
       prefix: true,
@@ -280,14 +306,18 @@ test('rangeRefCursor', () => {
 });
 
 test('emptyString', () => {
-  expect(encodeGraph({ $key: '', $val: 4 }, 0)).toEqual([
-    { key: '', version: 0, value: 4 },
+  expect(encodeGraph({ $key: MIN_KEY, $val: 4 }, 0)).toEqual([
+    { key: MIN_KEY, version: 0, value: 4 },
   ]);
 });
 
 test('ranges', () => {
   expect(encodeGraph({ foo: [{ $key: { $until: 'a' } }] }, 0)).toEqual([
-    { key: 'foo', version: 0, children: [{ key: '', end: 'a', version: 0 }] },
+    {
+      key: 'foo',
+      version: 0,
+      children: [{ key: MIN_KEY, end: 'a', version: 0 }],
+    },
   ]);
 });
 
@@ -298,14 +328,14 @@ test('emptyNestedObjects', () => {
 test('cursor_only', () => {
   expect(encodeGraph([{ $key: { $cursor: ['a'] }, name: 'A' }], 0)).toEqual([
     {
-      key: '',
+      key: MIN_KEY,
       prefix: true,
       version: 0,
       children: [
         {
-          key: '\x000VKW',
+          key: d('0VKW'),
           version: 0,
-          children: [{ key: 'name', version: 0, value: 'A' }],
+          children: [{ key: e.name, version: 0, value: 'A' }],
         },
       ],
     },

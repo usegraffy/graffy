@@ -31,12 +31,14 @@ export default function decorate(rootGraph, rootQuery) {
       const [range, filter] = splitRef($ref);
       const path = encodePath($ref);
       const targetPlumGraph = unwrap(rootGraph, path);
-      if (range) targetPlumGraph[PRE] = filter;
-      graph = construct(
-        targetPlumGraph,
-        range ? { $key: range, ...props } : props,
-      );
-      Object.defineProperty(graph, '$ref', { value: $ref });
+      if (targetPlumGraph) {
+        if (range) targetPlumGraph[PRE] = filter;
+        graph = construct(
+          targetPlumGraph,
+          range ? { $key: range, ...props } : props,
+        );
+        Object.defineProperty(graph, '$ref', { value: $ref });
+      }
     } else if (Array.isArray(query)) {
       let pageKey;
       graph = query.flatMap((item, i) => {
