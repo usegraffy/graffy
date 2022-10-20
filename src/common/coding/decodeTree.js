@@ -1,6 +1,6 @@
 import { decode as decodeArgs, splitArgs } from './args.js';
 import { decode as decodePath } from './path.js';
-import { isEmpty, isDef, isMinKey, isMaxKey } from '../util.js';
+import { isEmpty, isDef, isMinKey, isMaxKey, cmp } from '../util.js';
 import { keyAfter } from '../ops/index.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
@@ -31,16 +31,25 @@ function decode(nodes = [], { isGraph } = {}) {
     function addPutRange({ key, end }) {
       if (lastNode) {
         if (lastNode.end) {
-          if (key === keyAfter(lastNode.end)) {
+          console.log({
+            key,
+            end,
+            lastNode,
+            kale: keyAfter(lastNode.end),
+            cmp: cmp(key, keyAfter(lastNode.end)),
+          });
+          if (cmp(key, keyAfter(lastNode.end)) === 0) {
             lastNode.end = end || key;
-            return end && end !== key;
+            return end && cmp(end, key) !== 0;
           }
         } else {
-          if (key === keyAfter(lastNode.key)) key = lastNode.key;
+          if (cmp(key, keyAfter(lastNode.key)) === 0) {
+            key = lastNode.key;
+          }
         }
       }
 
-      if (end && key !== end) {
+      if (end && cmp(key, end) !== 0) {
         lastNode = { key, end };
         putRanges.push(lastNode);
         return true;
@@ -157,7 +166,9 @@ function decode(nodes = [], { isGraph } = {}) {
     Only for graphs;
   */
   function decodeRangeNode(node) {
-    if (node.key === node.end) return { $key: decodeArgs({ key: node.key }) };
+    if (cmp(node.key, node.end) === 0) {
+      return { $key: decodeArgs({ key: node.key }) };
+    }
   }
 
   function decodeLinkNode(node) {

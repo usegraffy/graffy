@@ -10,7 +10,7 @@ import {
   decode as decodeArgs,
 } from './args.js';
 import { unwrap, getNodeValue, IS_VAL } from '../ops/index.js';
-import { isDef, isPlainObject, isEmpty } from '../util.js';
+import { isDef, isPlainObject, isEmpty, isMinKey } from '../util.js';
 import { isRange, findFirst } from '../node/index.js';
 
 const REF = Symbol();
@@ -143,7 +143,7 @@ export default function decorate(rootGraph, rootQuery) {
       // console.log('descending into filter', filter, children);
       children = descend(children, filter);
       // console.log('descended into filter', filter, children);}
-    } else if (children[0].key === '' && children[0].prefix) {
+    } else if (isMinKey(children[0].key) && children[0].prefix) {
       // console.log('No-filter descending', children, $key);
       children = descend(children, '');
       // console.log('No-filter descended', children);

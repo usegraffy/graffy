@@ -1,3 +1,4 @@
+import { MAX_KEY, MIN_KEY } from '@graffy/common';
 import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import { encodeGraph, encodeQuery } from '@graffy/common';
@@ -47,7 +48,7 @@ describe('changes', () => {
   });
 
   test('simple-empty', async () => {
-    backend.write([{ key: '', end: '\uffff', version: 0 }]);
+    backend.write([{ key: MIN_KEY, end: MAX_KEY, version: 0 }]);
     const subscription = g.call('watch', encodeQuery({ foo: { a: 1 } }, 0), {
       raw: true,
     });
@@ -519,11 +520,11 @@ describe('values', () => {
     await expectNext(
       subscription,
       // prettier-ignore
-      [{ key: 'users', version: 1, children: encodeGraph({
+      [{ key: e.users, version: 1, children: encodeGraph({
           '1': { name: 'alice' },
           '3': { name: 'carol' },
         }, 0)},
-        { key: 'usersByAge', version: 1, children: encodeGraph([
+        { key: e.usersByAge, version: 1, children: encodeGraph([
           { $key: ['4'], $ref: ['users', '1'] },
           { $key: { $after: ['4'], $before: ['5'] } },
           { $key: ['5'], $ver: 1 },

@@ -4,22 +4,22 @@ test('getKnown', () => {
   expect(
     getKnown([
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 255, version: 3 },
-          { key: 'bat', end: 'baw', version: 3 },
-          { key: 'baz', end: 'baz', version: 4 },
+          { key: e.bar, value: 255, version: 3 },
+          { key: e.bat, end: e.baw, version: 3 },
+          { key: e.baz, end: e.baz, version: 4 },
         ],
         version: 0,
       },
     ]),
   ).toEqual([
     {
-      key: 'foo',
+      key: e.foo,
       children: [
-        { key: 'bar', value: 1, version: 0 },
-        { key: 'bat', end: 'baw', value: 1, version: 0 },
-        { key: 'baz', value: 1, version: 0 },
+        { key: e.bar, value: 1, version: 0 },
+        { key: e.bat, end: e.baw, value: 1, version: 0 },
+        { key: e.baz, value: 1, version: 0 },
       ],
       version: 0,
     },

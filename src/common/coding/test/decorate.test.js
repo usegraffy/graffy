@@ -1,3 +1,6 @@
+import { e } from '@graffy/testing/encoder.js';
+import { MAX_KEY, MIN_KEY } from '../../util.js';
+import { keyAfter as aft, keyBefore as bef } from '../../ops/step.js';
 import decorate from '../decorate.js';
 import { encodeGraph } from '../encodeTree.js';
 
@@ -27,8 +30,8 @@ describe('pagination', () => {
   test('backward_mid', () => {
     const result = decorate(
       [
-        { key: 'foo', value: 123, version: 1 },
-        { key: 'foo\0', end: '\uffff', version: 1 },
+        { key: e.foo, value: 123, version: 1 },
+        { key: aft(e.foo), end: MAX_KEY, version: 1 },
       ],
       [{ $key: { $first: 10, $since: 'foo' } }],
     );
@@ -46,8 +49,8 @@ describe('pagination', () => {
   test('forward_end', () => {
     const result = decorate(
       [
-        { key: 'foo', value: 123, version: 1 },
-        { key: 'foo\0', end: '\uffff', version: 1 },
+        { key: e.foo, value: 123, version: 1 },
+        { key: aft(e.foo), end: MAX_KEY, version: 1 },
       ],
       [{ $key: { $first: 10, $since: 'foo' } }],
     );
@@ -65,8 +68,8 @@ describe('pagination', () => {
   test('backward_start', () => {
     const result = decorate(
       [
-        { key: '', end: 'fon\uffff', version: 1 },
-        { key: 'foo', value: 123, version: 1 },
+        { key: MIN_KEY, end: bef(e.foo), version: 1 },
+        { key: e.foo, value: 123, version: 1 },
       ],
       [{ $key: { $last: 10, $until: 'foo' } }],
     );
@@ -84,8 +87,8 @@ describe('pagination', () => {
   test('forward_end', () => {
     const result = decorate(
       [
-        { key: '', end: 'fon\uffff', version: 1 },
-        { key: 'foo', value: 123, version: 1 },
+        { key: MIN_KEY, end: bef(e.foo), version: 1 },
+        { key: e.foo, value: 123, version: 1 },
       ],
       [{ $key: { $last: 10, $until: 'foo' } }],
     );
@@ -104,15 +107,15 @@ describe('pagination', () => {
     const result = decorate(
       [
         {
-          key: 'baz',
+          key: e.baz,
           version: 0,
           children: [
-            { key: '', end: '\x000VKV￿', version: 0 },
+            { key: MIN_KEY, end: '\x000VKV￿', version: 0 },
             { key: '\x000VKW', version: 0, path: ['foo'] },
             { key: '\x000VKW\x00', end: '￿', version: 0 },
           ],
         },
-        { key: 'foo', version: 0, value: 42 },
+        { key: e.foo, version: 0, value: 42 },
       ],
       { baz: [{ $key: { $first: 2 } }] },
     );
@@ -157,7 +160,7 @@ test('alias', () => {
   const result = decorate(
     [
       {
-        key: 'foo',
+        key: e.foo,
         version: 0,
         children: [
           {
@@ -165,11 +168,11 @@ test('alias', () => {
             version: 0,
             prefix: true,
             children: [
-              { key: '', end: '\x000Azj￿', version: 1628955868126 },
+              { key: MIN_KEY, end: '\x000Azj￿', version: 1628955868126 },
               {
                 key: '\x000Azk',
                 version: 1628955868126,
-                children: [{ key: 'x', version: 1628955868126, value: 100 }],
+                children: [{ key: e.x, version: 1628955868126, value: 100 }],
               },
               {
                 key: '\x000Azk\x00',
@@ -179,7 +182,7 @@ test('alias', () => {
               {
                 key: '\x000B-',
                 version: 1628955868126,
-                children: [{ key: 'x', version: 1628955868126, value: 200 }],
+                children: [{ key: e.x, version: 1628955868126, value: 200 }],
               },
             ],
           },

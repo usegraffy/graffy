@@ -31,7 +31,7 @@ function encodeObject(object) {
 
 const stringifyDescriptor = {
   value: function () {
-    if (this[0] === STR) return decodeString(this.subarray(1));
+    if (this[0] === STR) return '\0' + decodeString(this.subarray(1));
     return '\0' + encodeB64(this);
   },
 };
@@ -58,7 +58,7 @@ export function encode(value) {
   const lastPart = parts[parts.length - 1];
   if (typeof lastPart !== 'number') {
     let end = lastPart.length - 1;
-    while (end && !lastPart[end]) end--;
+    while (end >= 0 && !lastPart[end]) end--;
     parts[parts.length - 1] = lastPart.slice(0, end + 1);
   }
 

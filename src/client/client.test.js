@@ -149,7 +149,7 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     });
     expect(requestInit.body).toEqual(expect.any(String));
     expect(JSON.parse(requestInit.body)).toEqual([
-      { key: 'demo', version: expect.any(Number), value: 1 },
+      { key: e.demo, version: expect.any(Number), value: 1 },
     ]);
   });
 });

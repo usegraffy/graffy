@@ -18,18 +18,17 @@ export function encode(path) {
   }
 
   function encodeSegment(seg) {
-    if (typeof seg === 'string' || ArrayBuffer.isView(seg)) return seg;
     const { key, end } = encodeArgs(seg);
     if (end) throw 'encodePath.unexpected_range_key';
     return key;
   }
 
-  if (!isPlainObject(path[path.length - 1])) return path.map(encodeSegment);
+  if (isPlainObject(path[path.length - 1])) {
+    const [page, filter = {}] = splitArgs(path[path.length - 1]);
+    if (page) path = path.slice(0, -1).concat([filter]);
+  }
 
-  const [page, filter = {}] = splitArgs(path[path.length - 1]);
-  if (!page) return path.map(encodeSegment);
-
-  return path.slice(0, -1).concat([filter]).map(encodeSegment);
+  return path.map(encodeSegment);
 }
 
 export function decode(path) {

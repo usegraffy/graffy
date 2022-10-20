@@ -9,13 +9,19 @@ import {
   isDef,
   isMaxKey,
   isMinKey,
+  cmp,
 } from '../util.js';
 
 function decodeBound(bound) {
   const { key, step } = keyStep(bound);
   if (isMinKey(key) || isMaxKey(key)) return { step };
-  const value = decodeValue(key);
-  return { key: value, step };
+  try {
+    const value = decodeValue(key);
+    return { key: value, step };
+  } catch (e) {
+    console.log('Decoding failed', typeof key, key);
+    throw e;
+  }
 }
 
 const pageProps = {
@@ -77,7 +83,7 @@ export function encode(arg) {
 }
 
 export function decode(node) {
-  if (typeof node === 'string') return node;
+  if (typeof node === 'string') throw Error('why?');
   const { key, end, limit } = node;
 
   errIf('no_key', !isDef(key));
@@ -87,12 +93,13 @@ export function decode(node) {
   if (!isDef(end)) return kParts.key;
 
   const eParts = decodeBound(end);
-  const [lower, upper] = key < end ? [kParts, eParts] : [eParts, kParts];
+  const reverse = cmp(key, end) > 1;
+  const [lower, upper] = reverse ? [eParts, kParts] : [kParts, eParts];
 
   const args = {};
 
   if (limit) {
-    args[key < end ? '$first' : '$last'] = limit;
+    args[reverse ? '$last' : '$first'] = limit;
   } else if (
     lower.key &&
     upper.key &&

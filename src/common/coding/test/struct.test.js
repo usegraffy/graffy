@@ -39,3 +39,5 @@ test('arrayorder', () => {
   expect(encode([15.6, 'abc']) < encode([15.7])).toBe(true);
   expect(encode([15.6, 'abc']) > encode([15.6])).toBe(true);
 });
+
+test('emptystr', () => tryValue(''));

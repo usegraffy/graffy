@@ -9,7 +9,7 @@ export function isMaxKey(key) {
   return key.length === 1 && key[0] === 0xff;
 }
 
-export function err(message, { cause, ...args } = {}) {
+export function err(message, { cause = null, ...args } = {}) {
   const e = new Error(message + (args ? ' ' + JSON.stringify(args) : ''));
   e.cause = cause;
   throw e;
@@ -37,8 +37,19 @@ export function isPlainObject(arg) {
   );
 }
 
-export function isEncodedKey(str) {
-  return str[0] === '\0';
+// export function isEncodedKey(str) {
+//   return str[0] === '\0';
+// }
+
+export function cmp(a, b) {
+  const l = a.length < b.length ? a.length : b.length;
+  for (let i = 0; i < l; i++) {
+    if (a[i] < b[i]) return -1;
+    if (a[i] > b[i]) return 1;
+  }
+  if (a.length < b.length) return -1;
+  if (a.length > b.length) return 1;
+  return 0;
 }
 
 export function find(items, compare, first = 0, last = items.length) {

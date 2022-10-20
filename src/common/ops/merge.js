@@ -1,4 +1,5 @@
 import { isBranch, isRange, findFirst, findLast } from '../node/index.js';
+import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
 import { keyAfter, keyBefore } from './step.js';
 
 export default function merge(current, changes) {
@@ -38,9 +39,9 @@ function mergeRanges(base, node) {
   // eslint-disable-next-line no-param-reassign
   if (node.version < base.version) [node, base] = [base, node];
   return [
-    base.key < node.key && { ...base, end: keyBefore(node.key) },
+    cmp(base.key, node.key) < 0 && { ...base, end: keyBefore(node.key) },
     node,
-    base.end > node.end && { ...base, key: keyAfter(node.end) },
+    cmp(base.end, node.end) > 0 && { ...base, key: keyAfter(node.end) },
   ].filter(Boolean);
 }
 
@@ -50,7 +51,7 @@ export function insertNode(current, change, start = 0) {
   const index = findFirst(current, key, start);
   const node = current[index];
 
-  if (node && node.key <= key) {
+  if (node && cmp(node.key, key) <= 0) {
     // This change overlaps with something that exists.
     return isRange(node)
       ? insertNodeIntoRange(current, index, change)
@@ -69,9 +70,9 @@ function insertNodeIntoRange(current, index, change) {
   if (!newChange) return;
 
   const insertions = [
-    range.key < key && { ...range, end: keyBefore(key) },
+    cmp(range.key, key) < 0 && { ...range, end: keyBefore(key) },
     newChange,
-    range.end > key && { ...range, key: keyAfter(key) },
+    cmp(range.end, key) > 0 && { ...range, key: keyAfter(key) },
   ].filter(Boolean);
   current.splice(index, 1, ...insertions);
 
@@ -102,7 +103,7 @@ function updateNode(current, index, change) {
 function getNewer(node, base) {
   const { version } = base;
   if (isBranch(node)) {
-    const children = [{ key: '', end: '\uffff', version }];
+    const children = [{ key: MIN_KEY, end: MAX_KEY, version }];
     merge(children, node.children);
     return children.length === 1 ? null : { ...node, children };
   } else {

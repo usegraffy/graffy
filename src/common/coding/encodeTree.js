@@ -70,7 +70,7 @@ function encode(value, { version, isGraph } = {}) {
         !isDef(page.$cursor) &&
         ($ref || $val || $chi || $put || !isEmpty(props))
       ) {
-        const node = makeNode({ ...object, $key: filter || '' }, key, ver);
+        const node = makeNode({ ...object, $key: filter || {} }, key, ver);
         // if (!node) console.log(object, filter, key);
         // if (node.children) {
         //   TODO: "finalize" and fill gaps, but don't recurse into children.
@@ -87,7 +87,7 @@ function encode(value, { version, isGraph } = {}) {
       ) {
         const node = makeNode(
           {
-            $key: filter || '',
+            $key: filter || {},
             $chi: [
               { ...object, $key: isDef(page.$cursor) ? page.$cursor : page },
             ],
@@ -185,8 +185,6 @@ function encode(value, { version, isGraph } = {}) {
     if (isGraph && isDef(putQuery)) {
       node.children = finalize(node.children || [], putQuery, node.version);
     }
-
-    // console.log('returning', node);
 
     if (
       // (key === ROOT_KEY || isDef(node.key)) &&
