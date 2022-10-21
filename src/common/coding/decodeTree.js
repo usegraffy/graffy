@@ -31,13 +31,6 @@ function decode(nodes = [], { isGraph } = {}) {
     function addPutRange({ key, end }) {
       if (lastNode) {
         if (lastNode.end) {
-          console.log({
-            key,
-            end,
-            lastNode,
-            kale: keyAfter(lastNode.end),
-            cmp: cmp(key, keyAfter(lastNode.end)),
-          });
           if (cmp(key, keyAfter(lastNode.end)) === 0) {
             lastNode.end = end || key;
             return end && cmp(end, key) !== 0;
@@ -68,8 +61,14 @@ function decode(nodes = [], { isGraph } = {}) {
       else pushResult(decodeLeafNode(node));
     }
 
-    // Use a simplified format if all the keys are numbers or strings.
-    if (allNums || allStrs) {
+    // Use a simplified format if all the keys are strings or it's a plain array.
+    if (
+      allStrs ||
+      (allNums &&
+        putRanges.length === 1 &&
+        cmp(putRanges[0].key, 0) === 0 &&
+        cmp(putRanges[0].end, +Infinity) === 0)
+    ) {
       result = result.reduce(
         (collection, item) => {
           if (Array.isArray(item)) {
@@ -136,10 +135,13 @@ function decode(nodes = [], { isGraph } = {}) {
       throw Error('decode.prefix_without_encoded_child_keys:' + node.key);
     }
 
+    // console.log('Adding $cursor here', { node, children });
+
     for (const child of children) {
       if (typeof child.$key === 'string') {
         throw Error('decode.prefix_with_unencoded_child_key:' + child.$key);
       }
+      console.log('Handle child of prefix');
       if (!splitArgs(child.$key)[0]) {
         // splitArgs returns [page, filter]. If page is blank, it indicates
         // we have a bare cursor.
@@ -159,6 +161,7 @@ function decode(nodes = [], { isGraph } = {}) {
   function decodeLeafNode(node) {
     const child = isGraph ? { $val: node.value } : {};
     child.$key = decodeArgs(node);
+    // console.log('Decoded leaf node', { node, child });
     return child;
   }
 

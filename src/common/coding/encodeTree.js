@@ -1,6 +1,6 @@
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
-import { isEmpty, isDef, isPlainObject } from '../util.js';
+import { isEmpty, isDef, isPlainObject, cmp } from '../util.js';
 import { merge, add, wrap, finalize } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
@@ -95,6 +95,7 @@ function encode(value, { version, isGraph } = {}) {
           key,
           ver,
         );
+        console.log('Constructed prefix node', { object, node });
         node.prefix = true;
         return node;
       }
@@ -129,7 +130,7 @@ function encode(value, { version, isGraph } = {}) {
       const children = $chi
         .map((obj) => makeNode(obj, undefined, ver))
         .filter(Boolean)
-        .sort((a, b) => (a.key <= b.key ? -1 : 1));
+        .sort((a, b) => cmp(a.key, b.key));
 
       if (children.length) {
         node.children = children;

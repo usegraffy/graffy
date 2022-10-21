@@ -1,7 +1,9 @@
-import { decode } from './base64';
+import { decode, encode } from './base64';
 
 export function serialize(obj) {
-  return JSON.stringify(obj).replace(/\uffff/g, '\\uffff');
+  return JSON.stringify(obj, (_key, value) =>
+    ArrayBuffer.isView(value) ? '\0' + encode(value) : value,
+  );
 }
 
 export function deserialize(str) {

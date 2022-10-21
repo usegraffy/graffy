@@ -14,6 +14,7 @@ import {
   decodeGraph,
   mergeObject,
   decodeQuery,
+  cmp,
 } from '@graffy/common';
 import { selectByArgs, selectByIds } from './sql/select';
 import { put, patch, del } from './sql/index.js';
@@ -196,7 +197,7 @@ export default class Db {
       const arg = decodeArgs(node);
 
       if (isRange(node)) {
-        if (node.key === node.end) return del(arg, tableOptions);
+        if (cmp(node.key, node.end) === 0) return del(arg, tableOptions);
         throw Error('pg_write.write_range_unsupported');
       }
 

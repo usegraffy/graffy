@@ -84,7 +84,7 @@ describe('graph', () => {
   });
 
   test('put_partial', () => {
-    roundTrip({ foo: 3, $put: [{ $until: 'goo' }] }, {}, (decoded) => {
+    roundTrip({ foo: 3, $put: [{ $until: 'goo' }] }, { foo: 3 }, (decoded) => {
       expect(decoded.$put).toEqual([{ $until: 'goo' }]);
     });
   });
@@ -110,11 +110,23 @@ describe('graph', () => {
   });
 
   test('refWithProperties', () => {
-    roundTrip({ foo: { $ref: ['bar'], baz: 42 } });
+    roundTrip(
+      { foo: { $ref: ['bar'], baz: 42 } },
+      { foo: {}, bar: { baz: 42 } },
+      (dec) => {
+        expect(dec.foo.$ref).toEqual(['bar']);
+      },
+    );
   });
 
   test('refWithValue', () => {
-    roundTrip({ foo: { $ref: ['bar'], $val: 42 } });
+    roundTrip(
+      { foo: { $ref: ['bar'], $val: 42 } },
+      { foo: {}, bar: 42 },
+      (dec) => {
+        expect(dec.foo.$ref).toEqual(['bar']);
+      },
+    );
   });
 
   test('rangeRef', () => {
@@ -137,15 +149,21 @@ describe('graph', () => {
   });
 
   test('rangeWithChi', () => {
-    roundTrip([
-      {
-        $key: { tag: 'x', $first: 2 },
-        $chi: [
-          { $key: { i: 1 }, foo: 1 },
-          { $key: { i: 2 }, foo: 2 },
-        ],
-      },
-    ]);
+    roundTrip(
+      [
+        {
+          $key: { tag: 'x', $first: 2 },
+          $chi: [
+            { $key: { i: 1 }, foo: 1 },
+            { $key: { i: 2 }, foo: 2 },
+          ],
+        },
+      ],
+      [
+        { $key: { tag: 'x', $cursor: { i: 1 } }, foo: 1 },
+        { $key: { tag: 'x', $cursor: { i: 2 } }, foo: 2 },
+      ],
+    );
   });
 
   test('rangeWithCursor', () => {
@@ -177,58 +195,75 @@ describe('graph', () => {
 });
 
 describe('query', () => {
-  function roundTrip(original) {
+  function roundTrip(original, expected = original, callback = null) {
     const encoded = encodeQuery(original);
     const decoded = decodeQuery(encoded);
-    expect(decoded).toEqual(original);
+    expect(decoded).toEqual(expected);
+    if (callback) callback(decoded);
   }
 
   test('firstN', () => {
-    roundTrip({
-      $key: { $order: ['id'], $first: 3 },
-      name: true,
-    });
+    roundTrip([{ $key: { $order: ['id'], $first: 3 }, name: true }]);
   });
 
-  it('should encode queries', () => {
-    roundTrip({
-      postCount: 1,
-      posts: {
-        $key: { $first: 10, $since: '1984' },
-        title: 1,
-        body: 1,
-        author: { name: 1 },
+  test('sink', () => {
+    roundTrip(
+      {
+        postCount: 1,
+        posts: {
+          $key: { $first: 10, $since: '1984' },
+          title: 1,
+          body: 1,
+          author: { name: 1 },
+        },
+        tags: { $key: { $first: 10 } },
+        reactions: { $key: { $last: 100 } },
       },
-      tags: { $key: { $first: 10 } },
-      reactions: { $key: { $last: 100 } },
-    });
+      {
+        postCount: true,
+        posts: [
+          {
+            $key: { $first: 10, $since: '1984' },
+            title: true,
+            body: true,
+            author: { name: true },
+          },
+        ],
+        tags: [{ $key: { $first: 10 } }],
+        reactions: [{ $key: { $last: 100 } }],
+      },
+    );
   });
 
-  test('rangeRef', () => {
+  test('rangeRef1', () => {
     roundTrip({ foo: [{ $key: { $all: true, tag: 'x' } }] });
   });
 
   test('rangeRef2', () => {
-    roundTrip({ foo: { $key: { $all: true, tag: 'x' } } });
+    roundTrip(
+      { foo: { $key: { $all: true, tag: 'x' } } },
+      { foo: [{ $key: { $all: true, tag: 'x' } }] },
+    );
   });
 
   describe('alias', () => {
     test('simple', () => {
-      roundTrip({ foo: { $ref: ['bar'] } });
+      roundTrip({ foo: { $ref: ['bar'] } }, { bar: true });
     });
 
     test('children', () => {
-      roundTrip({ foo: { $ref: ['bar'], x: true } });
+      roundTrip({ foo: { $ref: ['bar'], x: true } }, { bar: { x: true } });
     });
 
     test('range', () => {
-      roundTrip({
-        foo: { $ref: ['bar', { $first: 4, t: '3' }], x: true },
-      });
+      roundTrip(
+        { foo: { $ref: ['bar', { $first: 4, t: '3' }], x: true } },
+        { bar: [{ $key: { $first: 4, t: '3' }, x: true }] },
+      );
     });
 
     test('emptyNestedObjects', () => {
-      roundTrip({ foo: { bar: { baz: {} } } });
+      roundTrip({ foo: { bar: { baz: {} } } }, {});
     });
   });
 });

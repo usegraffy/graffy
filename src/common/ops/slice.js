@@ -10,6 +10,7 @@ import { keyAfter, keyBefore } from './step.js';
 import { wrap } from './path.js';
 import merge from './merge.js';
 import add from './add.js';
+import { cmp, isMinKey, MAX_KEY, MIN_KEY } from '../util.js';
 
 class Result {
   constructor(root) {
@@ -62,14 +63,14 @@ function sliceNode(graph, query, result) {
   const { key, version } = query;
   const { root } = result;
   // console.log('Slicing', graph, query);
-  if (!graph || graph.key > key || isOlder(graph, version)) {
+  if (!graph || cmp(graph.key, key) > 0 || isOlder(graph, version)) {
     // The node found doesn't match the query or it's too old.
     result.addUnknown(query);
   } else if (isRange(graph)) {
     // The graph is indicating that this value was deleted.
     if (isBranch(query)) {
       const { known } = slice(
-        [{ key: '', end: '\uffff', version: graph.version }],
+        [{ key: MIN_KEY, end: MAX_KEY, version: graph.version }],
         query.children,
       );
       result.addKnown({ key, version: graph.version, children: known });
@@ -101,7 +102,7 @@ function sliceNode(graph, query, result) {
   } else if (isBranch(query)) {
     // One graph is a leaf while the query is a leaf; return null.
     const { known } = slice(
-      [{ key: '', end: '\uffff', version: graph.version }],
+      [{ key: MIN_KEY, end: MAX_KEY, version: graph.version }],
       query.children,
     );
     result.addKnown({ key, version: graph.version, children: known });
@@ -112,22 +113,22 @@ function sliceNode(graph, query, result) {
 
 export function sliceRange(graph, query, result) {
   let { key, end, limit = Infinity, version } = query;
-  const step = key < end ? 1 : -1;
+  const step = cmp(key, end) < 0 ? 1 : -1;
 
   // Prefixes are used to combine filtering and pagination. In schemas where
   // prefixes are expected but a particular graph does not have a filter, it
   // will have a prefix node with an empty string as key.
-  if (graph[0].key === '' && graph[0].prefix && graph[0].children) {
+  if (isMinKey(graph[0].key) && graph[0].prefix && graph[0].children) {
     const { known, unknown } = slice(graph[0].children, [query], result.root);
     if (known) result.addKnown({ ...graph[0], children: known });
     if (unknown) result.addUnknown({ ...query[0], children: unknown });
     return;
   }
 
-  if (key < end) {
-    for (let i = findFirst(graph, key); key <= end && limit > 0; i++) {
+  if (cmp(key, end) < 0) {
+    for (let i = findFirst(graph, key); cmp(key, end) <= 0 && limit > 0; i++) {
       const node = graph[i];
-      if (!node || key < node.key || isOlder(node, version)) break;
+      if (!node || cmp(key, node.key) < 0 || isOlder(node, version)) break;
       if (isRange(node)) {
         result.addKnown(getOverlap(node, key, end));
       } else {
@@ -137,9 +138,13 @@ export function sliceRange(graph, query, result) {
       key = keyAfter(node.end || node.key);
     }
   } else {
-    for (let i = findLast(graph, key) - 1; key >= end && limit > 0; i--) {
+    for (
+      let i = findLast(graph, key) - 1;
+      cmp(key, end) >= 0 && limit > 0;
+      i--
+    ) {
       const node = graph[i];
-      if (!node || key > (node.end || node.key) || isOlder(node, version))
+      if (!node || cmp(key, node.end || node.key) > 0 || isOlder(node, version))
         break;
       if (isRange(node)) {
         result.addKnown(getOverlap(node, end, key));
@@ -150,17 +155,17 @@ export function sliceRange(graph, query, result) {
       key = keyBefore(node.key);
     }
   }
-  if (limit && (step < 0 ? key > end : key < end)) {
+  if (limit && (step < 0 ? cmp(key, end) > 0 : cmp(key, end) < 0)) {
     const unknown = { ...query, key, end, limit };
     result.addUnknown(unknown);
   }
 }
 
 function getOverlap(node, key, end) {
-  if (node.key >= key && node.end <= end) return node;
+  if (cmp(node.key, key) >= 0 && cmp(node.end, end) <= 0) return node;
   return {
     ...node,
-    key: node.key > key ? node.key : key,
-    end: node.end < end ? node.end : end,
+    key: cmp(node.key, key) > 0 ? node.key : key,
+    end: cmp(node.end, end) < 0 ? node.end : end,
   };
 }

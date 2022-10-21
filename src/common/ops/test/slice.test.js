@@ -166,7 +166,7 @@ describe('range', () => {
           { key: e.foo, value: 3, version: 1 },
           { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ end: '', key: e.egg, limit: 3, num: 1, version: 0 }],
+        [{ end: MIN_KEY, key: e.egg, limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
@@ -263,7 +263,7 @@ describe('link', () => {
               { key: e.fuz, value: 43, version: 3 },
             ],
           },
-          { key: e.bat, path: ['bar'], version: 3 },
+          { key: e.bat, path: [e.bar], version: 3 },
         ],
         [
           {
@@ -279,7 +279,7 @@ describe('link', () => {
     ).toEqual({
       known: [
         { key: e.bar, children: [{ key: e.foo, value: 42, version: 3 }] },
-        { key: e.bat, path: ['bar'], version: 3 },
+        { key: e.bat, path: [e.bar], version: 3 },
       ],
       unknown: [
         {
@@ -296,20 +296,20 @@ describe('link', () => {
       slice(
         [
           { key: e.bar, version: 1, value: 25 },
-          { key: e.foo, version: 1, path: ['bar'] },
+          { key: e.foo, version: 1, path: [e.bar] },
         ],
         [{ key: e.foo, version: 0, value: 1 }],
       ).known,
     ).toEqual([
       { key: e.bar, version: 1, value: 25 },
-      { key: e.foo, version: 1, path: ['bar'] },
+      { key: e.foo, version: 1, path: [e.bar] },
     ]);
   });
 
   test('linkBroken', () => {
     expect(
       slice(
-        [{ key: e.bat, path: ['bar'], version: 3 }],
+        [{ key: e.bat, path: [e.bar], version: 3 }],
         [
           {
             key: e.bat,
@@ -322,7 +322,7 @@ describe('link', () => {
         ],
       ),
     ).toEqual({
-      known: [{ key: e.bat, path: ['bar'], version: 3 }],
+      known: [{ key: e.bat, path: [e.bar], version: 3 }],
       unknown: [
         {
           key: e.bar,
@@ -368,7 +368,7 @@ describe('version', () => {
               { key: e.fuz, value: 43, version: 3 },
             ],
           },
-          { key: e.bat, path: ['bar'], version: 1 },
+          { key: e.bat, path: [e.bar], version: 1 },
         ],
         [
           {
@@ -418,8 +418,8 @@ describe('version', () => {
     expect(
       slice(
         [
-          { key: e.bar, version: 0, path: ['foo'] },
-          { key: e.baz, version: 0, path: ['foo'] },
+          { key: e.bar, version: 0, path: [e.foo] },
+          { key: e.baz, version: 0, path: [e.foo] },
           {
             key: e.foo,
             version: 0,
@@ -441,8 +441,8 @@ describe('version', () => {
       ),
     ).toEqual({
       known: [
-        { key: e.bar, version: 0, path: ['foo'] },
-        { key: e.baz, version: 0, path: ['foo'] },
+        { key: e.bar, version: 0, path: [e.foo] },
+        { key: e.baz, version: 0, path: [e.foo] },
         {
           key: e.foo,
           version: 0,

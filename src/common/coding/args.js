@@ -93,7 +93,7 @@ export function decode(node) {
   if (!isDef(end)) return kParts.key;
 
   const eParts = decodeBound(end);
-  const reverse = cmp(key, end) > 1;
+  const reverse = cmp(key, end) > 0;
   const [lower, upper] = reverse ? [eParts, kParts] : [kParts, eParts];
 
   const args = {};
@@ -101,10 +101,8 @@ export function decode(node) {
   if (limit) {
     args[reverse ? '$last' : '$first'] = limit;
   } else if (
-    lower.key &&
-    upper.key &&
-    isMinKey(lower.key) &&
-    isMaxKey(upper.key)
+    (isMinKey(key) && isMaxKey(end)) ||
+    (isMinKey(end) && isMaxKey(key))
   ) {
     args.$all = true;
   }

@@ -16,7 +16,7 @@ export default function setVersion(graph, version) {
 //     let j = i;
 //     do {
 //       j++;
-//     } while (isRange(graph[j]) && graph[j].key === keyAfter(graph[j - 1].end));
+//     } while (isRange(graph[j]) && cmp(graph[j].key , keyAfter(graph[j - 1].end)) === 0);
 //     j = j - 1;
 //     if (j === i) continue;
 //     graph.splice(i, j - i + 1, {
