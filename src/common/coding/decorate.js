@@ -10,7 +10,7 @@ import {
   decode as decodeArgs,
 } from './args.js';
 import { unwrap, getNodeValue, IS_VAL } from '../ops/index.js';
-import { isDef, isPlainObject, isEmpty, isMinKey } from '../util.js';
+import { isDef, isPlainObject, isEmpty, isMinKey, cmp } from '../util.js';
 import { isRange, findFirst } from '../node/index.js';
 
 const REF = Symbol();
@@ -117,7 +117,7 @@ export default function decorate(rootGraph, rootQuery) {
     const node = children[ix];
     if (!node) return;
     if (isRange(node) && node.end >= key) return null;
-    if (node.key !== key) return;
+    if (cmp(node.key, key) !== 0) return;
 
     const result = getValue(node);
     if (node.prefix) result[PRE] = $key;

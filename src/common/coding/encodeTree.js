@@ -95,7 +95,6 @@ function encode(value, { version, isGraph } = {}) {
           key,
           ver,
         );
-        console.log('Constructed prefix node', { object, node });
         node.prefix = true;
         return node;
       }

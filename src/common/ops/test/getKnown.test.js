@@ -1,3 +1,4 @@
+import { e } from '@graffy/testing/encoder.js';
 import getKnown from '../getKnown.js';
 
 test('getKnown', () => {

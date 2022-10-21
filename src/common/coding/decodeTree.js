@@ -141,7 +141,6 @@ function decode(nodes = [], { isGraph } = {}) {
       if (typeof child.$key === 'string') {
         throw Error('decode.prefix_with_unencoded_child_key:' + child.$key);
       }
-      console.log('Handle child of prefix');
       if (!splitArgs(child.$key)[0]) {
         // splitArgs returns [page, filter]. If page is blank, it indicates
         // we have a bare cursor.

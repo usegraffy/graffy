@@ -462,9 +462,9 @@ test('prefix', () => {
           version: 0,
           children: [
             {
-              key: '(tag:x)',
+              key: e['(tag:x)'],
               version: 0,
-              path: ['posts', '(favs:true,tag:x)'],
+              path: [e.posts, e['(favs:true,tag:x)']],
               prefix: true,
             },
           ],
@@ -476,7 +476,7 @@ test('prefix', () => {
           version: 0,
           children: [
             {
-              key: '(tag:x)',
+              key: e['(tag:x)'],
               version: 0,
               children: [
                 {
@@ -499,9 +499,9 @@ test('prefix', () => {
         version: 0,
         children: [
           {
-            key: '(tag:x)',
+            key: e['(tag:x)'],
             version: 0,
-            path: ['posts', '(favs:true,tag:x)'],
+            path: [e.posts, e['(favs:true,tag:x)']],
             prefix: true,
           },
         ],
@@ -513,7 +513,7 @@ test('prefix', () => {
         version: 0,
         children: [
           {
-            key: '(favs:true,tag:x)',
+            key: e['(favs:true,tag:x)'],
             version: 0,
             prefix: true,
             children: [

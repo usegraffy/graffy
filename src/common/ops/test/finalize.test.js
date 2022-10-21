@@ -1,5 +1,7 @@
 import { e } from '@graffy/testing/encoder.js';
 import { MAX_KEY, MIN_KEY } from '../../util.js';
+import { keyAfter as aft, keyBefore as bef } from '../step.js';
+
 import finalize from '../finalize';
 
 test('prefix-regression', () => {
@@ -15,15 +17,15 @@ test('prefix-regression', () => {
               version: 0,
               children: [
                 {
-                  key: '\x000VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ',
+                  key: e['0VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ'],
                   version: 0,
-                  path: ['users', 'f77cecc8-fac5-46c5-a277-4d470f9354f9'],
+                  path: [e.users, e['f77cecc8-fac5-46c5-a277-4d470f9354f9']],
                 },
               ],
               prefix: true,
             },
             {
-              key: 'f77cecc8-fac5-46c5-a277-4d470f9354f9',
+              key: e['f77cecc8-fac5-46c5-a277-4d470f9354f9'],
               version: 0,
               children: [{ key: e.name, version: 0, value: 'A' }],
             },
@@ -57,16 +59,20 @@ test('prefix-regression', () => {
           children: [
             {
               key: MIN_KEY,
-              end: '\x000VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIY\uffff',
+              end: bef(
+                e['0VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ'],
+              ),
               version: 0,
             },
             {
-              key: '\x000VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ',
+              key: e['0VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ'],
               version: 0,
-              path: ['users', 'f77cecc8-fac5-46c5-a277-4d470f9354f9'],
+              path: [e.users, e['f77cecc8-fac5-46c5-a277-4d470f9354f9']],
             },
             {
-              key: '\x000VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ\x00',
+              key: aft(
+                e['0VJsOL7rD24WOXpYDL4aAIGaCLBhDL3tOXorCI4WBaNkCa8ZCIZ'],
+              ),
               end: MAX_KEY,
               version: 0,
             },
@@ -74,7 +80,7 @@ test('prefix-regression', () => {
           prefix: true,
         },
         {
-          key: 'f77cecc8-fac5-46c5-a277-4d470f9354f9',
+          key: e['f77cecc8-fac5-46c5-a277-4d470f9354f9'],
           version: 0,
           children: [{ key: e.name, version: 0, value: 'A' }],
         },

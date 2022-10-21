@@ -33,6 +33,8 @@ const stringifyDescriptor = {
     let str = '';
     let bull = false;
 
+    if (!this.forEach) return '';
+
     this.forEach((value, i) => {
       if (value >= 32 && value <= 126) {
         str += String.fromCharCode(value);

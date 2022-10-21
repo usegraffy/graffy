@@ -1,5 +1,6 @@
 import { isBranch } from '../node/index.js';
 import { find } from '../util.js';
+import { cmp as compareKey } from '../util.js';
 
 export default function add(base, diff) {
   let changed = false;
@@ -50,14 +51,16 @@ export default function add(base, diff) {
 function compare(node) {
   return (item) => {
     const v =
-      compareValue(item.key, node.key) ||
-      compareValue(item.end, node.end) ||
+      compareKey(item.key, node.key) ||
+      compareValue(!!item.end, !!node.end) ||
+      (item.end && compareKey(item.end, node.end)) ||
       compareValue(item.limit, node.limit);
     return v;
   };
 }
 
 function compareValue(a, b) {
+  // if (ArrayBuffer.isView(a) && ArrayBuffer.isView(b)) return compareKey(a, b);
   if (a === b) return 0;
   return a < b ? -1 : 1;
 }
