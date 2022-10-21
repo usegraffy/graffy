@@ -98,7 +98,7 @@ export default class Graffy {
     const rootQuery = wrapObject(porcelainQuery, path);
     const query = encodeQuery(rootQuery);
     const result = await this.core.call('read', query, options || {});
-    return unwrapObject(decorate(result, rootQuery), decodePath(path));
+    return unwrapObject(decorate(result, rootQuery), path);
   }
 
   watch(...args) {
@@ -107,7 +107,7 @@ export default class Graffy {
     const query = encodeQuery(rootQuery);
     const stream = this.core.call('watch', query, options || {});
     return mapStream(stream, (value) =>
-      unwrapObject(decorate(value, rootQuery), decodePath(path)),
+      unwrapObject(decorate(value, rootQuery), path),
     );
   }
 
@@ -115,6 +115,6 @@ export default class Graffy {
     const [path, porcelainChange, options] = validateCall(...args);
     const change = encodeGraph(wrapObject(porcelainChange, path));
     const writtenChange = await this.core.call('write', change, options || {});
-    return unwrapObject(decodeGraph(writtenChange), decodePath(path));
+    return unwrapObject(decodeGraph(writtenChange), path);
   }
 }

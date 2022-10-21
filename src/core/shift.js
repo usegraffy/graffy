@@ -1,4 +1,11 @@
-import { wrap, unwrap, remove, merge, mergeStreams } from '@graffy/common';
+import {
+  wrap,
+  unwrap,
+  remove,
+  merge,
+  mergeStreams,
+  encodePath,
+} from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 // import { format } from '@graffy/testing';
 
@@ -9,6 +16,7 @@ async function mapStream(stream, fn) {
 }
 
 export function shiftFn(fn, path) {
+  path = encodePath(path);
   return async function shiftedFn(payload, options, next) {
     let nextCalled = false;
     let remainingNextResult;
@@ -49,6 +57,7 @@ export function shiftFn(fn, path) {
 // TODO: Provider calling next in a subscription function is not tested.
 
 export function shiftGen(fn, path) {
+  path = encodePath(path);
   return async function* shiftedGen(payload, options, next) {
     let nextCalled = false;
     let remainingNextStream;
@@ -61,6 +70,7 @@ export function shiftGen(fn, path) {
       const nextPayload = wrap(unwrappedNextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
 
+      /** @type {Function} */
       let pushRemaining;
       remainingNextStream = makeStream((push) => {
         pushRemaining = push;
