@@ -72,3 +72,37 @@ export function find(items, compare, first = 0, last = items.length) {
 
   return currentFirst;
 }
+
+const stringifyDescriptor = {
+  value: function () {
+    if (this?.length === 0) return '\u00b7';
+    let str = '';
+    let bull = false;
+
+    this?.forEach?.((value, i) => {
+      if (value >= 32 && value <= 126) {
+        str += String.fromCharCode(value);
+        bull = true;
+      } else {
+        str +=
+          (bull ? '\u00b7' : '') +
+          ('0' + value.toString(16)).slice(-2) +
+          (i < this.length - 1 ? '\u00b7' : '');
+        bull = false;
+      }
+    });
+    return str;
+  },
+};
+
+export function addStringify(buffer) {
+  Object.defineProperties(buffer, {
+    // toJSON: stringifyDescriptor,
+    toString: stringifyDescriptor,
+    [Symbol.for('nodejs.util.inspect.custom')]: stringifyDescriptor,
+  });
+  return buffer;
+}
+
+addStringify(MIN_KEY);
+addStringify(MAX_KEY);

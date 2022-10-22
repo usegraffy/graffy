@@ -1,6 +1,6 @@
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
-import { isEmpty, isDef, isPlainObject, cmp } from '../util.js';
+import { isEmpty, isDef, isPlainObject, cmp, MIN_KEY } from '../util.js';
 import { merge, add, wrap, finalize } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
@@ -71,10 +71,7 @@ function encode(value, { version, isGraph } = {}) {
         ($ref || $val || $chi || $put || !isEmpty(props))
       ) {
         const node = makeNode({ ...object, $key: filter || {} }, key, ver);
-        // if (!node) console.log(object, filter, key);
-        // if (node.children) {
-        //   TODO: "finalize" and fill gaps, but don't recurse into children.
-        // }
+        if (!filter) node.key = MIN_KEY;
         node.prefix = true;
         // console.log('Early Returning', node);
         return node;
@@ -95,6 +92,7 @@ function encode(value, { version, isGraph } = {}) {
           key,
           ver,
         );
+        if (!filter) node.key = MIN_KEY;
         node.prefix = true;
         return node;
       }

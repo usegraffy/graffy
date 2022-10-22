@@ -4,6 +4,7 @@ import Graffy from '@graffy/core';
 import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
+import { e } from '@graffy/testing/encoder.js';
 
 const expectNext = async (subscription, expected, version = 0) => {
   // console.log('assert', expected);

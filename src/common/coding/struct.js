@@ -1,5 +1,6 @@
 import { encode as encodeString, decode as decodeString } from './string.js';
 import { encode as encodeNumber, decode as decodeNumber } from './number.js';
+import { addStringify } from '../util.js';
 
 export const END = 0;
 export const NULL = 1;
@@ -27,29 +28,6 @@ function encodeObject(object) {
     END,
   ];
 }
-
-const stringifyDescriptor = {
-  value: function () {
-    let str = '';
-    let bull = false;
-
-    if (!this.forEach) return '';
-
-    this.forEach((value, i) => {
-      if (value >= 32 && value <= 126) {
-        str += String.fromCharCode(value);
-        bull = true;
-      } else {
-        str +=
-          (bull ? '\u00b7' : '') +
-          ('0' + value.toString(16)).slice(-2) +
-          (i < this.length ? '\u00b7' : '');
-        bull = false;
-      }
-    });
-    return str;
-  },
-};
 
 function encodeParts(value) {
   if (value === null) return [NULL];
@@ -93,12 +71,7 @@ export function encode(value) {
     }
   }
 
-  Object.defineProperties(buffer, {
-    toJSON: stringifyDescriptor,
-    toString: stringifyDescriptor,
-    [Symbol.for('nodejs.util.inspect.custom')]: stringifyDescriptor,
-  });
-
+  addStringify(buffer);
   return buffer;
 }
 

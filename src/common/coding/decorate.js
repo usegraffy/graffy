@@ -10,7 +10,14 @@ import {
   decode as decodeArgs,
 } from './args.js';
 import { unwrap, getNodeValue, IS_VAL } from '../ops/index.js';
-import { isDef, isPlainObject, isEmpty, isMinKey, cmp } from '../util.js';
+import {
+  isDef,
+  isPlainObject,
+  isEmpty,
+  isMinKey,
+  cmp,
+  MIN_KEY,
+} from '../util.js';
 import { isRange, findFirst } from '../node/index.js';
 
 const REF = Symbol();
@@ -69,9 +76,10 @@ export default function decorate(rootGraph, rootQuery) {
             const $key = decodeArgs(node);
             const subResult = construct(getValue(node), subQuery);
             if (typeof subResult === 'object') {
-              subResult.$key = children[PRE]
-                ? { ...children[PRE], $cursor: $key }
-                : $key;
+              subResult.$key =
+                children[PRE] && !isMinKey(children[PRE])
+                  ? { ...children[PRE], $cursor: $key }
+                  : $key;
             }
             return subResult;
           });
@@ -110,9 +118,8 @@ export default function decorate(rootGraph, rootQuery) {
   }
 
   function descend(children, $key) {
-    const { key } = encodeArgs($key);
+    const key = ArrayBuffer.isView($key) ? $key : encodeArgs($key).key;
     if (!Array.isArray(children)) return null;
-    // console.log('descending', children, $key);
     const ix = findFirst(children, key);
     const node = children[ix];
     if (!node) return;
@@ -140,20 +147,16 @@ export default function decorate(rootGraph, rootQuery) {
   function slice(children, $key) {
     const [range, filter] = splitArgs($key);
     if (isDef(filter)) {
-      // console.log('descending into filter', filter, children);
       children = descend(children, filter);
-      // console.log('descended into filter', filter, children);}
     } else if (isMinKey(children[0].key) && children[0].prefix) {
-      // console.log('No-filter descending', children, $key);
-      children = descend(children, '');
-      // console.log('No-filter descended', children);
+      children = descend(children, MIN_KEY);
     }
 
     const { key, end, limit = Infinity } = encodeArgs(range);
     const ix = findFirst(children, key);
     let i = ix;
     let result;
-    if (key < end) {
+    if (cmp(key, end) < 0) {
       for (let n = 0; i < children.length && n < limit; i++) {
         if (!isRange(children[i])) n++;
       }

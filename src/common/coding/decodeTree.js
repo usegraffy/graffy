@@ -187,5 +187,6 @@ export function decodeGraph(graph) {
 }
 
 export function decodeQuery(query) {
+  // console.log('DecodeQuery', query);
   return decode(query, { isGraph: false });
 }

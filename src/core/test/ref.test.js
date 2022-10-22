@@ -79,7 +79,6 @@ describe('ref', () => {
           res[id] = { id, name: `User ${id}`, posts };
           return res;
         }, {});
-        // console.log('userProvider', { query, res });
         return res;
       });
 
@@ -94,7 +93,6 @@ describe('ref', () => {
             });
           }
         }
-        // console.log('postProvider', res);
         return res;
       });
 

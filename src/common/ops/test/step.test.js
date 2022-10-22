@@ -24,8 +24,8 @@ describe('keyAfter', () => {
   test('reverse keyBefore', () => {
     expect(keyAfter(a(3, 4, 4, 255))).toEqual(a(3, 4, 5));
   });
-  test('preserve minKey', () => {
-    expect(keyAfter(a())).toEqual(a());
+  test('minKey', () => {
+    expect(keyAfter(a())).toEqual(a(0));
   });
   test('preserve maxKey', () => {
     expect(keyAfter(a(255))).toEqual(a(255));

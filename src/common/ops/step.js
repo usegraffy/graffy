@@ -1,4 +1,4 @@
-import { isMaxKey, isMinKey } from '../util';
+import { addStringify, isMaxKey, isMinKey } from '../util';
 
 export function keyStep(key) {
   if (isMinKey(key)) return { key, step: 1 };
@@ -30,11 +30,12 @@ export function keyBefore(key) {
     newKey[l]--;
     newKey[l + 1] = 0xff;
   }
+  addStringify(newKey);
   return newKey;
 }
 
 export function keyAfter(key) {
-  if (isMinKey(key) || isMaxKey(key)) return key;
+  if (isMaxKey(key)) return key;
 
   const l = key.length - 1;
   let newKey;
@@ -46,5 +47,6 @@ export function keyAfter(key) {
     newKey.set(key, 0);
     newKey[l + 1] = 0;
   }
+  addStringify(newKey);
   return newKey;
 }

@@ -1,7 +1,7 @@
 import { isPlainObject } from '@graffy/common';
 
 const splitPath = (path) =>
-  Array.isArray(path) ? path : String(path).split('.');
+  Array.isArray(path) ? path : path === '' ? [] : String(path).split('.');
 
 /*
 any -> payload

@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
-import { encodeUrl } from '@graffy/common';
+import { deserialize, encodeUrl, serialize } from '@graffy/common';
+import { e } from '@graffy/testing/encoder.js';
 
 jest.unstable_mockModule('./Socket', () => ({
   default: jest.fn(() => ({
@@ -108,7 +109,7 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     expect(fetch).toHaveBeenCalledWith(
       `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
       {
-        body: '[{"key":"demo","version":0,"value":1}]',
+        body: serialize([{ key: e.demo, version: 0, value: 1 }]),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       },
@@ -128,7 +129,10 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     expect(fetch).toHaveBeenCalledWith(
       `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
       {
-        body: '[{"key":"anotherDemo","version":0,"value":2},{"key":"demo","version":0,"value":2}]',
+        body: serialize([
+          { key: e.anotherDemo, version: 0, value: 2 },
+          { key: e.demo, version: 0, value: 2 },
+        ]),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       },
@@ -148,7 +152,7 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
       'Content-Type': 'application/json',
     });
     expect(requestInit.body).toEqual(expect.any(String));
-    expect(JSON.parse(requestInit.body)).toEqual([
+    expect(deserialize(requestInit.body)).toEqual([
       { key: e.demo, version: expect.any(Number), value: 1 },
     ]);
   });
