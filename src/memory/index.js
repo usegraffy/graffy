@@ -6,7 +6,6 @@ import {
   MIN_KEY,
   MAX_KEY,
 } from '@graffy/common';
-// import { debug } from '@graffy/testing';
 
 export default function () {
   return (store) => {

@@ -1,5 +1,5 @@
 import sql, { Sql, raw, join, empty } from 'sql-template-tag';
-import { encodePath, isEmpty } from '@graffy/common';
+import { isEmpty } from '@graffy/common';
 
 /*
   Important: This function assumes that the object's keys are from
@@ -21,7 +21,7 @@ const getJsonBuildValue = (value) => {
 };
 
 export const lookup = (prop) => {
-  const [prefix, ...suffix] = encodePath(prop);
+  const [prefix, ...suffix] = prop.split('.');
   return suffix.length
     ? // @ts-ignore sql-template-tag typedef bug
       sql`"${raw(prefix)}" #> ${suffix}`
@@ -29,7 +29,7 @@ export const lookup = (prop) => {
 };
 
 export const lookupNumeric = (prop) => {
-  const [prefix, ...suffix] = encodePath(prop);
+  const [prefix, ...suffix] = prop.split('.');
   return suffix.length
     ? sql`CASE WHEN "${raw(prefix)}" #> ${
         // @ts-ignore sql-template-tag typedef bug
