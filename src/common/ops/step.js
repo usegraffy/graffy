@@ -5,16 +5,22 @@ export function keyStep(key) {
   if (isMaxKey(key)) return { key, step: -1 };
   const l = key.length - 1;
   let newKey;
+  let step;
   switch (key[l]) {
     case 0:
-      return { key: key.slice(0, l), step: 1 };
+      newKey = key.slice(0, l);
+      step = 1;
+      break;
     case 0xff:
       newKey = key.slice(0, l);
       newKey[l - 1]++;
-      return { key: newKey, step: -1 };
+      step = -1;
+      break;
     default:
-      return { key, step: 0 };
+      newKey = key;
+      step = 0;
   }
+  return { key: addStringify(newKey), step };
 }
 
 export function keyBefore(key) {

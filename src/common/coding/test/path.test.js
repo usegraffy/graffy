@@ -1,10 +1,9 @@
 import { encode, decode } from '../path.js';
 import { decode as decodeB64 } from '../base64.js';
 import { e } from '@graffy/testing/encoder.js';
-// import { stringifyBuffer } from '../struct.js';
+// import { MAX_KEY, MIN_KEY } from '../../util.js';
 
 const binarr = decodeB64('0kKXNM7-0B04V-');
-// binarr.toJSON = binarr.toString = stringifyBuffer;
 
 test('encode_empty_string', () => {
   expect(encode('')).toEqual([]);
@@ -30,9 +29,15 @@ test('decode', () => {
   expect(decode([e.foo, binarr])).toEqual(['foo', { bar: 43 }]);
 });
 
-test('encodeEmptyObject', () => {
-  expect(encode(['foo', { $first: 10 }])).toEqual([e.foo, decodeB64('0k')]);
-});
+// TODO: Implement range paths and remove the prefix:true, splitRef
+// and other similar concepts. And uncomment the following test.
+
+// test('encodeRange', () => {
+//   expect(encode(['foo', { $first: 10 }])).toEqual([
+//     e.foo,
+//     { key: MIN_KEY, end: MAX_KEY, limit: 10 },
+//   ]);
+// });
 
 test('decodeEmptyObject', () => {
   expect(decode([e.foo, decodeB64('0k')])).toEqual(['foo', {}]);

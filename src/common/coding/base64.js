@@ -1,3 +1,4 @@
+import { addStringify } from '../util.js';
 import alpha from './alphabet.js';
 
 function getByte(view, offset) {
@@ -47,5 +48,5 @@ export function decode(string, start = 0) {
     }
   }
 
-  return new Uint8Array(buffer);
+  return addStringify(new Uint8Array(buffer));
 }

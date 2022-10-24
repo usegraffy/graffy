@@ -3,8 +3,13 @@ import { cmp } from '../util.js';
 
 export const IS_VAL = Symbol('IS_VAL');
 
+function makeNode(seg, props) {
+  if (ArrayBuffer.isView(seg)) return { key: seg, ...props };
+  return { ...seg, ...props };
+}
+
 export function wrapValue(value, path, version = 0) {
-  const node = { key: path[path.length - 1], value, version };
+  const node = makeNode(path[path.length - 1], { value, version });
   return wrap([node], path.slice(0, -1), version);
 }
 
@@ -16,14 +21,14 @@ export function wrap(children, path, version = 0, prefix = false) {
 
   // If it is a plain value, make it a value node
   if (!Array.isArray(children)) {
-    children = [{ key: path[i--], value: children, version }];
+    children = [makeNode(path[i--], { value: children, version })];
   } else {
     if (!children.length) return;
-    children = [{ key: path[i--], version, children }];
+    children = [makeNode(path[i--], { children, version })];
   }
 
   if (prefix) children[0].prefix = true;
-  while (i >= 0) children = [{ key: path[i--], version, children }];
+  while (i >= 0) children = [makeNode(path[i--], { children, version })];
   return children;
 }
 
@@ -34,6 +39,7 @@ export function unwrap(tree, path) {
   let node = { children };
   for (let i = 0; i < path.length; i++) {
     const key = path[i];
+    if (!ArrayBuffer.isView(key)) throw Error('unwrap.ranges_unsupported');
     children = node.children;
     if (!children) return null; // This path does not exist.
     node = children[findFirst(children, key)];
