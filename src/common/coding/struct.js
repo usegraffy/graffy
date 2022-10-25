@@ -2,6 +2,13 @@ import { encode as encodeString, decode as decodeString } from './string.js';
 import { encode as encodeNumber, decode as decodeNumber } from './number.js';
 import { addStringify } from '../util.js';
 
+/*
+  Sortable encoding of JSON objects for Graffy keys.
+
+  The constraints are:
+  - Sorting a byte stream should 
+*/
+
 export const END = 0;
 export const NULL = 1;
 export const FALSE = 2;
@@ -10,6 +17,8 @@ export const NUM = 4;
 export const STR = 5;
 export const ARR = 6;
 export const OBJ = 7;
+
+export const EOK = 127; // end-of-key
 
 function encodeArray(array) {
   return [ARR, ...array.flatMap((value) => encodeParts(value)), END];
@@ -43,16 +52,25 @@ function encodeParts(value) {
 export function encode(value) {
   const parts = encodeParts(value);
 
-  // Remove trailing zeros, so keyBefore() can work.
+  // Ensure that there are no trailing zeros, so keyBefore() can work.
   // decode() handles this by assuming as many trailing
   // zeros as necessary.
   while (parts[parts.length - 1] === END) parts.pop();
 
+  // The last byte may occasionally a 0 or 255, which conflicts with keyBefore
+  // and keyAfter. This usually happens when the final part encodes a positive
+  // or negative integer. In such cases, we try to remove trailing zeros, and
+  // if that doesn't do it (we have a trailing 255) we instead append a dummy
+  // suffix that will be ignored by decode.
   const lastPart = parts[parts.length - 1];
   if (typeof lastPart !== 'number') {
     let end = lastPart.length - 1;
     while (end >= 0 && !lastPart[end]) end--;
-    parts[parts.length - 1] = lastPart.slice(0, end + 1);
+    if (lastPart[end] !== 0xff) {
+      parts[parts.length - 1] = lastPart.slice(0, end + 1);
+    } else {
+      parts.push(EOK);
+    }
   }
 
   const length = parts.reduce(
@@ -116,6 +134,8 @@ export function decode(buffer) {
     const type = buffer[i];
     const start = ++i;
     switch (type) {
+      case EOK:
+        return stack[0][0];
       case END:
         popToken();
         break;

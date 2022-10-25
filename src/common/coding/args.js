@@ -15,13 +15,8 @@ import {
 function decodeBound(bound) {
   const { key, step } = keyStep(bound);
   if (isMinKey(key) || isMaxKey(key)) return { step };
-  try {
-    const value = decodeValue(key);
-    return { key: value, step };
-  } catch (e) {
-    console.log('Decoding failed', typeof key, key);
-    throw e;
-  }
+  const value = decodeValue(key);
+  return { key: value, step };
 }
 
 const pageProps = {
@@ -90,7 +85,7 @@ export function decode(node) {
   errIf('limit_without_end', isDef(limit) && !isDef(end));
 
   const kParts = decodeBound(key);
-  if (!isDef(end)) return kParts.key;
+  if (!isDef(end) || cmp(key, end) === 0) return kParts.key;
 
   const eParts = decodeBound(end);
   const reverse = cmp(key, end) > 0;

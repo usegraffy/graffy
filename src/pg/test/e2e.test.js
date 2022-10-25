@@ -202,7 +202,6 @@ describe('pg_e2e', () => {
     });
 
     expect(res6).toEqual([
-      keyref({ email: 'alan@acme.co' }, ['users', id2]),
       {
         $key: id2,
         id: id2,
@@ -215,6 +214,7 @@ describe('pg_e2e', () => {
         },
         version: expect.any(Number),
       },
+      keyref({ email: 'alan@acme.co' }, ['users', id2]),
     ]);
 
     // Seventh, get all users with names starting with "al" (case sensitive)
