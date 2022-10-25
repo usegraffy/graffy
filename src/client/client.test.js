@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
-import { deserialize, encodeUrl, serialize } from '@graffy/common';
+import { deserialize, serialize } from '@graffy/common';
 import { e } from '@graffy/testing/encoder.js';
 
 jest.unstable_mockModule('./Socket', () => ({
@@ -107,7 +107,9 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     await store.read({ demo: 1 });
     expect(getOptions).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledWith(
-      `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
+      `${connectionUrl}?opts=${encodeURIComponent(
+        serialize({ value }),
+      )}&op=read`,
       {
         body: serialize([{ key: e.demo, version: 0, value: 1 }]),
         headers: { 'Content-Type': 'application/json' },
@@ -127,7 +129,9 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     expect(getOptions).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
-      `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
+      `${connectionUrl}?opts=${encodeURIComponent(
+        serialize({ value }),
+      )}&op=read`,
       {
         body: serialize([
           { key: e.anotherDemo, version: 0, value: 2 },
@@ -144,7 +148,9 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     expect(getOptions).toHaveBeenCalled();
     const result = fetch.mock.calls;
     expect(result[0][0]).toBe(
-      `${connectionUrl}?opts=${encodeUrl({ value })}&op=write`,
+      `${connectionUrl}?opts=${encodeURIComponent(
+        serialize({ value }),
+      )}&op=write`,
     );
     const requestInit = result[0][1];
     expect(requestInit.method).toBe('POST');

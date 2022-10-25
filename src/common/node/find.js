@@ -16,7 +16,5 @@ export function findFirst(children, target, first, last) {
 
 export function findLast(children, end, first, last) {
   const ix = findFirst(children, end, first, last);
-  return children[ix] && cmp(children[ix].key, end) <= 0
-    ? ix + 1
-    : ix;
+  return children[ix] && cmp(children[ix].key, end) <= 0 ? ix + 1 : ix;
 }

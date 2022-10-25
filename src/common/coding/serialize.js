@@ -1,4 +1,4 @@
-import { decode, encode } from './base64';
+import { decode, encode } from './base64.js';
 
 export function serialize(obj) {
   return JSON.stringify(obj, (_key, value) => {

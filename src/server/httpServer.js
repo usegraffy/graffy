@@ -1,5 +1,5 @@
 import url from 'url';
-import { decodeUrl, serialize, deserialize } from '@graffy/common';
+import { serialize, deserialize } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:server:http');
@@ -24,7 +24,8 @@ export default function server(store, { auth } = {}) {
       undefined;
 
     if (req.method === 'GET') {
-      const query = parsed.query.q && decodeUrl(parsed.query.q);
+      const query =
+        parsed.query.q && deserialize(decodeURIComponent(parsed.query.q));
       try {
         if (req.headers['accept'] === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');

@@ -4,7 +4,6 @@ import {
   decodeQuery,
   wrapObject,
   unwrapObject,
-  decodePath,
   encodeGraph,
   encodeQuery,
   finalize,

@@ -1,4 +1,3 @@
-export { encode as encodeUrl, decode as decodeUrl } from './url.js';
 export { encode as encodeValue, decode as decodeValue } from './struct.js';
 export {
   encode as encodeArgs,

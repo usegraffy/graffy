@@ -1,4 +1,4 @@
-import { encodeUrl, serialize, deserialize, add } from '@graffy/common';
+import { serialize, deserialize, add } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 function getOptionsParam(options) {
@@ -96,7 +96,9 @@ const httpClient =
       }
       if (!EventSource) throw Error('client.sse.unavailable');
       const optionsParam = getOptionsParam(await getOptions('watch', options));
-      const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
+      const url = `${baseUrl}?q=${encodeURIComponent(
+        serialize(query),
+      )}&opts=${optionsParam}`;
       const source = new EventSource(url);
 
       yield* makeStream((push, end) => {

@@ -1,4 +1,4 @@
-import { addStringify, isMaxKey, isMinKey } from '../util';
+import { addStringify, isMaxKey, isMinKey } from '../util.js';
 
 export function keyStep(key) {
   if (isMinKey(key)) return { key, step: 1 };

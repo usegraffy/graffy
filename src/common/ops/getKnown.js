@@ -3,7 +3,7 @@
   in that graph.
 */
 
-import { cmp } from '../util';
+import { cmp } from '../util.js';
 
 export default function getKnown(graph, version = 0) {
   const query = [];
