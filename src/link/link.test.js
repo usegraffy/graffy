@@ -6,15 +6,6 @@ import { mockBackend } from '@graffy/testing';
 import link from './index.js';
 import { ref, keyref } from '@graffy/testing';
 
-expect.addSnapshotSerializer({
-  test(val) {
-    return ArrayBuffer.isView(val);
-  },
-  serialize(val) {
-    return String(val);
-  },
-});
-
 describe('link', () => {
   let store, backend;
 
@@ -128,8 +119,6 @@ describe('link', () => {
         author: { name: true },
       },
     ]);
-
-    // console.log(res, [res[0].author.$ref]);
 
     expect(res).toEqual([
       ref(['post', 'p01'], {

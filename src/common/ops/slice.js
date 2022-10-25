@@ -50,7 +50,6 @@ export default function slice(graph, query, root) {
       }
     }
     currentQuery = root ? undefined : result.linked;
-    // if (currentQuery) console.log('LINKED', JSON.stringify(result.linked));
     delete result.linked;
   }
   delete result.root;
@@ -58,7 +57,6 @@ export default function slice(graph, query, root) {
 }
 
 function sliceNode(graph, query, result) {
-  // if (result.root === result) console.log('sliceNode', { query, graph });
   const { key, version } = query;
   const { root } = result;
   // console.log('Slicing', graph, query);
@@ -82,13 +80,10 @@ function sliceNode(graph, query, result) {
     if (known) result.addKnown({ ...graph, children: known });
     if (unknown) result.addUnknown({ ...query, children: unknown });
   } else if (isLink(graph)) {
-    // console.log('IS_LINK', JSON.stringify({ graph, query }, null, 2));
     result.addKnown(graph);
     if (graph.prefix && isRange(query)) {
-      // console.log('addLinked1', query);
       result.addLinked(wrap([query], graph.path, version, true));
     } else {
-      // console.log('addLinked2', query.children, query.value);
       result.addLinked(
         wrap(
           query.children || query.value,

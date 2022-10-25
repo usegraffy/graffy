@@ -37,10 +37,6 @@ export function isPlainObject(arg) {
   );
 }
 
-// export function isEncodedKey(str) {
-//   return str[0] === '\0';
-// }
-
 export function cmp(a, b) {
   const l = a.length < b.length ? a.length : b.length;
   for (let i = 0; i < l; i++) {

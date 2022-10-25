@@ -43,8 +43,6 @@ export default function add(base, diff) {
     }
   }
 
-  // console.log('after add', base);
-
   return changed;
 }
 
@@ -60,7 +58,6 @@ function compare(node) {
 }
 
 function compareValue(a, b) {
-  // if (ArrayBuffer.isView(a) && ArrayBuffer.isView(b)) return compareKey(a, b);
   if (a === b) return 0;
   return a < b ? -1 : 1;
 }

@@ -1,15 +1,6 @@
 import { addStringify, MAX_KEY, MIN_KEY } from '../../util.js';
 import { encode, decode } from '../args.js';
 
-expect.addSnapshotSerializer({
-  test(val) {
-    return ArrayBuffer.isView(val);
-  },
-  serialize(val) {
-    return String(val);
-  },
-});
-
 const a = (...n) => addStringify(new Uint8Array(n));
 
 describe('encode', () => {

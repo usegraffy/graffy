@@ -24,14 +24,6 @@ export default (defs) => (store) => {
     const unwrappedQuery = clone(unwrap(query, prefix));
     const usedDefs = prepQueryLinks(unwrappedQuery, defEntries);
 
-    // console.log('prepped query link', {
-    //   prefix,
-    //   defs,
-    //   usedDefs,
-    //   query,
-    //   unwrappedQuery,
-    // });
-
     // Shortcut for queries that don't interact with any links
     if (!usedDefs.length) return next(query, options);
 
@@ -50,7 +42,6 @@ export default (defs) => (store) => {
     log('beforeAddingLinks', prefix, finalizedResult);
     linkGraph(finalizedResult, usedDefs);
     log('afterAddingLinks', prefix, finalizedResult);
-    // console.log({ finalizedResult }, prefix);
     return wrap(finalizedResult, prefix, version);
   });
 };

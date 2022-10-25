@@ -135,8 +135,6 @@ function decode(nodes = [], { isGraph } = {}) {
       throw Error('decode.prefix_without_encoded_child_keys:' + node.key);
     }
 
-    // console.log('Adding $cursor here', { node, children });
-
     for (const child of children) {
       if (typeof child.$key === 'string') {
         throw Error('decode.prefix_with_unencoded_child_key:' + child.$key);
@@ -160,7 +158,6 @@ function decode(nodes = [], { isGraph } = {}) {
   function decodeLeafNode(node) {
     const child = isGraph ? { $val: node.value } : {};
     child.$key = decodeArgs(node);
-    // console.log('Decoded leaf node', { node, child });
     return child;
   }
 
@@ -187,6 +184,5 @@ export function decodeGraph(graph) {
 }
 
 export function decodeQuery(query) {
-  // console.log('DecodeQuery', query);
   return decode(query, { isGraph: false });
 }

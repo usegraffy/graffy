@@ -89,7 +89,6 @@ export default function prepQueryLinks(rootQuery, defs) {
 
     let used = [];
     if (key[0] === '$') {
-      // console.log('Found a placeholder in the middle', { key, query });
       for (const node of query) {
         if (!isBranch(node)) continue;
         let usedHere;
