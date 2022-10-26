@@ -12,6 +12,6 @@ export {
 
 export { default as makeId } from './id.js';
 export { default as decorate } from './decorate.js';
-export * from './serialize.js';
+export * from './pack.js';
 export * from './encodeTree.js';
 export * from './decodeTree.js';

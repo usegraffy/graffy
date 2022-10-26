@@ -1,5 +1,5 @@
 import url from 'url';
-import { serialize, deserialize } from '@graffy/common';
+import { encodeGraph, encodeQuery, pack, unpack } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:server:http');
@@ -17,15 +17,12 @@ export default function server(store, { auth } = {}) {
   return async (req, res) => {
     const parsed = url.parse(req.url, true);
 
-    const options =
-      (parsed.query.opts &&
-        !Array.isArray(parsed.query.opts) &&
-        deserialize(decodeURIComponent(parsed.query.opts))) ||
-      undefined;
+    const optParam = parsed.query.opts && String(parsed.query.opts);
+    const options = optParam && JSON.parse(decodeURIComponent(optParam));
 
     if (req.method === 'GET') {
-      const query =
-        parsed.query.q && deserialize(decodeURIComponent(parsed.query.q));
+      const qParam = parsed.query.q && String(parsed.query.q);
+      const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
       try {
         if (req.headers['accept'] === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');
@@ -47,7 +44,7 @@ export default function server(store, { auth } = {}) {
             });
             for await (const value of stream) {
               if (req.aborted || res.finished) break;
-              res.write(`data: ${serialize(value)}\n\n`);
+              res.write(`data: ${JSON.stringify(pack(value))}\n\n`);
             }
           } catch (e) {
             log(e);
@@ -72,9 +69,16 @@ export default function server(store, { auth } = {}) {
 
         const chunks = [];
         for await (const chunk of req) chunks.push(chunk);
-        const payload = deserialize(Buffer.concat(chunks).toString());
+        const payload = unpack(JSON.parse(Buffer.concat(chunks).toString()));
 
-        if (auth && !(await auth(op, payload, options))) {
+        if (
+          auth &&
+          !(await auth(
+            op,
+            (op === 'write' ? encodeGraph : encodeQuery)(payload),
+            options,
+          ))
+        ) {
           res.writeHead(401);
           res.end('unauthorized');
           return;
@@ -82,7 +86,7 @@ export default function server(store, { auth } = {}) {
 
         const value = await store.call(op, payload, options);
         res.writeHead(200);
-        res.end(serialize(value));
+        res.end(JSON.stringify(pack(value)));
       } catch (e) {
         log(e.message);
         log(e.stack);

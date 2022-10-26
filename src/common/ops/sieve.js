@@ -21,8 +21,8 @@ export function insertRange(current, change, result, start = 0) {
     keyIx === endIx &&
     !(
       current[keyIx] &&
-      cmp(current[keyIx].key, key) <= 0 &&
-      cmp(current[keyIx].end, end) >= 0
+      cmp(current[keyIx].key, end) <= 0 &&
+      cmp(current[keyIx].end || current[keyIx].key, key) >= 0
     )
   ) {
     // This range does not overlap with any existing data. Ignore it.
