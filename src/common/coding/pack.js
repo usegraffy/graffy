@@ -1,4 +1,3 @@
-import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
 import { decode, encode } from './base64.js';
 import { decodeValue, encodeValue } from './index.js';
 import { STR } from './struct.js';
@@ -16,7 +15,7 @@ const props = [
 function serializeKey(key) {
   if (key[0] === STR) {
     const last = key[key.length - 1];
-    if (cmp(last, MIN_KEY) !== 0 && cmp(last, MAX_KEY) !== 0) {
+    if (last !== 0 && last !== 0xff) {
       return decodeValue(key);
     }
   }

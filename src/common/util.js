@@ -93,7 +93,7 @@ const stringifyDescriptor = {
 
 export function addStringify(buffer) {
   Object.defineProperties(buffer, {
-    // toJSON: stringifyDescriptor,
+    toJSON: stringifyDescriptor,
     toString: stringifyDescriptor,
     [Symbol.for('nodejs.util.inspect.custom')]: stringifyDescriptor,
   });
