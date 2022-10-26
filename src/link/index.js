@@ -4,8 +4,8 @@ import {
   finalize,
   add,
   encodePath,
-  deserialize,
-  serialize,
+  pack,
+  unpack,
 } from '@graffy/common';
 import linkGraph from './linkGraph.js';
 import prepQueryLinks from './prepQueryLinks.js';
@@ -48,5 +48,5 @@ export default (defs) => (store) => {
 
 function clone(tree) {
   // TODO: Do better
-  return deserialize(serialize(tree));
+  return unpack(JSON.parse(JSON.stringify(pack(tree))));
 }
