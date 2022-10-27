@@ -1,7 +1,8 @@
+import isEqual from 'lodash/isEqual.js';
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
 import { isEmpty, isDef, isPlainObject, cmp, MIN_KEY } from '../util.js';
-import { merge, add, wrap, finalize } from '../ops/index.js';
+import { merge, add, wrap, finalize, setVersion } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
 
@@ -33,7 +34,7 @@ function encode(value, { version, isGraph } = {}) {
 
   const combine = isGraph ? merge : add;
 
-  function makeNode(object, key, ver) {
+  function makeNode(object, key, ver, parentPuts = []) {
     if (!isDef(object)) return;
     if (typeof object === 'object' && object && isEmpty(object)) return;
 
@@ -62,7 +63,14 @@ function encode(value, { version, isGraph } = {}) {
         Cases 2. and 3. are handled below: Basically we strip out the "page"
         part from the key (leaving only the filter), construct a node with that,
         then add the "prefix" flag to the node.
+
+        The page part is passed as $put for constructing children (when it's a 
+        graph with children)
       */
+
+      const foundPuts = parentPuts
+        .filter(([_, putFilter]) => isEqual(filter, putFilter))
+        .map(([range]) => range);
 
       if (
         isGraph &&
@@ -70,7 +78,11 @@ function encode(value, { version, isGraph } = {}) {
         !isDef(page.$cursor) &&
         ($ref || $val || $chi || $put || !isEmpty(props))
       ) {
-        const node = makeNode({ ...object, $key: filter || {} }, key, ver);
+        const node = makeNode(
+          { ...object, $key: filter || {}, $put: foundPuts },
+          key,
+          ver,
+        );
         if (!filter) node.key = MIN_KEY;
         node.prefix = true;
         // console.log('Early Returning', node);
@@ -88,6 +100,7 @@ function encode(value, { version, isGraph } = {}) {
             $chi: [
               { ...object, $key: isDef(page.$cursor) ? page.$cursor : page },
             ],
+            ...(isGraph ? { $put: foundPuts } : {}),
           },
           key,
           ver,
@@ -100,6 +113,31 @@ function encode(value, { version, isGraph } = {}) {
       // console.log('No prefix made', { key, $key, object });
     }
 
+    let putQuery = [],
+      prefixPuts = [];
+    // If this is a plain array (without keyed objects), we should "put" the
+    // entire positive integer range to give it atomic write behavior.
+    if (Array.isArray(object) && !object.some((it) => isDef(it?.$key))) {
+      putQuery = [encodeArgs({ $since: 0, $until: +Infinity })];
+    }
+
+    function classifyPut(put) {
+      const [range, filter] = splitArgs(put);
+      if (filter) {
+        prefixPuts.push([range, filter]);
+      } else {
+        putQuery.push(encodeArgs(put));
+      }
+    }
+
+    if ($put === true) {
+      putQuery = null;
+    } else if (Array.isArray($put)) {
+      $put.forEach(classifyPut);
+    } else if (isDef($put)) {
+      classifyPut($put);
+    }
+
     if (isDef($key) && (Number.isInteger(key) || !isDef(key))) key = $key;
     const node = key === ROOT_KEY || !isDef(key) ? {} : encodeArgs(key);
     node.version = ver;
@@ -110,7 +148,9 @@ function encode(value, { version, isGraph } = {}) {
       node.end = node.key;
     } else if (isDef($key) && isDef(key) && key !== $key) {
       // An array has been omitted because there is only one child.
-      node.children = [makeNode(object, undefined, ver)].filter(Boolean);
+      node.children = [makeNode(object, undefined, ver, prefixPuts)].filter(
+        Boolean,
+      );
       // We don't want to add a $put at this level.
       return node;
     } else if ($ref) {
@@ -125,7 +165,7 @@ function encode(value, { version, isGraph } = {}) {
       node.value = isGraph || typeof object === 'number' ? object : 1;
     } else if (isDef($chi)) {
       const children = $chi
-        .map((obj) => makeNode(obj, undefined, ver))
+        .map((obj) => makeNode(obj, undefined, ver, prefixPuts))
         .filter(Boolean)
         .sort((a, b) => cmp(a.key, b.key));
 
@@ -134,7 +174,7 @@ function encode(value, { version, isGraph } = {}) {
       }
     } else if (Array.isArray(object)) {
       const children = object
-        .map((obj, i) => makeNode(obj, i, ver))
+        .map((obj, i) => makeNode(obj, i, ver, prefixPuts))
         .filter(Boolean)
         .reduce((acc, it) => {
           combine(acc, [it]);
@@ -165,23 +205,13 @@ function encode(value, { version, isGraph } = {}) {
       }
     }
 
-    let putQuery;
-    // If this is a plain array (without keyed objects), we should "put" the
-    // entire positive integer range to give it atomic write behavior.
-    if (Array.isArray(object) && !object.some((it) => isDef(it?.$key))) {
-      putQuery = [encodeArgs({ $since: 0, $until: +Infinity })];
-    }
-
-    if ($put === true) {
-      putQuery = null;
-    } else if (Array.isArray($put)) {
-      putQuery = $put.map((arg) => encodeArgs(arg));
-    } else if (isDef($put)) {
-      putQuery = [encodeArgs($put)];
-    }
-
-    if (isGraph && isDef(putQuery)) {
-      node.children = finalize(node.children || [], putQuery, node.version);
+    if (isGraph && (putQuery === null || putQuery.length)) {
+      node.children = finalize(
+        node.children || [],
+        putQuery,
+        node.version,
+        true,
+      );
     }
 
     if (
@@ -208,7 +238,7 @@ function encode(value, { version, isGraph } = {}) {
 }
 
 export function encodeGraph(obj, version = Date.now()) {
-  return encode(obj, { version, isGraph: true });
+  return setVersion(encode(obj, { version, isGraph: true }), version);
 }
 
 export function encodeQuery(obj, version = 0) {

@@ -5,6 +5,8 @@ import {
   encodeQuery,
 } from '../index.js';
 
+import { keyref, put } from '@graffy/testing';
+
 describe('graph', () => {
   function roundTrip(original, expected = original, callback = null) {
     const encoded = encodeGraph(original);
@@ -191,6 +193,70 @@ describe('graph', () => {
 
   test('cursor_only', () => {
     roundTrip([{ $key: { $cursor: ['a'] }, name: 'A' }]);
+  });
+
+  const original1 = {
+    tenant: put(
+      [
+        {
+          id: 'bar',
+          name: 'Bar',
+          $key: 'bar',
+        },
+        {
+          id: 'foo',
+          name: 'Foo',
+          $key: 'foo',
+        },
+        keyref({ $order: ['id'], $cursor: ['bar'] }, ['tenant', 'bar']),
+        keyref({ $order: ['id'], $cursor: ['foo'] }, ['tenant', 'foo']),
+
+        // {
+        //   $key: { $order: ['id'], $cursor: ['foo'] },
+        //   $ref: ['tenant', 'foo'],
+        // },
+      ],
+      [{ $order: ['id'], $all: true }],
+    ),
+  };
+
+  const original2 = {
+    tenant: [
+      {
+        id: 'foo',
+        name: 'Foo',
+        $key: 'foo',
+      },
+      {
+        id: 'bar',
+        name: 'Bar',
+        $key: 'bar',
+      },
+      {
+        $key: { $order: ['id'], $all: true },
+        $chi: [
+          { $key: ['foo'], $ref: ['tenant', 'foo'] },
+          { $key: ['bar'], $ref: ['tenant', 'bar'] },
+        ],
+      },
+    ],
+  };
+
+  test('mix cursor and ids 1', () => {
+    roundTrip(original1);
+    // const encoded = encodeGraph(original1, 1);
+    // console.log(encoded);
+    // const decoded = decodeGraph(encoded);
+    // console.log(decoded);
+  });
+
+  test('mix cursor and ids 2', () => {
+    roundTrip(original2, original1);
+
+    // const encoded = encodeGraph(original2, 0);
+    // console.log(encoded);
+    // const decoded = decodeGraph(encoded);
+    // console.log(decoded);
   });
 });
 

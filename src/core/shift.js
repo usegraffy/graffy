@@ -7,7 +7,6 @@ import {
   encodePath,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
-// import { format } from '@graffy/testing';
 
 async function mapStream(stream, fn) {
   for await (const value of stream) {

@@ -4,6 +4,8 @@ import { isEmpty, isDef, isMinKey, isMaxKey, cmp } from '../util.js';
 import { keyAfter } from '../ops/index.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
+const PRE_CHI_PUT = Symbol('PREFIX_CHILDREN_$PUT');
+
 /**
   @param {any[]} nodes
   @param {{ isGraph?: boolean }} options
@@ -24,6 +26,7 @@ function decode(nodes = [], { isGraph } = {}) {
     }
 
     const putRanges = [];
+    const prefixChildPuts = [];
     let lastNode = null;
 
     // Graphs only: Constructs the $put array. Returns true if this is a range
@@ -54,8 +57,13 @@ function decode(nodes = [], { isGraph } = {}) {
 
     for (const node of nodes) {
       if (isGraph && addPutRange(node)) continue;
-      if (isPrefix(node)) pushResult(...decodePrefixNode(node));
-      else if (isGraph && isRange(node)) pushResult(decodeRangeNode(node));
+      if (isPrefix(node)) {
+        const decodedChildren = decodePrefixNode(node);
+        if (PRE_CHI_PUT in decodedChildren) {
+          prefixChildPuts.push(...decodedChildren[PRE_CHI_PUT]);
+        }
+        pushResult(...decodedChildren);
+      } else if (isGraph && isRange(node)) pushResult(decodeRangeNode(node));
       else if (isBranch(node)) pushResult(decodeBranchNode(node));
       else if (isLink(node)) pushResult(decodeLinkNode(node));
       else pushResult(decodeLeafNode(node));
@@ -101,9 +109,13 @@ function decode(nodes = [], { isGraph } = {}) {
         Object.defineProperty(result, '$put', { value: true });
       } else {
         Object.defineProperty(result, '$put', {
-          value: putRanges.map((rNode) => decodeArgs(rNode)),
+          value: putRanges
+            .map((rNode) => decodeArgs(rNode))
+            .concat(prefixChildPuts),
         });
       }
+    } else if (prefixChildPuts.length) {
+      Object.defineProperty(result, '$put', { value: prefixChildPuts });
     }
 
     return result;
@@ -111,7 +123,7 @@ function decode(nodes = [], { isGraph } = {}) {
 
   function decodePrefixNode(node) {
     let args = decodeArgs(node);
-    if (args === '') args = {};
+    if (!args) args = {};
     if (typeof args === 'string') {
       throw Error('decode.unencoded_prefix: ' + args);
     }
@@ -129,6 +141,7 @@ function decode(nodes = [], { isGraph } = {}) {
       return [linkObject];
     }
 
+    /** @type {any[] & {$put?: any}} */
     const children = decodeChildren(node.children);
 
     if (!Array.isArray(children)) {
@@ -146,6 +159,18 @@ function decode(nodes = [], { isGraph } = {}) {
       }
       child.$key = { ...args, ...child.$key };
     }
+
+    if (children.$put === true) {
+      children[PRE_CHI_PUT] = [{ ...args, $all: true }];
+    } else if (Array.isArray(children.$put)) {
+      children[PRE_CHI_PUT] = children.$put.map((rarg) => ({
+        ...args,
+        ...rarg,
+      }));
+    } else if (isDef(children.$put)) {
+      children[PRE_CHI_PUT] = [{ ...args, ...children.$put }];
+    }
+
     return children;
   }
 

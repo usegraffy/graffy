@@ -78,7 +78,6 @@ export function encode(arg) {
 }
 
 export function decode(node) {
-  if (typeof node === 'string') throw Error('why?');
   const { key, end, limit } = node;
 
   errIf('no_key', !isDef(key));

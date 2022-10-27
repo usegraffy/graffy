@@ -31,11 +31,16 @@ export default class Graffy {
     this.core.on(
       'read',
       path,
-      shiftFn(async function porcelainRead(query, options) {
+      shiftFn(async function porcelainRead(query, options, next) {
         // console.log('onRead', path, query);
-        const decoded = decodeQuery(query);
-        // console.log('decoded', path, decoded);
-        const encoded = encodeGraph(await handle(decoded, options));
+        const porcelainQuery = decodeQuery(query);
+        // console.log('porcelainQuery', path, porcelainQuery);
+        const encoded = encodeGraph(
+          await handle(porcelainQuery, options, async (nextQuery, nextOpts) => {
+            const nextResult = await next(encodeQuery(nextQuery), nextOpts);
+            return decodeGraph(nextResult);
+          }),
+        );
         // console.log({ encoded });
         const finalized = finalize(encoded, query);
         // console.log({ finalized });
@@ -52,7 +57,10 @@ export default class Graffy {
       path,
       shiftGen(function porcelainWatch(query, options) {
         return makeStream((push, end) => {
-          const subscription = handle(decodeQuery(query), options);
+          const subscription = handle(decodeQuery(query), options, () => {
+            // TODO: Implement this using mergeStreams
+            throw Error('porcelain.watch_next_unsupported: ' + path);
+          });
           (async function () {
             try {
               let firstValue = (await subscription.next()).value;
@@ -76,8 +84,17 @@ export default class Graffy {
     this.core.on(
       'write',
       path,
-      shiftFn(async function porcelainWrite(change, options) {
-        return encodeGraph(await handle(decodeGraph(change), options));
+      shiftFn(async function porcelainWrite(change, options, next) {
+        return encodeGraph(
+          await handle(
+            decodeGraph(change),
+            options,
+            async (nextChange, nextOpts) => {
+              const nextResult = await next(encodeGraph(nextChange), nextOpts);
+              return decodeGraph(nextResult);
+            },
+          ),
+        );
       }, path),
     );
   }

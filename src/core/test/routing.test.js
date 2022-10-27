@@ -126,5 +126,9 @@ test('option_update', async () => {
   g.onRead(provider2);
 
   g.read({ foo: true });
-  expect(provider2).toBeCalledWith({ foo: true }, { opt: 1 });
+  expect(provider2).toBeCalledWith(
+    { foo: true },
+    { opt: 1 },
+    expect.any(Function),
+  );
 });

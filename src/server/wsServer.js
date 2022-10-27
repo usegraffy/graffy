@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { pack, unpack } from '@graffy/common';
-// import { format } from '@graffy/testing';
+
 import debug from 'debug';
 
 const log = debug('graffy:server:ws');
