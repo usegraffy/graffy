@@ -2,7 +2,6 @@ import { merge, slice, sieve, add, finalize } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 import debug from 'debug';
 
-
 const log = debug('graffy:fill:subscribe');
 
 export default function subscribe(store, originalQuery, { raw }) {

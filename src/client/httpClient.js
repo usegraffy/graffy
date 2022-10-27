@@ -40,9 +40,12 @@ class AggregateQuery {
       }
       return;
     }
-    const data = unpack(JSON.parse(await response.text()));
-    for (const reader of this.readers) {
-      reader.resolve(data);
+    try {
+      const data = unpack(JSON.parse(await response.text()));
+      for (const reader of this.readers) reader.resolve(data);
+    } catch (e) {
+      console.error(e);
+      for (const reader of this.readers) reader.reject(e);
     }
   }
 }
