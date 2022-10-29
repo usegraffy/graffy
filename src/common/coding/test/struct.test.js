@@ -1,3 +1,4 @@
+import { cmp } from '../../util.js';
 import { encode, decode } from '../struct.js';
 
 function tryValue(value) {
@@ -36,8 +37,8 @@ test('num', () => tryValue(123));
 test('str', () => tryValue('potatoes'));
 
 test('arrayorder', () => {
-  expect(encode([15.6, 'abc']) < encode([15.7])).toBe(true);
-  expect(encode([15.6, 'abc']) > encode([15.6])).toBe(true);
+  expect(cmp(encode([15.6, 'abc']), encode([15.7])) < 0).toBe(true);
+  expect(cmp(encode([15.6, 'abc']), encode([15.6])) > 0).toBe(true);
 });
 
 test('emptystr', () => tryValue(''));
