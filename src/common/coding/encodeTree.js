@@ -36,9 +36,29 @@ function encode(value, { version, isGraph } = {}) {
 
   function makeNode(object, key, ver, parentPuts = []) {
     if (!isDef(object)) return;
-    if (typeof object === 'object' && object && isEmpty(object)) return;
 
     const { $key, $ver, $ref, $val, $chi, $put, ...props } = object || {};
+
+    // Turn any non-enumerable properties of object into enumerable,
+    // so they're incleded in ...object below.
+    if (typeof object === 'object' && object && !Array.isArray(object)) {
+      object = {
+        ...Object.fromEntries(
+          Object.entries({
+            $key,
+            $ver,
+            $ref,
+            $val,
+            $chi,
+            $put,
+          }).filter(([_, val]) => isDef(val)),
+        ),
+        ...props,
+      };
+    }
+
+    // An empty object is considered equivalent to undefined.
+    if (typeof object === 'object' && object && isEmpty(object)) return;
 
     if (isDef($ver)) ver = $ver;
 
@@ -68,24 +88,6 @@ function encode(value, { version, isGraph } = {}) {
         The page part is passed as $put for constructing children (when it's a 
         graph with children)
       */
-
-        // Turn any non-enumerable properties of object into enumerable,
-        // so they're incleded in ...object below.
-        if (typeof object === 'object' && object && !Array.isArray(object)) {
-          object = {
-            ...Object.fromEntries(
-              Object.entries({
-                $key,
-                $ver,
-                $ref,
-                $val,
-                $chi,
-                $put,
-              }).filter(([_, val]) => isDef(val)),
-            ),
-            ...props,
-          };
-        }
 
         const foundPuts = parentPuts
           .filter(([_, putFilter]) => isEqual(filter, putFilter))

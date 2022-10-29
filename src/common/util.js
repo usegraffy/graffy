@@ -92,6 +92,13 @@ const stringifyDescriptor = {
 };
 
 export function addStringify(buffer) {
+  if (
+    Object.hasOwn(buffer, 'toJSON') ||
+    Object.hasOwn(buffer, 'toString') ||
+    Object.hasOwn(buffer, Symbol.for('nodejs.util.inspect.custom'))
+  ) {
+    return buffer;
+  }
   Object.defineProperties(buffer, {
     toJSON: stringifyDescriptor,
     toString: stringifyDescriptor,

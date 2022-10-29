@@ -9,10 +9,12 @@ export function keyStep(key) {
   switch (key[l]) {
     case 0:
       newKey = key.slice(0, l);
+      addStringify(newKey);
       step = 1;
       break;
     case 0xff:
       newKey = key.slice(0, l);
+      addStringify(newKey);
       newKey[l - 1]++;
       step = -1;
       break;
@@ -20,7 +22,7 @@ export function keyStep(key) {
       newKey = key;
       step = 0;
   }
-  return { key: addStringify(newKey), step };
+  return { key: newKey, step };
 }
 
 export function keyBefore(key) {

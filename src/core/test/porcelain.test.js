@@ -411,3 +411,30 @@ test('write_key_put', async () => {
   expect(res).toEqual({ bar: { baz: 4 } });
   expect(res.bar.$put).toBe(true);
 });
+
+test('onReadWithNext', async () => {
+  const query = { post: { abc: { author: { name: true }, title: true } } };
+  const store = new Graffy();
+  store.use(GraffyFill());
+  store.onRead(async (query, options, next) => {
+    const res = await next(query, options);
+    // do nothing
+    return res;
+  });
+  store.onRead('post', () => ({
+    abc: { author: { $ref: ['user', '123'] }, title: 'Example' },
+  }));
+  store.onRead('user', () => ({
+    123: { name: 'Alice' },
+  }));
+
+  const res = await store.read(query);
+  expect(res).toEqual({
+    post: {
+      abc: {
+        author: ref(['user', '123'], { name: 'Alice' }),
+        title: 'Example',
+      },
+    },
+  });
+});

@@ -1,5 +1,5 @@
 import url from 'url';
-import { encodeGraph, encodeQuery, pack, unpack } from '@graffy/common';
+import { decodeGraph, decodeQuery, pack, unpack } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:server:http');
@@ -75,7 +75,7 @@ export default function server(store, { auth } = {}) {
           auth &&
           !(await auth(
             op,
-            (op === 'write' ? encodeGraph : encodeQuery)(payload),
+            (op === 'write' ? decodeGraph : decodeQuery)(payload),
             options,
           ))
         ) {

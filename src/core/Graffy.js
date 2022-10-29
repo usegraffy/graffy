@@ -7,6 +7,9 @@ import {
   encodeGraph,
   encodeQuery,
   finalize,
+  wrap,
+  unwrap,
+  encodePath,
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';
 import { validateCall, validateOn } from './validate.js';
@@ -35,16 +38,27 @@ export default class Graffy {
         // console.log('onRead', path, query);
         const porcelainQuery = decodeQuery(query);
         // console.log('porcelainQuery', path, porcelainQuery);
+        let nextCalled = false;
         const encoded = encodeGraph(
           await handle(porcelainQuery, options, async (nextQuery, nextOpts) => {
+            nextCalled = true;
             const nextResult = await next(encodeQuery(nextQuery), nextOpts);
             return decodeGraph(nextResult);
           }),
         );
+
+        let final;
+        if (!nextCalled) {
+          const encodedPath = encodePath(path);
+          final = unwrap(
+            finalize(wrap(encoded, encodedPath), wrap(query, encodedPath)),
+            encodedPath,
+          );
+        } else {
+          final = encoded;
+        }
         // console.log({ encoded });
-        const finalized = finalize(encoded, query);
-        // console.log({ finalized });
-        return finalized;
+        return final;
       }, path),
     );
   }
