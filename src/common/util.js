@@ -93,9 +93,9 @@ const stringifyDescriptor = {
 
 export function addStringify(buffer) {
   if (
-    Object.hasOwn(buffer, 'toJSON') ||
-    Object.hasOwn(buffer, 'toString') ||
-    Object.hasOwn(buffer, Symbol.for('nodejs.util.inspect.custom'))
+    'toJSON' in buffer ||
+    'toString' in buffer ||
+    Symbol.for('nodejs.util.inspect.custom') in buffer
   ) {
     return buffer;
   }
