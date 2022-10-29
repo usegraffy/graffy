@@ -44,9 +44,10 @@ function encode(value, { version, isGraph } = {}) {
 
     if (isPlainObject($key)) {
       const [page, filter] = splitArgs($key);
-      // console.log('isKey', { $key, page, filter });
-
-      /* When we encounter a range key in a graph, it means one of these:
+      if (page) {
+        /* 
+        CONSTRUCT PREFIX NODES
+        When we encounter a range key in a graph, it means one of these:
         1. an empty range, e.g. { $key: { $after: 'foo' } }
         2. a range reference, e.g.
             { $key: { x: 1, $all: true }, $ref: ['foo', { $all: true }] }
@@ -68,49 +69,56 @@ function encode(value, { version, isGraph } = {}) {
         graph with children)
       */
 
-      const foundPuts = parentPuts
-        .filter(([_, putFilter]) => isEqual(filter, putFilter))
-        .map(([range]) => range);
+        // Turn any non-enumerable properties of object into enumerable,
+        // so they're incleded in ...object below.
+        if (typeof object === 'object' && object && !Array.isArray(object)) {
+          object = {
+            ...Object.fromEntries(
+              Object.entries({
+                $key,
+                $ver,
+                $ref,
+                $val,
+                $chi,
+                $put,
+              }).filter(([_, val]) => isDef(val)),
+            ),
+            ...props,
+          };
+        }
 
-      if (
-        isGraph &&
-        page &&
-        !isDef(page.$cursor) &&
-        ($ref || $val || $chi || $put || !isEmpty(props))
-      ) {
-        const node = makeNode(
-          { ...object, $key: filter || {}, $put: foundPuts },
-          key,
-          ver,
-        );
-        if (!filter) node.key = MIN_KEY;
-        node.prefix = true;
-        // console.log('Early Returning', node);
-        return node;
+        const foundPuts = parentPuts
+          .filter(([_, putFilter]) => isEqual(filter, putFilter))
+          .map(([range]) => range);
+
+        if (
+          isGraph &&
+          !isDef(page.$cursor) &&
+          ($ref || $val || $chi || $put || !isEmpty(props))
+        ) {
+          object.$key = filter || {};
+          object.$put = foundPuts;
+          const node = makeNode(object, key, ver);
+          if (!filter) node.key = MIN_KEY;
+          node.prefix = true;
+          return node;
+        }
+
+        if (
+          (!isDef(key) || Number.isInteger(key)) &&
+          (filter || isDef(page.$cursor))
+        ) {
+          object.$key = isDef(page.$cursor) ? page.$cursor : page;
+          const wrapper = { $key: filter || {}, $chi: [object] };
+          if (isGraph) wrapper.$put = foundPuts;
+          const node = makeNode(wrapper, key, ver);
+          if (!filter) node.key = MIN_KEY;
+          node.prefix = true;
+          return node;
+        }
+
+        // console.log('No prefix made', { key, $key, object });
       }
-
-      if (
-        (!isDef(key) || Number.isInteger(key)) &&
-        page &&
-        (filter || isDef(page.$cursor))
-      ) {
-        const node = makeNode(
-          {
-            $key: filter || {},
-            $chi: [
-              { ...object, $key: isDef(page.$cursor) ? page.$cursor : page },
-            ],
-            ...(isGraph ? { $put: foundPuts } : {}),
-          },
-          key,
-          ver,
-        );
-        if (!filter) node.key = MIN_KEY;
-        node.prefix = true;
-        return node;
-      }
-
-      // console.log('No prefix made', { key, $key, object });
     }
 
     let putQuery = [],
@@ -140,6 +148,7 @@ function encode(value, { version, isGraph } = {}) {
 
     if (isDef($key) && (Number.isInteger(key) || !isDef(key))) key = $key;
     const node = key === ROOT_KEY || !isDef(key) ? {} : encodeArgs(key);
+    // console.log('Set version', node.key, ver);
     node.version = ver;
 
     // console.log('Constructed', { node, $key, key });
@@ -206,12 +215,7 @@ function encode(value, { version, isGraph } = {}) {
     }
 
     if (isGraph && (putQuery === null || putQuery.length)) {
-      node.children = finalize(
-        node.children || [],
-        putQuery,
-        node.version,
-        true,
-      );
+      node.children = finalize(node.children || [], putQuery, false);
     }
 
     if (
@@ -238,7 +242,9 @@ function encode(value, { version, isGraph } = {}) {
 }
 
 export function encodeGraph(obj, version = Date.now()) {
-  return setVersion(encode(obj, { version, isGraph: true }), version);
+  const encoded = encode(obj, { version, isGraph: true });
+  const versioned = setVersion(encoded, version, true);
+  return versioned;
 }
 
 export function encodeQuery(obj, version = 0) {

@@ -242,16 +242,22 @@ describe('graph', () => {
     ],
   };
 
-  test('mix cursor and ids 1', () => {
-    roundTrip(original1);
+  test('mix1', () => {
+    roundTrip(original1, original1, (decoded) => {
+      expect(decoded.tenant[2].$ref).toEqual(['tenant', 'bar']);
+      expect(decoded.tenant[3].$ref).toEqual(['tenant', 'foo']);
+    });
     // const encoded = encodeGraph(original1, 1);
     // console.log(encoded);
     // const decoded = decodeGraph(encoded);
     // console.log(decoded);
   });
 
-  test('mix cursor and ids 2', () => {
-    roundTrip(original2, original1);
+  test('mix2', () => {
+    roundTrip(original2, original1, (decoded) => {
+      expect(decoded.tenant[2].$ref).toEqual(['tenant', 'bar']);
+      expect(decoded.tenant[3].$ref).toEqual(['tenant', 'foo']);
+    });
 
     // const encoded = encodeGraph(original2, 0);
     // console.log(encoded);
