@@ -313,3 +313,15 @@ test('cursor_only', () => {
     },
   ]);
 });
+
+test('return_empty', () => {
+  encodeGraph({
+    person: [
+      {
+        $key: { example: 'filter', $cursor: ['something'] },
+        $ref: ['person', 'exampleId'],
+        domains: {},
+      },
+    ],
+  });
+});
