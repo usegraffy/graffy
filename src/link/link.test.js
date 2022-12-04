@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
-import { encodeGraph, encodeQuery } from '@graffy/common';
+import { MAX_KEY, MIN_KEY, encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import link from './index.js';
 import { ref, keyref } from '@graffy/testing';
@@ -23,7 +23,7 @@ describe('link', () => {
     );
     store.use(backend.middleware);
 
-    backend.write([{ key: '', end: '\uffff', version: 1 }]); // Set to empty
+    backend.write([{ key: MIN_KEY, end: MAX_KEY, version: 1 }]); // Set to empty
     backend.write(
       encodeGraph({
         user: {

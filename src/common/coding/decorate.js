@@ -10,7 +10,14 @@ import {
   decode as decodeArgs,
 } from './args.js';
 import { unwrap, getNodeValue, IS_VAL } from '../ops/index.js';
-import { isDef, isPlainObject, isEmpty } from '../util.js';
+import {
+  isDef,
+  isPlainObject,
+  isEmpty,
+  isMinKey,
+  cmp,
+  MIN_KEY,
+} from '../util.js';
 import { isRange, findFirst } from '../node/index.js';
 
 const REF = Symbol();
@@ -31,12 +38,14 @@ export default function decorate(rootGraph, rootQuery) {
       const [range, filter] = splitRef($ref);
       const path = encodePath($ref);
       const targetPlumGraph = unwrap(rootGraph, path);
-      if (range) targetPlumGraph[PRE] = filter;
-      graph = construct(
-        targetPlumGraph,
-        range ? { $key: range, ...props } : props,
-      );
-      Object.defineProperty(graph, '$ref', { value: $ref });
+      if (targetPlumGraph) {
+        if (range) targetPlumGraph[PRE] = filter;
+        graph = construct(
+          targetPlumGraph,
+          range ? { $key: range, ...props } : props,
+        );
+        Object.defineProperty(graph, '$ref', { value: $ref });
+      }
     } else if (Array.isArray(query)) {
       let pageKey;
       graph = query.flatMap((item, i) => {
@@ -67,9 +76,10 @@ export default function decorate(rootGraph, rootQuery) {
             const $key = decodeArgs(node);
             const subResult = construct(getValue(node), subQuery);
             if (typeof subResult === 'object') {
-              subResult.$key = children[PRE]
-                ? { ...children[PRE], $cursor: $key }
-                : $key;
+              subResult.$key =
+                children[PRE] && !isMinKey(children[PRE])
+                  ? { ...children[PRE], $cursor: $key }
+                  : $key;
             }
             return subResult;
           });
@@ -108,14 +118,13 @@ export default function decorate(rootGraph, rootQuery) {
   }
 
   function descend(children, $key) {
-    const { key } = encodeArgs($key);
+    const key = ArrayBuffer.isView($key) ? $key : encodeArgs($key).key;
     if (!Array.isArray(children)) return null;
-    // console.log('descending', children, $key);
     const ix = findFirst(children, key);
     const node = children[ix];
     if (!node) return;
     if (isRange(node) && node.end >= key) return null;
-    if (node.key !== key) return;
+    if (cmp(node.key, key) !== 0) return;
 
     const result = getValue(node);
     if (node.prefix) result[PRE] = $key;
@@ -138,20 +147,16 @@ export default function decorate(rootGraph, rootQuery) {
   function slice(children, $key) {
     const [range, filter] = splitArgs($key);
     if (isDef(filter)) {
-      // console.log('descending into filter', filter, children);
       children = descend(children, filter);
-      // console.log('descended into filter', filter, children);}
-    } else if (children[0].key === '' && children[0].prefix) {
-      // console.log('No-filter descending', children, $key);
-      children = descend(children, '');
-      // console.log('No-filter descended', children);
+    } else if (isMinKey(children[0].key) && children[0].prefix) {
+      children = descend(children, MIN_KEY);
     }
 
     const { key, end, limit = Infinity } = encodeArgs(range);
     const ix = findFirst(children, key);
     let i = ix;
     let result;
-    if (key < end) {
+    if (cmp(key, end) < 0) {
       for (let n = 0; i < children.length && n < limit; i++) {
         if (!isRange(children[i])) n++;
       }

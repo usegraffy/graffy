@@ -75,6 +75,7 @@ describe('range-getKnown', () => {
     expect(provider).toBeCalledWith(
       { foo: [{ $key: { $first: 100 }, bar: true }] },
       {},
+      expect.any(Function),
     );
     const expected = {
       foo: [

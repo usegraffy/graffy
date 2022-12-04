@@ -3,12 +3,14 @@
   in that graph.
 */
 
+import { cmp } from '../util.js';
+
 export default function getKnown(graph, version = 0) {
   const query = [];
   for (const { key, end, children } of graph) {
     const node = { key, version };
     if (end) {
-      if (end !== key) node.end = end;
+      if (cmp(end, key) !== 0) node.end = end;
       node.value = 1;
     }
     if (children) {

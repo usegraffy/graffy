@@ -1,37 +1,60 @@
+import { addStringify, isMaxKey, isMinKey } from '../util.js';
+
 export function keyStep(key) {
-  if (key === '') return { key, step: 1 };
-  if (key === '\uffff') return { key, step: -1 };
+  if (isMinKey(key)) return { key, step: 1 };
+  if (isMaxKey(key)) return { key, step: -1 };
   const l = key.length - 1;
-  switch (key.charCodeAt(l)) {
+  let newKey;
+  let step;
+  switch (key[l]) {
     case 0:
-      return { key: key.substr(0, l), step: 1 };
-    case 0xffff:
-      return {
-        key:
-          key.substr(0, l - 1) + String.fromCharCode(key.charCodeAt(l - 1) + 1),
-        step: -1,
-      };
+      newKey = key.slice(0, l);
+      addStringify(newKey);
+      step = 1;
+      break;
+    case 0xff:
+      newKey = key.slice(0, l);
+      addStringify(newKey);
+      newKey[l - 1]++;
+      step = -1;
+      break;
     default:
-      return { key, step: 0 };
+      newKey = key;
+      step = 0;
   }
+  return { key: newKey, step };
 }
 
 export function keyBefore(key) {
-  if (key === '' || key === '\uffff' || key === '\0' || key === '\0\uffff') {
-    return key;
-  }
+  if (isMinKey(key) || isMaxKey(key)) return key;
+
   const l = key.length - 1;
-  return key.charCodeAt(l) === 0
-    ? key.substr(0, l)
-    : key.substr(0, l) + String.fromCharCode(key.charCodeAt(l) - 1) + '\uffff';
+  let newKey;
+  if (key[l] === 0) {
+    newKey = key.slice(0, l);
+  } else {
+    newKey = new Uint8Array(l + 2);
+    newKey.set(key, 0);
+    newKey[l]--;
+    newKey[l + 1] = 0xff;
+  }
+  addStringify(newKey);
+  return newKey;
 }
 
 export function keyAfter(key) {
-  if (key === '\uffff' || key === '\0' || key === '\0\uffff') {
-    return key;
-  }
+  if (isMaxKey(key)) return key;
+
   const l = key.length - 1;
-  return key.charCodeAt(l) === 0xffff
-    ? key.substr(0, l - 1) + String.fromCharCode(key.charCodeAt(l - 1) + 1)
-    : key + '\0';
+  let newKey;
+  if (key[l] === 0xff) {
+    newKey = key.slice(0, l);
+    newKey[l - 1]++;
+  } else {
+    newKey = new Uint8Array(l + 2);
+    newKey.set(key, 0);
+    newKey[l + 1] = 0;
+  }
+  addStringify(newKey);
+  return newKey;
 }

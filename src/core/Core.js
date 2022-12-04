@@ -1,4 +1,4 @@
-import { unwrap } from '@graffy/common';
+import { encodePath, unwrap } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:core');
@@ -12,7 +12,9 @@ function resolve(handlers, firstPayload, firstOptions) {
     }
 
     const { path, handle } = handlers[i];
-    if (!unwrap(payload, path)) return run(i + 1, payload, options);
+    if (!unwrap(payload, path)) {
+      return run(i + 1, payload, options);
+    }
 
     let nextCalled = false;
     return handle(payload, options, (nextPayload, nextOptions) => {
@@ -35,7 +37,7 @@ export default class Core {
 
   on(type, path, handle) {
     this.handlers[type] = this.handlers[type] || [];
-    this.handlers[type].push({ path, handle });
+    this.handlers[type].push({ path: encodePath(path), handle });
   }
 
   call(type, payload, options = {}) {

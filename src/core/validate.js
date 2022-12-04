@@ -1,8 +1,7 @@
-import { encodePath } from '@graffy/common';
+import { isPlainObject } from '@graffy/common';
 
-function isPlainObject(obj) {
-  return obj && typeof obj === 'object' && !Array.isArray(obj);
-}
+const splitPath = (path) =>
+  Array.isArray(path) ? path : path === '' ? [] : String(path).split('.');
 
 /*
 any -> payload
@@ -22,13 +21,13 @@ export function validateCall(...args) {
       }
       return [[], args[0], args[1]];
     } else {
-      return [encodePath(args[0]), args[1], {}];
+      return [splitPath(args[0]), args[1], {}];
     }
   } else if (args.length === 3) {
     if (!isPlainObject(args[2])) {
       throw Error(`validateCall.invalid_options: ${JSON.stringify(args[1])}`);
     }
-    return [encodePath(args[0]), args[1], args[2]];
+    return [splitPath(args[0]), args[1], args[2]];
   }
 
   throw Error(`validateCall.invalid_args: ${JSON.stringify(args)}`);
@@ -44,7 +43,7 @@ export function validateOn(...args) {
     if (typeof args[1] !== 'function') {
       throw Error(`validateOn.invalid_handler: ${JSON.stringify(args[1])}`);
     }
-    return [encodePath(args[0]), args[1]];
+    return [splitPath(args[0]), args[1]];
   }
 
   throw Error(`validateOn.invalid_args: ${JSON.stringify(args)}`);

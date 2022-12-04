@@ -1,4 +1,4 @@
-import { encodeQuery } from '@graffy/common';
+import { encodeQuery, MIN_KEY } from '@graffy/common';
 import prepQueryLinks from './prepQueryLinks.js';
 
 test('prepQueryLinks', () => {
@@ -142,7 +142,7 @@ test('placeholder_in_key', () => {
   const usedDefs = prepQueryLinks(query, defs);
   expect(usedDefs).toEqual([
     {
-      path: ['person', 'abcdef', 'prospect', ''],
+      path: ['person', 'abcdef', 'prospect', MIN_KEY],
       def: [
         'prospect',
         { $all: true, persons: { '$$person.abcdef.id': true } },
@@ -176,7 +176,7 @@ test('gate_pattern', () => {
   const usedDefs = prepQueryLinks(query, defs);
   expect(usedDefs).toEqual([
     {
-      path: ['abcdef', 'prospect', '\x000kKkOM8nQqtn--R485CoRk-60L8WRV-6'],
+      path: ['abcdef', 'prospect', { persons: { $cts: { bar: {} } } }],
       def: [
         'prospect',
         {

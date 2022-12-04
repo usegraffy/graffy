@@ -1,4 +1,4 @@
-import { encodeGraph } from '../common/index.js';
+import { encodeGraph, MIN_KEY } from '../common/index.js';
 import linkGraph from './linkGraph.js';
 
 test('simple', () => {
@@ -102,7 +102,7 @@ test('compat', () => {
 test('placeholder_in_key', () => {
   const defs = [
     {
-      path: ['person', 'abcdef', 'prospect', ''],
+      path: ['person', 'abcdef', 'prospect', MIN_KEY],
       def: [
         'prospect',
         { $all: true, persons: { '$$person.abcdef.id': true } },
@@ -136,7 +136,7 @@ test('placeholder_in_key', () => {
 test('gate_pattern', () => {
   const defs = [
     {
-      path: ['abcdef', 'prospect', '\x000kKaQqw-0kJZNrGn--R4Na4m--R'],
+      path: ['abcdef', 'prospect', { foo: { $cts: { bar: {} } } }],
       def: [
         'prospect',
         {

@@ -1,4 +1,7 @@
+import { e } from '@graffy/testing/encoder.js';
+import { MAX_KEY, MIN_KEY } from '../../util.js';
 import merge from '../merge.js';
+import { keyBefore as bef, keyAfter as aft } from '../step.js';
 
 describe('merge', () => {
   test('stayEmpty', () => {
@@ -9,20 +12,20 @@ describe('merge', () => {
 
   test('addLeafToEmpty', () => {
     const original = [];
-    merge(original, [{ key: 'foo', value: 42, version: 3 }]);
-    expect(original).toEqual([{ key: 'foo', value: 42, version: 3 }]);
+    merge(original, [{ key: e.foo, value: 42, version: 3 }]);
+    expect(original).toEqual([{ key: e.foo, value: 42, version: 3 }]);
   });
 
   test('updateLeafNewer', () => {
-    const original = [{ key: 'foo', value: 41, version: 2 }];
-    merge(original, [{ key: 'foo', value: 42, version: 3 }]);
-    expect(original).toEqual([{ key: 'foo', value: 42, version: 3 }]);
+    const original = [{ key: e.foo, value: 41, version: 2 }];
+    merge(original, [{ key: e.foo, value: 42, version: 3 }]);
+    expect(original).toEqual([{ key: e.foo, value: 42, version: 3 }]);
   });
 
   test('updateLeafOlder', () => {
-    const original = [{ key: 'foo', value: 41, version: 3 }];
-    merge(original, [{ key: 'foo', value: 42, version: 2 }]);
-    expect(original).toEqual([{ key: 'foo', value: 41, version: 3 }]);
+    const original = [{ key: e.foo, value: 41, version: 3 }];
+    merge(original, [{ key: e.foo, value: 42, version: 2 }]);
+    expect(original).toEqual([{ key: e.foo, value: 41, version: 3 }]);
   });
 });
 
@@ -30,94 +33,94 @@ describe('branches', () => {
   test('updateBranchWithBranch', () => {
     const original = [
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 10, version: 2 },
-          { key: 'bat', value: 15, version: 2 },
-          { key: 'baz', value: 20, version: 2 },
+          { key: e.bar, value: 10, version: 2 },
+          { key: e.bat, value: 15, version: 2 },
+          { key: e.baz, value: 20, version: 2 },
         ],
       },
     ];
     merge(original, [
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'cat', value: 3, version: 2 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: e.cat, value: 3, version: 2 },
         ],
       },
     ]);
     expect(original).toEqual([
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 10, version: 2 },
-          { key: 'bat', value: 15, version: 2 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'cat', value: 3, version: 2 },
+          { key: e.bar, value: 10, version: 2 },
+          { key: e.bat, value: 15, version: 2 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: e.cat, value: 3, version: 2 },
         ],
       },
     ]);
   });
 
   test('updateLeafWithNewerBranch', () => {
-    const original = [{ key: 'foo', value: 10, version: 2 }];
+    const original = [{ key: e.foo, value: 10, version: 2 }];
     merge(original, [
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'cat', value: 3, version: 1 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: e.cat, value: 3, version: 1 },
         ],
       },
     ]);
     expect(original).toEqual([
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: '', end: 'bay\uffff', version: 2 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'baz\0', end: '\uffff', version: 2 },
+          { key: MIN_KEY, end: bef(e.baz), version: 2 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: aft(e.baz), end: MAX_KEY, version: 2 },
         ],
       },
     ]);
   });
 
   test('updateLeafWithOlderBranch', () => {
-    const original = [{ key: 'foo', value: 10, version: 2 }];
+    const original = [{ key: e.foo, value: 10, version: 2 }];
     merge(original, [
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'cat', value: 3, version: 1 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.cat, value: 3, version: 1 },
         ],
       },
     ]);
-    expect(original).toEqual([{ key: 'foo', value: 10, version: 2 }]);
+    expect(original).toEqual([{ key: e.foo, value: 10, version: 2 }]);
   });
 
   test('updateBranchWithOlderLeaf', () => {
     const original = [
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'cat', value: 3, version: 1 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: e.cat, value: 3, version: 1 },
         ],
       },
     ];
-    merge(original, [{ key: 'foo', value: 10, version: 2 }]);
+    merge(original, [{ key: e.foo, value: 10, version: 2 }]);
     expect(original).toEqual([
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: '', end: 'bay\uffff', version: 2 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'baz\0', end: '\uffff', version: 2 },
+          { key: MIN_KEY, end: bef(e.baz), version: 2 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: aft(e.baz), end: MAX_KEY, version: 2 },
         ],
       },
     ]);
@@ -126,121 +129,121 @@ describe('branches', () => {
   test('updateBranchWithNewerLeaf', () => {
     const original = [
       {
-        key: 'foo',
+        key: e.foo,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'cat', value: 3, version: 2 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.cat, value: 3, version: 2 },
         ],
       },
     ];
-    merge(original, [{ key: 'foo', value: 10, version: 3 }]);
-    expect(original).toEqual([{ key: 'foo', value: 10, version: 3 }]);
+    merge(original, [{ key: e.foo, value: 10, version: 3 }]);
+    expect(original).toEqual([{ key: e.foo, value: 10, version: 3 }]);
   });
 });
 
 describe('addToGap', () => {
   test('addLeafToGapStart', () => {
-    const original = [{ key: 'foo', value: 41, version: 2 }];
-    merge(original, [{ key: 'bar', value: 42, version: 3 }]);
+    const original = [{ key: e.foo, value: 41, version: 2 }];
+    merge(original, [{ key: e.bar, value: 42, version: 3 }]);
     expect(original).toEqual([
-      { key: 'bar', value: 42, version: 3 },
-      { key: 'foo', value: 41, version: 2 },
+      { key: e.bar, value: 42, version: 3 },
+      { key: e.foo, value: 41, version: 2 },
     ]);
   });
 
   test('addLeafToGapEnd', () => {
-    const original = [{ key: 'foo', value: 41, version: 2 }];
-    merge(original, [{ key: 'zop', value: 42, version: 3 }]);
+    const original = [{ key: e.foo, value: 41, version: 2 }];
+    merge(original, [{ key: e.zop, value: 42, version: 3 }]);
     expect(original).toEqual([
-      { key: 'foo', value: 41, version: 2 },
-      { key: 'zop', value: 42, version: 3 },
+      { key: e.foo, value: 41, version: 2 },
+      { key: e.zop, value: 42, version: 3 },
     ]);
   });
 
   test('addLeafToGapMiddle', () => {
     const original = [
-      { key: 'bar', value: 42, version: 3 },
-      { key: 'foo', value: 41, version: 2 },
+      { key: e.bar, value: 42, version: 3 },
+      { key: e.foo, value: 41, version: 2 },
     ];
-    merge(original, [{ key: 'baz', value: 40, version: 3 }]);
+    merge(original, [{ key: e.baz, value: 40, version: 3 }]);
     expect(original).toEqual([
-      { key: 'bar', value: 42, version: 3 },
-      { key: 'baz', value: 40, version: 3 },
-      { key: 'foo', value: 41, version: 2 },
+      { key: e.bar, value: 42, version: 3 },
+      { key: e.baz, value: 40, version: 3 },
+      { key: e.foo, value: 41, version: 2 },
     ]);
   });
 });
 
 describe('addToRange', () => {
   test('addNewLeafToRangeStart', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 2 }];
-    merge(original, [{ key: 'foo', value: 42, version: 3 }]);
+    const original = [{ key: e.foo, end: e.gah, version: 2 }];
+    merge(original, [{ key: e.foo, value: 42, version: 3 }]);
     expect(original).toEqual([
-      { key: 'foo', value: 42, version: 3 },
-      { key: 'foo\0', end: 'gah', version: 2 },
+      { key: e.foo, value: 42, version: 3 },
+      { key: aft(e.foo), end: e.gah, version: 2 },
     ]);
   });
 
   test('addNewLeafToRangeEnd', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 2 }];
-    merge(original, [{ key: 'gah', value: 42, version: 3 }]);
+    const original = [{ key: e.foo, end: e.gah, version: 2 }];
+    merge(original, [{ key: e.gah, value: 42, version: 3 }]);
     expect(original).toEqual([
-      { key: 'foo', end: 'gag\uffff', version: 2 },
-      { key: 'gah', value: 42, version: 3 },
+      { key: e.foo, end: bef(e.gah), version: 2 },
+      { key: e.gah, value: 42, version: 3 },
     ]);
   });
 
   test('addNewLeafToRangeMiddle', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 2 }];
-    merge(original, [{ key: 'fuz', value: 42, version: 3 }]);
+    const original = [{ key: e.foo, end: e.gah, version: 2 }];
+    merge(original, [{ key: e.fuz, value: 42, version: 3 }]);
     expect(original).toEqual([
-      { key: 'foo', end: 'fuy\uffff', version: 2 },
-      { key: 'fuz', value: 42, version: 3 },
-      { key: 'fuz\0', end: 'gah', version: 2 },
+      { key: e.foo, end: bef(e.fuz), version: 2 },
+      { key: e.fuz, value: 42, version: 3 },
+      { key: aft(e.fuz), end: e.gah, version: 2 },
     ]);
   });
 
   test('addOldLeafToRangeStart', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 3 }];
-    merge(original, [{ key: 'foo', value: 42, version: 2 }]);
-    expect(original).toEqual([{ key: 'foo', end: 'gah', version: 3 }]);
+    const original = [{ key: e.foo, end: e.gah, version: 3 }];
+    merge(original, [{ key: e.foo, value: 42, version: 2 }]);
+    expect(original).toEqual([{ key: e.foo, end: e.gah, version: 3 }]);
   });
 
   test('addOldLeafToRangeEnd', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 3 }];
-    merge(original, [{ key: 'gah', value: 42, version: 2 }]);
-    expect(original).toEqual([{ key: 'foo', end: 'gah', version: 3 }]);
+    const original = [{ key: e.foo, end: e.gah, version: 3 }];
+    merge(original, [{ key: e.gah, value: 42, version: 2 }]);
+    expect(original).toEqual([{ key: e.foo, end: e.gah, version: 3 }]);
   });
 
   test('addOldLeafToRangeMiddle', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 3 }];
-    merge(original, [{ key: 'fuz', value: 42, version: 2 }]);
-    expect(original).toEqual([{ key: 'foo', end: 'gah', version: 3 }]);
+    const original = [{ key: e.foo, end: e.gah, version: 3 }];
+    merge(original, [{ key: e.fuz, value: 42, version: 2 }]);
+    expect(original).toEqual([{ key: e.foo, end: e.gah, version: 3 }]);
   });
 
   test('addBranchToRange', () => {
-    const original = [{ key: 'foo', end: 'gah', version: 2 }];
+    const original = [{ key: e.foo, end: e.gah, version: 2 }];
     merge(original, [
       {
-        key: 'fuz',
+        key: e.fuz,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'cat', value: 3, version: 1 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: e.cat, value: 3, version: 1 },
         ],
       },
     ]);
     expect(original).toEqual([
-      { key: 'foo', end: 'fuy\uffff', version: 2 },
+      { key: e.foo, end: bef(e.fuz), version: 2 },
       {
-        key: 'fuz',
+        key: e.fuz,
         children: [
-          { key: '', end: 'bay\uffff', version: 2 },
-          { key: 'baz', value: 25, version: 3 },
-          { key: 'baz\0', end: '\uffff', version: 2 },
+          { key: MIN_KEY, end: bef(e.baz), version: 2 },
+          { key: e.baz, value: 25, version: 3 },
+          { key: aft(e.baz), end: MAX_KEY, version: 2 },
         ],
       },
-      { key: 'fuz\0', end: 'gah', version: 2 },
+      { key: aft(e.fuz), end: e.gah, version: 2 },
     ]);
   });
 });
@@ -248,80 +251,80 @@ describe('addToRange', () => {
 describe('addRange', () => {
   test('addRange', () => {
     const original = [
-      { key: 'bar', end: 'fos\uffff', version: 2 },
-      { key: 'fot', value: 42, version: 2 },
+      { key: e.bar, end: bef(e.fot), version: 2 },
+      { key: e.fot, value: 42, version: 2 },
       {
-        key: 'foz',
+        key: e.foz,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'cat', value: 3, version: 2 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.cat, value: 3, version: 2 },
         ],
       },
       {
-        key: 'fuz',
+        key: e.fuz,
         children: [
-          { key: 'bar', value: 8, version: 1 },
-          { key: 'baz', value: 25, version: 4 },
-          { key: 'cat', value: 3, version: 2 },
+          { key: e.bar, value: 8, version: 1 },
+          { key: e.baz, value: 25, version: 4 },
+          { key: e.cat, value: 3, version: 2 },
         ],
       },
-      { key: 'gah', value: 42, version: 4 },
-      { key: 'hey', value: 2, version: 1 },
+      { key: e.gah, value: 42, version: 4 },
+      { key: e.hey, value: 2, version: 1 },
     ];
-    merge(original, [{ key: 'foo', end: 'gah', version: 3 }]);
+    merge(original, [{ key: e.foo, end: e.gah, version: 3 }]);
     expect(original).toEqual([
-      { key: 'bar', end: 'fon\uffff', version: 2 },
-      { key: 'foo', end: 'fuy\uffff', version: 3 },
+      { key: e.bar, end: bef(e.foo), version: 2 },
+      { key: e.foo, end: bef(e.fuz), version: 3 },
       {
-        key: 'fuz',
+        key: e.fuz,
         children: [
-          { key: '', end: 'bay\uffff', version: 3 },
-          { key: 'baz', value: 25, version: 4 },
-          { key: 'baz\0', end: '\uffff', version: 3 },
+          { key: MIN_KEY, end: bef(e.baz), version: 3 },
+          { key: e.baz, value: 25, version: 4 },
+          { key: aft(e.baz), end: MAX_KEY, version: 3 },
         ],
       },
-      { key: 'fuz\0', end: 'gag\uffff', version: 3 },
-      { key: 'gah', value: 42, version: 4 },
-      { key: 'hey', value: 2, version: 1 },
+      { key: aft(e.fuz), end: bef(e.gah), version: 3 },
+      { key: e.gah, value: 42, version: 4 },
+      { key: e.hey, value: 2, version: 1 },
     ]);
   });
 });
 
 test('fillEmpty', () => {
-  const original = [{ key: '', end: '\uffff', version: 0 }];
+  const original = [{ key: MIN_KEY, end: MAX_KEY, version: 0 }];
   expect(
     merge(original, [
       {
-        key: 'foo',
-        children: [{ key: 'bar', value: 33, version: 0 }],
+        key: e.foo,
+        children: [{ key: e.bar, value: 33, version: 0 }],
         version: 0,
       },
     ]),
   ).toEqual([
-    { key: '', end: 'fon\uffff', version: 0 },
+    { key: MIN_KEY, end: bef(e.foo), version: 0 },
     {
-      key: 'foo',
+      key: e.foo,
       children: [
-        { key: '', end: 'baq\uffff', version: 0 },
-        { key: 'bar', value: 33, version: 0 },
-        { key: 'bar\0', end: '\uffff', version: 0 },
+        { key: MIN_KEY, end: bef(e.bar), version: 0 },
+        { key: e.bar, value: 33, version: 0 },
+        { key: aft(e.bar), end: MAX_KEY, version: 0 },
       ],
       version: 0,
     },
-    { key: 'foo\0', end: '\uffff', version: 0 },
+    { key: aft(e.foo), end: MAX_KEY, version: 0 },
   ]);
 });
 
 test('prefixFill', () => {
-  const original = [{ key: '', end: '\uffff', version: 0 }];
+  const original = [{ key: MIN_KEY, end: MAX_KEY, version: 0 }];
   expect(
     merge(original, [
       {
-        key: '\0abc',
+        key: e.abc,
         children: [
           {
-            key: '\0def',
-            path: ['foo'],
+            key: e.def,
+            path: [e.foo],
             version: 0,
           },
         ],
@@ -329,38 +332,38 @@ test('prefixFill', () => {
         prefix: true,
       },
       {
-        key: 'foo',
-        children: [{ key: 'bar', value: 33, version: 0 }],
+        key: e.foo,
+        children: [{ key: e.bar, value: 33, version: 0 }],
         version: 0,
       },
     ]),
   ).toEqual([
-    { key: '', end: '\0abb\uffff', version: 0 },
+    { key: MIN_KEY, end: bef(e.abc), version: 0 },
     {
-      key: '\0abc',
+      key: e.abc,
       children: [
-        { key: '', end: '\0dee\uffff', version: 0 },
+        { key: MIN_KEY, end: bef(e.def), version: 0 },
         {
-          key: '\0def',
-          path: ['foo'],
+          key: e.def,
+          path: [e.foo],
           version: 0,
         },
-        { key: '\0def\0', end: '\uffff', version: 0 },
+        { key: aft(e.def), end: MAX_KEY, version: 0 },
       ],
       version: 0,
       prefix: true,
     },
-    { key: '\0abc\0', end: 'fon\uffff', version: 0 },
+    { key: aft(e.abc), end: bef(e.foo), version: 0 },
     {
-      key: 'foo',
+      key: e.foo,
       children: [
-        { key: '', end: 'baq\uffff', version: 0 },
-        { key: 'bar', value: 33, version: 0 },
-        { key: 'bar\0', end: '\uffff', version: 0 },
+        { key: MIN_KEY, end: bef(e.bar), version: 0 },
+        { key: e.bar, value: 33, version: 0 },
+        { key: aft(e.bar), end: MAX_KEY, version: 0 },
       ],
       version: 0,
     },
-    { key: 'foo\0', end: '\uffff', version: 0 },
+    { key: aft(e.foo), end: MAX_KEY, version: 0 },
   ]);
 });
 
@@ -368,8 +371,8 @@ test('prefixFill', () => {
 //   test('versionCollisionError', () => {
 //     expect(() =>
 //       merge(
-//         [{ key: 'foo', value: 41, version: 2 }],
-//         [{ key: 'foo', value: 42, version: 2 }],
+//         [{ key: e.foo, value: 41, version: 2 }],
+//         [{ key: e.foo, value: 42, version: 2 }],
 //       ),
 //     ).toThrow();
 //   });

@@ -1,9 +1,15 @@
-import { merge, slice, setVersion, makeWatcher } from '@graffy/common';
-// import { debug } from '@graffy/testing';
+import {
+  merge,
+  slice,
+  setVersion,
+  makeWatcher,
+  MIN_KEY,
+  MAX_KEY,
+} from '@graffy/common';
 
 export default function () {
   return (store) => {
-    const state = [{ key: '', end: '\uffff', version: 0 }];
+    const state = [{ key: MIN_KEY, end: MAX_KEY, version: 0 }];
     const watcher = makeWatcher();
 
     store.on('read', [], async (query) => {

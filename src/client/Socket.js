@@ -10,7 +10,7 @@
   The isAlive exported function may be called in situations such as the app
   being restored, where timers may have been forgotten.
 */
-import { makeId, serialize, deserialize } from '@graffy/common';
+import { makeId } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:client:socket');
@@ -69,7 +69,7 @@ export default function Socket(
   }
 
   function received(event) {
-    const [id, ...data] = deserialize(event.data);
+    const [id, ...data] = JSON.parse(event.data);
     setAlive();
     if (id === ':ping') {
       send([':pong']);
@@ -145,13 +145,14 @@ export default function Socket(
       return false;
     }
     if (Date.now() - lastAlive < PING_TIMEOUT) return true;
+    log('Ping timeout, closing', lastAlive);
     socket.close();
     return false;
   }
 
   function send(req) {
     if (isAlive()) {
-      socket.send(serialize(req));
+      socket.send(JSON.stringify(req));
     } else {
       buffer.push(req);
     }

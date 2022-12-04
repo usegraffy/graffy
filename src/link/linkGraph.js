@@ -6,6 +6,8 @@ import {
   encodePath,
   splitRef,
   splitArgs,
+  cmp,
+  encodeArgs,
 } from '@graffy/common';
 
 export default function linkGraph(rootGraph, defs) {
@@ -70,14 +72,14 @@ export default function linkGraph(rootGraph, defs) {
       const realRef = makeRef(value, vars);
       const node = { key: realPath.pop(), path: encodePath(realRef), version };
 
-      const [range] = splitRef(realRef);
+      const [range] = splitRef(value);
       if (range) node.prefix = true;
 
       let target = rootGraph;
       do {
         const key = realPath.shift();
         const nextTarget = target[findFirst(target, key)];
-        if (!nextTarget || nextTarget.key !== key || nextTarget.end) {
+        if (!nextTarget || cmp(nextTarget.key, key) !== 0 || nextTarget.end) {
           realPath.unshift(key);
           break;
         }
@@ -145,8 +147,9 @@ export default function linkGraph(rootGraph, defs) {
       });
     }
 
-    let node = graph[findFirst(graph, key)];
-    if (!node || node.key !== key || node.end) return [];
+    const encodedKey = encodeArgs(key).key;
+    let node = graph[findFirst(graph, encodedKey)];
+    if (!node || cmp(node.key, encodedKey) !== 0 || node.end) return [];
     return recurse(node, rest, vars);
   }
 
@@ -201,7 +204,7 @@ function makeRef(def, vars) {
     if (Array.isArray(key)) {
       return key.map(replacePlaceholders);
     }
-    if (typeof key === 'object' && key) {
+    if (typeof key === 'object' && !ArrayBuffer.isView(key) && key) {
       const result = {};
       for (const prop in key) {
         result[replacePlaceholders(prop)] = replacePlaceholders(key[prop]);
@@ -211,6 +214,5 @@ function makeRef(def, vars) {
     return getValue(key);
   }
 
-  const ref = def.map(replacePlaceholders);
-  return ref;
+  return encodePath(def.map(replacePlaceholders));
 }

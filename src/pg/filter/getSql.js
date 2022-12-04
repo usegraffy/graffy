@@ -1,6 +1,5 @@
 import sql, { join, raw } from 'sql-template-tag';
 import getAst from './getAst.js';
-import { encodePath } from '@graffy/common';
 import { cubeLiteralSql } from '../sql/clauses.js';
 
 const opSql = {
@@ -72,7 +71,7 @@ export default function getSql(filter, options) {
 
     // It is a binary operator
 
-    const [prefix, ...suffix] = encodePath(ast[1]);
+    const [prefix, ...suffix] = ast[1].split('.');
     const { types } = options.schema;
     if (!types[prefix]) throw Error('pg.no_column ' + prefix);
 

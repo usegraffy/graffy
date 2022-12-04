@@ -1,8 +1,10 @@
 import { decode as decodeArgs, splitArgs } from './args.js';
 import { decode as decodePath } from './path.js';
-import { isEmpty, isDef } from '../util.js';
+import { isEmpty, isDef, isMinKey, isMaxKey, cmp } from '../util.js';
 import { keyAfter } from '../ops/index.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
+
+const PRE_CHI_PUT = Symbol('PREFIX_CHILDREN_$PUT');
 
 /**
   @param {any[]} nodes
@@ -24,6 +26,7 @@ function decode(nodes = [], { isGraph } = {}) {
     }
 
     const putRanges = [];
+    const prefixChildPuts = [];
     let lastNode = null;
 
     // Graphs only: Constructs the $put array. Returns true if this is a range
@@ -31,16 +34,18 @@ function decode(nodes = [], { isGraph } = {}) {
     function addPutRange({ key, end }) {
       if (lastNode) {
         if (lastNode.end) {
-          if (key === keyAfter(lastNode.end)) {
+          if (cmp(key, keyAfter(lastNode.end)) === 0) {
             lastNode.end = end || key;
-            return end && end !== key;
+            return end && cmp(end, key) !== 0;
           }
         } else {
-          if (key === keyAfter(lastNode.key)) key = lastNode.key;
+          if (cmp(key, keyAfter(lastNode.key)) === 0) {
+            key = lastNode.key;
+          }
         }
       }
 
-      if (end && key !== end) {
+      if (end && cmp(key, end) !== 0) {
         lastNode = { key, end };
         putRanges.push(lastNode);
         return true;
@@ -52,15 +57,26 @@ function decode(nodes = [], { isGraph } = {}) {
 
     for (const node of nodes) {
       if (isGraph && addPutRange(node)) continue;
-      if (isPrefix(node)) pushResult(...decodePrefixNode(node));
-      else if (isGraph && isRange(node)) pushResult(decodeRangeNode(node));
+      if (isPrefix(node)) {
+        const decodedChildren = decodePrefixNode(node);
+        if (PRE_CHI_PUT in decodedChildren) {
+          prefixChildPuts.push(...decodedChildren[PRE_CHI_PUT]);
+        }
+        pushResult(...decodedChildren);
+      } else if (isGraph && isRange(node)) pushResult(decodeRangeNode(node));
       else if (isBranch(node)) pushResult(decodeBranchNode(node));
       else if (isLink(node)) pushResult(decodeLinkNode(node));
       else pushResult(decodeLeafNode(node));
     }
 
-    // Use a simplified format if all the keys are numbers or strings.
-    if (allNums || allStrs) {
+    // Use a simplified format if all the keys are strings or it's a plain array.
+    if (
+      allStrs ||
+      (allNums &&
+        putRanges.length === 1 &&
+        cmp(putRanges[0].key, 0) === 0 &&
+        cmp(putRanges[0].end, +Infinity) === 0)
+    ) {
       result = result.reduce(
         (collection, item) => {
           if (Array.isArray(item)) {
@@ -89,13 +105,17 @@ function decode(nodes = [], { isGraph } = {}) {
     }
 
     if (isGraph && putRanges.length) {
-      if (putRanges[0].key === '' && putRanges[0].end === '\uffff') {
+      if (isMinKey(putRanges[0].key) && isMaxKey(putRanges[0].end)) {
         Object.defineProperty(result, '$put', { value: true });
       } else {
         Object.defineProperty(result, '$put', {
-          value: putRanges.map((rNode) => decodeArgs(rNode)),
+          value: putRanges
+            .map((rNode) => decodeArgs(rNode))
+            .concat(prefixChildPuts),
         });
       }
+    } else if (prefixChildPuts.length) {
+      Object.defineProperty(result, '$put', { value: prefixChildPuts });
     }
 
     return result;
@@ -103,7 +123,7 @@ function decode(nodes = [], { isGraph } = {}) {
 
   function decodePrefixNode(node) {
     let args = decodeArgs(node);
-    if (args === '') args = {};
+    if (!args) args = {};
     if (typeof args === 'string') {
       throw Error('decode.unencoded_prefix: ' + args);
     }
@@ -121,6 +141,7 @@ function decode(nodes = [], { isGraph } = {}) {
       return [linkObject];
     }
 
+    /** @type {any[] & {$put?: any}} */
     const children = decodeChildren(node.children);
 
     if (!Array.isArray(children)) {
@@ -138,6 +159,18 @@ function decode(nodes = [], { isGraph } = {}) {
       }
       child.$key = { ...args, ...child.$key };
     }
+
+    if (children.$put === true) {
+      children[PRE_CHI_PUT] = [{ ...args, $all: true }];
+    } else if (Array.isArray(children.$put)) {
+      children[PRE_CHI_PUT] = children.$put.map((rarg) => ({
+        ...args,
+        ...rarg,
+      }));
+    } else if (isDef(children.$put)) {
+      children[PRE_CHI_PUT] = [{ ...args, ...children.$put }];
+    }
+
     return children;
   }
 
@@ -157,7 +190,9 @@ function decode(nodes = [], { isGraph } = {}) {
     Only for graphs;
   */
   function decodeRangeNode(node) {
-    if (node.key === node.end) return { $key: decodeArgs({ key: node.key }) };
+    if (cmp(node.key, node.end) === 0) {
+      return { $key: decodeArgs({ key: node.key }) };
+    }
   }
 
   function decodeLinkNode(node) {

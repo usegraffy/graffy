@@ -1,3 +1,6 @@
+import { e } from '@graffy/testing/encoder.js';
+import { MAX_KEY, MIN_KEY } from '../../util.js';
+import { keyAfter as aft, keyBefore as bef } from '../step.js';
 import sieve from '../sieve.js';
 import { encodeGraph } from '../../coding/index.js';
 
@@ -9,32 +12,32 @@ test('empty', () => {
 });
 
 test('full', () => {
-  const g = [{ key: '', end: '\uffff', version: 0 }];
+  const g = [{ key: MIN_KEY, end: MAX_KEY, version: 0 }];
   const change = sieve(g, encodeGraph({ foo: 42 }, 0));
   expect(change).toEqual(encodeGraph({ foo: 42 }, 0));
   expect(g).toEqual([
-    { key: '', end: 'fon\uffff', version: 0 },
-    { key: 'foo', value: 42, version: 0 },
-    { key: 'foo\0', end: '\uffff', version: 0 },
+    { key: MIN_KEY, end: bef(e.foo), version: 0 },
+    { key: e.foo, value: 42, version: 0 },
+    { key: aft(e.foo), end: MAX_KEY, version: 0 },
   ]);
 });
 
 test('full-add-branch', () => {
-  const g = [{ key: '', end: '\uffff', version: 0 }];
+  const g = [{ key: MIN_KEY, end: MAX_KEY, version: 0 }];
   const change = sieve(g, encodeGraph({ foo: { bar: 42 } }, 0));
   expect(change).toEqual(encodeGraph({ foo: { bar: 42 } }, 0));
   expect(g).toEqual([
-    { key: '', end: 'fon\uffff', version: 0 },
+    { key: MIN_KEY, end: bef(e.foo), version: 0 },
     {
-      key: 'foo',
+      key: e.foo,
       version: 0,
       children: [
-        { key: '', end: 'baq\uffff', version: 0 },
-        { key: 'bar', value: 42, version: 0 },
-        { key: 'bar\0', end: '\uffff', version: 0 },
+        { key: MIN_KEY, end: bef(e.bar), version: 0 },
+        { key: e.bar, value: 42, version: 0 },
+        { key: aft(e.bar), end: MAX_KEY, version: 0 },
       ],
     },
-    { key: 'foo\0', end: '\uffff', version: 0 },
+    { key: aft(e.foo), end: MAX_KEY, version: 0 },
   ]);
 });
 
@@ -46,23 +49,23 @@ test('ignore-unchanged', () => {
 });
 
 test('empty knowledge', () => {
-  const data = [{ key: '', end: '\uffff', version: -1 }];
+  const data = [{ key: MIN_KEY, end: MAX_KEY, version: -1 }];
   const change = [
     {
-      key: 'foo',
+      key: e.foo,
       version: 0,
-      children: [{ key: '', end: '\uffff', version: 1 }],
+      children: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }],
     },
   ];
   const sieved = sieve(data, change);
   expect(data).toEqual([
-    { key: '', end: 'fon\uffff', version: -1 },
+    { key: MIN_KEY, end: bef(e.foo), version: -1 },
     {
-      key: 'foo',
+      key: e.foo,
       version: 0,
-      children: [{ key: '', end: '\uffff', version: 1 }],
+      children: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }],
     },
-    { key: 'foo\0', end: '\uffff', version: -1 },
+    { key: aft(e.foo), end: MAX_KEY, version: -1 },
   ]);
   expect(sieved).toEqual(change);
 });

@@ -1,10 +1,15 @@
 import { findFirst, isRange, isBranch } from '../node/index.js';
-import { encodeArgs /* decodeArgs */ } from '../coding/index.js';
+import { cmp } from '../util.js';
 
 export const IS_VAL = Symbol('IS_VAL');
 
+function makeNode(seg, props) {
+  if (ArrayBuffer.isView(seg)) return { key: seg, ...props };
+  return { ...seg, ...props };
+}
+
 export function wrapValue(value, path, version = 0) {
-  const node = { ...encodeArgs(path[path.length - 1]), value, version };
+  const node = makeNode(path[path.length - 1], { value, version });
   return wrap([node], path.slice(0, -1), version);
 }
 
@@ -16,14 +21,14 @@ export function wrap(children, path, version = 0, prefix = false) {
 
   // If it is a plain value, make it a value node
   if (!Array.isArray(children)) {
-    children = [{ ...encodeArgs(path[i--]), value: children, version }];
+    children = [makeNode(path[i--], { value: children, version })];
   } else {
     if (!children.length) return;
-    children = [{ ...encodeArgs(path[i--]), version, children }];
+    children = [makeNode(path[i--], { children, version })];
   }
 
   if (prefix) children[0].prefix = true;
-  while (i >= 0) children = [{ ...encodeArgs(path[i--]), version, children }];
+  while (i >= 0) children = [makeNode(path[i--], { children, version })];
   return children;
 }
 
@@ -33,11 +38,12 @@ export function unwrap(tree, path) {
   let children = tree;
   let node = { children };
   for (let i = 0; i < path.length; i++) {
-    const { key } = encodeArgs(path[i]);
+    const key = path[i];
+    if (!ArrayBuffer.isView(key)) throw Error('unwrap.ranges_unsupported');
     children = node.children;
     if (!children) return null; // This path does not exist.
     node = children[findFirst(children, key)];
-    if (!node || node.key > key) return undefined; // We lack knowledge.
+    if (!node || cmp(node.key, key) > 0) return undefined; // We lack knowledge.
     if (isRange(node)) return null; // This is known to be null.
     if (node.path) return unwrap(tree, node.path.concat(path.slice(i + 1)));
   }
@@ -61,7 +67,7 @@ export function remove(children, path) {
   const key = path[0];
   const ix = findFirst(children, key);
   const node = children[ix];
-  if (!node || node.key > key || isRange(node)) return children;
+  if (!node || cmp(node.key, key) > 0 || isRange(node)) return children;
 
   // let filteredNode;
   if (path.length === 1) {

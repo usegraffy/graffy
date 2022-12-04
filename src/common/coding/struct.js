@@ -1,6 +1,13 @@
 import { encode as encodeString, decode as decodeString } from './string.js';
 import { encode as encodeNumber, decode as decodeNumber } from './number.js';
-import { encode as encodeB64, decode as decodeB64 } from './base64.js';
+import { addStringify } from '../util.js';
+
+/*
+  Sortable encoding of JSON objects for Graffy keys.
+
+  The constraints are:
+  - Sorting a byte stream should 
+*/
 
 export const END = 0;
 export const NULL = 1;
@@ -11,20 +18,16 @@ export const STR = 5;
 export const ARR = 6;
 export const OBJ = 7;
 
+export const EOK = 127; // end-of-key
+
 function encodeArray(array) {
-  return [
-    ARR,
-    // encodeInteger(array.length),
-    ...array.flatMap((value) => encodeParts(value)),
-    END,
-  ];
+  return [ARR, ...array.flatMap((value) => encodeParts(value)), END];
 }
 
 function encodeObject(object) {
   const keys = Object.keys(object).sort();
   return [
     OBJ,
-    // encodeInteger(keys.length),
     ...keys.flatMap((key) => [
       STR,
       encodeString(key),
@@ -48,7 +51,28 @@ function encodeParts(value) {
 
 export function encode(value) {
   const parts = encodeParts(value);
+
+  // Ensure that there are no trailing zeros, so keyBefore() can work.
+  // decode() handles this by assuming as many trailing
+  // zeros as necessary.
   while (parts[parts.length - 1] === END) parts.pop();
+
+  // The last byte may occasionally a 0 or 255, which conflicts with keyBefore
+  // and keyAfter. This usually happens when the final part encodes a positive
+  // or negative integer. In such cases, we try to remove trailing zeros, and
+  // if that doesn't do it (we have a trailing 255) we instead append a dummy
+  // suffix that will be ignored by decode.
+  const lastPart = parts[parts.length - 1];
+  if (typeof lastPart !== 'number') {
+    let end = lastPart.length - 1;
+    while (end >= 0 && !lastPart[end]) end--;
+    if (lastPart[end] !== 0xff) {
+      parts[parts.length - 1] = lastPart.slice(0, end + 1);
+    } else {
+      parts.push(EOK);
+    }
+  }
+
   const length = parts.reduce(
     (sum, part) => sum + (typeof part === 'number' ? 1 : part.length),
     0,
@@ -64,14 +88,15 @@ export function encode(value) {
       i += part.length;
     }
   }
-  return encodeB64(buffer);
+
+  addStringify(buffer);
+  return buffer;
 }
 
 const nextKey = new WeakMap();
 
-export function decode(key) {
+export function decode(buffer) {
   let i = 0;
-  const buffer = decodeB64(key, 0);
 
   /** @type {Array<{ [prop: string]: any }|Array>} */
   const stack = [[]];
@@ -109,6 +134,8 @@ export function decode(key) {
     const type = buffer[i];
     const start = ++i;
     switch (type) {
+      case EOK:
+        return stack[0][0];
       case END:
         popToken();
         break;

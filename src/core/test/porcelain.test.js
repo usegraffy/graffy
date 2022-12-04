@@ -58,11 +58,13 @@ test('Porcelain read', async () => {
   expect(onReadBooks).toHaveBeenCalledWith(
     expectedBooksQuery,
     expect.any(Object),
+    expect.any(Function),
   );
   expect(onReadBooks.mock.calls[0][0].$key).toEqual(expectedBooksQuery.$key);
   expect(onReadUsers).toHaveBeenCalledWith(
     expectedUsersQuery,
     expect.any(Object),
+    expect.any(Function),
   );
   expect(result).toEqual(expectedResult);
 });
@@ -279,7 +281,7 @@ test('query_forwarding', async () => {
       ];
     });
   });
-  store2.onRead((...args) => store.read(...args));
+  store2.onRead((query, options) => store.read(query, options));
 
   const result = await store2.read(query);
   const expected = {
@@ -315,7 +317,11 @@ test('read_leaf', async () => {
   store.onRead('foo', provider);
   const res = await store.read('foo.bar', true);
 
-  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(provider).toHaveBeenCalledWith(
+    { bar: true },
+    {},
+    expect.any(Function),
+  );
   expect(res).toBe(44);
 });
 
@@ -325,7 +331,7 @@ test('write_leaf', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo.bar', 45);
 
-  expect(provider).toHaveBeenCalledWith({ bar: 45 }, {});
+  expect(provider).toHaveBeenCalledWith({ bar: 45 }, {}, expect.any(Function));
   expect(res).toBe(45);
 });
 
@@ -335,7 +341,11 @@ test('delete_leaf', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo.bar', null);
 
-  expect(provider).toHaveBeenCalledWith({ bar: null }, {});
+  expect(provider).toHaveBeenCalledWith(
+    { bar: null },
+    {},
+    expect.any(Function),
+  );
   expect(res).toBe(null);
 });
 
@@ -345,7 +355,11 @@ test('read_key', async () => {
   store.onRead('foo', provider);
   const res = await store.read('foo', { $key: 'bar' });
 
-  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(provider).toHaveBeenCalledWith(
+    { bar: true },
+    {},
+    expect.any(Function),
+  );
   expect(res).toEqual([44]); // Can't add $key:bar on the number 44
 });
 
@@ -355,7 +369,11 @@ test('read_array_key', async () => {
   store.onRead('foo', provider);
   const res = await store.read('foo', [{ $key: 'bar' }]);
 
-  expect(provider).toHaveBeenCalledWith({ bar: true }, {});
+  expect(provider).toHaveBeenCalledWith(
+    { bar: true },
+    {},
+    expect.any(Function),
+  );
   expect(res).toEqual([44]);
 });
 
@@ -365,7 +383,7 @@ test('write_key', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', { $key: 'bar', $val: 44 });
 
-  expect(provider).toHaveBeenCalledWith({ bar: 44 }, {});
+  expect(provider).toHaveBeenCalledWith({ bar: 44 }, {}, expect.any(Function));
   expect(res).toEqual({ bar: 44 });
 });
 
@@ -375,7 +393,7 @@ test('write_array_key', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', [{ $key: 'bar', $val: 44 }]);
 
-  expect(provider).toHaveBeenCalledWith({ bar: 44 }, {});
+  expect(provider).toHaveBeenCalledWith({ bar: 44 }, {}, expect.any(Function));
   expect(res).toEqual({ bar: 44 });
 });
 
@@ -385,7 +403,38 @@ test('write_key_put', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', { $key: 'bar', $put: true, baz: 4 });
 
-  expect(provider).toHaveBeenCalledWith({ bar: { baz: 4 } }, {});
+  expect(provider).toHaveBeenCalledWith(
+    { bar: { baz: 4 } },
+    {},
+    expect.any(Function),
+  );
   expect(res).toEqual({ bar: { baz: 4 } });
   expect(res.bar.$put).toBe(true);
+});
+
+test('onReadWithNext', async () => {
+  const query = { post: { abc: { author: { name: true }, title: true } } };
+  const store = new Graffy();
+  store.use(GraffyFill());
+  store.onRead(async (query, options, next) => {
+    const res = await next(query, options);
+    // do nothing
+    return res;
+  });
+  store.onRead('post', () => ({
+    abc: { author: { $ref: ['user', '123'] }, title: 'Example' },
+  }));
+  store.onRead('user', () => ({
+    123: { name: 'Alice' },
+  }));
+
+  const res = await store.read(query);
+  expect(res).toEqual({
+    post: {
+      abc: {
+        author: ref(['user', '123'], { name: 'Alice' }),
+        title: 'Example',
+      },
+    },
+  });
 });
