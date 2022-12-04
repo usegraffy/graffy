@@ -1,9 +1,9 @@
-import { encodeUrl, serialize, deserialize, add } from '@graffy/common';
+import { pack, unpack, add } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
 function getOptionsParam(options) {
   if (!options) return '';
-  return encodeURIComponent(serialize(options));
+  return encodeURIComponent(JSON.stringify(options));
 }
 const aggregateQueries = {};
 
@@ -30,7 +30,7 @@ class AggregateQuery {
     const response = await fetch(this.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: serialize(this.combinedQuery),
+      body: JSON.stringify(pack(this.combinedQuery)),
     });
     if (response.status !== 200) {
       const message = await response.text();
@@ -40,9 +40,11 @@ class AggregateQuery {
       }
       return;
     }
-    const data = await response.json();
-    for (const reader of this.readers) {
-      reader.resolve(data);
+    try {
+      const data = unpack(JSON.parse(await response.text()));
+      for (const reader of this.readers) reader.resolve(data);
+    } catch (e) {
+      for (const reader of this.readers) reader.reject(e);
     }
   }
 }
@@ -56,7 +58,7 @@ function makeQuery(url, query) {
  *
  * @param {string} baseUrl
  * @param {{
- *    getOptions?: () => Promise<void>,
+ *    getOptions?: (op: string, options: any) => Promise<void>,
  *    watch?: 'sse' | 'none' | 'hang',
  *    connInfoPath?: string,
  * } | undefined} options
@@ -96,16 +98,18 @@ const httpClient =
       }
       if (!EventSource) throw Error('client.sse.unavailable');
       const optionsParam = getOptionsParam(await getOptions('watch', options));
-      const url = `${baseUrl}?q=${encodeUrl(query)}&opts=${optionsParam}`;
+      const url = `${baseUrl}?q=${encodeURIComponent(
+        JSON.stringify(pack(query)),
+      )}&opts=${optionsParam}`;
       const source = new EventSource(url);
 
       yield* makeStream((push, end) => {
         source.onmessage = ({ data }) => {
-          push(deserialize(data));
+          push(unpack(JSON.parse(data)));
         };
 
         source.onerror = (e) => {
-          end(Error('client.sse.transport: ' + e.message));
+          end(Error('client.sse.transport: ' + e));
         };
 
         source.addEventListener('graffyerror', (e) => {
@@ -125,9 +129,9 @@ const httpClient =
       return fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: serialize(change),
-      }).then((res) => {
-        if (res.status === 200) return res.json();
+        body: JSON.stringify(pack(change)),
+      }).then(async (res) => {
+        if (res.status === 200) return unpack(JSON.parse(await res.text()));
         return res.text().then((message) => {
           throw Error('server.' + message);
         });

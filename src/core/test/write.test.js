@@ -12,6 +12,6 @@ describe('write', () => {
     const handler = jest.fn((change) => change);
     g.onWrite(handler);
     await g.write({ foo: 42 });
-    expect(handler).toBeCalledWith({ foo: 42 }, {});
+    expect(handler).toBeCalledWith({ foo: 42 }, {}, expect.any(Function));
   });
 });

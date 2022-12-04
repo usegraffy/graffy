@@ -14,10 +14,6 @@ export function isLink(node) {
   return node && typeof node.path !== 'undefined';
 }
 
-export function isEncoded(node) {
-  return node && node.key[0] === '\0';
-}
-
 export function isOlder(node, version) {
   return typeof node.version !== 'undefined' && node.version < version;
 }

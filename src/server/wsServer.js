@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
-import { serialize, deserialize } from '@graffy/common';
-// import { format } from '@graffy/testing';
+import { pack, unpack } from '@graffy/common';
+
 import debug from 'debug';
 
 const log = debug('graffy:server:ws');
@@ -16,7 +16,8 @@ export default function server(store) {
     ws.graffyStreams = {}; // We use this to keep track of streams to close.
     ws.on('message', async function message(msg) {
       try {
-        const [id, op, payload, options] = deserialize(msg);
+        const [id, op, packedPayload, options] = JSON.parse(msg);
+        const payload = unpack(packedPayload);
 
         if (id === ':pong') {
           ws.pingPending = false;
@@ -28,10 +29,10 @@ export default function server(store) {
           case 'write':
             try {
               const result = await store.call(op, payload, options);
-              ws.send(serialize([id, null, result]));
+              ws.send(JSON.stringify([id, null, pack(result)]));
             } catch (e) {
               log(op + 'error:' + e.message + ' ' + payload);
-              ws.send(serialize([id, e.message]));
+              ws.send(JSON.stringify([id, e.message]));
             }
             break;
           case 'watch':
@@ -44,11 +45,11 @@ export default function server(store) {
               ws.graffyStreams[id] = stream;
 
               for await (const value of stream) {
-                ws.send(serialize([id, null, value]));
+                ws.send(JSON.stringify([id, null, pack(value)]));
               }
             } catch (e) {
               log(op + 'error:' + e.message + ' ' + payload);
-              ws.send(serialize([id, e.message]));
+              ws.send(JSON.stringify([id, e.message]));
             }
             break;
           case 'unwatch':
@@ -57,7 +58,8 @@ export default function server(store) {
             delete ws.graffyStreams[id];
             break;
         }
-      } catch (_) {
+      } catch (e) {
+        log('Closing socket due to error: ' + e.message);
         ws.close();
       }
     });
@@ -74,7 +76,7 @@ export default function server(store) {
     wss.clients.forEach(function each(ws) {
       if (ws.pingPending) return ws.terminate();
       ws.pingPending = true;
-      ws.send(serialize([':ping', Date.now()]));
+      ws.send(JSON.stringify([':ping', Date.now()]));
     });
   }, PING_INTERVAL);
 

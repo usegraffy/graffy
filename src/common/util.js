@@ -1,4 +1,15 @@
-export function err(message, { cause, ...args } = {}) {
+export const MIN_KEY = new Uint8Array();
+export const MAX_KEY = new Uint8Array([0xff]);
+
+export function isMinKey(key) {
+  return key.length === 0;
+}
+
+export function isMaxKey(key) {
+  return key.length === 1 && key[0] === 0xff;
+}
+
+export function err(message, { cause = null, ...args } = {}) {
   const e = new Error(message + (args ? ' ' + JSON.stringify(args) : ''));
   e.cause = cause;
   throw e;
@@ -18,11 +29,23 @@ export function isDef(value) {
 }
 
 export function isPlainObject(arg) {
-  return typeof arg === 'object' && arg && !Array.isArray(arg);
+  return (
+    typeof arg === 'object' &&
+    arg &&
+    !Array.isArray(arg) &&
+    !ArrayBuffer.isView(arg)
+  );
 }
 
-export function isEncodedKey(str) {
-  return str[0] === '\0';
+export function cmp(a, b) {
+  const l = a.length < b.length ? a.length : b.length;
+  for (let i = 0; i < l; i++) {
+    if (a[i] < b[i]) return -1;
+    if (a[i] > b[i]) return 1;
+  }
+  if (a.length < b.length) return -1;
+  if (a.length > b.length) return 1;
+  return 0;
 }
 
 export function find(items, compare, first = 0, last = items.length) {
@@ -45,3 +68,44 @@ export function find(items, compare, first = 0, last = items.length) {
 
   return currentFirst;
 }
+
+const stringifyDescriptor = {
+  value: function () {
+    if (this?.length === 0) return '\u00b7';
+    let str = '';
+    let bull = false;
+
+    this?.forEach?.((value, i) => {
+      if (value >= 32 && value <= 126) {
+        str += String.fromCharCode(value);
+        bull = true;
+      } else {
+        str +=
+          (bull ? '\u00b7' : '') +
+          ('0' + value.toString(16)).slice(-2) +
+          (i < this.length - 1 ? '\u00b7' : '');
+        bull = false;
+      }
+    });
+    return str;
+  },
+};
+
+export function addStringify(buffer) {
+  if (
+    'toJSON' in buffer ||
+    'toString' in buffer ||
+    Symbol.for('nodejs.util.inspect.custom') in buffer
+  ) {
+    return buffer;
+  }
+  Object.defineProperties(buffer, {
+    toJSON: stringifyDescriptor,
+    toString: stringifyDescriptor,
+    [Symbol.for('nodejs.util.inspect.custom')]: stringifyDescriptor,
+  });
+  return buffer;
+}
+
+addStringify(MIN_KEY);
+addStringify(MAX_KEY);

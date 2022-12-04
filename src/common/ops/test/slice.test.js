@@ -1,3 +1,6 @@
+import { e } from '@graffy/testing/encoder.js';
+import { MAX_KEY, MIN_KEY } from '../../util.js';
+import { keyAfter as aft, keyBefore as bef } from '../step.js';
 import slice from '../slice.js';
 
 describe('slice', () => {
@@ -10,22 +13,22 @@ describe('slice', () => {
     expect(
       slice(
         [
-          { key: 'foo', value: 42, version: 3 },
-          { key: 'foo\0', end: 'fuy\uffff', version: 3 },
-          { key: 'fuz', value: 43, version: 3 },
+          { key: e.foo, value: 42, version: 3 },
+          { key: aft(e.foo), end: bef(e.fuz), version: 3 },
+          { key: e.fuz, value: 43, version: 3 },
         ],
         [
-          { key: 'flo', value: 1, version: 2 },
-          { key: 'foo', value: 1, version: 2 },
-          { key: 'fub', value: 1, version: 2 },
+          { key: e.flo, value: 1, version: 2 },
+          { key: e.foo, value: 1, version: 2 },
+          { key: e.fub, value: 1, version: 2 },
         ],
       ),
     ).toEqual({
       known: [
-        { key: 'foo', value: 42, version: 3 },
-        { key: 'fub', end: 'fub', version: 3 },
+        { key: e.foo, value: 42, version: 3 },
+        { key: e.fub, end: e.fub, version: 3 },
       ],
-      unknown: [{ key: 'flo', value: 1, version: 2 }],
+      unknown: [{ key: e.flo, value: 1, version: 2 }],
     });
   });
 
@@ -34,21 +37,21 @@ describe('slice', () => {
       slice(
         [
           {
-            key: 'bar',
+            key: e.bar,
             children: [
-              { key: 'foo', value: 42, version: 3 },
-              { key: 'fuz', value: 43, version: 3 },
+              { key: e.foo, value: 42, version: 3 },
+              { key: e.fuz, value: 43, version: 3 },
             ],
           },
         ],
-        [{ key: 'bar', value: 1, version: 2 }],
+        [{ key: e.bar, value: 1, version: 2 }],
       ).known,
     ).toEqual([
       {
-        key: 'bar',
+        key: e.bar,
         children: [
-          { key: 'foo', value: 42, version: 3 },
-          { key: 'fuz', value: 43, version: 3 },
+          { key: e.foo, value: 42, version: 3 },
+          { key: e.fuz, value: 43, version: 3 },
         ],
       },
     ]);
@@ -60,18 +63,18 @@ test('gleaf_qbranch', () => {
     slice(
       [
         {
-          key: 'bar',
+          key: e.bar,
           version: 3,
           value: 'abc',
         },
       ],
       [
         {
-          key: 'bar',
+          key: e.bar,
           value: 1,
           children: [
-            { key: 'foo', value: 42, version: 2 },
-            { key: 'fuz', value: 43, version: 2 },
+            { key: e.foo, value: 42, version: 2 },
+            { key: e.fuz, value: 43, version: 2 },
           ],
           version: 2,
         },
@@ -79,11 +82,11 @@ test('gleaf_qbranch', () => {
     ).known,
   ).toEqual([
     {
-      key: 'bar',
+      key: e.bar,
       version: 3,
       children: [
-        { key: 'foo', end: 'foo', version: 3 },
-        { key: 'fuz', end: 'fuz', version: 3 },
+        { key: e.foo, end: e.foo, version: 3 },
+        { key: e.fuz, end: e.fuz, version: 3 },
       ],
     },
   ]);
@@ -93,38 +96,38 @@ describe('range', () => {
   test('rangeEmpty', () => {
     expect(
       slice(
-        [{ key: '', end: '\uffff', version: 1 }],
+        [{ key: MIN_KEY, end: MAX_KEY, version: 1 }],
         [
           {
-            key: '',
-            end: '\uffff',
+            key: MIN_KEY,
+            end: MAX_KEY,
             limit: 2,
             version: 0,
-            children: [{ key: 'foo', value: 1, version: 0 }],
+            children: [{ key: e.foo, value: 1, version: 0 }],
           },
         ],
       ),
-    ).toEqual({ known: [{ key: '', end: '\uffff', version: 1 }] });
+    ).toEqual({ known: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }] });
   });
 
   test('rangeForeFull', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 1 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: 'gag', version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 1 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ key: 'bar', end: 'egg', limit: 2, num: 1, version: 0 }],
+        [{ key: e.bar, end: e.egg, limit: 2, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', value: 1, version: 1 },
-        { key: 'bar\0', end: 'bas\uffff', version: 1 },
-        { key: 'bat', value: 2, version: 1 },
+        { key: e.bar, value: 1, version: 1 },
+        { key: aft(e.bar), end: bef(e.bat), version: 1 },
+        { key: e.bat, value: 2, version: 1 },
       ],
     });
   });
@@ -133,21 +136,21 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 1 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: 'gag', version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 1 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ end: 'bar', key: 'egg', limit: 2, num: 1, version: 0 }],
+        [{ end: e.bar, key: e.egg, limit: 2, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', value: 1, version: 1 },
-        { key: 'bar\0', end: 'bas\uffff', version: 1 },
-        { key: 'bat', value: 2, version: 1 },
-        { key: 'bat\0', end: 'egg', version: 1 },
+        { key: e.bar, value: 1, version: 1 },
+        { key: aft(e.bar), end: bef(e.bat), version: 1 },
+        { key: e.bat, value: 2, version: 1 },
+        { key: aft(e.bat), end: e.egg, version: 1 },
       ],
     });
   });
@@ -156,23 +159,25 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 1 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: 'gag', version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 1 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ end: '', key: 'egg', limit: 3, num: 1, version: 0 }],
+        [{ end: MIN_KEY, key: e.egg, limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', value: 1, version: 1 },
-        { key: 'bar\0', end: 'bas\uffff', version: 1 },
-        { key: 'bat', value: 2, version: 1 },
-        { key: 'bat\0', end: 'egg', version: 1 },
+        { key: e.bar, value: 1, version: 1 },
+        { key: aft(e.bar), end: bef(e.bat), version: 1 },
+        { key: e.bat, value: 2, version: 1 },
+        { key: aft(e.bat), end: e.egg, version: 1 },
       ],
-      unknown: [{ end: '', key: 'baq\uffff', limit: 1, num: 1, version: 0 }],
+      unknown: [
+        { end: MIN_KEY, key: bef(e.bar), limit: 1, num: 1, version: 0 },
+      ],
     });
   });
 
@@ -180,22 +185,22 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 1 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: 'gag', version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 1 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ key: 'bark', end: 'fuz', limit: 3, num: 1, version: 0 }],
+        [{ key: e.bark, end: e.fuz, limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: 'bark', end: 'bas\uffff', version: 1 },
-        { key: 'bat', value: 2, version: 1 },
-        { key: 'bat\0', end: 'fon\uffff', version: 1 },
-        { key: 'foo', value: 3, version: 1 },
-        { key: 'foo\0', end: 'fuz', version: 1 },
+        { key: e.bark, end: bef(e.bat), version: 1 },
+        { key: e.bat, value: 2, version: 1 },
+        { key: aft(e.bat), end: bef(e.foo), version: 1 },
+        { key: e.foo, value: 3, version: 1 },
+        { key: aft(e.foo), end: e.fuz, version: 1 },
       ],
     });
   });
@@ -204,17 +209,17 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 1 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: 'gag', version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 1 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ key: 'ark', end: 'foo', limit: 3, num: 1, version: 0 }],
+        [{ key: e.ark, end: e.foo, limit: 3, num: 1, version: 0 }],
       ),
     ).toEqual({
-      unknown: [{ key: 'ark', end: 'foo', limit: 3, num: 1, version: 0 }],
+      unknown: [{ key: e.ark, end: e.foo, limit: 3, num: 1, version: 0 }],
     });
   });
 
@@ -222,25 +227,25 @@ describe('range', () => {
     expect(
       slice(
         [
-          { key: '', end: 'baq\uffff', version: 1 },
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 1 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: '\uffff', version: 1 },
+          { key: MIN_KEY, end: bef(e.bar), version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 1 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: MAX_KEY, version: 1 },
         ],
-        [{ key: '', end: '\uffff', limit: 5000, num: 1, version: 0 }],
+        [{ key: MIN_KEY, end: MAX_KEY, limit: 5000, num: 1, version: 0 }],
       ),
     ).toEqual({
       known: [
-        { key: '', end: 'baq\uffff', version: 1 },
-        { key: 'bar', value: 1, version: 1 },
-        { key: 'bar\0', end: 'bas\uffff', version: 1 },
-        { key: 'bat', value: 2, version: 1 },
-        { key: 'bat\0', end: 'fon\uffff', version: 1 },
-        { key: 'foo', value: 3, version: 1 },
-        { key: 'foo\0', end: '\uffff', version: 1 },
+        { key: MIN_KEY, end: bef(e.bar), version: 1 },
+        { key: e.bar, value: 1, version: 1 },
+        { key: aft(e.bar), end: bef(e.bat), version: 1 },
+        { key: e.bat, value: 2, version: 1 },
+        { key: aft(e.bat), end: bef(e.foo), version: 1 },
+        { key: e.foo, value: 3, version: 1 },
+        { key: aft(e.foo), end: MAX_KEY, version: 1 },
       ],
     });
   });
@@ -252,35 +257,35 @@ describe('link', () => {
       slice(
         [
           {
-            key: 'bar',
+            key: e.bar,
             children: [
-              { key: 'foo', value: 42, version: 3 },
-              { key: 'fuz', value: 43, version: 3 },
+              { key: e.foo, value: 42, version: 3 },
+              { key: e.fuz, value: 43, version: 3 },
             ],
           },
-          { key: 'bat', path: ['bar'], version: 3 },
+          { key: e.bat, path: [e.bar], version: 3 },
         ],
         [
           {
-            key: 'bat',
+            key: e.bat,
             version: 2,
             children: [
-              { key: 'flo', value: 1, version: 2 },
-              { key: 'foo', value: 1, version: 2 },
+              { key: e.flo, value: 1, version: 2 },
+              { key: e.foo, value: 1, version: 2 },
             ],
           },
         ],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', children: [{ key: 'foo', value: 42, version: 3 }] },
-        { key: 'bat', path: ['bar'], version: 3 },
+        { key: e.bar, children: [{ key: e.foo, value: 42, version: 3 }] },
+        { key: e.bat, path: [e.bar], version: 3 },
       ],
       unknown: [
         {
-          key: 'bar',
+          key: e.bar,
           version: 2,
-          children: [{ key: 'flo', value: 1, version: 2 }],
+          children: [{ key: e.flo, value: 1, version: 2 }],
         },
       ],
     });
@@ -290,41 +295,41 @@ describe('link', () => {
     expect(
       slice(
         [
-          { key: 'bar', version: 1, value: 25 },
-          { key: 'foo', version: 1, path: ['bar'] },
+          { key: e.bar, version: 1, value: 25 },
+          { key: e.foo, version: 1, path: [e.bar] },
         ],
-        [{ key: 'foo', version: 0, value: 1 }],
+        [{ key: e.foo, version: 0, value: 1 }],
       ).known,
     ).toEqual([
-      { key: 'bar', version: 1, value: 25 },
-      { key: 'foo', version: 1, path: ['bar'] },
+      { key: e.bar, version: 1, value: 25 },
+      { key: e.foo, version: 1, path: [e.bar] },
     ]);
   });
 
   test('linkBroken', () => {
     expect(
       slice(
-        [{ key: 'bat', path: ['bar'], version: 3 }],
+        [{ key: e.bat, path: [e.bar], version: 3 }],
         [
           {
-            key: 'bat',
+            key: e.bat,
             version: 2,
             children: [
-              { key: 'flo', value: 1, version: 2 },
-              { key: 'foo', value: 1, version: 2 },
+              { key: e.flo, value: 1, version: 2 },
+              { key: e.foo, value: 1, version: 2 },
             ],
           },
         ],
       ),
     ).toEqual({
-      known: [{ key: 'bat', path: ['bar'], version: 3 }],
+      known: [{ key: e.bat, path: [e.bar], version: 3 }],
       unknown: [
         {
-          key: 'bar',
+          key: e.bar,
           version: 2,
           children: [
-            { key: 'flo', value: 1, version: 2 },
-            { key: 'foo', value: 1, version: 2 },
+            { key: e.flo, value: 1, version: 2 },
+            { key: e.foo, value: 1, version: 2 },
           ],
         },
       ],
@@ -337,18 +342,18 @@ describe('version', () => {
     expect(
       slice(
         [
-          { key: 'bar', value: 1, version: 1 },
-          { key: 'bar\0', end: 'bas\uffff', version: 1 },
-          { key: 'bat', value: 2, version: 0 },
-          { key: 'bat\0', end: 'fon\uffff', version: 1 },
-          { key: 'foo', value: 3, version: 1 },
-          { key: 'foo\0', end: 'gag', version: 1 },
+          { key: e.bar, value: 1, version: 1 },
+          { key: aft(e.bar), end: bef(e.bat), version: 1 },
+          { key: e.bat, value: 2, version: 0 },
+          { key: aft(e.bat), end: bef(e.foo), version: 1 },
+          { key: e.foo, value: 3, version: 1 },
+          { key: aft(e.foo), end: e.gag, version: 1 },
         ],
-        [{ key: 'bark', end: 'fuz', limit: 3, num: 1, version: 1 }],
+        [{ key: e.bark, end: e.fuz, limit: 3, num: 1, version: 1 }],
       ),
     ).toEqual({
-      known: [{ key: 'bark', end: 'bas\uffff', version: 1 }],
-      unknown: [{ key: 'bat', end: 'fuz', limit: 3, version: 1, num: 1 }],
+      known: [{ key: e.bark, end: bef(e.bat), version: 1 }],
+      unknown: [{ key: e.bat, end: e.fuz, limit: 3, version: 1, num: 1 }],
     });
   });
 
@@ -357,21 +362,21 @@ describe('version', () => {
       slice(
         [
           {
-            key: 'bar',
+            key: e.bar,
             children: [
-              { key: 'foo', value: 42, version: 3 },
-              { key: 'fuz', value: 43, version: 3 },
+              { key: e.foo, value: 42, version: 3 },
+              { key: e.fuz, value: 43, version: 3 },
             ],
           },
-          { key: 'bat', path: ['bar'], version: 1 },
+          { key: e.bat, path: [e.bar], version: 1 },
         ],
         [
           {
-            key: 'bat',
+            key: e.bat,
             version: 2,
             children: [
-              { key: 'flo', value: 1, version: 2 },
-              { key: 'foo', value: 1, version: 2 },
+              { key: e.flo, value: 1, version: 2 },
+              { key: e.foo, value: 1, version: 2 },
             ],
           },
         ],
@@ -379,11 +384,11 @@ describe('version', () => {
     ).toEqual({
       unknown: [
         {
-          key: 'bat',
+          key: e.bat,
           version: 2,
           children: [
-            { key: 'flo', value: 1, version: 2 },
-            { key: 'foo', value: 1, version: 2 },
+            { key: e.flo, value: 1, version: 2 },
+            { key: e.foo, value: 1, version: 2 },
           ],
         },
       ],
@@ -394,18 +399,18 @@ describe('version', () => {
     expect(
       slice(
         [
-          { key: '', end: 'fon\uffff', version: 0 },
-          { key: 'foo', version: 1580541870611, value: 42 },
-          { key: 'foo\u0000', end: '\uffff', version: 0 },
+          { key: MIN_KEY, end: bef(e.foo), version: 0 },
+          { key: e.foo, version: 1580541870611, value: 42 },
+          { key: aft(e.foo), end: MAX_KEY, version: 0 },
         ],
         [
-          { key: 'bar', version: 0, value: 1 },
-          { key: 'foo', version: 0, value: 1 },
+          { key: e.bar, version: 0, value: 1 },
+          { key: e.foo, version: 0, value: 1 },
         ],
       ).known,
     ).toEqual([
-      { key: 'bar', end: 'bar', version: 0 },
-      { key: 'foo', version: 1580541870611, value: 42 },
+      { key: e.bar, end: e.bar, version: 0 },
+      { key: e.foo, version: 1580541870611, value: 42 },
     ]);
   });
 
@@ -413,35 +418,35 @@ describe('version', () => {
     expect(
       slice(
         [
-          { key: 'bar', version: 0, path: ['foo'] },
-          { key: 'baz', version: 0, path: ['foo'] },
+          { key: e.bar, version: 0, path: [e.foo] },
+          { key: e.baz, version: 0, path: [e.foo] },
           {
-            key: 'foo',
+            key: e.foo,
             version: 0,
-            children: [{ key: 'x', version: 0, value: 42 }],
+            children: [{ key: e.x, version: 0, value: 42 }],
           },
         ],
         [
           {
-            key: 'bar',
+            key: e.bar,
             version: 0,
-            children: Object.freeze([{ key: 'x', version: 0, value: 1 }]),
+            children: Object.freeze([{ key: e.x, version: 0, value: 1 }]),
           },
           {
-            key: 'baz',
+            key: e.baz,
             version: 0,
-            children: Object.freeze([{ key: 'x', version: 0, value: 1 }]),
+            children: Object.freeze([{ key: e.x, version: 0, value: 1 }]),
           },
         ],
       ),
     ).toEqual({
       known: [
-        { key: 'bar', version: 0, path: ['foo'] },
-        { key: 'baz', version: 0, path: ['foo'] },
+        { key: e.bar, version: 0, path: [e.foo] },
+        { key: e.baz, version: 0, path: [e.foo] },
         {
-          key: 'foo',
+          key: e.foo,
           version: 0,
-          children: [{ key: 'x', version: 0, value: 42 }],
+          children: [{ key: e.x, version: 0, value: 42 }],
         },
       ],
     });
@@ -453,13 +458,13 @@ test('prefix', () => {
     slice(
       [
         {
-          key: 'favs',
+          key: e.favs,
           version: 0,
           children: [
             {
-              key: '(tag:x)',
+              key: e['(tag:x)'],
               version: 0,
-              path: ['posts', '(favs:true,tag:x)'],
+              path: [e.posts, e['(favs:true,tag:x)']],
               prefix: true,
             },
           ],
@@ -467,19 +472,19 @@ test('prefix', () => {
       ],
       [
         {
-          key: 'favs',
+          key: e.favs,
           version: 0,
           children: [
             {
-              key: '(tag:x)',
+              key: e['(tag:x)'],
               version: 0,
               children: [
                 {
-                  key: '',
-                  end: '\uffff',
+                  key: MIN_KEY,
+                  end: MAX_KEY,
                   limit: 3,
                   version: 0,
-                  children: [{ key: 'name', version: 0, value: 1 }],
+                  children: [{ key: e.name, version: 0, value: 1 }],
                 },
               ],
             },
@@ -490,13 +495,13 @@ test('prefix', () => {
   ).toEqual({
     known: [
       {
-        key: 'favs',
+        key: e.favs,
         version: 0,
         children: [
           {
-            key: '(tag:x)',
+            key: e['(tag:x)'],
             version: 0,
-            path: ['posts', '(favs:true,tag:x)'],
+            path: [e.posts, e['(favs:true,tag:x)']],
             prefix: true,
           },
         ],
@@ -504,20 +509,20 @@ test('prefix', () => {
     ],
     unknown: [
       {
-        key: 'posts',
+        key: e.posts,
         version: 0,
         children: [
           {
-            key: '(favs:true,tag:x)',
+            key: e['(favs:true,tag:x)'],
             version: 0,
             prefix: true,
             children: [
               {
-                key: '',
-                end: '\uffff',
+                key: MIN_KEY,
+                end: MAX_KEY,
                 limit: 3,
                 version: 0,
-                children: [{ key: 'name', version: 0, value: 1 }],
+                children: [{ key: e.name, version: 0, value: 1 }],
               },
             ],
           },

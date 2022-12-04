@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
-import { encodeUrl } from '@graffy/common';
+import { pack, unpack } from '@graffy/common';
+import { e } from '@graffy/testing/encoder.js';
 
 jest.unstable_mockModule('./Socket', () => ({
   default: jest.fn(() => ({
@@ -79,9 +80,12 @@ describe('httpClient connInfoPath', () => {
 
 // async refers to the getOptions implementation
 describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
-  globalThis.fetch = jest
-    .fn()
-    .mockResolvedValue({ status: 200, json: jest.fn() });
+  // @ts-ignore
+  globalThis.fetch = jest.fn().mockResolvedValue({
+    status: 200,
+    json: jest.fn().mockResolvedValue([['foo', 42]]),
+    text: jest.fn().mockResolvedValue('[["foo",42]]'),
+  });
 
   let store, getOptions;
   const connectionUrl = 'http://example';
@@ -106,9 +110,11 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     await store.read({ demo: 1 });
     expect(getOptions).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledWith(
-      `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
+      `${connectionUrl}?opts=${encodeURIComponent(
+        JSON.stringify({ value }),
+      )}&op=read`,
       {
-        body: '[{"key":"demo","version":0,"value":1}]',
+        body: JSON.stringify(pack([{ key: e.demo, version: 0, value: 1 }])),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       },
@@ -126,9 +132,16 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     expect(getOptions).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
-      `${connectionUrl}?opts=${encodeUrl({ value })}&op=read`,
+      `${connectionUrl}?opts=${encodeURIComponent(
+        JSON.stringify({ value }),
+      )}&op=read`,
       {
-        body: '[{"key":"anotherDemo","version":0,"value":2},{"key":"demo","version":0,"value":2}]',
+        body: JSON.stringify(
+          pack([
+            { key: e.anotherDemo, version: 0, value: 2 },
+            { key: e.demo, version: 0, value: 2 },
+          ]),
+        ),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       },
@@ -140,7 +153,9 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     expect(getOptions).toHaveBeenCalled();
     const result = fetch.mock.calls;
     expect(result[0][0]).toBe(
-      `${connectionUrl}?opts=${encodeUrl({ value })}&op=write`,
+      `${connectionUrl}?opts=${encodeURIComponent(
+        JSON.stringify({ value }),
+      )}&op=write`,
     );
     const requestInit = result[0][1];
     expect(requestInit.method).toBe('POST');
@@ -148,8 +163,8 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
       'Content-Type': 'application/json',
     });
     expect(requestInit.body).toEqual(expect.any(String));
-    expect(JSON.parse(requestInit.body)).toEqual([
-      { key: 'demo', version: expect.any(Number), value: 1 },
+    expect(unpack(JSON.parse(requestInit.body))).toEqual([
+      { key: e.demo, version: expect.any(Number), value: 1 },
     ]);
   });
 });

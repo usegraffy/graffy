@@ -1,36 +1,37 @@
+import { e } from '@graffy/testing/encoder.js';
 import { unwrap, remove } from '../path.js';
 
 describe('unwrap', () => {
   test('root', () => {
-    expect(unwrap([{ key: 'foo', value: '10' }], [])).toEqual([
+    expect(unwrap([{ key: e.foo, value: '10' }], [])).toEqual([
       {
-        key: 'foo',
+        key: e.foo,
         value: '10',
       },
     ]);
   });
 
   test('present', () => {
-    expect(unwrap([{ key: 'foo', value: '10' }], ['foo'])).toEqual('10');
+    expect(unwrap([{ key: e.foo, value: '10' }], [e.foo])).toEqual('10');
   });
 
   test('absent', () => {
-    expect(unwrap([{ key: 'foo', end: 'gah' }], ['foo'])).toEqual(null);
+    expect(unwrap([{ key: e.foo, end: e.gah }], [e.foo])).toEqual(null);
   });
 
   test('unknown', () => {
-    expect(unwrap([{ key: 'foo', value: '10' }], ['bar'])).toEqual(undefined);
+    expect(unwrap([{ key: e.foo, value: '10' }], [e.bar])).toEqual(undefined);
   });
 });
 
 describe('remove', () => {
   test('last', () => {
-    expect(remove([{ key: 'foo', value: '10' }], ['foo'])).toEqual([]);
+    expect(remove([{ key: e.foo, value: '10' }], [e.foo])).toEqual([]);
   });
 
   test('miss', () => {
-    expect(remove([{ key: 'foo', value: '10' }], ['bar'])).toEqual([
-      { key: 'foo', value: '10' },
+    expect(remove([{ key: e.foo, value: '10' }], [e.bar])).toEqual([
+      { key: e.foo, value: '10' },
     ]);
   });
 
@@ -38,12 +39,12 @@ describe('remove', () => {
     expect(
       remove(
         [
-          { key: 'bar', value: '10' },
-          { key: 'foo', value: '10' },
+          { key: e.bar, value: '10' },
+          { key: e.foo, value: '10' },
         ],
-        ['foo'],
+        [e.foo],
       ),
-    ).toEqual([{ key: 'bar', value: '10' }]);
+    ).toEqual([{ key: e.bar, value: '10' }]);
   });
 
   test('tree', () => {
@@ -51,15 +52,15 @@ describe('remove', () => {
       remove(
         [
           {
-            key: 'root',
+            key: e.root,
             children: [
-              { key: 'bar', value: '10' },
-              { key: 'foo', value: '10' },
+              { key: e.bar, value: '10' },
+              { key: e.foo, value: '10' },
             ],
           },
         ],
-        ['root', 'foo'],
+        [e.root, e.foo],
       ),
-    ).toEqual([{ key: 'root', children: [{ key: 'bar', value: '10' }] }]);
+    ).toEqual([{ key: e.root, children: [{ key: e.bar, value: '10' }] }]);
   });
 });

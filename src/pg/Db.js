@@ -14,9 +14,10 @@ import {
   decodeGraph,
   mergeObject,
   decodeQuery,
+  cmp,
+  encodePath,
 } from '@graffy/common';
-import { selectByArgs, selectByIds } from './sql/select';
-import { put, patch, del } from './sql/index.js';
+import { selectByArgs, selectByIds, put, patch, del } from './sql/index.js';
 import debug from 'debug';
 const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
@@ -129,7 +130,8 @@ export default class Db {
     const idQueries = {};
     const promises = [];
     const results = [];
-    const { prefix } = tableOptions;
+    const { prefix: rawPrefix } = tableOptions;
+    const prefix = encodePath(rawPrefix);
 
     await this.ensureSchema(tableOptions);
 
@@ -137,7 +139,7 @@ export default class Db {
       const result = await this.readSql(
         selectByArgs(args, projection, tableOptions),
       );
-      const wrappedGraph = encodeGraph(wrapObject(result, prefix));
+      const wrappedGraph = encodeGraph(wrapObject(result, rawPrefix));
       log('getByArgs', wrappedGraph);
       merge(results, wrappedGraph);
     };
@@ -150,7 +152,7 @@ export default class Db {
         selectByIds(Object.keys(idQueries), null, tableOptions),
       );
       result.forEach((object) => {
-        const wrappedGraph = encodeGraph(wrapObject(object, prefix));
+        const wrappedGraph = encodeGraph(wrapObject(object, rawPrefix));
         log('getByIds', wrappedGraph);
         merge(results, wrappedGraph);
       });
@@ -174,7 +176,7 @@ export default class Db {
           promises.push(getByArgs(args, projection));
         }
       } else {
-        idQueries[node.key] = node.children;
+        idQueries[args] = node.children;
       }
     }
 
@@ -186,7 +188,8 @@ export default class Db {
   }
 
   async write(rootChange, tableOptions) {
-    const { prefix } = tableOptions;
+    const { prefix: rawPrefix } = tableOptions;
+    const prefix = encodePath(rawPrefix);
 
     await this.ensureSchema(tableOptions);
 
@@ -196,7 +199,7 @@ export default class Db {
       const arg = decodeArgs(node);
 
       if (isRange(node)) {
-        if (node.key === node.end) return del(arg, tableOptions);
+        if (cmp(node.key, node.end) === 0) return del(arg, tableOptions);
         throw Error('pg_write.write_range_unsupported');
       }
 
@@ -220,7 +223,7 @@ export default class Db {
     await Promise.all(
       sqls.map((sql) =>
         this.writeSql(sql).then((object) => {
-          merge(result, encodeGraph(wrapObject(object, prefix)));
+          merge(result, encodeGraph(wrapObject(object, rawPrefix)));
         }),
       ),
     );

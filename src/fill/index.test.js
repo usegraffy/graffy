@@ -1,5 +1,5 @@
 // index.test.js
-
+import { e } from '@graffy/testing/encoder.js';
 import Graffy from '@graffy/core';
 import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
@@ -88,7 +88,7 @@ test('indexes', async () => {
 
   expect((await subscription.next()).value).toEqual([
     {
-      key: 'bar',
+      key: e.bar,
       version: 1,
       children: encodeGraph(
         {
@@ -100,7 +100,7 @@ test('indexes', async () => {
       ),
     },
     {
-      key: 'foo',
+      key: e.foo,
       version: 1,
       children: [
         ...encodeGraph(

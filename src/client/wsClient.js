@@ -1,5 +1,5 @@
 import { makeStream } from '@graffy/stream';
-import { makeWatcher } from '@graffy/common';
+import { makeWatcher, pack, unpack } from '@graffy/common';
 import Socket from './Socket.js';
 
 const wsClient =
@@ -30,10 +30,10 @@ const wsClient =
     function once(op, payload, options) {
       return new Promise((resolve, reject) => {
         const id = socket.start(
-          [op, payload, getOptions(op, options) || {}],
+          [op, pack(payload), getOptions(op, options) || {}],
           (error, result) => {
             socket.stop(id);
-            error ? reject(Error('server.' + error)) : resolve(result);
+            error ? reject(Error('server.' + error)) : resolve(unpack(result));
           },
         );
       });
@@ -54,14 +54,14 @@ const wsClient =
       const op = 'watch';
       return makeStream((push, end) => {
         const id = socket.start(
-          [op, query, getOptions(op, options) || {}],
+          [op, pack(query), getOptions(op, options) || {}],
           (error, result) => {
             if (error) {
               socket.stop(id);
               end(Error('server.' + error));
               return;
             }
-            push(result);
+            push(unpack(result));
           },
         );
 

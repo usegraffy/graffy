@@ -1,4 +1,5 @@
 import { isBranch, isRange, findFirst, findLast } from '../node/index.js';
+import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
 import { keyAfter, keyBefore } from './step.js';
 
 export default function sieve(current, changes, result = []) {
@@ -18,7 +19,11 @@ export function insertRange(current, change, result, start = 0) {
 
   if (
     keyIx === endIx &&
-    !(current[keyIx] && current[keyIx].key <= key && current[keyIx].end >= end)
+    !(
+      current[keyIx] &&
+      cmp(current[keyIx].key, end) <= 0 &&
+      cmp(current[keyIx].end || current[keyIx].key, key) >= 0
+    )
   ) {
     // This range does not overlap with any existing data. Ignore it.
     return keyIx;
@@ -31,7 +36,7 @@ export function insertRange(current, change, result, start = 0) {
     // We treat a negative version as a non-existent node
     // as this is a hack used by subscribe.
     if (isRange(node) && node.version >= 0) {
-      if (node.key > currentKey) {
+      if (cmp(node.key, currentKey) > 0) {
         appliedChange.push({
           key: currentKey,
           end: keyBefore(node.key),
@@ -49,12 +54,12 @@ export function insertRange(current, change, result, start = 0) {
         currentKey = keyAfter(node.key);
       }
     }
-    if (currentKey >= change.end) {
+    if (cmp(currentKey, change.end) >= 0) {
       break;
     }
   }
 
-  if (currentKey <= change.end) {
+  if (cmp(currentKey, change.end) <= 0) {
     appliedChange.push({
       key: currentKey,
       end: change.end,
@@ -91,9 +96,9 @@ function mergeRanges(base, node) {
   // Ensure node is newer than base
 
   return [
-    base.key < node.key && { ...base, end: keyBefore(node.key) },
+    cmp(base.key, node.key) < 0 && { ...base, end: keyBefore(node.key) },
     node,
-    base.end > node.end && { ...base, key: keyAfter(node.end) },
+    cmp(base.end, node.end) > 0 && { ...base, key: keyAfter(node.end) },
   ].filter(Boolean);
 }
 
@@ -102,7 +107,7 @@ export function insertNode(current, change, result, start = 0) {
   const index = findFirst(current, key, start);
   const node = current[index];
 
-  if (node && node.key <= key) {
+  if (node && cmp(node.key, key) <= 0) {
     // This change overlaps with something that exists.
     return isRange(node)
       ? insertNodeIntoRange(current, index, change, result)
@@ -123,9 +128,9 @@ function insertNodeIntoRange(current, index, change, result) {
   result.push(newChange);
 
   const insertions = [
-    range.key < key && { ...range, end: keyBefore(key) },
+    cmp(range.key, key) < 0 && { ...range, end: keyBefore(key) },
     newNode,
-    range.end > key && { ...range, key: keyAfter(key) },
+    cmp(range.end, key) > 0 && { ...range, key: keyAfter(key) },
   ].filter(Boolean);
   current.splice(index, 1, ...insertions);
 
@@ -176,7 +181,7 @@ function isPathEqual(first, second) {
 
 function getNewerNode(node, base) {
   if (isBranch(node)) {
-    const emptyNode = { key: '', end: '\uffff', version: base.version };
+    const emptyNode = { key: MIN_KEY, end: MAX_KEY, version: base.version };
     const children = [emptyNode];
     sieve(children, node.children);
     return children.length === 1 && children[0] === emptyNode

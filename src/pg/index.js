@@ -1,4 +1,4 @@
-import { remove, merge } from '@graffy/common';
+import { remove, merge, encodePath } from '@graffy/common';
 import Db from './Db.js';
 /**
  *
@@ -35,7 +35,7 @@ export const pg =
       const { pgClient } = options;
       const db = pgClient ? new Db(pgClient) : defaultDb;
       const readPromise = db.read(query, tableOpts);
-      const remainingQuery = remove(query, prefix);
+      const remainingQuery = remove(query, encodePath(prefix));
       const nextPromise = next(remainingQuery);
 
       return Promise.all([readPromise, nextPromise]).then(
@@ -49,7 +49,7 @@ export const pg =
       const { pgClient } = options;
       const db = pgClient ? new Db(pgClient) : defaultDb;
       const writePromise = db.write(change, tableOpts);
-      const remainingChange = remove(change, prefix);
+      const remainingChange = remove(change, encodePath(prefix));
       const nextPromise = next(remainingChange);
 
       return Promise.all([writePromise, nextPromise]).then(

@@ -1,11 +1,11 @@
 // import { isRange } from '../node/index.js';
 // import { keyAfter } from './step.js';
 
-export default function setVersion(graph, version) {
+export default function setVersion(graph, version, onlyIfZero = false) {
   // mergeRanges(graph);
   for (const node of graph) {
-    node.version = version;
-    if (node.children) setVersion(node.children, version);
+    if (!onlyIfZero || !node.version) node.version = version;
+    if (node.children) setVersion(node.children, version, onlyIfZero);
   }
   return graph;
 }
@@ -16,7 +16,7 @@ export default function setVersion(graph, version) {
 //     let j = i;
 //     do {
 //       j++;
-//     } while (isRange(graph[j]) && graph[j].key === keyAfter(graph[j - 1].end));
+//     } while (isRange(graph[j]) && cmp(graph[j].key , keyAfter(graph[j - 1].end)) === 0);
 //     j = j - 1;
 //     if (j === i) continue;
 //     graph.splice(i, j - i + 1, {

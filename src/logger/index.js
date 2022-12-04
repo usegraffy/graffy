@@ -1,7 +1,5 @@
 /* eslint-disable no-console */
 
-// import { format } from '@graffy/testing';
-
 export default function () {
   return (store) => {
     store.on('read', (query, options, next) => {

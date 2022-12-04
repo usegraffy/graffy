@@ -1,49 +1,33 @@
 import { keyBefore, keyAfter } from '../step.js';
 
+const a = (...n) => new Uint8Array(n);
+
 describe('keyBefore', () => {
   test('simple', () => {
-    expect(keyBefore('foo')).toEqual('fon\uffff');
+    expect(keyBefore(a(3, 4, 5))).toEqual(a(3, 4, 4, 255));
   });
   test('reverse keyAfter', () => {
-    expect(keyBefore('foo\0')).toEqual('foo');
+    expect(keyBefore(a(3, 4, 5, 0))).toEqual(a(3, 4, 5));
   });
-  test('return same if empty', () => {
-    expect(keyBefore('')).toEqual('');
+  test('preserve minKey', () => {
+    expect(keyBefore(a())).toEqual(a());
   });
-  test('encodedStart', () => {
-    expect(keyBefore('\0')).toEqual('\0');
-  });
-  test('encodedEnd', () => {
-    expect(keyBefore('\0\uffff')).toEqual('\0\uffff');
-  });
-  test('encodedOther', () => {
-    expect(keyBefore('\0foo')).toEqual('\0fon\uffff');
-  });
-  test('encodedKeyAfter', () => {
-    expect(keyBefore('\0foo\0')).toEqual('\0foo');
+  test('preserve maxKey', () => {
+    expect(keyBefore(a(255))).toEqual(a(255));
   });
 });
 
 describe('keyAfter', () => {
   test('simple', () => {
-    expect(keyAfter('foo')).toEqual('foo\0');
+    expect(keyAfter(a(3, 4, 5))).toEqual(a(3, 4, 5, 0));
   });
   test('reverse keyBefore', () => {
-    expect(keyAfter('fon\uffff')).toEqual('foo');
+    expect(keyAfter(a(3, 4, 4, 255))).toEqual(a(3, 4, 5));
   });
-  test('return same if last', () => {
-    expect(keyAfter('\uffff')).toEqual('\uffff');
+  test('minKey', () => {
+    expect(keyAfter(a())).toEqual(a(0));
   });
-  test('encodedStart', () => {
-    expect(keyAfter('\0')).toEqual('\0');
-  });
-  test('encodedEnd', () => {
-    expect(keyAfter('\0\uffff')).toEqual('\0\uffff');
-  });
-  test('encodedOther', () => {
-    expect(keyAfter('\0foo')).toEqual('\0foo\0');
-  });
-  test('encodedKeyBefore', () => {
-    expect(keyAfter('\0fon\uffff')).toEqual('\0foo');
+  test('preserve maxKey', () => {
+    expect(keyAfter(a(255))).toEqual(a(255));
   });
 });

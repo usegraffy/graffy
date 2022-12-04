@@ -1,4 +1,12 @@
-import { wrap, unwrap, finalize, add } from '@graffy/common';
+import {
+  wrap,
+  unwrap,
+  finalize,
+  add,
+  encodePath,
+  pack,
+  unpack,
+} from '@graffy/common';
 import linkGraph from './linkGraph.js';
 import prepQueryLinks from './prepQueryLinks.js';
 import debug from 'debug';
@@ -6,7 +14,7 @@ import debug from 'debug';
 const log = debug('graffy:link');
 
 export default (defs) => (store) => {
-  const prefix = store.path;
+  const prefix = encodePath(store.path);
   const defEntries = Object.entries(defs).map(([prop, def]) => ({
     path: prop.split('.'),
     def,
@@ -40,5 +48,5 @@ export default (defs) => (store) => {
 
 function clone(tree) {
   // TODO: Do better
-  return JSON.parse(JSON.stringify(tree));
+  return unpack(JSON.parse(JSON.stringify(pack(tree))));
 }

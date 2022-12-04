@@ -1,19 +1,22 @@
 import { encode as encodeValue, decode as decodeValue } from './struct.js';
 import { keyStep, keyAfter, keyBefore } from '../ops/step.js';
-import { errIf, isEmpty, isPlainObject, isEncodedKey, isDef } from '../util.js';
+import {
+  MIN_KEY,
+  MAX_KEY,
+  errIf,
+  isEmpty,
+  isPlainObject,
+  isDef,
+  isMaxKey,
+  isMinKey,
+  cmp,
+} from '../util.js';
 
-function maybeEncode(value) {
-  return typeof value === 'string' ? value : '\0' + encodeValue(value);
-}
-
-function maybeDecode(string) {
-  if (isEncodedKey(string)) {
-    const { key, step } = keyStep(string.slice(1));
-    const value = key === '' || key === '\uffff' ? key : decodeValue(key);
-    return { key: value, step };
-  } else {
-    return keyStep(string);
-  }
+function decodeBound(bound) {
+  const { key, step } = keyStep(bound);
+  if (isMinKey(key) || isMaxKey(key)) return { step };
+  const value = decodeValue(key);
+  return { key: value, step };
 }
 
 const pageProps = {
@@ -38,14 +41,15 @@ export function splitArgs(arg) {
 }
 
 export function encode(arg) {
-  if (!isPlainObject(arg)) return { key: maybeEncode(arg) };
+  if (!isPlainObject(arg)) return { key: encodeValue(arg) };
 
   const [page, filter] = splitArgs(arg);
   errIf('page_and_filter', page && filter, arg);
 
-  if (!page) return { key: maybeEncode(filter || {}) };
+  if (!page) return { key: encodeValue(filter || {}) };
 
   const { $cursor, ...range } = page;
+  // @ts-ignore
   const { $first, $all, $last, $after, $before, $since, $until } = range;
   const hasRange = !isEmpty(range);
 
@@ -56,13 +60,13 @@ export function encode(arg) {
   errIf('before_and_until', isDef($before) && isDef($until), arg);
   errIf('cursor_and_range_arg', isDef($cursor) && hasRange, arg);
 
-  let [key, end] = hasRange ? ['', '\uffff'] : [];
+  let [key, end] = hasRange ? [MIN_KEY, MAX_KEY] : [];
 
-  if (isDef($cursor)) key = maybeEncode($cursor);
-  if (isDef($after)) key = keyAfter(maybeEncode($after));
-  if (isDef($before)) end = keyBefore(maybeEncode($before));
-  if (isDef($since)) key = maybeEncode($since);
-  if (isDef($until)) end = maybeEncode($until);
+  if (isDef($cursor)) key = encodeValue($cursor);
+  if (isDef($after)) key = keyAfter(encodeValue($after));
+  if (isDef($before)) end = keyBefore(encodeValue($before));
+  if (isDef($since)) key = encodeValue($since);
+  if (isDef($until)) end = encodeValue($until);
 
   if (isDef($last)) [key, end] = [end, key];
 
@@ -74,32 +78,34 @@ export function encode(arg) {
 }
 
 export function decode(node) {
-  if (typeof node === 'string') return node;
   const { key, end, limit } = node;
-  if (!isEncodedKey(key) && (!isDef(end) || end === key)) return key;
 
   errIf('no_key', !isDef(key));
   errIf('limit_without_end', isDef(limit) && !isDef(end));
 
-  const kParts = maybeDecode(key);
-  if (!isDef(end)) return kParts.key;
+  const kParts = decodeBound(key);
+  if (!isDef(end) || cmp(key, end) === 0) return kParts.key;
 
-  const eParts = maybeDecode(end);
-  const [lower, upper] = key < end ? [kParts, eParts] : [eParts, kParts];
+  const eParts = decodeBound(end);
+  const reverse = cmp(key, end) > 0;
+  const [lower, upper] = reverse ? [eParts, kParts] : [kParts, eParts];
 
   const args = {};
 
   if (limit) {
-    args[key < end ? '$first' : '$last'] = limit;
-  } else if (lower.key === '' && upper.key === '\uffff') {
+    args[reverse ? '$last' : '$first'] = limit;
+  } else if (
+    (isMinKey(key) && isMaxKey(end)) ||
+    (isMinKey(end) && isMaxKey(key))
+  ) {
     args.$all = true;
   }
 
-  if (lower.key !== '') {
+  if (lower.key && !isMinKey(lower.key)) {
     args[lower.step === 1 ? '$after' : '$since'] = lower.key;
   }
 
-  if (upper.key !== '\uffff') {
+  if (upper.key && !isMaxKey(upper.key)) {
     args[upper.step === -1 ? '$before' : '$until'] = upper.key;
   }
 

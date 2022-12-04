@@ -44,6 +44,26 @@ describe('select_sql', () => {
     expectSql(selectByIds(ids, null, options), expectedResult);
   });
 
+  test('selectByArgs_no_range', () => {
+    const arg = { email: 'abc@foo.com' };
+    const options = {
+      table: 'user',
+      prefix: ['user'],
+      idCol: 'id',
+      schema: { types: { email: 'text' } },
+      verCol: 'version',
+      verDefault: 'current_timestamp',
+    };
+
+    const expectedResult = sql`
+      SELECT *, ${JSON.stringify({ email: 'abc@foo.com' })}::jsonb AS "$key",
+      current_timestamp AS "$ver",
+      array[ ${'user'}::text, "id" ]::text[] AS "$ref"
+      FROM "user" WHERE "email" = ${'abc@foo.com'} LIMIT ${1}
+    `;
+    expectSql(selectByArgs(arg, null, options), expectedResult);
+  });
+
   test('selectByArgs_order_first', () => {
     const arg = { $order: ['createTime', 'id'], $first: 10 };
     const options = {
