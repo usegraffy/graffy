@@ -15,14 +15,15 @@ function encode(value, { version, isGraph } = {}) {
   function pushLink($ref, $ver, props, $val, $chi) {
     const [range, _] = splitRef($ref);
 
+    const node = !isEmpty(props)
+      ? makeNode(range ? [{ $key: range, ...props }] : props, undefined, $ver)
+      : isDef($chi)
+      ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
+      : null;
+
     // prettier-ignore
-    let children =
-      !isEmpty(props) ? makeNode(
-        range ? [{ $key: range, ...props}] : props, undefined, $ver
-      ).children :
-      isDef($chi) ? makeNode(
-        range ? [{ $key: range, $chi }] : $chi, undefined, $ver
-      ).children :
+    const children =
+      node ? node.children :
       isDef($val) ? $val :
       isGraph ? undefined : 1;
 
