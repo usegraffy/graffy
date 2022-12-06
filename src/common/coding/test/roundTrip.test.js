@@ -264,6 +264,29 @@ describe('graph', () => {
     // const decoded = decodeGraph(encoded);
     // console.log(decoded);
   });
+
+  test('nested_empty_object', () => {
+    roundTrip(
+      {
+        person: [
+          {
+            $key: { example: 'filter', $cursor: ['something'] },
+            $ref: ['person', 'exampleId'],
+            domains: {},
+          },
+        ],
+      },
+      {
+        person: [
+          {
+            $key: { example: 'filter', $cursor: ['something'] },
+          },
+        ],
+      },
+      (decoded) =>
+        expect(decoded.person[0].$ref).toEqual(['person', 'exampleId']),
+    );
+  });
 });
 
 describe('query', () => {
