@@ -67,7 +67,7 @@ export default function getArgSql(
           ? sql`${lookup(orderItem.slice(1))} ${$last ? sql`ASC` : sql`DESC`}`
           : sql`${lookup(orderItem)} ${$last ? sql`DESC` : sql`ASC`}`,
       ),
-      ", ",
+      ', ',
     );
 
   const cursorKey = getJsonBuildTrusted({

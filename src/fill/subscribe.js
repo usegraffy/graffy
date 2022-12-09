@@ -124,7 +124,7 @@ export default function subscribe(store, originalQuery, { raw }) {
     if (unknown) return resubscribe(unknown);
 
     if (!raw) {
-      if (!isChange || (sieved?.length)) push(data);
+      if (!isChange || sieved?.length) push(data);
     } else if (payload.length) {
       push(payload);
       payload = [];

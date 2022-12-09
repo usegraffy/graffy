@@ -14,14 +14,14 @@ function getSingleSql(arg, options) {
   }
 
   const { where, meta } = getArgSql(arg, options);
-  if (!(where?.length)) throw Error('pg_write.no_condition');
+  if (!where?.length) throw Error('pg_write.no_condition');
   /* We use a subquery to ensure that only one object is ever updated.
      Postgres doesn't support LIMIT on updates otherwise. */
   return {
     where: sql`"${raw(idCol)}" = (
         SELECT "${raw(idCol)}"
         FROM "${raw(table)}"
-        WHERE ${join(where, " AND ")}
+        WHERE ${join(where, ' AND ')}
         LIMIT 1
       )`,
     meta,

@@ -79,7 +79,7 @@ function vertexSql(array, nullValue) {
 
 export function cubeLiteralSql(value) {
   if (
-    !(Array.isArray(value) &&value.length ) ||
+    !(Array.isArray(value) && value.length) ||
     (Array.isArray(value[0]) && value.length !== 2)
   ) {
     throw Error(`pg.castValue_bad_cube${JSON.stringify(value)}`);

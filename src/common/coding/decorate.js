@@ -204,13 +204,13 @@ function addPageMeta(graph, args) {
     }
   }
 
-  // prettier-ignore
+  // rome-ignore format: ternary chain
   const $prev =
     isDef($page.$after) ? { ...filter, $last: count, $until: $page.$after } :
     isDef($page.$since) ? { ...filter, $last: count, $before: $page.$since } :
     null;
 
-  // prettier-ignore
+  // rome-ignore format: ternary chain
   let $next =
     isDef($page.$before) ? { ...filter, $first: count, $since: $page.$before } :
     isDef($page.$until) ? { ...filter, $first: count, $after: $page.$until } :

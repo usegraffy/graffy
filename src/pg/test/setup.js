@@ -29,28 +29,31 @@ const isPgReady = async () => {
 
 export async function setupPgServer() {
   // const start = Date.now();
-  // prettier-ignore
   try {
-      await execFile('docker', [
-        'run', '-d',
-        '--name', 'graffypg',
-        '-p', `${connOptions.port}:5432`,
-        '-e', `POSTGRES_PASSWORD=${connOptions.password}`,
-        'postgres:alpine',
-      ]);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(
-        'Could not start a test Postgres server using Docker.\n' +
+    await execFile('docker', [
+      'run',
+      '-d',
+      '--name',
+      'graffypg',
+      '-p',
+      `${connOptions.port}:5432`,
+      '-e',
+      `POSTGRES_PASSWORD=${connOptions.password}`,
+      'postgres:alpine',
+    ]);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(
+      'Could not start a test Postgres server using Docker.\n' +
         'Possible reasons:\n' +
         '1. You might not have Docker installed.\n' +
         '2. The last test run might not have exited properly.\n' +
         '   Run yarn pg:clean to fix this.\n' +
         'Docker might have printed a detailed error message above.',
-      );
+    );
 
-      throw e;
-    }
+    throw e;
+  }
 
   while (!(await isPgReady())) await sleep(200);
   // console.log('Postgres is up in', Date.now() - start, 'ms');

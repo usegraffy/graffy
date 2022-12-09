@@ -22,7 +22,7 @@ function encode(value, { version, isGraph } = {}) {
       ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
       : null;
 
-    // prettier-ignore
+    // rome-ignore format: ternary chain
     const children =
       node ? node.children :
       isDef($val) ? $val :

@@ -40,7 +40,7 @@ export default function Example() {
 
   const visitors = data.visitors;
 
-  if (!(loading || $prev ) && $next && range.$last) {
+  if (!(loading || $prev) && $next && range.$last) {
     // We have reached the beginning of the list while paginating backwards.
     // Flip the query to the first N.
     setRange({ $first: PAGE_SIZE });

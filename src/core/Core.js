@@ -4,7 +4,7 @@ import debug from 'debug';
 const log = debug('graffy:core');
 
 function resolve(handlers, firstPayload, firstOptions) {
-  if (!(handlers?.length)) throw Error('resolve.no_provider');
+  if (!handlers?.length) throw Error('resolve.no_provider');
 
   function run(i, payload, options) {
     if (i >= handlers.length) {

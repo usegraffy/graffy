@@ -3,8 +3,8 @@ import getAst from './getAst.js';
 import { cubeLiteralSql } from '../sql/clauses.js';
 
 const opSql = {
-  $and: "AND", // Not SQL as these are used as delimiters
-  $or: "OR",
+  $and: 'AND', // Not SQL as these are used as delimiters
+  $or: 'OR',
   $not: sql`NOT`,
   $eq: sql`=`,
   $neq: sql`<>`,

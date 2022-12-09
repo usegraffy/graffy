@@ -92,7 +92,7 @@ function decode(nodes = [], { isGraph } = {}) {
           if (typeof $val === 'object') {
             Object.defineProperty($val, '$val', { value: true });
           }
-          // prettier-ignore
+          // rome-ignore format: tertnary chain
           collection[$key] = (
             isDef($val) ? $val :
             !isEmpty(item) || item.$ref || item.$put ? item :
