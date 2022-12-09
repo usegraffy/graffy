@@ -162,7 +162,7 @@ export function decode(buffer) {
         pushToken(type, {});
         break;
       default:
-        throw new Error('Invalid byte ' + type + ' at ' + start);
+        throw new Error(`Invalid byte ${type} at ${start}`);
     }
   }
 

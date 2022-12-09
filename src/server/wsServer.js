@@ -31,7 +31,7 @@ export default function server(store) {
               const result = await store.call(op, payload, options);
               ws.send(JSON.stringify([id, null, pack(result)]));
             } catch (e) {
-              log(op + 'error:' + e.message + ' ' + payload);
+              log(`${op}error:${e.message} ${payload}`);
               ws.send(JSON.stringify([id, e.message]));
             }
             break;
@@ -48,7 +48,7 @@ export default function server(store) {
                 ws.send(JSON.stringify([id, null, pack(value)]));
               }
             } catch (e) {
-              log(op + 'error:' + e.message + ' ' + payload);
+              log(`${op}error:${e.message} ${payload}`);
               ws.send(JSON.stringify([id, e.message]));
             }
             break;
@@ -59,7 +59,7 @@ export default function server(store) {
             break;
         }
       } catch (e) {
-        log('Closing socket due to error: ' + e.message);
+        log(`Closing socket due to error: ${e.message}`);
         ws.close();
       }
     });

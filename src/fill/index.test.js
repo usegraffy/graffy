@@ -5,7 +5,8 @@ import { encodeGraph, encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
 import live from './index.js';
 
-let g, backend;
+let g;
+let backend;
 
 beforeEach(() => {
   g = new Graffy();

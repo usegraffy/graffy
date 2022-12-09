@@ -170,8 +170,8 @@ function updateNode(current, index, change, result) {
 }
 
 function isPathEqual(first, second) {
-  if (!first && !second) return true;
-  if (!first || !second) return false;
+  if (!(first || second)) return true;
+  if (!(first && second)) return false;
   if (first.length !== second.length) return false;
   for (let i = 0; i < first.length; i++) {
     if (first[i] !== second[i]) return false;

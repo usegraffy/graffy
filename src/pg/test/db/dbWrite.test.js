@@ -139,7 +139,7 @@ describe('postgres', () => {
       RETURNING *,
         ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
         current_timestamp AS "$ver",
-        array[ ${`googleSession`}::text , "id" ]::text[] AS "$ref"`;
+        array[ ${"googleSession"}::text , "id" ]::text[] AS "$ref"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 
@@ -159,7 +159,7 @@ describe('postgres', () => {
       RETURNING *,
         ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
         current_timestamp AS "$ver",
-        array[ ${`googleSession`}::text , "id" ]::text[] AS "$ref"`;
+        array[ ${"googleSession"}::text , "id" ]::text[] AS "$ref"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 

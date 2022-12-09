@@ -14,7 +14,7 @@ export function wrapValue(value, path, version = 0) {
 }
 
 export function wrap(children, path, version = 0, prefix = false) {
-  if (!Array.isArray(path)) throw Error('wrap.path_not_array ' + path);
+  if (!Array.isArray(path)) throw Error(`wrap.path_not_array ${path}`);
 
   if (!path.length) return children;
   let i = path.length - 1;
@@ -33,7 +33,7 @@ export function wrap(children, path, version = 0, prefix = false) {
 }
 
 export function unwrap(tree, path) {
-  if (!Array.isArray(path)) throw Error('unwrap.path_not_array ' + path);
+  if (!Array.isArray(path)) throw Error(`unwrap.path_not_array ${path}`);
 
   let children = tree;
   let node = { children };
@@ -60,7 +60,7 @@ export function getNodeValue(node) {
 }
 
 export function remove(children, path) {
-  if (!Array.isArray(path)) throw Error('del.path_not_array ' + path);
+  if (!Array.isArray(path)) throw Error(`del.path_not_array ${path}`);
   if (!children) return null; // This path does not exist.
   if (!path.length) return []; // Remove everything.
 

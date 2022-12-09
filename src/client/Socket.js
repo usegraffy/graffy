@@ -77,7 +77,7 @@ export default function Socket(
       handlers[id].callback(...data);
     } else {
       // We received an unexpected push.
-      onUnhandled && onUnhandled(id, ...data);
+      onUnhandled?.(id, ...data);
     }
   }
 

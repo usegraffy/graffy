@@ -109,11 +109,11 @@ const httpClient =
         };
 
         source.onerror = (e) => {
-          end(Error('client.sse.transport: ' + e));
+          end(Error(`client.sse.transport: ${e}`));
         };
 
         source.addEventListener('graffyerror', (e) => {
-          end(Error('server.' + e.data));
+          end(Error(`server.${e.data}`));
         });
 
         return () => {
@@ -133,7 +133,7 @@ const httpClient =
       }).then(async (res) => {
         if (res.status === 200) return unpack(JSON.parse(await res.text()));
         return res.text().then((message) => {
-          throw Error('server.' + message);
+          throw Error(`server.${message}`);
         });
       });
     });

@@ -10,7 +10,7 @@ export function isMaxKey(key) {
 }
 
 export function err(message, { cause = null, ...args } = {}) {
-  const e = new Error(message + (args ? ' ' + JSON.stringify(args) : ''));
+  const e = new Error(message + (args ? ` ${JSON.stringify(args)}` : ''));
   e.cause = cause;
   throw e;
 }
@@ -82,7 +82,7 @@ const stringifyDescriptor = {
       } else {
         str +=
           (bull ? '\u00b7' : '') +
-          ('0' + value.toString(16)).slice(-2) +
+          (`0${value.toString(16)}`).slice(-2) +
           (i < this.length - 1 ? '\u00b7' : '');
         bull = false;
       }

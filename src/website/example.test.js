@@ -11,11 +11,12 @@ const PORT = 1025 + Math.floor(Math.random() * 30000);
 jest.setTimeout(120000);
 
 describe('integration', () => {
-  let server, browser;
+  let server;
+  let browser;
   beforeAll(() => {
     return Promise.all([
       new Promise((resolve, reject) => {
-        server = fork(`${__dirname + '/server.js'}`, {
+        server = fork(`${`${__dirname}/server.js`}`, {
           env: { PORT: String(PORT) },
           silent: true,
         });
@@ -92,7 +93,7 @@ describe('integration', () => {
 
   const exampleUrl = `http://localhost:${PORT}`;
   test('exampleWs', () => runExampleTests(exampleUrl));
-  test('exampleHttp', () => runExampleTests(exampleUrl + '?usehttp'));
+  test('exampleHttp', () => runExampleTests(`${exampleUrl}?usehttp`));
 
   afterAll(() =>
     Promise.all([

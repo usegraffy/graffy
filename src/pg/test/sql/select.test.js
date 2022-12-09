@@ -121,7 +121,7 @@ describe('select_sql', () => {
     };
     const expectedResult = sql`
       SELECT *, (
-          ${`{}`}::jsonb ||
+          ${"{}"}::jsonb ||
           jsonb_build_object ('$cursor', jsonb_build_array("id"))
         ) AS "$key",
         current_timestamp AS "$ver",

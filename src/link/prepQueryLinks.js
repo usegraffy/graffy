@@ -35,9 +35,9 @@ export default function prepQueryLinks(rootQuery, defs) {
       const [range, filter] = splitRef(def);
       if (range && subQuery.length) {
         return subQuery.map((node) => {
-          if (!node.prefix && !node.end) {
+          if (!(node.prefix || node.end)) {
             throw Error(
-              'link.range_expected: ' + path.concat(node.key).join('.'),
+              `link.range_expected: ${path.concat(node.key).join('.')}`,
             );
           }
           return {
@@ -68,7 +68,7 @@ export default function prepQueryLinks(rootQuery, defs) {
       }));
     }
 
-    if (!Array.isArray(query) || !query.length) return [];
+    if (!(Array.isArray(query) && query.length)) return [];
 
     const [key, ...rest] = path;
     const encodedKey = encodeArgs(key).key;
@@ -194,7 +194,7 @@ function prepareDef(def, vars) {
 
   function replacePlaceholders(key) {
     if (typeof key === 'string' && key[0] === '$' && key[1] === '$') {
-      return '$$' + key.slice(2).split('.').flatMap(getValue).join('.');
+      return `$$${key.slice(2).split('.').flatMap(getValue).join('.')}`;
     }
     if (Array.isArray(key)) {
       return key.map(replacePlaceholders);

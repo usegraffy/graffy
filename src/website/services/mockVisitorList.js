@@ -13,9 +13,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let store;
 let ts = Date.now();
 let id = 0;
-let enter = 0,
-  leave = 0,
-  update = 0;
+let enter = 0;
+let leave = 0;
+let update = 0;
 
 export default function (s) {
   store = s;
@@ -87,7 +87,7 @@ function simulateEnter() {
   } else {
     addId = id++;
   }
-  addId = '' + addId;
+  addId = `${addId}`;
 
   enter++;
   return encodeGraph(
@@ -107,7 +107,7 @@ async function simulateLeave() {
     delId = Math.floor(Math.random() * id);
   } while (freeIds.has(delId));
   freeIds.add(delId);
-  delId = '' + delId;
+  delId = `${delId}`;
 
   const delTs = (await store.read(['visitors', delId], { ts: true })).ts;
   // const delTs = unwrap(state, ['visitors', delId, 'ts']);
@@ -125,7 +125,7 @@ function simulateUpdate() {
   do {
     upId = Math.floor(Math.random() * id);
   } while (freeIds.has(upId));
-  upId = '' + upId;
+  upId = `${upId}`;
   const url = faker.system.directoryPath();
   update++;
   return encodeGraph(

@@ -27,7 +27,8 @@ describe('cache', () => {
 
 describe('optimism', () => {
   let store;
-  let watchProvider, writeProvider;
+  let watchProvider;
+  let writeProvider;
   let state = 42;
 
   beforeEach(() => {

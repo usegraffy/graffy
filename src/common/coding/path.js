@@ -14,7 +14,7 @@ export function encode(path) {
   }
 
   if (!Array.isArray(path)) {
-    throw Error('encodePath.invalid:' + JSON.stringify(path));
+    throw Error(`encodePath.invalid:${JSON.stringify(path)}`);
   }
 
   function encodeSegment(seg) {
@@ -34,7 +34,7 @@ export function encode(path) {
 
 export function decode(path) {
   if (!Array.isArray(path)) {
-    throw Error('decodePath.invalid:' + JSON.stringify(path));
+    throw Error(`decodePath.invalid:${JSON.stringify(path)}`);
   }
 
   return path.map((key) => decodeArgs({ key }));

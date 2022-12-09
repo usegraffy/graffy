@@ -57,7 +57,7 @@ export default function decorate(rootGraph, rootQuery) {
         const { $key, $chi, ...props } = item;
         const subQuery = $chi || (isEmpty(props) ? 1 : props);
 
-        if (!isPlainObject($key) || !splitArgs($key)[0]) {
+        if (!(isPlainObject($key) && splitArgs($key)[0])) {
           // This is a non-string argument without pagination
           return construct(descend(plumGraph, $key), subQuery);
         }
@@ -65,7 +65,7 @@ export default function decorate(rootGraph, rootQuery) {
         // This is a pagination query.
         if (pageKey) {
           throw Error(
-            'decorate.multi_range_query:' + JSON.stringify({ $key, pageKey }),
+            `decorate.multi_range_query:${JSON.stringify({ $key, pageKey })}`,
           );
         }
         pageKey = $key;

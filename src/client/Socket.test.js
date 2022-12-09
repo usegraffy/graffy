@@ -11,7 +11,8 @@ class MockWebSocket {
 }
 
 describe('Socket', () => {
-  let socket, ws;
+  let socket;
+  let ws;
   let actualWebSocket;
 
   beforeEach(() => {

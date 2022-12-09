@@ -46,7 +46,7 @@ function mergeRanges(base, node) {
 }
 
 export function insertNode(current, change, start = 0) {
-  if (!current) throw new Error('merge.insertNode: ' + current);
+  if (!current) throw new Error(`merge.insertNode: ${current}`);
   const key = change.key;
   const index = findFirst(current, key, start);
   const node = current[index];

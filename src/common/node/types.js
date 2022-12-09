@@ -7,7 +7,7 @@ export function isBranch(node) {
 }
 
 export function isPrefix(node) {
-  return node && node.prefix;
+  return node?.prefix;
 }
 
 export function isLink(node) {
