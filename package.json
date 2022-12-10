@@ -9,8 +9,8 @@
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "format": "prettier --write '{src,scripts,example,pages}/**/*.{js,jsx,css,html,json,md}' && eslint --fix scripts src pages",
-    "lint": "eslint scripts src pages",
+    "format": "rome check --apply-suggested . && rome format --write .",
+    "lint": "rome ci .",
     "package": "./scripts/package.js",
     "start": "node src/website/server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=testing jest",
