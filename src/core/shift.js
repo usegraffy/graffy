@@ -44,7 +44,7 @@ export function shiftFn(fn, path) {
       remainingNextResult = await next(remainingPayload);
     }
 
-    if (remainingNextResult && remainingNextResult.length) {
+    if (remainingNextResult?.length) {
       merge(result, remainingNextResult);
     }
 

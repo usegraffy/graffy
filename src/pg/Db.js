@@ -36,7 +36,7 @@ export default class Db {
   }
 
   async query(sql) {
-    log('Making SQL query: ' + sql.text, sql.values);
+    log(`Making SQL query: ${sql.text}`, sql.values);
     try {
       sql.types = {
         getTypeParser: (oid, format) => {
@@ -58,7 +58,7 @@ export default class Db {
       ]
         .filter(Boolean)
         .join('; ');
-      throw Error('pg.sql_error ' + message);
+      throw Error(`pg.sql_error ${message}`);
     }
   }
 
@@ -73,7 +73,7 @@ export default class Db {
     const res = await this.query(sql);
     log('Rows written', res.rowCount);
     if (!res.rowCount) {
-      throw Error('pg.nothing_written ' + sql.text + ' with ' + sql.values);
+      throw Error(`pg.nothing_written ${sql.text} with ${sql.values}`);
     }
     return res.rows[0];
   }

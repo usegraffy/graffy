@@ -14,7 +14,6 @@ import { makeId } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:client:socket');
-// eslint-disable-next-line no-console
 log.log = console.log.bind(console);
 
 const MIN_DELAY = 1000;
@@ -77,7 +76,7 @@ export default function Socket(
       handlers[id].callback(...data);
     } else {
       // We received an unexpected push.
-      onUnhandled && onUnhandled(id, ...data);
+      onUnhandled?.(id, ...data);
     }
   }
 

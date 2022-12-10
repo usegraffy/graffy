@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { yarn } from './utils.js';
 
 export default async function publish(name, version) {

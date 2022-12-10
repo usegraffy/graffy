@@ -28,11 +28,11 @@ export default function getArgSql(
 
   if ($order && $group) {
     // TODO: Allow this.
-    throw Error('pg_arg.order_and_group_unsupported in ' + prefix);
+    throw Error(`pg_arg.order_and_group_unsupported in ${prefix}`);
   }
 
   if (($order || ($group && $group !== true)) && !hasRangeArg) {
-    throw Error('pg_arg.range_arg_expected in ' + prefix);
+    throw Error(`pg_arg.range_arg_expected in ${prefix}`);
   }
 
   const baseKey = sql`${JSON.stringify(rest)}::jsonb`;
@@ -67,7 +67,7 @@ export default function getArgSql(
           ? sql`${lookup(orderItem.slice(1))} ${$last ? sql`ASC` : sql`DESC`}`
           : sql`${lookup(orderItem)} ${$last ? sql`DESC` : sql`ASC`}`,
       ),
-      `, `,
+      ', ',
     );
 
   const cursorKey = getJsonBuildTrusted({
@@ -90,7 +90,7 @@ export default function getArgSql(
 
 function getBoundCond(orderCols, bound, kind) {
   if (!Array.isArray(bound)) {
-    throw Error('pg_arg.bad_query bound : ' + JSON.stringify(bound));
+    throw Error(`pg_arg.bad_query bound : ${JSON.stringify(bound)}`);
   }
 
   const lhs = orderCols[0];

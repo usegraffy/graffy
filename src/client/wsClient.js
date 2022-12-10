@@ -33,7 +33,7 @@ const wsClient =
           [op, pack(payload), getOptions(op, options) || {}],
           (error, result) => {
             socket.stop(id);
-            error ? reject(Error('server.' + error)) : resolve(unpack(result));
+            error ? reject(Error(`server.${error}`)) : resolve(unpack(result));
           },
         );
       });
@@ -58,7 +58,7 @@ const wsClient =
           (error, result) => {
             if (error) {
               socket.stop(id);
-              end(Error('server.' + error));
+              end(Error(`server.${error}`));
               return;
             }
             push(unpack(result));

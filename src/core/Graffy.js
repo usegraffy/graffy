@@ -73,7 +73,7 @@ export default class Graffy {
         return makeStream((push, end) => {
           const subscription = handle(decodeQuery(query), options, () => {
             // TODO: Implement this using mergeStreams
-            throw Error('porcelain.watch_next_unsupported: ' + path);
+            throw Error(`porcelain.watch_next_unsupported: ${path}`);
           });
           (async function () {
             try {

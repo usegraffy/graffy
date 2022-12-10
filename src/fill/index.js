@@ -11,7 +11,7 @@ export default function fill(_) {
     store.on('read', [], async function fillOnRead(query, options, next) {
       let value = await next(query);
       if (options.skipFill) return value;
-      if (!value || !value.length) {
+      if (!value?.length) {
         log('No progress', query);
         throw Error('fill.no_progress');
         // return null;

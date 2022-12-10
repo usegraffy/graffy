@@ -7,7 +7,8 @@ import link from './index.js';
 import { ref, keyref } from '@graffy/testing';
 
 describe('link', () => {
-  let store, backend;
+  let store;
+  let backend;
 
   beforeEach(() => {
     store = new Graffy();

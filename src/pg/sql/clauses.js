@@ -79,11 +79,10 @@ function vertexSql(array, nullValue) {
 
 export function cubeLiteralSql(value) {
   if (
-    !Array.isArray(value) ||
-    !value.length ||
+    !(Array.isArray(value) && value.length) ||
     (Array.isArray(value[0]) && value.length !== 2)
   ) {
-    throw Error('pg.castValue_bad_cube' + JSON.stringify(value));
+    throw Error(`pg.castValue_bad_cube${JSON.stringify(value)}`);
   }
   return Array.isArray(value[0])
     ? sql`cube(${vertexSql(value[0], sql`'-Infinity'`)}, ${vertexSql(
@@ -94,7 +93,7 @@ export function cubeLiteralSql(value) {
 }
 
 function castValue(value, type, name, isPut) {
-  if (!type) throw Error('pg.write_no_column ' + name);
+  if (!type) throw Error(`pg.write_no_column ${name}`);
   if (value instanceof Sql) return value;
   if (value === null) return sql`NULL`;
 

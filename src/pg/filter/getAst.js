@@ -41,7 +41,7 @@ function construct(node, prop, op) {
   if (!node || typeof node !== 'object' || (prop && op)) {
     if (op && prop) return [op, prop, node];
     if (prop) return ['$eq', prop, node];
-    throw Error('pgast.expected_prop_before:' + JSON.stringify(node));
+    throw Error(`pgast.expected_prop_before:${JSON.stringify(node)}`);
   }
   if (Array.isArray(node)) {
     return ['$or', node.map((item) => construct(item, prop, op))];
@@ -57,14 +57,14 @@ function construct(node, prop, op) {
       }
 
       if (key[0] === '$') {
-        if (!valid[key]) throw Error('pgast.invalid_op:' + key);
-        if (op) throw Error('pgast.unexpected_op:' + op + ' before:' + key);
-        if (!prop) throw Error('pgast.expected_prop_before:' + key);
+        if (!valid[key]) throw Error(`pgast.invalid_op:${key}`);
+        if (op) throw Error(`pgast.unexpected_op:${op} before:${key}`);
+        if (!prop) throw Error(`pgast.expected_prop_before:${key}`);
         return construct(val, prop, key);
       }
       if (prop) {
         if (key[0] === '.') return construct(val, prop + key);
-        throw Error('pgast.unexpected_prop: ' + key);
+        throw Error(`pgast.unexpected_prop: ${key}`);
       }
       return construct(val, key);
     }),

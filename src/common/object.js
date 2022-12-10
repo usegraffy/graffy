@@ -45,7 +45,7 @@ export function cloneObject(object) {
 }
 
 export function wrapObject(object, path) {
-  if (!Array.isArray(path)) throw Error('wrapObject.path_not_array ' + path);
+  if (!Array.isArray(path)) throw Error(`wrapObject.path_not_array ${path}`);
   for (let i = path.length - 1; i >= 0; i--) {
     const $key = path[i];
     if (typeof $key === 'string') {
@@ -60,18 +60,18 @@ export function wrapObject(object, path) {
 }
 
 export function unwrapObject(object, path) {
-  if (!Array.isArray(path)) throw Error('unwrapObject.path_not_array ' + path);
+  if (!Array.isArray(path)) throw Error(`unwrapObject.path_not_array ${path}`);
   for (let i = 0; i < path.length; i++) {
     if (!object || typeof object !== 'object') return;
     const $key = path[i];
     if (typeof $key === 'string') {
       if (Array.isArray(object)) {
-        throw Error('unwrapObject.string_key_array:' + $key);
+        throw Error(`unwrapObject.string_key_array:${$key}`);
       }
       object = object[$key];
     } else {
       if (!Array.isArray(object)) {
-        throw Error('unwrapObject.arg_key_object:' + JSON.stringify($key));
+        throw Error(`unwrapObject.arg_key_object:${JSON.stringify($key)}`);
       }
       const [page, filter] = splitArgs($key);
       if (page && !page.$cursor) {

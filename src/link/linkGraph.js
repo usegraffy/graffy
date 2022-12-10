@@ -160,7 +160,7 @@ export default function linkGraph(rootGraph, defs) {
       const linked = unwrap(rootGraph, node.path);
       if (Array.isArray(linked)) return lookupValues(linked, path, vars);
     }
-    throw Error('link.no_children ' + JSON.stringify(node));
+    throw Error(`link.no_children ${JSON.stringify(node)}`);
   }
 }
 

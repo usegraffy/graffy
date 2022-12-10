@@ -6,7 +6,8 @@ const log = debug('graffy:fill:subscribe');
 
 export default function subscribe(store, originalQuery, { raw }) {
   const empty = () => finalize([], originalQuery, 0);
-  let push, end;
+  let push;
+  let end;
   let upstream;
   let query = [];
   let data = empty();
@@ -123,7 +124,7 @@ export default function subscribe(store, originalQuery, { raw }) {
     if (unknown) return resubscribe(unknown);
 
     if (!raw) {
-      if (!isChange || (sieved && sieved.length)) push(data);
+      if (!isChange || sieved?.length) push(data);
     } else if (payload.length) {
       push(payload);
       payload = [];

@@ -92,7 +92,7 @@ function decode(nodes = [], { isGraph } = {}) {
           if (typeof $val === 'object') {
             Object.defineProperty($val, '$val', { value: true });
           }
-          // prettier-ignore
+          // rome-ignore format: tertnary chain
           collection[$key] = (
             isDef($val) ? $val :
             !isEmpty(item) || item.$ref || item.$put ? item :
@@ -125,7 +125,7 @@ function decode(nodes = [], { isGraph } = {}) {
     let args = decodeArgs(node);
     if (!args) args = {};
     if (typeof args === 'string') {
-      throw Error('decode.unencoded_prefix: ' + args);
+      throw Error(`decode.unencoded_prefix: ${args}`);
     }
 
     if (isLink(node)) {
@@ -133,7 +133,7 @@ function decode(nodes = [], { isGraph } = {}) {
       const $ref = decodePath(node.path);
       const lastKey = $ref[$ref.length - 1];
       if (typeof lastKey === 'string') {
-        throw Error('decode.unencoded_prefix_ref: ' + node.path);
+        throw Error(`decode.unencoded_prefix_ref: ${node.path}`);
       }
       lastKey.$all = true;
       const linkObject = { $key: args };
@@ -145,12 +145,12 @@ function decode(nodes = [], { isGraph } = {}) {
     const children = decodeChildren(node.children);
 
     if (!Array.isArray(children)) {
-      throw Error('decode.prefix_without_encoded_child_keys:' + node.key);
+      throw Error(`decode.prefix_without_encoded_child_keys:${node.key}`);
     }
 
     for (const child of children) {
       if (typeof child.$key === 'string') {
-        throw Error('decode.prefix_with_unencoded_child_key:' + child.$key);
+        throw Error(`decode.prefix_with_unencoded_child_key:${child.$key}`);
       }
       if (!splitArgs(child.$key)[0]) {
         // splitArgs returns [page, filter]. If page is blank, it indicates

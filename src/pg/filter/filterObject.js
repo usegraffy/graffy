@@ -23,7 +23,7 @@ export default function filterObject(filter, object) {
       case '$in':
         return Array.isArray(ast[2]) && ast[2].includes(lookup(ast[1]));
       case '$nin':
-        return !Array.isArray(ast[2]) || !ast[2].includes(lookup(ast[1]));
+        return !(Array.isArray(ast[2]) && ast[2].includes(lookup(ast[1])));
       case '$cts':
       case '$ctd':
       case '$ovp':

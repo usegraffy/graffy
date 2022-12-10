@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 export default function () {
   return (store) => {
     store.on('read', (query, options, next) => {

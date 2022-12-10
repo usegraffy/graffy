@@ -87,7 +87,8 @@ describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
     text: jest.fn().mockResolvedValue('[["foo",42]]'),
   });
 
-  let store, getOptions;
+  let store;
+  let getOptions;
   const connectionUrl = 'http://example';
   const value = '12345';
 

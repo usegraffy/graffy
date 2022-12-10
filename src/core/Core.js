@@ -4,11 +4,11 @@ import debug from 'debug';
 const log = debug('graffy:core');
 
 function resolve(handlers, firstPayload, firstOptions) {
-  if (!handlers || !handlers.length) throw Error('resolve.no_provider');
+  if (!handlers?.length) throw Error('resolve.no_provider');
 
   function run(i, payload, options) {
     if (i >= handlers.length) {
-      throw Error('resolve.no_providers_for ' + JSON.stringify(payload));
+      throw Error(`resolve.no_providers_for ${JSON.stringify(payload)}`);
     }
 
     const { path, handle } = handlers[i];
@@ -19,7 +19,7 @@ function resolve(handlers, firstPayload, firstOptions) {
     let nextCalled = false;
     return handle(payload, options, (nextPayload, nextOptions) => {
       if (nextCalled) {
-        throw Error('resolve.duplicate_next_call: ' + handlers[i].name);
+        throw Error(`resolve.duplicate_next_call: ${handlers[i].name}`);
       }
       nextCalled = true;
       if (typeof nextPayload === 'undefined' || !nextPayload.length) return;

@@ -1,6 +1,10 @@
+/**
+ * @jest-environment ../scripts/jestDomEnvironment.cjs
+ */
+
 import { jest } from '@jest/globals';
 import React from 'react';
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import Graffy from '@graffy/core';
 import { encodeQuery } from '@graffy/common';
 import { mockBackend } from '@graffy/testing';
@@ -25,15 +29,14 @@ describe('useQuery', () => {
     };
   });
 
-  const expectLifeCycle = async (
-    { result, waitForValueToChange },
-    beforeLoading,
-    afterLoading,
-  ) => {
+  const expectLifeCycle = async (result, beforeLoading, afterLoading) => {
     const query = encodeQuery(afterLoading.data);
 
     expect(result.current).toStrictEqual({ ...beforeLoading, loading: true });
-    await waitForValueToChange(() => result.current.loading);
+    const initialLoading = result.current.loading;
+    await waitFor(() =>
+      expect(result.current.loading).not.toBe(initialLoading),
+    );
     expect(result.current).toStrictEqual({ ...afterLoading, loading: false });
     expect(result.error).toBeFalsy();
     expect(backend.read).toHaveBeenCalledWith(query, {}, expect.any(Function));
@@ -41,35 +44,25 @@ describe('useQuery', () => {
 
   test('loading', async () => {
     const data = { demo: { value } };
-    const { result, waitForValueToChange } = renderHook(
+    const { result } = renderHook(
       () => useQuery({ demo: { value: 1 } }, { once: true }),
       { wrapper },
     );
 
     const refetch = expect.any(Function);
-    await expectLifeCycle(
-      { result, waitForValueToChange },
-      { refetch },
-      { data, error: null, refetch },
-    );
+    await expectLifeCycle(result, { refetch }, { data, error: null, refetch });
   });
 
   test('refetch', async () => {
     const data = { demo: { value } };
-    const { result, waitForValueToChange } = renderHook(
+    const { result } = renderHook(
       () => useQuery({ demo: { value: 1 } }, { once: true }),
-      {
-        wrapper,
-      },
+      { wrapper },
     );
     const refetch = expect.any(Function);
 
     // normal lifecycle
-    await expectLifeCycle(
-      { result, waitForValueToChange },
-      { refetch },
-      { data, error: null, refetch },
-    );
+    await expectLifeCycle(result, { refetch }, { data, error: null, refetch });
 
     // update store
     const newValue = '12345';
@@ -82,7 +75,7 @@ describe('useQuery', () => {
     });
 
     await expectLifeCycle(
-      { result, waitForValueToChange },
+      result,
       { data, error: null, refetch },
       { data: newData, error: null, refetch },
     );

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 
 import { mkdir, readdir } from 'fs/promises';
 import os from 'os';

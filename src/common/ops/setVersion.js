@@ -4,7 +4,7 @@
 export default function setVersion(graph, version, onlyIfZero = false) {
   // mergeRanges(graph);
   for (const node of graph) {
-    if (!onlyIfZero || !node.version) node.version = version;
+    if (!(onlyIfZero && node.version)) node.version = version;
     if (node.children) setVersion(node.children, version, onlyIfZero);
   }
   return graph;

@@ -3,8 +3,8 @@ import getAst from './getAst.js';
 import { cubeLiteralSql } from '../sql/clauses.js';
 
 const opSql = {
-  $and: `AND`, // Not SQL as these are used as delimiters
-  $or: `OR`,
+  $and: 'AND', // Not SQL as these are used as delimiters
+  $or: 'OR',
   $not: sql`NOT`,
   $eq: sql`=`,
   $neq: sql`<>`,
@@ -25,7 +25,7 @@ function getBinarySql(lhs, type, op, value, textLhs) {
   if (value === null && op === '$neq') return sql`${lhs} IS NOT NULL`;
 
   const sqlOp = opSql[op];
-  if (!sqlOp) throw Error('pg.getSql_unknown_operator ' + op);
+  if (!sqlOp) throw Error(`pg.getSql_unknown_operator ${op}`);
 
   if (op === '$in' || op === '$nin') {
     if (type === 'jsonb' && typeof value[0] === 'string') lhs = textLhs;
@@ -73,7 +73,7 @@ export default function getSql(filter, options) {
 
     const [prefix, ...suffix] = ast[1].split('.');
     const { types } = options.schema;
-    if (!types[prefix]) throw Error('pg.no_column ' + prefix);
+    if (!types[prefix]) throw Error(`pg.no_column ${prefix}`);
 
     if (types[prefix] === 'jsonb') {
       const [lhs, textLhs] = suffix.length
@@ -85,7 +85,7 @@ export default function getSql(filter, options) {
 
       return getBinarySql(lhs, 'jsonb', op, ast[2], textLhs);
     } else {
-      if (suffix.length) throw Error('pg.lookup_not_jsonb ' + prefix);
+      if (suffix.length) throw Error(`pg.lookup_not_jsonb ${prefix}`);
       return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
     }
   }

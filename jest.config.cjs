@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 
 module.exports = {
@@ -13,7 +12,7 @@ module.exports = {
   setupFiles: ['../scripts/jest.setup.js'],
   restoreMocks: true,
   transform: {
-    '\\.[jt]sx?$': path.resolve(__dirname, './scripts/jestBabelTransform.js'),
+    '\\.jsx$': path.resolve(__dirname, './scripts/jestBabelTransform.js'),
   },
   extensionsToTreatAsEsm: ['.jsx'],
 };

@@ -19,7 +19,7 @@ function serializeKey(key) {
       return decodeValue(key);
     }
   }
-  return '\0' + encode(key);
+  return `\0${encode(key)}`;
 }
 
 function deserializeKey(key) {

@@ -145,7 +145,7 @@ describe('changes', () => {
     backend.write(encodeGraph({ foo: [{ $key: ['b'] }] }, 1));
     await expectNext(
       subscription,
-      // prettier-ignore
+      // rome-ignore format: deep tree
       { $ver: 1, foo: [
           { $key: { $since: ['b'], $until: ['b'] } },
           { $key: { $after: ['c'], $before: ['d'] }, $ver: 0 },
@@ -348,7 +348,7 @@ describe('values', () => {
 
     await expectNext(
       subscription,
-      // prettier-ignore
+      // rome-ignore format: deep tree
       {
         $ver: 1,
         foo: [
@@ -398,7 +398,7 @@ describe('values', () => {
     });
 
     backend.write(
-      // prettier-ignore
+      // rome-ignore format: deep tree
       encodeGraph({
         foo: [
           { $key: ['b'], $val: 2 },
@@ -520,7 +520,7 @@ describe('values', () => {
     );
     await expectNext(
       subscription,
-      // prettier-ignore
+      // rome-ignore format: deep tree
       [{ key: e.users, version: 1, children: encodeGraph({
           '1': { name: 'alice' },
           '3': { name: 'carol' },

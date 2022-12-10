@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { git } from './utils.js';
 
 export default async function version(str) {
@@ -47,7 +46,7 @@ export default async function version(str) {
         }`;
     }
   } catch (e) {
-    console.error(`ERROR incrementing version`);
+    console.error('ERROR incrementing version');
     console.error(e);
   }
 }

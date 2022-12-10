@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { parentPort } from 'worker_threads';
 import ts from 'typescript';
 import { src, dst } from './utils.js';
@@ -37,7 +36,7 @@ function getFileArgs(name, fileName) {
   const srcRoot = src(name);
 
   if (fileName.substr(0, srcRoot.length) !== srcRoot) {
-    throw Error('Updated file ' + fileName + ' is not in ' + srcRoot);
+    throw Error(`Updated file ${fileName} is not in ${srcRoot}`);
   }
 
   const filePath = fileName.substr(srcRoot.length);

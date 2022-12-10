@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { yarn, ownPattern, read } from './utils.js';
 
 export default async function link(name) {

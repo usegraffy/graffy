@@ -22,7 +22,7 @@ function encode(value, { version, isGraph } = {}) {
       ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
       : null;
 
-    // prettier-ignore
+    // rome-ignore format: ternary chain
     const children =
       node ? node.children :
       isDef($val) ? $val :
@@ -124,8 +124,8 @@ function encode(value, { version, isGraph } = {}) {
       }
     }
 
-    let putQuery = [],
-      prefixPuts = [];
+    let putQuery = [];
+    let prefixPuts = [];
     // If this is a plain array (without keyed objects), we should "put" the
     // entire positive integer range to give it atomic write behavior.
     if (Array.isArray(object) && !object.some((it) => isDef(it?.$key))) {
@@ -209,7 +209,7 @@ function encode(value, { version, isGraph } = {}) {
         // { foo: {} } === undefined (we know nothing)
         // but { $key: 'foo' }] === { foo: null } (we know foo doesn't exist)
         // This is because when using the $key notation, we can't use null.
-        if (!isDef($key) && !isDef($put)) return;
+        if (!(isDef($key) || isDef($put))) return;
         if (node.key && !node.end) node.end = node.key;
       } else {
         if (!isDef($key)) return;

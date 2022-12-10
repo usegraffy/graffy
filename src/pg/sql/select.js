@@ -13,7 +13,7 @@ export function selectByArgs(args, projection, options) {
     SELECT
     ${getSelectCols(table, projection)}, ${meta}
     FROM "${raw(table)}"
-    ${where.length ? sql`WHERE ${join(where, ` AND `)}` : empty}
+    ${where.length ? sql`WHERE ${join(where, ' AND ')}` : empty}
     ${group ? sql`GROUP BY ${group}` : empty}
     ${order ? sql`ORDER BY ${order}` : empty}
     LIMIT ${clampedLimit}
