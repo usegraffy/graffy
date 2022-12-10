@@ -12,6 +12,7 @@ export default function Visitor({ avatar, name, ts, pageviews }) {
       </div>
       <div className="Visitor-pages">
         {pageviews.map((url, i) => (
+          // rome-ignore lint: We don't have any IDs
           <div key={i} className="Visitor-page">
             {url}
           </div>

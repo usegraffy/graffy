@@ -13,7 +13,8 @@ const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 const esmOnlyDeps = ['sql-template-tag', 'nanoid'];
 
 export default async function build(name, version, watch, onUpdate) {
-  let packageName, description;
+  let packageName;
+  let description;
 
   // Copy the Readme file first. If there is no readme, skip this directory.
   try {
@@ -100,7 +101,8 @@ export default async function build(name, version, watch, onUpdate) {
   }
 
   async function writePackageJson(imports) {
-    let dependencies, peerDependencies;
+    let dependencies;
+    let peerDependencies;
 
     Object.keys(imports).map((imp) => {
       const dep = imp.match(depPattern)[0];
