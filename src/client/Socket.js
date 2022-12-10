@@ -14,7 +14,6 @@ import { makeId } from '@graffy/common';
 import debug from 'debug';
 
 const log = debug('graffy:client:socket');
-// eslint-disable-next-line no-console
 log.log = console.log.bind(console);
 
 const MIN_DELAY = 1000;

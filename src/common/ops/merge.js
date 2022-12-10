@@ -36,7 +36,6 @@ export function insertRange(current, change, start = 0) {
 
 function mergeRanges(base, node) {
   // assertVersion(node, base.version);
-  // eslint-disable-next-line no-param-reassign
   if (node.version < base.version) [node, base] = [base, node];
   return [
     cmp(base.key, node.key) < 0 && { ...base, end: keyBefore(node.key) },

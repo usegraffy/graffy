@@ -26,7 +26,6 @@ export default function (s) {
   }
 
   (async function () {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       ts = Date.now();
       store.call('write', await simulate());
@@ -35,7 +34,6 @@ export default function (s) {
   })();
 
   (async function () {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const line =
         `${id - freeIds.size} users `.padStart(16) +

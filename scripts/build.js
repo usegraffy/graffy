@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { builtinModules } from 'module';
 import { src, dst, ownPattern, read } from './utils.js';

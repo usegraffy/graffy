@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { root } from './utils.js';
 import { Worker } from 'worker_threads';
 

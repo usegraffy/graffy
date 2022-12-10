@@ -42,7 +42,6 @@ export async function setupPgServer() {
       'postgres:alpine',
     ]);
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error(
       'Could not start a test Postgres server using Docker.\n' +
         'Possible reasons:\n' +

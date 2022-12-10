@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { git } from './utils.js';
 
 export default async function version(str) {

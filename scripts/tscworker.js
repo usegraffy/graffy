@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { parentPort } from 'worker_threads';
 import ts from 'typescript';
 import { src, dst } from './utils.js';
