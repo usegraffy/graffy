@@ -1,3 +1,7 @@
+/**
+ * @jest-environment ../scripts/jestDomEnvironment.cjs
+ */
+
 import { jest } from '@jest/globals';
 import React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
