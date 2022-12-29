@@ -1053,7 +1053,7 @@ describe('pg_e2e', () => {
     }]);
 
     await store.write(['users', id], {
-      settings: { foo: { bar: null } }
+      settings: { foo: { bar: null }, baz: { $put: true, bar: null } }
     });
 
     const pgClient = await getPool().connect();
@@ -1061,7 +1061,5 @@ describe('pg_e2e', () => {
     pgClient.release();
 
     expect(res).toEqual({ settings: null });
-
-    
   })
 });
