@@ -174,7 +174,7 @@ function stripAttributes(object) {
   }
 
   return Object.entries(object).reduce((out, [key, val]) => {
-    if (key === '$put') return out;
+    if (key === '$put' || val === null) return out;
     out[key] = stripAttributes(val);
     return out;
   }, {});
