@@ -1045,21 +1045,25 @@ describe('pg_e2e', () => {
 
   test('update_single_child_null', async () => {
     let id = uuid();
-    await store.write('users', [{
-      $key: id,
-      $put: true,
-      name: 'A',
-      settings: { foo: { bar: 33 } },
-    }]);
+    await store.write('users', [
+      {
+        $key: id,
+        $put: true,
+        name: 'A',
+        settings: { foo: { bar: 33 } },
+      },
+    ]);
 
     await store.write(['users', id], {
-      settings: { foo: { bar: null }, baz: { $put: true, bar: null } }
+      settings: { foo: { bar: null }, baz: { $put: true, bar: null } },
     });
 
     const pgClient = await getPool().connect();
-    const res = (await pgClient.query(`SELECT "settings" from "users" where id = '${id}'`)).rows[0];
+    const res = (
+      await pgClient.query(`SELECT "settings" from "users" where id = '${id}'`)
+    ).rows[0];
     pgClient.release();
 
     expect(res).toEqual({ settings: null });
-  })
+  });
 });
