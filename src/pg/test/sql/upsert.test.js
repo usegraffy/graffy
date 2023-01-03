@@ -68,9 +68,9 @@ describe('byId', () => {
         "type" = ${'post'},
         "name" = ${'hello'},
         "email" = ${'world'},
-        "config" = jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
-          jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)),
-        "tags" = jsonb_strip_nulls(${JSON.stringify([1, 2, 3])}::jsonb),
+        "config" = nullif(jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
+          jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)), '{}'::jsonb),
+        "tags" = ${JSON.stringify([1, 2, 3])}::jsonb,
         "version" =  default
       WHERE "id" = ${'post22'}
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"

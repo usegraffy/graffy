@@ -100,7 +100,7 @@ function castValue(value, type, name, isPut) {
   if (type === 'jsonb') {
     return isPut
       ? JSON.stringify(stripAttributes(value))
-      : sql`jsonb_strip_nulls(${getJsonUpdate(value, name, [])})`;
+      : getJsonUpdate(value, name, []);
   }
 
   if (type === 'cube') return cubeLiteralSql(value);
@@ -154,7 +154,7 @@ function getJsonUpdate(object, col, path) {
   const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
   if (isEmpty(object)) return curr;
 
-  return sql`(case jsonb_typeof(${curr})
+  return sql`nullif(jsonb_strip_nulls((case jsonb_typeof(${curr})
     when 'object' then ${curr}
     else '{}'::jsonb
   end) || jsonb_build_object(${join(
@@ -164,7 +164,7 @@ function getJsonUpdate(object, col, path) {
         sql`${key}::text, ${getJsonUpdate(value, col, path.concat(key))}`,
     ),
     ', ',
-  )})`;
+  )})), '{}'::jsonb)`;
 }
 
 function stripAttributes(object) {
@@ -174,8 +174,9 @@ function stripAttributes(object) {
   }
 
   return Object.entries(object).reduce((out, [key, val]) => {
-    if (key === '$put') return out;
+    if (key === '$put' || val === null) return out;
+    if (out === null) out = {};
     out[key] = stripAttributes(val);
     return out;
-  }, {});
+  }, null);
 }
