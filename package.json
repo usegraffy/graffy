@@ -12,7 +12,7 @@
     "format": "rome check --apply-suggested . && rome format --write .",
     "lint": "rome ci .",
     "package": "./scripts/package.js",
-    "start": "node src/website/server.js",
+    "start": "node src/example/server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=testing jest",
     "pg:clean": "docker rm -f graffypg",
     "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl"
