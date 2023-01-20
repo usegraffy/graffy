@@ -242,6 +242,96 @@ describe('graph', () => {
     ],
   };
 
+  const original3 = {
+    gParticipant: put(
+      [ 
+        { 
+          domains: { 'nektartest.page': true },
+          emailAddresses: { 
+            'minato@nektartest.page': { 
+              tags: { 
+                work: true,
+              },
+            },
+          },
+          id: 'c0661bc9-991b-4701-a9ad-4421f722531e',
+          integrationId: 'minato@nektartest.page',
+          isDeleted: false,
+          jobTitle: null,
+          name: 'Minato',
+          phoneNumbers: null,
+          tenantId: 'c126cf52-2c80-45e3-8419-eb8fbff041f0',
+          '$key': 'c0661bc9-991b-4701-a9ad-4421f722531e'
+        },
+        { 
+          domains: { 'nektartest.page': true },
+          emailAddresses: { 
+            'minato@nektartest.page': { 
+              tags: { 
+                work: true,
+              },
+            },
+          },
+          id: 'cd57af2f-274e-4ff8-ada2-b5c97e589ed9',
+          integrationId: 'minato@nektartest.page',
+          isDeleted: false,
+          jobTitle: null,
+          name: 'Minato',
+          phoneNumbers: null,
+          tenantId: 'c126cf52-2c80-45e3-8419-eb8fbff041f0',
+          '$key': 'cd57af2f-274e-4ff8-ada2-b5c97e589ed9'
+        },
+        {
+          '$key': {
+            '$or': [ 
+              { 
+                '$or': [
+                  { 
+                    emailAddresses: { 
+                      '$cts': { 
+                        'minato@nektartest.page': {} 
+                      } 
+                    } 
+                  },
+                ] 
+              },
+            ],
+           '$order': [ 'createdAt', 'id',  ],
+           isDeleted: false,
+           tenantId: 'c126cf52-2c80-45e3-8419-eb8fbff041f0',
+           '$cursor': [ 1674050462847, 'c0661bc9-991b-4701-a9ad-4421f722531e',  ] },
+          $ref: [ 'gParticipant', 'c0661bc9-991b-4701-a9ad-4421f722531e' ]
+        },
+        { 
+          '$key': {
+            '$or':[ 
+              {
+                '$or': [ 
+                  { 
+                    emailAddresses: { 
+                      '$cts': { 
+                        'minato@nektartest.page': {}
+                      } 
+                    } 
+                  },
+                ] 
+              },
+            ],
+            '$order': [ 'createdAt', 'id',  ],
+            isDeleted: false,
+            tenantId: 'c126cf52-2c80-45e3-8419-eb8fbff041f0',
+            '$cursor': [ 1674050462870, 'cd57af2f-274e-4ff8-ada2-b5c97e589ed9']
+          },
+          $ref: [ 'gParticipant', 'cd57af2f-274e-4ff8-ada2-b5c97e589ed9' ]
+        },
+      ]
+    )
+  }
+
+  test ('rangeQuery test case with $ref', () => {
+    roundTrip(original3);
+  });
+
   test('mix1', () => {
     roundTrip(original1, original1, (decoded) => {
       expect(decoded.tenant[2].$ref).toEqual(['tenant', 'bar']);
