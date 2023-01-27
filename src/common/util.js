@@ -94,7 +94,6 @@ const stringifyDescriptor = {
 export function addStringify(buffer) {
   if (
     'toJSON' in buffer ||
-    'toString' in buffer ||
     Symbol.for('nodejs.util.inspect.custom') in buffer
   ) {
     return buffer;

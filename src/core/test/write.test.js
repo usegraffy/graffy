@@ -14,4 +14,14 @@ describe('write', () => {
     await g.write({ foo: 42 });
     expect(handler).toBeCalledWith({ foo: 42 }, {}, expect.any(Function));
   });
+
+  // describe('middleware_coding', () => {
+  //   test('no_path', () => {
+  //     g.onWrite(async (change, options, next) => {
+  //       const written = next(change, options);
+  //       return next;
+  //     });
+  //     g.onWrite()
+  //   })
+  // })
 });
