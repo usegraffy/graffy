@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
-import { ref } from '@graffy/testing';
+import { keyref, page, put, ref } from '@graffy/testing';
 
 let g;
 beforeEach(() => {
@@ -34,13 +34,6 @@ test('remove_null', async () => {
     foo: { bar: 45, baz: null },
   });
 });
-
-// test('leaf_branch_mismatch', async () => {
-//   g.onRead('foo', () => ({ bar: 45, baz: { bad: 3 }, f: 3 }));
-//   expect(
-//     async () => await g.read({ foo: { bar: 1, baz: 1 } }),
-//   ).rejects.toThrow();
-// });
 
 test('getKnown', async () => {
   g.use((graffy) => {
@@ -78,39 +71,32 @@ describe('range-getKnown', () => {
       expect.any(Function),
     );
     const expected = {
-      foo: [
+      foo: page({ $all: true }, null, [
         { $key: { x: 'a' }, bar: 42 },
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
         { $key: { x: 'e' }, bar: 38 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true };
-    expected.foo.$next = null;
-    expected.foo.$prev = null;
     expect(result).toEqual(expected);
   });
 
   test('simple-first', async () => {
     const result = await g.read({ foo: { $key: { $first: 2 }, bar: 1 } });
     const expected = {
-      foo: [
+      foo: page({ $until: { x: 'b' } }, 2, [
         { $key: { x: 'a' }, bar: 42 },
         { $key: { x: 'b' }, bar: 41 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $until: { x: 'b' } };
-    expected.foo.$next = { $first: 2, $after: { x: 'b' } };
-    expected.foo.$prev = null;
     expect(result).toEqual(expected);
   });
   test('simple-last', async () => {
     const result = await g.read({ foo: { $key: { $last: 1 }, bar: 1 } });
-    const expected = { foo: [{ $key: { x: 'e' }, bar: 38 }] };
-    expected.foo.$page = { $all: true, $since: { x: 'e' } };
-    expected.foo.$next = null;
-    expected.foo.$prev = { $last: 1, $before: { x: 'e' } };
+    const expected = {
+      foo: page({ $since: { x: 'e' } }, 1, [{ $key: { x: 'e' }, bar: 38 }]),
+    };
     expect(result).toEqual(expected);
   });
   test('first-since', async () => {
@@ -118,14 +104,11 @@ describe('range-getKnown', () => {
       foo: { $key: { $first: 2, $since: { x: 'b' } }, bar: 1 },
     });
     const expected = {
-      foo: [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'c' } }, 2, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
-    expected.foo.$next = { $first: 2, $after: { x: 'c' } };
-    expected.foo.$prev = { $last: 2, $before: { x: 'b' } };
     expect(result).toEqual(expected);
   });
   test('last-until', async () => {
@@ -133,15 +116,12 @@ describe('range-getKnown', () => {
       foo: { $key: { $last: 3, $until: { x: 'd' } }, bar: 1 },
     });
     const expected = {
-      foo: [
+      foo: page({ $until: { x: 'd' }, $since: { x: 'b' } }, 3, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $until: { x: 'd' }, $since: { x: 'b' } };
-    expected.foo.$next = { $first: 3, $after: { x: 'd' } };
-    expected.foo.$prev = { $last: 3, $before: { x: 'b' } };
     expect(result).toEqual(expected);
   });
   test('first-until-since', async () => {
@@ -152,14 +132,11 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'c' } }, 2, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
-    expected.foo.$next = { $first: 2, $after: { x: 'c' } };
-    expected.foo.$prev = { $last: 2, $before: { x: 'b' } };
     expect(result).toEqual(expected);
   });
   test('last-until-since', async () => {
@@ -170,15 +147,12 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'd' } }, 3, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'd' } };
-    expected.foo.$next = { $first: 3, $after: { x: 'd' } };
-    expected.foo.$prev = { $last: 3, $before: { x: 'b' } };
     expect(result).toEqual(expected);
   });
   test('first-until-since-filled', async () => {
@@ -189,14 +163,11 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'c' } }, 4, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'c' } };
-    expected.foo.$next = { $first: 4, $after: { x: 'c' } };
-    expected.foo.$prev = { $last: 4, $before: { x: 'b' } };
     expect(result).toEqual(expected);
   });
   test('last-until-since-filled', async () => {
@@ -207,15 +178,12 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'd' } }, 5, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
-      ],
+      ]),
     };
-    expected.foo.$page = { $all: true, $since: { x: 'b' }, $until: { x: 'd' } };
-    expected.foo.$next = { $first: 5, $after: { x: 'd' } };
-    expected.foo.$prev = { $last: 5, $before: { x: 'b' } };
     expect(result).toEqual(expected);
   });
 });
@@ -252,17 +220,88 @@ describe('alias', () => {
     });
     const expectedArray = ref(
       ['foo', { t: 3, $first: 2 }],
-      [
+      page({ $until: 2 }, 2, [
         { $key: { t: 3, $cursor: 1 }, x: 100 },
         { $key: { t: 3, $cursor: 2 }, x: 200 },
-      ],
+      ]),
     );
-    expectedArray.$page = { $all: true, $until: 2 };
-    expectedArray.$next = { $first: 2, $after: 2 };
-    expectedArray.$prev = null;
 
     expect(result).toEqual({
       bar: expectedArray,
     });
+  });
+});
+
+describe('middleware_coding', () => {
+  test('no_path', async () => {
+    const composedResult = [
+      keyref({ foo: 'bar', $cursor: [3847, 'p1'] }, ['participant', 'p1'], {
+        name: 'Participant1',
+      }),
+      keyref({ foo: 'bar', $cursor: [4826, 'p2'] }, ['participant', 'p2'], {
+        name: 'Participant2',
+      }),
+    ];
+
+    const decomposedResult = put(
+      [
+        { $key: 'p1', name: 'Participant1' },
+        { $key: 'p2', name: 'Participant2' },
+        keyref({ foo: 'bar', $cursor: [3847, 'p1'] }, ['participant', 'p1']),
+        keyref({ foo: 'bar', $cursor: [4826, 'p2'] }, ['participant', 'p2']),
+      ],
+      [{ foo: 'bar', $until: [4826, 'p2'] }],
+    );
+
+    g.onRead(async (query, options, next) => {
+      const result = await next(query, options);
+      expect(result).toEqual({ participant: decomposedResult });
+      return result;
+    });
+    g.onRead(async (query) => {
+      return { participant: composedResult };
+    });
+
+    const res = await g.read(['participant', { foo: 'bar', $first: 2 }], {
+      name: true,
+    });
+    const exp = page({ foo: 'bar', $until: [4826, 'p2'] }, 2, composedResult);
+    expect(res).toEqual(exp);
+  });
+
+  test('downstream_path', async () => {
+    const composedResult = [
+      keyref({ foo: 'bar', $cursor: [3847, 'p1'] }, ['participant', 'p1'], {
+        name: 'Participant1',
+      }),
+      keyref({ foo: 'bar', $cursor: [4826, 'p2'] }, ['participant', 'p2'], {
+        name: 'Participant2',
+      }),
+    ];
+
+    const decomposedResult = put(
+      [
+        { $key: 'p1', name: 'Participant1' },
+        { $key: 'p2', name: 'Participant2' },
+        keyref({ foo: 'bar', $cursor: [3847, 'p1'] }, ['participant', 'p1']),
+        keyref({ foo: 'bar', $cursor: [4826, 'p2'] }, ['participant', 'p2']),
+      ],
+      [{ foo: 'bar', $until: [4826, 'p2'] }],
+    );
+
+    g.onRead(async (query, options, next) => {
+      const result = await next(query, options);
+      expect(result).toEqual({ participant: decomposedResult });
+      return result;
+    });
+    g.onRead('participant', async (query) => {
+      return composedResult;
+    });
+
+    const res = await g.read(['participant', { foo: 'bar', $first: 2 }], {
+      name: true,
+    });
+    const exp = page({ foo: 'bar', $until: [4826, 'p2'] }, 2, composedResult);
+    expect(res).toEqual(exp);
   });
 });

@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
 import { MAX_KEY, MIN_KEY, encodeGraph, encodeQuery } from '@graffy/common';
-import { mockBackend } from '@graffy/testing';
+import { mockBackend, page } from '@graffy/testing';
 import link from './index.js';
 import { ref, keyref } from '@graffy/testing';
 
@@ -154,16 +154,12 @@ describe('link', () => {
     // is modified afterwards.
     const res = await resPromise;
 
-    const exp = [
+    const exp = page({ authorId: 'bob', $until: { id: 'p02' } }, 1, [
       keyref({ $cursor: { id: 'p02' }, authorId: 'bob' }, ['post', 'p02'], {
         title: 'Post 2 B',
         author: ref(['user', 'bob'], { name: 'Robert' }),
       }),
-    ];
-    exp.$page = { $all: true, authorId: 'bob', $until: { id: 'p02' } };
-    exp.$next = { $first: 1, authorId: 'bob', $after: { id: 'p02' } };
-    exp.$prev = null;
-
+    ]);
     expect(res).toEqual(exp);
   });
 
@@ -175,14 +171,11 @@ describe('link', () => {
     // console.log(res);
     const exp = {
       name: 'Carl',
-      friends: [
+      friends: page({}, null, [
         keyref(0, ['user', 'ali'], { name: 'Alicia' }),
         keyref(1, ['user', 'bob'], { name: 'Robert' }),
-      ],
+      ]),
     };
-    exp.friends.$page = { $all: true };
-    exp.friends.$prev = null;
-    exp.friends.$next = null;
     expect(res).toEqual(exp);
   });
 
@@ -195,15 +188,12 @@ describe('link', () => {
     const res = await store.read('post', [
       { $key: { $first: 1, authorId: 'bob' } },
     ]);
-    const exp = [
+    const exp = page({ authorId: 'bob', $until: { id: 'p02' } }, 1, [
       keyref({ $cursor: { id: 'p02' }, authorId: 'bob' }, ['post', 'p02'], {
         title: 'Post 2 B',
         authorId: 'bob',
       }),
-    ];
-    exp.$page = { $all: true, authorId: 'bob', $until: { id: 'p02' } };
-    exp.$next = { $first: 1, authorId: 'bob', $after: { id: 'p02' } };
-    exp.$prev = null;
+    ]);
     expect(res).toEqual(exp);
   });
 });

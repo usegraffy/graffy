@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import Graffy from '../Graffy.js';
 import GraffyFill from '@graffy/fill';
-import { ref } from '@graffy/testing';
+import { page, ref } from '@graffy/testing';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -39,7 +39,7 @@ test('Porcelain read', async () => {
     author: { name: true },
   });
 
-  const expectedResult = [
+  const expectedResult = page({ $until: ['2001'] }, 2, [
     {
       $key: ['1984'],
       title: '1984',
@@ -50,10 +50,7 @@ test('Porcelain read', async () => {
       title: '2001',
       author: ref(['users', 'clarke'], { name: 'Arthur C Clarke' }),
     },
-  ];
-  expectedResult.$page = { $all: true, $until: ['2001'] };
-  expectedResult.$next = { $first: 2, $after: ['2001'] };
-  expectedResult.$prev = null;
+  ]);
 
   expect(onReadBooks).toHaveBeenCalledWith(
     expectedBooksQuery,
@@ -107,7 +104,7 @@ test('Porcelain subscription', async () => {
     title: true,
     author: { name: true },
   });
-  const expectedResult = [
+  const expectedResult = page({ $until: ['2001'] }, 2, [
     {
       $key: ['1984'],
       title: '1984',
@@ -118,10 +115,7 @@ test('Porcelain subscription', async () => {
       title: '2001',
       author: ref(['users', 'clarke'], { name: 'Arthur C Clarke' }),
     },
-  ];
-  expectedResult.$page = { $all: true, $until: ['2001'] };
-  expectedResult.$next = { $first: 2, $after: ['2001'] };
-  expectedResult.$prev = null;
+  ]);
 
   expect((await result.next()).value).toEqual(expectedResult);
 });
@@ -153,6 +147,8 @@ test('read array value', async () => {
 
   const result = await store.read({ foo: 1 });
   expect(provider).toBeCalled();
+
+  /** @type {string[] & { $val?: true }} */
   const expected = ['hello', 'world'];
   expected.$val = true;
   expect(result).toEqual({ foo: expected });
@@ -173,28 +169,19 @@ test('basic_range', async () => {
     _store.onRead('foo', async (_query, _options) => {
       return [
         {
-          $key: {
-            $cursor: [1],
-            bar: 'something',
-          },
+          $key: { $cursor: [1], bar: 'something' },
           id: 'id-1',
           name: 'name-1',
           address: 'address-1',
         },
         {
-          $key: {
-            $cursor: [2],
-            bar: 'something',
-          },
+          $key: { $cursor: [2], bar: 'something' },
           id: 'id-2',
           name: 'name-2',
           address: 'address-2',
         },
         {
-          $key: {
-            $cursor: [3],
-            bar: 'something',
-          },
+          $key: { $cursor: [3], bar: 'something' },
           id: 'id-3',
           name: 'name-3',
           address: 'address-3',
@@ -205,28 +192,19 @@ test('basic_range', async () => {
 
   const result = await store.read(query);
   const expected = {
-    foo: [
+    foo: page({ bar: 'something', $until: [2] }, 2, [
       {
-        $key: {
-          $cursor: [1],
-          bar: 'something',
-        },
+        $key: { $cursor: [1], bar: 'something' },
         id: 'id-1',
         name: 'name-1',
       },
       {
-        $key: {
-          $cursor: [2],
-          bar: 'something',
-        },
+        $key: { $cursor: [2], bar: 'something' },
         id: 'id-2',
         name: 'name-2',
       },
-    ],
+    ]),
   };
-  expected.foo.$page = { bar: 'something', $all: true, $until: [2] };
-  expected.foo.$next = { bar: 'something', $first: 2, $after: [2] };
-  expected.foo.$prev = null;
 
   expect(result).toEqual(expected);
 });
@@ -252,28 +230,19 @@ test('query_forwarding', async () => {
     _store.onRead('foo', async (_query, _options) => {
       return [
         {
-          $key: {
-            $cursor: [1],
-            bar: 'something',
-          },
+          $key: { $cursor: [1], bar: 'something' },
           id: 'id-1',
           name: 'name-1',
           address: 'address-1',
         },
         {
-          $key: {
-            $cursor: [2],
-            bar: 'something',
-          },
+          $key: { $cursor: [2], bar: 'something' },
           id: 'id-2',
           name: 'name-2',
           address: 'address-2',
         },
         {
-          $key: {
-            $cursor: [3],
-            bar: 'something',
-          },
+          $key: { $cursor: [3], bar: 'something' },
           id: 'id-3',
           name: 'name-3',
           address: 'address-3',
@@ -285,7 +254,7 @@ test('query_forwarding', async () => {
 
   const result = await store2.read(query);
   const expected = {
-    foo: [
+    foo: page({ bar: 'something', $until: [2] }, 2, [
       {
         $key: {
           $cursor: [1],
@@ -302,12 +271,8 @@ test('query_forwarding', async () => {
         id: 'id-2',
         name: 'name-2',
       },
-    ],
+    ]),
   };
-  expected.foo.$page = { bar: 'something', $all: true, $until: [2] };
-  expected.foo.$next = { bar: 'something', $first: 2, $after: [2] };
-  expected.foo.$prev = null;
-
   expect(result).toEqual(expected);
 });
 

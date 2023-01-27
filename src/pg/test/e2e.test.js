@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { v4 as uuid } from 'uuid';
 import Graffy from '@graffy/core';
-import { put, ref, keyref } from '@graffy/testing';
+import { put, ref, keyref, page } from '@graffy/testing';
 import { pg } from '../index.js';
 import {
   setupPgServer,
@@ -9,10 +9,6 @@ import {
   resetTables,
   getPool,
 } from './setup.js';
-
-/**
- * @typedef {any[] & { $next?: any, $prev?: any, $page?: any }} GraffyRangeResult
- */
 
 const uuidV4Regex =
   /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
@@ -87,18 +83,14 @@ describe('pg_e2e', () => {
       settings: { foo: true },
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp2 = [
+    const exp2 = page({ email: { $not: null } }, null, [
       keyref({ $cursor: [id1], email: { $not: null } }, ['users', id1], {
         id: id1,
         name: 'Alice',
         email: 'alice@acme.co',
         settings: { foo: 10 },
       }),
-    ];
-    exp2.$page = { $all: true, email: { $not: null } };
-    exp2.$next = null;
-    exp2.$prev = null;
+    ]);
     expect(res2).toEqual(exp2);
     expect(res2[0].$ref).toEqual(exp2[0].$ref);
 
@@ -153,44 +145,44 @@ describe('pg_e2e', () => {
 
     // console.log(res5);
 
-    /** @type {GraffyRangeResult} */
-    const exp5 = [
-      keyref(
-        {
-          $cursor: ['Alicia', id1],
-          name: { $ire: '^al' },
-          $order: ['name', 'id'],
-        },
-        ['users', id1],
-        {
-          id: id1,
-          name: 'Alicia',
-          email: 'alice@acme.co',
-          settings: { foo: null, bar: 5, baz: { x: null, y: null } },
-        },
-      ),
-      keyref(
-        {
-          $cursor: ['alan', id2],
-          name: { $ire: '^al' },
-          $order: ['name', 'id'],
-        },
-        ['users', id2],
-        {
-          id: id2,
-          name: 'alan',
-          email: 'alan@acme.co',
-          settings: { foo: null, bar: 3, baz: { x: 4, y: 5 } },
-        },
-      ),
-    ];
-    exp5.$page = {
-      $all: true,
-      name: { $ire: '^al' },
-      $order: ['name', 'id'],
-    };
-    exp5.$next = null;
-    exp5.$prev = null;
+    const exp5 = page(
+      {
+        $all: true,
+        name: { $ire: '^al' },
+        $order: ['name', 'id'],
+      },
+      null,
+      [
+        keyref(
+          {
+            $cursor: ['Alicia', id1],
+            name: { $ire: '^al' },
+            $order: ['name', 'id'],
+          },
+          ['users', id1],
+          {
+            id: id1,
+            name: 'Alicia',
+            email: 'alice@acme.co',
+            settings: { foo: null, bar: 5, baz: { x: null, y: null } },
+          },
+        ),
+        keyref(
+          {
+            $cursor: ['alan', id2],
+            name: { $ire: '^al' },
+            $order: ['name', 'id'],
+          },
+          ['users', id2],
+          {
+            id: id2,
+            name: 'alan',
+            email: 'alan@acme.co',
+            settings: { foo: null, bar: 3, baz: { x: 4, y: 5 } },
+          },
+        ),
+      ],
+    );
     expect(res5).toEqual(exp5);
 
     // Sixth, update Alan to Alain using email address
@@ -226,29 +218,29 @@ describe('pg_e2e', () => {
       email: true,
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp7 = [
-      keyref(
-        {
-          $cursor: ['alain', id2],
-          name: { $re: '^al' },
-          $order: ['name', 'id'],
-        },
-        ['users', id2],
-        {
-          id: id2,
-          name: 'alain',
-          email: 'alan@acme.co',
-        },
-      ),
-    ];
-    exp7.$page = {
-      $all: true,
-      name: { $re: '^al' },
-      $order: ['name', 'id'],
-    };
-    exp7.$next = null;
-    exp7.$prev = null;
+    const exp7 = page(
+      {
+        $all: true,
+        name: { $re: '^al' },
+        $order: ['name', 'id'],
+      },
+      null,
+      [
+        keyref(
+          {
+            $cursor: ['alain', id2],
+            name: { $re: '^al' },
+            $order: ['name', 'id'],
+          },
+          ['users', id2],
+          {
+            id: id2,
+            name: 'alain',
+            email: 'alan@acme.co',
+          },
+        ),
+      ],
+    );
     expect(res7).toEqual(exp7);
   });
 
@@ -286,8 +278,7 @@ describe('pg_e2e', () => {
       email: true,
       settings: true,
     });
-    /** @type {GraffyRangeResult} */
-    const exp1 = [
+    const exp1 = page({ $all: true, $order: ['email'] }, null, [
       keyref({ $order: ['email'], $cursor: ['a'] }, expect.any(Array), {
         name: 'A',
         email: 'a',
@@ -308,11 +299,7 @@ describe('pg_e2e', () => {
         email: 'd',
         settings: null,
       }),
-    ];
-
-    exp1.$page = { $all: true, $order: ['email'] };
-    exp1.$next = null;
-    exp1.$prev = null;
+    ]);
 
     expect(res1).toEqual(exp1);
 
@@ -323,35 +310,34 @@ describe('pg_e2e', () => {
       email: true,
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp2 = [
-      keyref(
-        {
-          settings: { $cts: { foo: [] } },
-          $order: ['email'],
-          $cursor: [expect.any(String)],
-        },
-        expect.any(Array),
-        { email: 'a' },
-      ),
-      keyref(
-        {
-          settings: { $cts: { foo: [] } },
-          $order: ['email'],
-          $cursor: [expect.any(String)],
-        },
-        expect.any(Array),
-        { email: 'b' },
-      ),
-    ];
-
-    exp2.$page = {
-      settings: { $cts: { foo: [] } },
-      $order: ['email'],
-      $all: true,
-    };
-    exp2.$next = null;
-    exp2.$prev = null;
+    const exp2 = page(
+      {
+        settings: { $cts: { foo: [] } },
+        $order: ['email'],
+        $all: true,
+      },
+      null,
+      [
+        keyref(
+          {
+            settings: { $cts: { foo: [] } },
+            $order: ['email'],
+            $cursor: [expect.any(String)],
+          },
+          expect.any(Array),
+          { email: 'a' },
+        ),
+        keyref(
+          {
+            settings: { $cts: { foo: [] } },
+            $order: ['email'],
+            $cursor: [expect.any(String)],
+          },
+          expect.any(Array),
+          { email: 'b' },
+        ),
+      ],
+    );
 
     expect(res2).toEqual(exp2);
 
@@ -362,26 +348,25 @@ describe('pg_e2e', () => {
       email: true,
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp3 = [
-      keyref(
-        {
-          settings: { $cts: { bar: [4] } },
-          $order: ['email'],
-          $cursor: [expect.any(String)],
-        },
-        expect.any(Array),
-        { email: 'b' },
-      ),
-    ];
-
-    exp3.$page = {
-      settings: { $cts: { bar: [4] } },
-      $order: ['email'],
-      $all: true,
-    };
-    exp3.$next = null;
-    exp3.$prev = null;
+    const exp3 = page(
+      {
+        settings: { $cts: { bar: [4] } },
+        $order: ['email'],
+        $all: true,
+      },
+      null,
+      [
+        keyref(
+          {
+            settings: { $cts: { bar: [4] } },
+            $order: ['email'],
+            $cursor: [expect.any(String)],
+          },
+          expect.any(Array),
+          { email: 'b' },
+        ),
+      ],
+    );
 
     expect(res3).toEqual(exp3);
   });
@@ -452,15 +437,11 @@ describe('pg_e2e', () => {
       name: true,
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp2 = [
+    const exp2 = page({ 'settings.bar': 9, $all: true }, null, [
       keyref({ 'settings.bar': 9, $cursor: [uid] }, ['users', uid], {
         name: 'Alice',
       }),
-    ];
-    exp2.$page = { 'settings.bar': 9, $all: true };
-    exp2.$next = null;
-    exp2.$prev = null;
+    ]);
     expect(res2).toEqual(exp2);
   });
 
@@ -519,8 +500,7 @@ describe('pg_e2e', () => {
         name: true,
       });
 
-      /** @type {GraffyRangeResult} */
-      const exp1 = [
+      const exp1 = page({ $order: ['settings.x'], $all: true }, null, [
         keyref(
           { $cursor: [3], $order: ['settings.x'] },
           ['users', expect.any(String)],
@@ -542,11 +522,7 @@ describe('pg_e2e', () => {
             name: 'B',
           },
         ),
-      ];
-
-      exp1.$page = { $order: ['settings.x'], $all: true };
-      exp1.$prev = null;
-      exp1.$next = null;
+      ]);
 
       expect(res1).toEqual(exp1);
     });
@@ -557,8 +533,7 @@ describe('pg_e2e', () => {
         name: true,
       });
 
-      /** @type {GraffyRangeResult} */
-      const exp1 = [
+      const exp1 = page({ $order: ['!settings.x'], $all: true }, null, [
         keyref(
           { $cursor: [-5], $order: ['!settings.x'] },
           ['users', expect.any(String)],
@@ -580,11 +555,7 @@ describe('pg_e2e', () => {
             name: 'A',
           },
         ),
-      ];
-
-      exp1.$page = { $order: ['!settings.x'], $all: true };
-      exp1.$prev = null;
-      exp1.$next = null;
+      ]);
 
       expect(res1).toEqual(exp1);
     });
@@ -682,16 +653,11 @@ describe('pg_e2e', () => {
         $card: { email: true },
       });
 
-      /** @type {GraffyRangeResult} */
-      const exp1 = [
+      const exp1 = page({ $group: ['name'], $all: true }, null, [
         { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['A'] } },
         { $card: { email: 1 }, $key: { $group: ['name'], $cursor: ['B'] } },
         { $card: { email: 2 }, $key: { $group: ['name'], $cursor: ['C'] } },
-      ];
-
-      exp1.$page = { $group: ['name'], $all: true };
-      exp1.$prev = null;
-      exp1.$next = null;
+      ]);
 
       expect(res1).toEqual(exp1);
     });
@@ -898,33 +864,33 @@ describe('pg_e2e', () => {
       title: true,
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp2 = [
-      keyref(
-        {
-          scores: {
-            $ctd: [
-              [0, null, 0],
-              [null, 20, 0],
-            ],
-          },
-          $cursor: [pid1],
+    const exp2 = page(
+      {
+        $all: true,
+        scores: {
+          $ctd: [
+            [0, null, 0],
+            [null, 20, 0],
+          ],
         },
-        ['posts', pid1],
-        { title: 'Post One' },
-      ),
-    ];
-    exp2.$page = {
-      $all: true,
-      scores: {
-        $ctd: [
-          [0, null, 0],
-          [null, 20, 0],
-        ],
       },
-    };
-    exp2.$prev = null;
-    exp2.$next = null;
+      null,
+      [
+        keyref(
+          {
+            scores: {
+              $ctd: [
+                [0, null, 0],
+                [null, 20, 0],
+              ],
+            },
+            $cursor: [pid1],
+          },
+          ['posts', pid1],
+          { title: 'Post One' },
+        ),
+      ],
+    );
 
     expect(res2).toEqual(exp2);
 
@@ -938,23 +904,23 @@ describe('pg_e2e', () => {
       title: true,
     });
 
-    /** @type {GraffyRangeResult} */
-    const exp3 = [
-      keyref(
-        {
-          commenters: { $cts: ['bob'] },
-          $cursor: [pid1],
-        },
-        ['posts', pid1],
-        { title: 'Post One' },
-      ),
-    ];
-    exp3.$page = {
-      $all: true,
-      commenters: { $cts: ['bob'] },
-    };
-    exp3.$prev = null;
-    exp3.$next = null;
+    const exp3 = page(
+      {
+        $all: true,
+        commenters: { $cts: ['bob'] },
+      },
+      null,
+      [
+        keyref(
+          {
+            commenters: { $cts: ['bob'] },
+            $cursor: [pid1],
+          },
+          ['posts', pid1],
+          { title: 'Post One' },
+        ),
+      ],
+    );
 
     expect(res3).toEqual(exp3);
   });
@@ -973,10 +939,7 @@ describe('pg_e2e', () => {
         $key: { $all: true },
         name: true,
       });
-      /** @type {GraffyRangeResult} */
-      const exp = [{ $key: [expect.any(String)], name: 'A' }];
-      (exp.$page = { $all: true }), (exp.$next = null);
-      exp.$prev = null;
+      const exp = page({}, null, [{ $key: [expect.any(String)], name: 'A' }]);
       expect(res).toEqual(exp);
     });
   });
@@ -1007,16 +970,13 @@ describe('pg_e2e', () => {
         $key: { ...filter, $all: true },
         name: true,
       });
-      const exp = results.map((name) =>
+      const exp = page(filter, null, results.map((name) =>
         keyref(
           { ...filter, $cursor: [expect.any(String)] },
           ['users', expect.any(String)],
           { name },
         ),
-      );
-      exp.$page = { ...filter, $all: true };
-      exp.$next = null;
-      exp.$prev = null;
+      ));
 
       expect(res).toEqual(exp);
     }
