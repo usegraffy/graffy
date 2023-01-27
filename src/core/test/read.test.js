@@ -85,7 +85,7 @@ describe('range-getKnown', () => {
   test('simple-first', async () => {
     const result = await g.read({ foo: { $key: { $first: 2 }, bar: 1 } });
     const expected = {
-      foo: page({ $all: true, $until: { x: 'b' } }, 2, [
+      foo: page({ $until: { x: 'b' } }, 2, [
         { $key: { x: 'a' }, bar: 42 },
         { $key: { x: 'b' }, bar: 41 },
       ]),
@@ -94,7 +94,9 @@ describe('range-getKnown', () => {
   });
   test('simple-last', async () => {
     const result = await g.read({ foo: { $key: { $last: 1 }, bar: 1 } });
-    const expected = { foo: page({ $all: true, $since: { x: 'e' } }, 1, [{ $key: { x: 'e' }, bar: 38 }]) };
+    const expected = {
+      foo: page({ $since: { x: 'e' } }, 1, [{ $key: { x: 'e' }, bar: 38 }]),
+    };
     expect(result).toEqual(expected);
   });
   test('first-since', async () => {
@@ -102,7 +104,7 @@ describe('range-getKnown', () => {
       foo: { $key: { $first: 2, $since: { x: 'b' } }, bar: 1 },
     });
     const expected = {
-      foo: page({ $all: true, $since: { x: 'b' }, $until: { x: 'c' } }, 2, [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'c' } }, 2, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
       ]),
@@ -114,7 +116,7 @@ describe('range-getKnown', () => {
       foo: { $key: { $last: 3, $until: { x: 'd' } }, bar: 1 },
     });
     const expected = {
-      foo: page({ $all: true, $until: { x: 'd' }, $since: { x: 'b' } }, 3, [
+      foo: page({ $until: { x: 'd' }, $since: { x: 'b' } }, 3, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
@@ -130,7 +132,7 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: page({ $all: true, $since: { x: 'b' }, $until: { x: 'c' } }, 2, [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'c' } }, 2, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
       ]),
@@ -145,7 +147,7 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: page({ $all: true, $since: { x: 'b' }, $until: { x: 'd' } }, 3, [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'd' } }, 3, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
@@ -161,7 +163,7 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: page({ $all: true, $since: { x: 'b' }, $until: { x: 'c' } }, 4, [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'c' } }, 4, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
       ]),
@@ -176,7 +178,7 @@ describe('range-getKnown', () => {
       },
     });
     const expected = {
-      foo: page({ $all: true, $since: { x: 'b' }, $until: { x: 'd' } }, 5, [
+      foo: page({ $since: { x: 'b' }, $until: { x: 'd' } }, 5, [
         { $key: { x: 'b' }, bar: 41 },
         { $key: { x: 'c' }, bar: 40 },
         { $key: { x: 'd' }, bar: 39 },
@@ -218,14 +220,11 @@ describe('alias', () => {
     });
     const expectedArray = ref(
       ['foo', { t: 3, $first: 2 }],
-      [
+      page({ $until: 2 }, 2, [
         { $key: { t: 3, $cursor: 1 }, x: 100 },
         { $key: { t: 3, $cursor: 2 }, x: 200 },
-      ],
+      ]),
     );
-    expectedArray.$page = { $all: true, $until: 2 };
-    expectedArray.$next = { $first: 2, $after: 2 };
-    expectedArray.$prev = null;
 
     expect(result).toEqual({
       bar: expectedArray,
@@ -266,11 +265,7 @@ describe('middleware_coding', () => {
     const res = await g.read(['participant', { foo: 'bar', $first: 2 }], {
       name: true,
     });
-    const exp = page(
-      { foo: 'bar', $all: true, $until: [4826, 'p2'] },
-      2,
-      composedResult,
-    );
+    const exp = page({ foo: 'bar', $until: [4826, 'p2'] }, 2, composedResult);
     expect(res).toEqual(exp);
   });
 
@@ -306,11 +301,7 @@ describe('middleware_coding', () => {
     const res = await g.read(['participant', { foo: 'bar', $first: 2 }], {
       name: true,
     });
-    const exp = page(
-      { foo: 'bar', $all: true, $until: [4826, 'p2'] },
-      2,
-      composedResult,
-    );
+    const exp = page({ foo: 'bar', $until: [4826, 'p2'] }, 2, composedResult);
     expect(res).toEqual(exp);
   });
 });

@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
 import { splitArgs } from '@graffy/common';
-import { ref } from '@graffy/testing';
+import { page, ref } from '@graffy/testing';
 
 describe('ref', () => {
   describe('author', () => {
@@ -82,7 +82,7 @@ describe('ref', () => {
         return res;
       });
 
-      postProvider = jest.fn((query) => {
+      postProvider = jest.fn((/** @type {array} */query) => {
         const res = [];
         for (const { $key } of query) {
           const [_, filter] = splitArgs($key);
@@ -110,14 +110,10 @@ describe('ref', () => {
         },
       });
 
-      const posts = [
+      const posts = page({ tag: 'x', $until: { postId: 1 } }, 2, [
         { $key: { tag: 'x', $cursor: { postId: 0 } }, title: 'Title 0' },
         { $key: { tag: 'x', $cursor: { postId: 1 } }, title: 'Title 1' },
-      ];
-      posts.$page = { tag: 'x', $all: true, $until: { postId: 1 } };
-      posts.$next = { tag: 'x', $first: 2, $after: { postId: 1 } };
-      posts.$prev = null;
-
+      ]);
       const expected = { users: { abc: { name: 'User abc', posts } } };
 
       expect(postProvider).toBeCalledTimes(1);
@@ -137,14 +133,10 @@ describe('ref', () => {
         },
       });
 
-      const posts = [
+      const posts = page({ $all: true, $until: { postId: 1 } }, 2, [
         { $key: { postId: 0 }, title: 'Title 0' },
         { $key: { postId: 1 }, title: 'Title 1' },
-      ];
-      posts.$page = { $all: true, $until: { postId: 1 } };
-      posts.$next = { $first: 2, $after: { postId: 1 } };
-      posts.$prev = null;
-
+      ]);
       const expected = { users: { abc: { name: 'User abc', posts } } };
 
       expect(postProvider).toBeCalledTimes(1);
