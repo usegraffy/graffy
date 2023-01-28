@@ -44,8 +44,14 @@ describe('clauses', () => {
   });
 
   test('selectCols', () => {
-    const table = 'test';
-    const query = getSelectCols(table);
+    const options = {
+      idCol: 'id',
+      table: test,
+      verCol: 'version',
+      schema: { types: { a: 'int8', b: 'float', version: 'int8' } },
+      verDefault: 'current_timestamp',
+    };
+    const query = getSelectCols(options);
     expectSql(query, sql`*`);
   });
 });
