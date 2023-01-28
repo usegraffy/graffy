@@ -37,7 +37,7 @@ export function patch(object, arg, options) {
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
     WHERE ${where}
-    RETURNING ${getSelectCols(table)}, ${meta}`;
+    RETURNING ${getSelectCols(options)}, ${meta}`;
 }
 
 export function put(object, arg, options) {
@@ -59,7 +59,7 @@ export function put(object, arg, options) {
   return sql`
     INSERT INTO "${raw(table)}" (${cols}) VALUES (${vals})
     ON CONFLICT (${conflictTarget}) DO UPDATE SET (${cols}) = (${vals})
-    RETURNING ${getSelectCols(table)}, ${meta}`;
+    RETURNING ${getSelectCols(options)}, ${meta}`;
 }
 
 export function del(arg, options) {

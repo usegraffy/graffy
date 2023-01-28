@@ -145,44 +145,36 @@ describe('pg_e2e', () => {
 
     // console.log(res5);
 
-    const exp5 = page(
-      {
-        $all: true,
-        name: { $ire: '^al' },
-        $order: ['name', 'id'],
-      },
-      null,
-      [
-        keyref(
-          {
-            $cursor: ['Alicia', id1],
-            name: { $ire: '^al' },
-            $order: ['name', 'id'],
-          },
-          ['users', id1],
-          {
-            id: id1,
-            name: 'Alicia',
-            email: 'alice@acme.co',
-            settings: { foo: null, bar: 5, baz: { x: null, y: null } },
-          },
-        ),
-        keyref(
-          {
-            $cursor: ['alan', id2],
-            name: { $ire: '^al' },
-            $order: ['name', 'id'],
-          },
-          ['users', id2],
-          {
-            id: id2,
-            name: 'alan',
-            email: 'alan@acme.co',
-            settings: { foo: null, bar: 3, baz: { x: 4, y: 5 } },
-          },
-        ),
-      ],
-    );
+    const exp5 = page({ name: { $ire: '^al' }, $order: ['name', 'id'] }, null, [
+      keyref(
+        {
+          $cursor: ['Alicia', id1],
+          name: { $ire: '^al' },
+          $order: ['name', 'id'],
+        },
+        ['users', id1],
+        {
+          id: id1,
+          name: 'Alicia',
+          email: 'alice@acme.co',
+          settings: { foo: null, bar: 5, baz: { x: null, y: null } },
+        },
+      ),
+      keyref(
+        {
+          $cursor: ['alan', id2],
+          name: { $ire: '^al' },
+          $order: ['name', 'id'],
+        },
+        ['users', id2],
+        {
+          id: id2,
+          name: 'alan',
+          email: 'alan@acme.co',
+          settings: { foo: null, bar: 3, baz: { x: 4, y: 5 } },
+        },
+      ),
+    ]);
     expect(res5).toEqual(exp5);
 
     // Sixth, update Alan to Alain using email address
@@ -199,11 +191,7 @@ describe('pg_e2e', () => {
         id: id2,
         name: 'alain',
         email: 'alan@acme.co',
-        settings: {
-          foo: 7,
-          bar: 3,
-          baz: { y: 8 },
-        },
+        settings: { foo: 7, bar: 3, baz: { y: 8 } },
         version: expect.any(Number),
       },
       keyref({ email: 'alan@acme.co' }, ['users', id2]),
@@ -218,29 +206,21 @@ describe('pg_e2e', () => {
       email: true,
     });
 
-    const exp7 = page(
-      {
-        $all: true,
-        name: { $re: '^al' },
-        $order: ['name', 'id'],
-      },
-      null,
-      [
-        keyref(
-          {
-            $cursor: ['alain', id2],
-            name: { $re: '^al' },
-            $order: ['name', 'id'],
-          },
-          ['users', id2],
-          {
-            id: id2,
-            name: 'alain',
-            email: 'alan@acme.co',
-          },
-        ),
-      ],
-    );
+    const exp7 = page({ name: { $re: '^al' }, $order: ['name', 'id'] }, null, [
+      keyref(
+        {
+          $cursor: ['alain', id2],
+          name: { $re: '^al' },
+          $order: ['name', 'id'],
+        },
+        ['users', id2],
+        {
+          id: id2,
+          name: 'alain',
+          email: 'alan@acme.co',
+        },
+      ),
+    ]);
     expect(res7).toEqual(exp7);
   });
 
@@ -278,7 +258,7 @@ describe('pg_e2e', () => {
       email: true,
       settings: true,
     });
-    const exp1 = page({ $all: true, $order: ['email'] }, null, [
+    const exp1 = page({ $order: ['email'] }, null, [
       keyref({ $order: ['email'], $cursor: ['a'] }, expect.any(Array), {
         name: 'A',
         email: 'a',
@@ -311,11 +291,7 @@ describe('pg_e2e', () => {
     });
 
     const exp2 = page(
-      {
-        settings: { $cts: { foo: [] } },
-        $order: ['email'],
-        $all: true,
-      },
+      { settings: { $cts: { foo: [] } }, $order: ['email'] },
       null,
       [
         keyref(
@@ -349,11 +325,7 @@ describe('pg_e2e', () => {
     });
 
     const exp3 = page(
-      {
-        settings: { $cts: { bar: [4] } },
-        $order: ['email'],
-        $all: true,
-      },
+      { settings: { $cts: { bar: [4] } }, $order: ['email'] },
       null,
       [
         keyref(
@@ -437,7 +409,7 @@ describe('pg_e2e', () => {
       name: true,
     });
 
-    const exp2 = page({ 'settings.bar': 9, $all: true }, null, [
+    const exp2 = page({ 'settings.bar': 9 }, null, [
       keyref({ 'settings.bar': 9, $cursor: [uid] }, ['users', uid], {
         name: 'Alice',
       }),
@@ -470,27 +442,9 @@ describe('pg_e2e', () => {
   describe('order', () => {
     beforeEach(async () => {
       await store.write('users', [
-        {
-          $key: uuid(),
-          $put: true,
-          name: 'A',
-          email: 'a',
-          settings: { x: 3 },
-        },
-        {
-          $key: uuid(),
-          $put: true,
-          name: 'B',
-          email: 'b',
-          settings: { x: 5 },
-        },
-        {
-          $key: uuid(),
-          $put: true,
-          name: 'C',
-          email: 'c',
-          settings: { x: 4 },
-        },
+        { $key: uuid(), $put: true, name: 'A', email: 'a', settings: { x: 3 } },
+        { $key: uuid(), $put: true, name: 'B', email: 'b', settings: { x: 5 } },
+        { $key: uuid(), $put: true, name: 'C', email: 'c', settings: { x: 4 } },
       ]);
     });
 
@@ -504,23 +458,17 @@ describe('pg_e2e', () => {
         keyref(
           { $cursor: [3], $order: ['settings.x'] },
           ['users', expect.any(String)],
-          {
-            name: 'A',
-          },
+          { name: 'A' },
         ),
         keyref(
           { $cursor: [4], $order: ['settings.x'] },
           ['users', expect.any(String)],
-          {
-            name: 'C',
-          },
+          { name: 'C' },
         ),
         keyref(
           { $cursor: [5], $order: ['settings.x'] },
           ['users', expect.any(String)],
-          {
-            name: 'B',
-          },
+          { name: 'B' },
         ),
       ]);
 
@@ -537,23 +485,17 @@ describe('pg_e2e', () => {
         keyref(
           { $cursor: [-5], $order: ['!settings.x'] },
           ['users', expect.any(String)],
-          {
-            name: 'B',
-          },
+          { name: 'B' },
         ),
         keyref(
           { $cursor: [-4], $order: ['!settings.x'] },
           ['users', expect.any(String)],
-          {
-            name: 'C',
-          },
+          { name: 'C' },
         ),
         keyref(
           { $cursor: [-3], $order: ['!settings.x'] },
           ['users', expect.any(String)],
-          {
-            name: 'A',
-          },
+          { name: 'A' },
         ),
       ]);
 
@@ -751,16 +693,8 @@ describe('pg_e2e', () => {
 
     try {
       await store.write({
-        users: {
-          $key: id,
-          $put: true,
-          name: 'A',
-          email: 'a',
-        },
-        posts: {
-          $key: 'nevermind',
-          title: 'Fail',
-        },
+        users: { $key: id, $put: true, name: 'A', email: 'a' },
+        posts: { $key: 'nevermind', title: 'Fail' },
       });
     } catch (_) {
       /* Do nothing. */
@@ -778,16 +712,8 @@ describe('pg_e2e', () => {
     try {
       await store.write(
         {
-          users: {
-            $key: id,
-            $put: true,
-            name: 'A',
-            email: 'a',
-          },
-          posts: {
-            $key: 'nevermind',
-            title: 'Fail',
-          },
+          users: { $key: id, $put: true, name: 'A', email: 'a' },
+          posts: { $key: 'nevermind', title: 'Fail' },
         },
         { pgClient },
       );
@@ -866,7 +792,6 @@ describe('pg_e2e', () => {
 
     const exp2 = page(
       {
-        $all: true,
         scores: {
           $ctd: [
             [0, null, 0],
@@ -897,32 +822,34 @@ describe('pg_e2e', () => {
     // Case 3: Array query
 
     const res3 = await store.read('posts', {
-      $key: {
-        $all: true,
-        commenters: { $cts: ['bob'] },
-      },
+      $key: { $all: true, commenters: { $cts: ['bob'] } },
       title: true,
     });
 
-    const exp3 = page(
-      {
-        $all: true,
-        commenters: { $cts: ['bob'] },
-      },
-      null,
-      [
-        keyref(
-          {
-            commenters: { $cts: ['bob'] },
-            $cursor: [pid1],
-          },
-          ['posts', pid1],
-          { title: 'Post One' },
-        ),
-      ],
-    );
+    const exp3 = page({ commenters: { $cts: ['bob'] } }, null, [
+      keyref(
+        { commenters: { $cts: ['bob'] }, $cursor: [pid1] },
+        ['posts', pid1],
+        { title: 'Post One' },
+      ),
+    ]);
 
     expect(res3).toEqual(exp3);
+
+    // Case 4: Order by cube component
+
+    const res4 = await store.read('posts', {
+      $key: { $first: 1, $order: ['!scores.1'] },
+      title: true,
+    });
+
+    const exp4 = page({ $order: ['!scores.1'], $until: [-5] }, 1, [
+      keyref({ $order: ['!scores.1'], $cursor: [-5] }, ['posts', pid1], {
+        title: 'Post One',
+      }),
+    ]);
+
+    expect(res4).toEqual(exp4);
   });
 
   describe('no_filter', () => {
@@ -970,13 +897,17 @@ describe('pg_e2e', () => {
         $key: { ...filter, $all: true },
         name: true,
       });
-      const exp = page(filter, null, results.map((name) =>
-        keyref(
-          { ...filter, $cursor: [expect.any(String)] },
-          ['users', expect.any(String)],
-          { name },
+      const exp = page(
+        filter,
+        null,
+        results.map((name) =>
+          keyref(
+            { ...filter, $cursor: [expect.any(String)] },
+            ['users', expect.any(String)],
+            { name },
+          ),
         ),
-      ));
+      );
 
       expect(res).toEqual(exp);
     }

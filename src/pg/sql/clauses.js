@@ -20,35 +20,37 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
-export const lookup = (prop) => {
+export const lookup = (prop, options) => {
   const [prefix, ...suffix] = prop.split('.');
-  return suffix.length
-    ? // @ts-ignore sql-template-tag typedef bug
-      sql`"${raw(prefix)}" #> ${suffix}`
-    : sql`"${raw(prefix)}"`;
+  if (!suffix.length) return sql`"${raw(prefix)}"`;
+
+  const { types } = options.schema;
+  if (types[prefix] === 'jsonb') {
+    return sql`"${raw(prefix)}" #> ${suffix}`;
+  } else if (types[prefix] === 'cube' && suffix.length === 1) {
+    return sql`"${raw(prefix)}" ~> ${parseInt(suffix[0])}`;
+  } else {
+    throw Error(`pg.cannot_lookup ${prop}`);
+  }
 };
 
 export const lookupNumeric = (prop) => {
   const [prefix, ...suffix] = prop.split('.');
   return suffix.length
-    ? sql`CASE WHEN "${raw(prefix)}" #> ${
-        // @ts-ignore sql-template-tag typedef bug
-        suffix
-      } = 'null'::jsonb THEN 0 ELSE ("${raw(
-        prefix,
-      )}" #> ${suffix})::numeric END`
+    ? sql`CASE WHEN "${raw(prefix)}" #> ${suffix} = 'null'::jsonb
+      THEN 0 ELSE ("${raw(prefix)}" #> ${suffix})::numeric END`
     : sql`"${raw(prefix)}"`;
 };
 
 const aggSql = {
   $sum: (prop) => sql`sum((${lookupNumeric(prop)})::numeric)`,
-  $card: (prop) => sql`count(distinct(${lookup(prop)}))`,
+  $card: (prop, options) => sql`count(distinct(${lookup(prop, options)}))`,
   $avg: (prop) => sql`avg((${lookupNumeric(prop)})::numeric)`,
   $max: (prop) => sql`max((${lookupNumeric(prop)})::numeric)`,
   $min: (prop) => sql`min((${lookupNumeric(prop)})::numeric)`,
 };
 
-export const getSelectCols = (table, projection = null) => {
+export const getSelectCols = (options, projection = null) => {
   if (!projection) return sql`*`;
 
   const sqls = [];
@@ -58,7 +60,7 @@ export const getSelectCols = (table, projection = null) => {
     } else if (aggSql[key]) {
       const subSqls = [];
       for (const prop in projection[key]) {
-        subSqls.push(sql`${prop}::text, ${aggSql[key](prop)}`);
+        subSqls.push(sql`${prop}::text, ${aggSql[key](prop, options)}`);
       }
       sqls.push(
         sql`jsonb_build_object(${join(subSqls, ', ')}) AS "${raw(key)}"`,
@@ -173,10 +175,13 @@ function stripAttributes(object) {
     return object.map((item) => stripAttributes(item));
   }
 
-  return Object.entries(object).reduce((out, [key, val]) => {
-    if (key === '$put' || val === null) return out;
-    if (out === null) out = {};
-    out[key] = stripAttributes(val);
-    return out;
-  }, null);
+  return Object.entries(object).reduce(
+    (/** @type {null|Record<string,any>} */ out, [key, val]) => {
+      if (key === '$put' || val === null) return out;
+      if (out === null) out = {};
+      out[key] = stripAttributes(val);
+      return out;
+    },
+    null,
+  );
 }
