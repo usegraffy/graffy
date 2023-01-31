@@ -121,7 +121,7 @@ describe('byArg', () => {
         "name" = ${'hello'},
         "email" = ${'world'},
         "version" =  default
-      WHERE "id" = (SELECT "id" FROM "post" WHERE "email" = ${'world'} LIMIT 2)
+      WHERE "id" = (SELECT "id" FROM "post" WHERE "email" = ${'world'} LIMIT 1)
       RETURNING *,
         ${'{"email":"world"}'}::jsonb AS "$key",
         current_timestamp AS "$ver",

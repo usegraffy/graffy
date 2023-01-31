@@ -59,10 +59,7 @@ describe('select_sql', () => {
       SELECT *, ${JSON.stringify({ email: 'abc@foo.com' })}::jsonb AS "$key",
       current_timestamp AS "$ver",
       array[ ${'user'}::text, "id" ]::text[] AS "$ref"
-      FROM "user" WHERE "id" = (
-        SELECT "id" FROM "user" WHERE "email" = ${'abc@foo.com'}
-        LIMIT 2
-      )
+      FROM "user" WHERE "email" = ${'abc@foo.com'} LIMIT ${1}
     `;
     expectSql(selectByArgs(arg, null, options), expectedResult);
   });
