@@ -11,7 +11,7 @@ import { getJsonBuildTrusted, lookup } from './clauses.js';
   @param {{prefix: string, idCol: string, verDefault: string}} options
 
   @typedef { import('sql-template-tag').Sql } Sql
-  @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number, ensureSingleRow: boolean }}
+  @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number }}
 */
 export default function getArgSql(
   { $first, $last, $after, $before, $since, $until, $all, $cursor: _, ...rest },
@@ -40,13 +40,7 @@ export default function getArgSql(
 
   if (!isEmpty(filter)) where.push(getFilterSql(filter, options));
 
-  if (!hasRangeArg)
-    return {
-      meta: meta(baseKey),
-      where,
-      limit: 1,
-      ensureSingleRow: $group === true,
-    };
+  if (!hasRangeArg) return { meta: meta(baseKey), where, limit: 1 };
 
   const groupCols =
     Array.isArray($group) &&
@@ -95,7 +89,6 @@ export default function getArgSql(
     order,
     group,
     limit: $first || $last,
-    ensureSingleRow: true,
   };
 }
 
