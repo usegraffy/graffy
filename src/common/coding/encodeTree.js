@@ -1,7 +1,7 @@
 import isEqual from 'lodash/isEqual.js';
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
-import { isEmpty, isDef, isPlainObject, cmp, MIN_KEY } from '../util.js';
+import { isEmpty, isDef, isPlainObject, cmp, MIN_KEY, MAX_KEY } from '../util.js';
 import { merge, add, wrap, finalize, setVersion } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
@@ -19,14 +19,14 @@ function encode(value, { version, isGraph } = {}) {
     const node = !isEmpty(props)
       ? makeNode(range ? [{ $key: range, ...props }] : props, undefined, $ver)
       : isDef($chi)
-      ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
-      : null;
+        ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
+        : null;
 
     // rome-ignore format: ternary chain
     const children =
       node ? node.children :
-      isDef($val) ? $val :
-      isGraph ? undefined : 1;
+        isDef($val) ? $val :
+          isGraph ? undefined : 1;
 
     if (children) {
       links.push(wrap(children, encodePath($ref), $ver, !!range)[0]);
@@ -124,12 +124,12 @@ function encode(value, { version, isGraph } = {}) {
       }
     }
 
-    let putQuery = [];
+    let putRange = [];
     let prefixPuts = [];
     // If this is a plain array (without keyed objects), we should "put" the
     // entire positive integer range to give it atomic write behavior.
     if (Array.isArray(object) && !object.some((it) => isDef(it?.$key))) {
-      putQuery = [encodeArgs({ $since: 0, $until: +Infinity })];
+      putRange = [encodeArgs({ $since: 0, $until: +Infinity })];
     }
 
     function classifyPut(put) {
@@ -137,12 +137,12 @@ function encode(value, { version, isGraph } = {}) {
       if (filter) {
         prefixPuts.push([range, filter]);
       } else {
-        putQuery.push(encodeArgs(put));
+        putRange.push(encodeArgs(put));
       }
     }
 
     if ($put === true) {
-      putQuery = null;
+      putRange = [{ key: MIN_KEY, end: MAX_KEY }];
     } else if (Array.isArray($put)) {
       $put.forEach(classifyPut);
     } else if (isDef($put)) {
@@ -217,8 +217,9 @@ function encode(value, { version, isGraph } = {}) {
       }
     }
 
-    if (isGraph && (putQuery === null || putQuery.length)) {
-      node.children = finalize(node.children || [], putQuery, false);
+    if (isGraph && putRange.length) {
+      const putRangeClone = putRange.map(({ key, end }) => ({ key, end, version: 0 }));
+      node.children = merge(putRangeClone, node.children || []);
     }
 
     if (
