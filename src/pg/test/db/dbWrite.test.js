@@ -40,7 +40,7 @@ describe('postgres', () => {
     store.use(
       'user',
       pg({
-        schema: { types: { id: 'uuid', name: 'text', updatedAt: 'int8' } },
+        schema: { types: { id: 'uuid', name: 'text', updatedAt: 'int8', quantities: 'cube' } },
         verDefault: 'current_timestamp',
       }),
     );
@@ -91,6 +91,7 @@ describe('postgres', () => {
   test('patch_by_id', async () => {
     const data = {
       name: 'Alice',
+      quantities: [100000, 75000, 0],
     };
     const id = 'foo';
     await store.write('user.foo', data);
@@ -99,6 +100,7 @@ describe('postgres', () => {
     const sqlQuery = sql`
       UPDATE "user" SET
         "name" = ${data.name},
+        "quantities" = cube ( array[${100000} , ${75000} , ${0}]::float8[] ) ,
         "updatedAt" = default
       WHERE "id" = ${id}
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
