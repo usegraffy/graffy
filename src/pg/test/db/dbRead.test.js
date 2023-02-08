@@ -40,11 +40,12 @@ describe('postgres', () => {
   test('id_lookup', async () => {
     const now = Date.now();
     mockQuery.mockReturnValueOnce({
-      rows: [[{ $key: 'foo', id: 'foo', name: 'Alice', version: now }]],
+      rows: [[{ $key: 'foo', id: 'foo', name: 'Alice', quantities: [0, 1, 2], version: now }]],
     });
 
     const result = await store.read('user.foo', {
       name: true,
+      quantities: true,
       version: true,
     });
 
@@ -57,6 +58,7 @@ describe('postgres', () => {
 
     expect(result).toEqual({
       name: 'Alice',
+      quantities: [0, 1, 2],
       version: now,
     });
   });

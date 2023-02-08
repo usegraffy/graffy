@@ -287,6 +287,16 @@ describe('graph', () => {
         expect(decoded.person[0].$ref).toEqual(['person', 'exampleId']),
     );
   });
+
+  test('simple_cube', () => {
+    roundTrip([
+      {
+        $key: { $order: ['id'], $cursor: [123] },
+        name: 'Alice',
+        quantities: [100000, 75000, 0],
+      },
+    ]);
+  });
 });
 
 describe('query', () => {
