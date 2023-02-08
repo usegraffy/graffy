@@ -688,6 +688,29 @@ describe('pg_e2e', () => {
     });
   });
 
+  describe('cube', () => {
+    beforeEach(async () => {
+      await store.write('prospect', [
+        {
+          $key: uuid(),
+          $put: true,
+          data: { Amount: 10 },
+          quantities: [0, 1, 2],
+          isDeleted: true,
+        },
+      ]);
+    });
+
+    test('simple_cube', async () => {
+      const res1 = await store.read('prospect', {
+        $key: { $all: true },
+        quantities: true,
+      });
+
+      expect(res1[0].quantities).toEqual([0, 1, 2]);
+    });
+  });
+
   test('without_transaction', async () => {
     const id = uuid();
 

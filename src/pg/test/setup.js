@@ -97,6 +97,7 @@ export async function resetTables() {
       "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
       "version" int8 NOT NULL DEFAULT extract(epoch from current_timestamp) * 1000,
       "data" jsonb,
+      "quantities" CUBE NOT NULL DEFAULT '0',
       "isDeleted" boolean
     );
   `);
