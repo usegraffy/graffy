@@ -775,7 +775,7 @@ describe('pg_e2e', () => {
         authorId: null,
         title: 'Post One',
         commenters: ['alice', 'bob', 'charlie'],
-        scores: '(5, 10, 0)', // We won't actually be reading these. Ever.
+        scores: [5, 10, 0],
         version: expect.any(Number),
       },
       [pid2]: {
@@ -783,7 +783,7 @@ describe('pg_e2e', () => {
         authorId: null,
         title: 'Post Two',
         commenters: ['alice', 'debra'],
-        scores: '(-1, 3, 0)',
+        scores: [-1, 3, 0],
         version: expect.any(Number),
       },
     };
