@@ -37,6 +37,14 @@ export function isPlainObject(arg) {
   );
 }
 
+export function clone(obj) {
+  if (Array.isArray(obj)) {
+    return obj.slice(0);
+  } else {
+    return { ...obj };
+  }
+}
+
 export function cmp(a, b) {
   const l = a.length < b.length ? a.length : b.length;
   for (let i = 0; i < l; i++) {

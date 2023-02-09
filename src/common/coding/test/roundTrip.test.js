@@ -9,9 +9,11 @@ import { keyref, put } from '@graffy/testing';
 
 describe('graph', () => {
   function roundTrip(original, expected = original, callback = null) {
-    const encoded = encodeGraph(original);
+    const encoded = encodeGraph(original, 10);
     const decoded = decodeGraph(encoded);
     expect(decoded).toEqual(expected);
+    const reencoded = encodeGraph(decoded, 10);
+    expect(reencoded).toEqual(encoded);
     if (callback) callback(decoded);
   }
 
