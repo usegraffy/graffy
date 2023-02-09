@@ -1,7 +1,7 @@
 import isEqual from 'lodash/isEqual.js';
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
-import { isEmpty, isDef, isPlainObject, cmp, MIN_KEY, MAX_KEY } from '../util.js';
+import { isEmpty, isDef, isPlainObject, cmp, MIN_KEY, MAX_KEY, clone } from '../util.js';
 import { merge, add, wrap, finalize, setVersion } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
@@ -41,7 +41,7 @@ function encode(value, { version, isGraph } = {}) {
     const { $key, $ver, $ref, $val, $chi, $put, ...props } = object || {};
 
     // Turn any non-enumerable properties of object into enumerable,
-    // so they're incleded in ...object below.
+    // so they're included in ...object below.
     if (typeof object === 'object' && object && !Array.isArray(object)) {
       object = {
         ...Object.fromEntries(
@@ -128,7 +128,7 @@ function encode(value, { version, isGraph } = {}) {
     let prefixPuts = [];
     // If this is a plain array (without keyed objects), we should "put" the
     // entire positive integer range to give it atomic write behavior.
-    if (Array.isArray(object) && !object.some((it) => isDef(it?.$key))) {
+    if (Array.isArray(object) && !isDef($put) && !isDef($val) && !object.some((it) => isDef(it?.$key))) {
       putRange = [encodeArgs({ $since: 0, $until: +Infinity })];
     }
 
@@ -157,6 +157,7 @@ function encode(value, { version, isGraph } = {}) {
     // console.log('Constructed', { node, $key, key });
 
     if (object === null) {
+      console.log('c1');
       node.end = node.key;
     } else if (isDef($key) && isDef(key) && key !== $key) {
       // An array has been omitted because there is only one child.
@@ -170,7 +171,7 @@ function encode(value, { version, isGraph } = {}) {
       if (!isGraph) return; // Drop query aliases from encoded format
       node.path = encodePath($ref);
     } else if ($val === true) {
-      node.value = props;
+      node.value = Array.isArray(object) ? clone(object) : props;
     } else if (isDef($val)) {
       node.value = $val;
     } else if (typeof object !== 'object') {
@@ -204,12 +205,15 @@ function encode(value, { version, isGraph } = {}) {
 
       if (children.length) {
         node.children = children;
+      } else if (putRange.length) {
+        // Do nothing; this is to avoid falling into the later branches
       } else if (isGraph) {
         // Some inconsistency here.
         // { foo: {} } === undefined (we know nothing)
         // but { $key: 'foo' }] === { foo: null } (we know foo doesn't exist)
         // This is because when using the $key notation, we can't use null.
         if (!(isDef($key) || isDef($put))) return;
+        console.log('c2', node);
         if (node.key && !node.end) node.end = node.key;
       } else {
         if (!isDef($key)) return;
@@ -217,7 +221,7 @@ function encode(value, { version, isGraph } = {}) {
       }
     }
 
-    if (isGraph && putRange.length) {
+    if (isGraph && putRange.length && !isDef(node.path) && !isDef(node.value)) {
       const putRangeClone = putRange.map(({ key, end }) => ({ key, end, version: 0 }));
       node.children = merge(putRangeClone, node.children || []);
     }

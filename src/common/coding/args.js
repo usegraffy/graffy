@@ -101,11 +101,11 @@ export function decode(node) {
     args.$all = true;
   }
 
-  if (lower.key && !isMinKey(lower.key)) {
+  if (isDef(lower.key) && !isMinKey(lower.key)) {
     args[lower.step === 1 ? '$after' : '$since'] = lower.key;
   }
 
-  if (upper.key && !isMaxKey(upper.key)) {
+  if (isDef(upper.key) && !isMaxKey(upper.key)) {
     args[upper.step === -1 ? '$before' : '$until'] = upper.key;
   }
 
