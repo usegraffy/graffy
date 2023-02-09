@@ -40,7 +40,17 @@ describe('postgres', () => {
   test('id_lookup', async () => {
     const now = Date.now();
     mockQuery.mockReturnValueOnce({
-      rows: [[{ $key: 'foo', id: 'foo', name: 'Alice', quantities: [0, 1, 2], version: now }]],
+      rows: [
+        [
+          {
+            $key: 'foo',
+            id: 'foo',
+            name: 'Alice',
+            quantities: [0, 1, 2],
+            version: now,
+          },
+        ],
+      ],
     });
 
     const result = await store.read('user.foo', {
