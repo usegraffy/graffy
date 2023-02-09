@@ -40,7 +40,14 @@ describe('postgres', () => {
     store.use(
       'user',
       pg({
-        schema: { types: { id: 'uuid', name: 'text', updatedAt: 'int8', quantities: 'cube' } },
+        schema: {
+          types: {
+            id: 'uuid',
+            name: 'text',
+            updatedAt: 'int8',
+            quantities: 'cube',
+          },
+        },
         verDefault: 'current_timestamp',
       }),
     );
