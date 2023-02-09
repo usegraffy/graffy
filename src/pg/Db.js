@@ -35,13 +35,26 @@ export default class Db {
     }
   }
 
-  async query(sql) {
+  async query(sql, tableOptions) {
     log(`Making SQL query: ${sql.text}`, sql.values);
+    const cubeOid =
+      parseInt(tableOptions?.schema?.typeOids?.cube || '0') || null;
     try {
       sql.types = {
         getTypeParser: (oid, format) => {
           if (oid === types.builtins.INT8) {
             return (value) => parseInt(value, 10);
+          }
+          if (oid === cubeOid) {
+            return (value) => {
+              const array = value
+                .slice(1, -1)
+                .split(/\)\s*,\s*\(/)
+                .map((corner) =>
+                  corner.split(',').map((coord) => parseFloat(coord.trim())),
+                );
+              return array.length > 1 ? array : array[0];
+            };
           }
           return types.getTypeParser(oid, format);
         },
@@ -62,15 +75,15 @@ export default class Db {
     }
   }
 
-  async readSql(sql) {
-    const result = (await this.query(sql)).rows;
+  async readSql(sql, tableOptions) {
+    const result = (await this.query(sql, tableOptions)).rows;
     // Each row is an array, as there is only one column returned.
     log('Read result', result);
     return result;
   }
 
-  async writeSql(sql) {
-    const res = await this.query(sql);
+  async writeSql(sql, tableOptions) {
+    const res = await this.query(sql, tableOptions);
     log('Rows written', res.rowCount);
     if (!res.rowCount) {
       throw Error(`pg.nothing_written ${sql.text} with ${sql.values}`);
@@ -107,6 +120,15 @@ export default class Db {
 
     if (!types) throw Error(`pg.missing_table ${table}`);
 
+    const typeOids = (
+      await this.query(sqlTag`
+        SELECT jsonb_object_agg(typname, oid) AS type_oids
+        FROM pg_type
+        WHERE typname = 'cube'`)
+    ).rows[0].type_oids;
+
+    // console.log({ typeOids });
+
     const verDefault = (
       await this.query(sqlTag`
         SELECT column_default
@@ -122,7 +144,7 @@ export default class Db {
     }
 
     log('ensureSchema', types);
-    tableOptions.schema = { types };
+    tableOptions.schema = { types, typeOids };
     tableOptions.verDefault = verDefault;
   }
 
@@ -138,6 +160,7 @@ export default class Db {
     const getByArgs = async (args, projection) => {
       const result = await this.readSql(
         selectByArgs(args, projection, tableOptions),
+        tableOptions,
       );
       const wrappedGraph = encodeGraph(wrapObject(result, rawPrefix));
       log('getByArgs', wrappedGraph);
@@ -150,6 +173,7 @@ export default class Db {
       // based on projection.
       const result = await this.readSql(
         selectByIds(Object.keys(idQueries), null, tableOptions),
+        tableOptions,
       );
       result.forEach((object) => {
         const wrappedGraph = encodeGraph(wrapObject(object, rawPrefix));
@@ -222,7 +246,7 @@ export default class Db {
     const result = [];
     await Promise.all(
       sqls.map((sql) =>
-        this.writeSql(sql).then((object) => {
+        this.writeSql(sql, tableOptions).then((object) => {
           merge(result, encodeGraph(wrapObject(object, rawPrefix)));
         }),
       ),
