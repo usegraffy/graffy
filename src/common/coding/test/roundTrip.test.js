@@ -9,9 +9,11 @@ import { keyref, put } from '@graffy/testing';
 
 describe('graph', () => {
   function roundTrip(original, expected = original, callback = null) {
-    const encoded = encodeGraph(original);
+    const encoded = encodeGraph(original, 10);
     const decoded = decodeGraph(encoded);
     expect(decoded).toEqual(expected);
+    const reencoded = encodeGraph(decoded, 10);
+    expect(reencoded).toEqual(encoded);
     if (callback) callback(decoded);
   }
 
@@ -286,6 +288,16 @@ describe('graph', () => {
       (decoded) =>
         expect(decoded.person[0].$ref).toEqual(['person', 'exampleId']),
     );
+  });
+
+  test('simple_cube', () => {
+    roundTrip([
+      {
+        $key: { $order: ['id'], $cursor: [123] },
+        name: 'Alice',
+        quantities: [100000, 75000, 0],
+      },
+    ]);
   });
 });
 

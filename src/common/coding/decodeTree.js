@@ -1,6 +1,6 @@
 import { decode as decodeArgs, splitArgs } from './args.js';
 import { decode as decodePath } from './path.js';
-import { isEmpty, isDef, isMinKey, isMaxKey, cmp } from '../util.js';
+import { isEmpty, isDef, isMinKey, isMaxKey, cmp, clone } from '../util.js';
 import { keyAfter } from '../ops/index.js';
 import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
@@ -85,18 +85,19 @@ function decode(nodes = [], { isGraph } = {}) {
             return collection;
           }
 
-          const { $key, $val } = item;
+          let { $key, $val } = item;
           delete item.$key;
           delete item.$val;
 
           if (typeof $val === 'object') {
+            $val = clone($val);
             Object.defineProperty($val, '$val', { value: true });
           }
           // rome-ignore format: tertnary chain
           collection[$key] = (
             isDef($val) ? $val :
-            !isEmpty(item) || item.$ref || item.$put ? item :
-            isGraph ? null : true
+              !isEmpty(item) || item.$ref || item.$put ? item :
+                isGraph ? null : true
           );
           return collection;
         },

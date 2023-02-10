@@ -33,7 +33,7 @@ export const keyref = ($key, $ref, obj = {}) => {
 export const page = ($page, size, obj = []) => {
   const { $first, $last, $all, $after, $since, $before, $until, ...filter } =
     $page;
-  obj.$page = $page;
+  obj.$page = { ...$page, $all: true };
   obj.$next = $before
     ? { ...filter, $last: size, $since: $before }
     : $until

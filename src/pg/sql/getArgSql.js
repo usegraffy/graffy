@@ -43,14 +43,16 @@ export default function getArgSql(
   if (!hasRangeArg) return { meta: meta(baseKey), where, limit: 1 };
 
   const groupCols =
-    Array.isArray($group) && $group.length && $group.map(lookup);
+    Array.isArray($group) &&
+    $group.length &&
+    $group.map((prop) => lookup(prop, options));
 
   const group = groupCols ? join(groupCols, ', ') : undefined;
 
   const orderCols = ($order || [idCol]).map((orderItem) =>
     orderItem[0] === '!'
-      ? sql`-(${lookup(orderItem.slice(1))})::float8`
-      : lookup(orderItem),
+      ? sql`-(${lookup(orderItem.slice(1), options)})::float8`
+      : lookup(orderItem, options),
   );
 
   Object.entries({ $after, $before, $since, $until }).forEach(
@@ -64,8 +66,10 @@ export default function getArgSql(
     join(
       ($order || [idCol]).map((orderItem) =>
         orderItem[0] === '!'
-          ? sql`${lookup(orderItem.slice(1))} ${$last ? sql`ASC` : sql`DESC`}`
-          : sql`${lookup(orderItem)} ${$last ? sql`DESC` : sql`ASC`}`,
+          ? sql`${lookup(orderItem.slice(1), options)} ${
+              $last ? sql`ASC` : sql`DESC`
+            }`
+          : sql`${lookup(orderItem, options)} ${$last ? sql`DESC` : sql`ASC`}`,
       ),
       ', ',
     );

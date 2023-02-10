@@ -17,6 +17,7 @@ const options = {
       config: 'jsonb',
       tags: 'jsonb',
       version: 'int8',
+      quantities: 'cube',
     },
   },
   verDefault: 'current_timestamp',
@@ -60,6 +61,7 @@ describe('byId', () => {
           email: 'world',
           config: { foo: 3 },
           tags: [1, 2, 3],
+          quantities: [100000, 75000, 0],
         },
         'post22',
         options,
@@ -71,6 +73,7 @@ describe('byId', () => {
         "config" = nullif(jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
           jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)), '{}'::jsonb),
         "tags" = ${JSON.stringify([1, 2, 3])}::jsonb,
+        "quantities" = cube ( array[${100000} , ${75000} , ${0}]::float8[] ),
         "version" =  default
       WHERE "id" = ${'post22'}
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"

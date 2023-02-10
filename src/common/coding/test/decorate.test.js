@@ -9,6 +9,7 @@ import {
 import decorate from '../decorate.js';
 import { encodeGraph } from '../encodeTree.js';
 import { decode } from '../base64.js';
+import { page } from '@graffy/testing';
 
 const ref = (ref, obj) => {
   Object.defineProperty(obj, '$ref', { value: ref });
@@ -41,14 +42,7 @@ describe('pagination', () => {
       ],
       [{ $key: { $first: 10, $since: 'foo' } }],
     );
-    const expected = [123];
-    expected.$page = { $all: true, $since: 'foo' };
-    expected.$next = null;
-    expected.$prev = { $last: 10, $before: 'foo' };
-
-    expect(result.$page).toEqual(expected.$page);
-    expect(result.$prev).toEqual(expected.$prev);
-    expect(result.$next).toEqual(expected.$next);
+    const expected = page({ $since: 'foo' }, 10, [123]);
     expect(result).toEqual(expected);
   });
 
@@ -60,14 +54,7 @@ describe('pagination', () => {
       ],
       [{ $key: { $first: 10, $since: 'foo' } }],
     );
-    const expected = [123];
-    expected.$page = { $all: true, $since: 'foo' };
-    expected.$next = null;
-    expected.$prev = { $last: 10, $before: 'foo' };
-
-    expect(result.$page).toEqual(expected.$page);
-    expect(result.$prev).toEqual(expected.$prev);
-    expect(result.$next).toEqual(expected.$next);
+    const expected = page({ $since: 'foo' }, 10, [123]);
     expect(result).toEqual(expected);
   });
 
@@ -79,14 +66,7 @@ describe('pagination', () => {
       ],
       [{ $key: { $last: 10, $until: 'foo' } }],
     );
-    const expected = [123];
-    expected.$page = { $all: true, $until: 'foo' };
-    expected.$next = { $first: 10, $after: 'foo' };
-    expected.$prev = null;
-
-    expect(result.$page).toEqual(expected.$page);
-    expect(result.$prev).toEqual(expected.$prev);
-    expect(result.$next).toEqual(expected.$next);
+    const expected = page({ $until: 'foo' }, 10, [123]);
     expect(result).toEqual(expected);
   });
 
@@ -98,14 +78,7 @@ describe('pagination', () => {
       ],
       [{ $key: { $last: 10, $until: 'foo' } }],
     );
-    const expected = [123];
-    expected.$page = { $all: true, $until: 'foo' };
-    expected.$next = { $first: 10, $after: 'foo' };
-    expected.$prev = null;
-
-    expect(result.$page).toEqual(expected.$page);
-    expect(result.$prev).toEqual(expected.$prev);
-    expect(result.$next).toEqual(expected.$next);
+    const expected = page({ $until: 'foo' }, 10, [123]);
     expect(result).toEqual(expected);
   });
 
@@ -126,11 +99,7 @@ describe('pagination', () => {
       { baz: [{ $key: { $first: 2 } }] },
     );
 
-    const expected = [42];
-    expected.$page = { $all: true };
-    expected.$next = null;
-    expected.$prev = null;
-
+    const expected = page({}, null, [42]);
     expect(result).toEqual({ baz: expected });
   });
 });
@@ -142,24 +111,18 @@ test('arrayCursor.decode', () => {
     [{ key: decode('0VI-Ck--------'), value: 25, version: 0 }],
     { $key: { $first: 3 } },
   );
-  const expected = [25];
-  expected.$page = { $all: true };
-  expected.$next = null;
-  expected.$prev = null;
+  const expected = page({}, null, [25]);
   expect(decorated).toEqual(expected);
 });
 
 test('alias', () => {
   const expectedArray = ref(
     ['foo', { t: 3, $first: 2 }],
-    [
+    page({ $until: 2 }, 2, [
       { x: 100, $key: { t: 3, $cursor: 1 } },
       { x: 200, $key: { t: 3, $cursor: 2 } },
-    ],
+    ]),
   );
-  expectedArray.$page = { $all: true, $until: 2 };
-  expectedArray.$next = { $first: 2, $after: 2 };
-  expectedArray.$prev = null;
 
   const result = decorate(
     [

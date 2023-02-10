@@ -1,5 +1,6 @@
 import Graffy from '@graffy/core';
 import Memory from './index.js';
+import { page } from '@graffy/testing';
 
 describe('final', () => {
   let store;
@@ -28,10 +29,7 @@ describe('final', () => {
   test('range', async () => {
     store.write({ baz: [{ $key: ['a'], $ref: 'foo' }] });
     const result = await store.read('baz', [{ $key: { $first: 3 } }]);
-    const expectedResult = [42];
-    expectedResult.$page = { $all: true };
-    expectedResult.$next = expectedResult.$prev = null;
-
+    const expectedResult = page({}, null, [42]);
     expect(result).toEqual(expectedResult);
   });
 });
