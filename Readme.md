@@ -1,6 +1,6 @@
 ![Graffy logo](public/graffy-logo.svg)
 
-# Graffy [![Build Status](https://img.shields.io/travis/usegraffy/graffy?style=flat-square)](https://travis-ci.org/usegraffy/graffy) [![NPM version](https://img.shields.io/npm/v/@graffy/core?style=flat-square)](https://www.npmjs.com/org/graffy)
+# Graffy [![NPM version](https://img.shields.io/npm/v/@graffy/core?style=flat-square)](https://www.npmjs.com/org/graffy)
 
 Graffy is a toolkit for graph-centric APIs. It has capabilities comparable to GraphQL and Firebase.
 
