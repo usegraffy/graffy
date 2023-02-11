@@ -93,3 +93,15 @@ test('jsonb eq text', () => {
     sql`"data" #>> ${['Name']} = ${'Bob'}`,
   );
 });
+
+test('join', () => {
+  expect(getSql(
+    { posts: { category: 'programming' } },
+    {
+      idCol: 'id',
+      joins: { posts: { table: 'posts', refCol: 'authorId', schema: { types: { category: 'text' } } } },
+    }
+  )).toEqual(
+    sql`"id" IN (SELECT "authorId" FROM "posts" WHERE "category" = ${'programming'})`
+  )
+});

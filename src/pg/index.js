@@ -6,6 +6,11 @@ import Db from './Db.js';
  *    table?: string,
  *    idCol?: string,
  *    verCol?: string,
+ *    joins?: Record<string, {
+ *        table?: string,
+ *        refCol?: string,
+ *        verCol?: string,
+ *    }>
  *    connection?: any,
  *    schema?: any,
  *    verDefault?: string
@@ -13,18 +18,18 @@ import Db from './Db.js';
  * @returns
  */
 export const pg =
-  ({ table, idCol, verCol, connection, schema, verDefault }) =>
+  ({ table, idCol, verCol, joins, connection, schema, verDefault }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
 
-    // TODO: Make the defaults smarter using introspection.
     const prefix = store.path;
     const tableOpts = {
       prefix,
       table: table || prefix[prefix.length - 1] || 'default',
       idCol: idCol || 'id',
       verCol: verCol || 'updatedAt',
+      joins: joins || {},
       schema,
       verDefault,
     };

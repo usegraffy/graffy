@@ -15,16 +15,16 @@ const uuidV4Regex =
 
 jest.setTimeout(30000);
 
+beforeAll(async () => {
+  await setupPgServer();
+});
+
+afterAll(async () => {
+  await teardownPgServer();
+});
+
 describe('pg_e2e', () => {
   let store;
-
-  beforeAll(async () => {
-    await setupPgServer();
-  });
-
-  afterAll(async () => {
-    await teardownPgServer();
-  });
 
   beforeEach(async () => {
     await resetTables();
@@ -35,6 +35,13 @@ describe('pg_e2e', () => {
         table: 'users',
         idCol: 'id',
         verCol: 'version',
+        joins: {
+          posts: {
+            table: 'posts',
+            refCol: 'authorId',
+            verCol: 'version',
+          },
+        },
         connection: getPool(),
       }),
     );
@@ -896,7 +903,6 @@ describe('pg_e2e', () => {
 
   describe('json_lookup_and_operators', () => {
     beforeEach(async () => {
-      await resetTables();
       await store.write('users', [
         {
           $key: uuid(),
@@ -980,4 +986,8 @@ describe('pg_e2e', () => {
 
     expect(res).toEqual({ settings: null });
   });
+
+  // describe('join', () => {
+  //   beforeEach()
+  // });
 });
