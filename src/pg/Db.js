@@ -96,9 +96,9 @@ export default class Db {
     It mutates the argument, to "persist" the results and
     avoid this query in every operation. 
   */
-  async ensureSchema(tableOptions) {
+  async ensureSchema(tableOptions, typeOids) {
     if (tableOptions.schema) return;
-    const { table, verCol } = tableOptions;
+    const { table, verCol, joins } = tableOptions;
 
     const tableSchema = (
       await this.query(sqlTag`
@@ -120,12 +120,14 @@ export default class Db {
 
     if (!types) throw Error(`pg.missing_table ${table}`);
 
-    const typeOids = (
-      await this.query(sqlTag`
+    typeOids =
+      typeOids ||
+      (
+        await this.query(sqlTag`
         SELECT jsonb_object_agg(typname, oid) AS type_oids
         FROM pg_type
         WHERE typname = 'cube'`)
-    ).rows[0].type_oids;
+      ).rows[0].type_oids;
 
     // console.log({ typeOids });
 
@@ -142,6 +144,12 @@ export default class Db {
     if (!verDefault) {
       throw Error(`pg.verCol_without_default ${verCol}`);
     }
+
+    await Promise.all(
+      Object.values(joins).map((joinOptions) =>
+        this.ensureSchema(joinOptions, typeOids),
+      ),
+    );
 
     log('ensureSchema', types);
     tableOptions.schema = { types, typeOids };

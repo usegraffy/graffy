@@ -74,24 +74,24 @@ function getNodeSql(ast, options) {
     if (!options.joins[joinName]) throw Error(`pg.no_join ${joinName}`);
     const { idCol } = options;
     const joinOptions = options.joins[joinName];
-    // console.log({ joinOptions });
     const { table: joinTable, refCol } = options.joins[joinName];
-    return sql`"${raw(idCol)}" IN (SELECT "${raw(refCol)}" FROM "${raw(joinTable)}" WHERE ${getNodeSql(ast[2], joinOptions)})`;
+    return sql`"${raw(idCol)}" IN (SELECT "${raw(refCol)}" FROM "${raw(
+      joinTable,
+    )}" WHERE ${getNodeSql(ast[2], joinOptions)})`;
   }
 
   // It is a binary operator
 
   const [prefix, ...suffix] = ast[1].split('.');
   const { types = {} } = options.schema;
-  console.log({ options });
   if (!types[prefix]) throw Error(`pg.no_column ${prefix}`);
 
   if (types[prefix] === 'jsonb') {
     const [lhs, textLhs] = suffix.length
       ? [
-        sql`"${raw(prefix)}" #> ${suffix}`,
-        sql`"${raw(prefix)}" #>> ${suffix}`,
-      ]
+          sql`"${raw(prefix)}" #> ${suffix}`,
+          sql`"${raw(prefix)}" #>> ${suffix}`,
+        ]
       : [sql`"${raw(prefix)}"`, sql`"${raw(prefix)}" #>> '{}'`];
 
     return getBinarySql(lhs, 'jsonb', op, ast[2], textLhs);
@@ -100,7 +100,6 @@ function getNodeSql(ast, options) {
     return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
   }
 }
-
 
 export default function getSql(filter, options) {
   const ast = getAst(filter);

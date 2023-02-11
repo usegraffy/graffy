@@ -67,7 +67,7 @@ function construct(node, prop, op) {
 function simplify(node) {
   const op = node[0];
 
-  // TODO: $and/$or with multiple $subs with same prop -> 
+  // TODO: $and/$or with multiple $subs with same prop ->
   // single $sub with $and/$or inside
 
   // Recurse into subnodes and simplify them first.

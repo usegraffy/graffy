@@ -1,38 +1,64 @@
 import { remove, merge, encodePath } from '@graffy/common';
 import Db from './Db.js';
+
 /**
- *
- * @param {{
- *    table?: string,
- *    idCol?: string,
- *    verCol?: string,
- *    joins?: Record<string, {
- *        table?: string,
- *        refCol?: string,
- *        verCol?: string,
- *    }>
- *    connection?: any,
+ * @typedef {{
+ *    table: string,
+ *    idCol: string,
+ *    verCol: string,
+ *    joins: Record<string, TableOpts & { refCol: string }>,
  *    schema?: any,
  *    verDefault?: string
- * }} options
- * @returns
+ * }} TableOpts
+ */
+
+/**
+ * @param {string} name
+ * @param {Partial<TableOpts>} options
+ * @param {string} parentName
+ * @returns {TableOpts}
+ */
+
+function getTableOpts(
+  name,
+  { table, idCol, verCol, joins, schema, verDefault } = {},
+  parentName = null,
+) {
+  const tableName = table || name;
+  return {
+    table: table || name,
+    idCol: idCol || 'id',
+    verCol: verCol || 'updatedAt',
+    joins: Object.fromEntries(
+      Object.entries(joins || {}).map(
+        ([joinName, { refCol = parentName, ...joinOptions }]) => [
+          joinName,
+          {
+            refCol,
+            ...getTableOpts(joinName, joinOptions, tableName),
+          },
+        ],
+      ),
+    ),
+    schema,
+    verDefault,
+  };
+}
+
+/**
+ * @param {Partial<TableOpts> & {connection: any}} options
+ * @returns {Function}
  */
 export const pg =
-  ({ table, idCol, verCol, joins, connection, schema, verDefault }) =>
+  ({ connection, ...rawOptions }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);
 
     const prefix = store.path;
-    const tableOpts = {
-      prefix,
-      table: table || prefix[prefix.length - 1] || 'default',
-      idCol: idCol || 'id',
-      verCol: verCol || 'updatedAt',
-      joins: joins || {},
-      schema,
-      verDefault,
-    };
+    /** @type {TableOpts & {prefix?: string[]}} */
+    const tableOpts = getTableOpts(prefix[prefix.length - 1], rawOptions);
+    tableOpts.prefix = prefix;
 
     const defaultDb = new Db(connection);
 
