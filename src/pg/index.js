@@ -6,7 +6,7 @@ import Db from './Db.js';
  *    table: string,
  *    idCol: string,
  *    verCol: string,
- *    joins: Record<string, TableOpts & { refCol: string }>,
+ *    joins: Record<string, Partial<TableOpts> & { refCol: string }>,
  *    schema?: any,
  *    verDefault?: string
  * }} TableOpts

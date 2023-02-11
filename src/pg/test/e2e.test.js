@@ -987,7 +987,13 @@ describe('pg_e2e', () => {
     expect(res).toEqual({ settings: null });
   });
 
-  // describe('join', () => {
-  //   beforeEach()
-  // });
+  describe('join', () => {
+    test('simple_join', async () => {
+      const res = await store.read('users', {
+        $key: { posts: { title: { $ire: 'foo' } } },
+        name: true,
+      });
+      expect(res).toEqual('rst');
+    });
+  });
 });

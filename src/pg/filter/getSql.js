@@ -72,12 +72,12 @@ function getNodeSql(ast, options) {
     // Handle joins.
     const joinName = ast[1];
     if (!options.joins[joinName]) throw Error(`pg.no_join ${joinName}`);
-    const { idCol } = options;
+    const { idCol, schema } = options;
     const joinOptions = options.joins[joinName];
     const { table: joinTable, refCol } = options.joins[joinName];
-    return sql`"${raw(idCol)}" IN (SELECT "${raw(refCol)}" FROM "${raw(
-      joinTable,
-    )}" WHERE ${getNodeSql(ast[2], joinOptions)})`;
+    return sql`"${raw(idCol)}" IN (SELECT "${raw(refCol)}"::${raw(
+      schema.types[idCol],
+    )} FROM "${raw(joinTable)}" WHERE ${getNodeSql(ast[2], joinOptions)})`;
   }
 
   // It is a binary operator
