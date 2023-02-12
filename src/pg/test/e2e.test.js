@@ -988,12 +988,65 @@ describe('pg_e2e', () => {
   });
 
   describe('join', () => {
-    test('simple_join', async () => {
+    beforeEach(async () => {
+      const uidA = uuid();
+      const uidB = uuid();
+      await store.write({
+        users: {
+          [uidA]: { $put: true, name: 'Alice', email: 'a' },
+          [uidB]: { $put: true, name: 'Bob', email: 'b' },
+        },
+        posts: {
+          [uuid()]: {
+            title: 'Extra Foo',
+            authorId: uidA,
+            $put: true,
+          },
+          [uuid()]: {
+            title: 'Extra bar',
+            authorId: uidB,
+            $put: true,
+          },
+        },
+      });
+    });
+
+    test('equals', async () => {
+      const res = await store.read('users', {
+        $key: { posts: { title: 'Extra bar' } },
+        name: true,
+      });
+      expect(res).toEqual([{ name: 'Bob' }]);
+    });
+
+    test('regex', async () => {
       const res = await store.read('users', {
         $key: { posts: { title: { $ire: 'foo' } } },
         name: true,
       });
-      expect(res).toEqual('rst');
+      expect(res).toEqual([{ name: 'Alice' }]);
+    });
+
+    test('combined_narrowing', async () => {
+      const res = await store.read('users', {
+        $key: { email: 'a', posts: { title: { $ire: 'Extra' } } },
+        name: true,
+      });
+      expect(res).toEqual([{ name: 'Alice' }]);
+    });
+
+    test('combined_negative_range', async () => {
+      const res = await store.read('users', {
+        $key: { email: 'a', posts: { title: 'Extra bar' }, $all: true },
+        name: true,
+      });
+      expect(res).toEqual(
+        page(
+          { email: 'a', posts: { title: 'Extra bar' }, $all: true },
+          null,
+          [],
+        ),
+      );
     });
   });
 });
