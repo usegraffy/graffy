@@ -439,6 +439,81 @@ describe('pg_e2e', () => {
     expect(res2).toEqual(null);
   });
 
+  describe('val', () => {
+    const id = uuid();
+    // beforeAll(async () => {
+    //   const result = await store.write('users', [
+    //     {
+    //       $key: id,
+    //       $put: true,
+    //       name: 'A',
+    //       email: 'a',
+    //       settings: {
+    //         foo: {
+    //           bar: 'incorrect',
+    //           baz: 'correct'
+    //         }
+    //       }
+    //     },
+    //   ]);
+    // });
+    // afterAll(async () => {
+    //   await store.write(['users', id], null)
+    // })
+    test('key is removed', async () => {
+      await store.write('users', [
+        {
+          $key: id,
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: {
+            foo: {
+              bar: 'incorrect',
+              baz: 'correct'
+            }
+          }
+        },
+      ]);
+      const res1 = await store.write(['users', id], {
+        settings: {
+          foo: {
+            bar: null,
+          }
+        }
+      });
+      expect(Object.keys(res1.settings.foo)).toEqual(['baz']);
+      await store.write(['users', id], null)
+    })
+
+    test('key is kept with null', async () => {
+      await store.write('users', [
+        {
+          $key: id,
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: {
+            foo: {
+              bar: 'incorrect',
+              baz: 'correct'
+            }
+          }
+        },
+      ]);
+      const res1 = await store.write(['users', id], {
+        settings: {
+          $val: true,
+          foo: {
+            bar: null,
+          }
+        }
+      });
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar', 'baz']);
+      await store.write(['users', id], null)
+    })
+  })
+
   describe('order', () => {
     beforeEach(async () => {
       await store.write('users', [
