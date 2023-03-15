@@ -468,7 +468,7 @@ describe('pg_e2e', () => {
           },
         },
       });
-      expect(Object.keys(res1.settings.foo)).toEqual(['bar', 'baz']);
+      expect(Object.keys(res1.settings.foo)).toEqual(['baz']);
     });
 
     test('key is kept with null', async () => {
@@ -480,7 +480,7 @@ describe('pg_e2e', () => {
           },
         },
       });
-      expect(Object.keys(res1.settings.foo)).toEqual(['baz']);
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar', 'baz']);
     });
   });
 
