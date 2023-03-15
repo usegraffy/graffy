@@ -441,26 +441,7 @@ describe('pg_e2e', () => {
 
   describe('val', () => {
     const id = uuid();
-    // beforeAll(async () => {
-    //   const result = await store.write('users', [
-    //     {
-    //       $key: id,
-    //       $put: true,
-    //       name: 'A',
-    //       email: 'a',
-    //       settings: {
-    //         foo: {
-    //           bar: 'incorrect',
-    //           baz: 'correct'
-    //         }
-    //       }
-    //     },
-    //   ]);
-    // });
-    // afterAll(async () => {
-    //   await store.write(['users', id], null)
-    // })
-    test('key is removed', async () => {
+    beforeEach(async () => {
       await store.write('users', [
         {
           $key: id,
@@ -470,49 +451,38 @@ describe('pg_e2e', () => {
           settings: {
             foo: {
               bar: 'incorrect',
-              baz: 'correct'
-            }
-          }
+              baz: 'correct',
+            },
+          },
         },
       ]);
+    });
+    afterEach(async () => {
+      await store.write(['users', id], null);
+    });
+    test('key is removed', async () => {
       const res1 = await store.write(['users', id], {
         settings: {
           foo: {
             bar: null,
-          }
-        }
+          },
+        },
       });
-      expect(Object.keys(res1.settings.foo)).toEqual(['baz']);
-      await store.write(['users', id], null)
-    })
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar', 'baz']);
+    });
 
     test('key is kept with null', async () => {
-      await store.write('users', [
-        {
-          $key: id,
-          $put: true,
-          name: 'A',
-          email: 'a',
-          settings: {
-            foo: {
-              bar: 'incorrect',
-              baz: 'correct'
-            }
-          }
-        },
-      ]);
       const res1 = await store.write(['users', id], {
         settings: {
           $val: true,
           foo: {
             bar: null,
-          }
-        }
+          },
+        },
       });
-      expect(Object.keys(res1.settings.foo)).toEqual(['bar', 'baz']);
-      await store.write(['users', id], null)
-    })
-  })
+      expect(Object.keys(res1.settings.foo)).toEqual(['baz']);
+    });
+  });
 
   describe('order', () => {
     beforeEach(async () => {
