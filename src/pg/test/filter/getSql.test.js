@@ -100,16 +100,17 @@ test('join', () => {
       { posts: { category: 'programming' } },
       {
         idCol: 'id',
+        schema: { types: { id: 'uuid' } },
         joins: {
           posts: {
             table: 'posts',
             refCol: 'authorId',
-            schema: { types: { category: 'text' } },
+            schema: { types: { category: 'text', authorId: 'text' } },
           },
         },
       },
     ),
   ).toEqual(
-    sql`"id" IN (SELECT "authorId" FROM "posts" WHERE "category" = ${'programming'})`,
+    sql`"id" IN (SELECT "authorId"::uuid FROM "posts" WHERE "category" = ${'programming'})`,
   );
 });
