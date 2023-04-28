@@ -5,6 +5,13 @@ import {
   merge,
   mergeStreams,
   encodePath,
+  encodeQuery,
+  encodeGraph,
+  decodeQuery,
+  decodeGraph,
+  unwrapObject,
+  wrapObject,
+  finalize,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
@@ -14,31 +21,43 @@ async function mapStream(stream, fn) {
   }
 }
 
-export function shiftFn(fn, path) {
-  path = encodePath(path);
-  return async function shiftedFn(payload, options, next) {
+export function wrapProvider(fn, decodedPath, isRead) {
+  const decodePayload = isRead ? decodeQuery : decodeGraph;
+  const encodePayload = isRead ? encodeQuery : encodeGraph;
+  const path = encodePath(decodedPath);
+  return async function wrappedProvider(payload, options, next) {
     let nextCalled = false;
     let remainingNextResult;
-    const unwrappedPayload = unwrap(payload, path);
+    const porcelainPayload = unwrapObject(decodePayload(payload), decodedPath);
     const remainingPayload = remove(payload, path) || [];
 
     // This next function is offered to the provider function.
-    async function shiftedNext(unwrappedNextPayload) {
+    async function shiftedNext(porcelainNextPayload) {
       nextCalled = true;
-      const nextPayload = wrap(unwrappedNextPayload, path);
+      const nextPayload = encodePayload(
+        wrapObject(porcelainNextPayload, decodedPath),
+      );
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
       const nextResult = await next(nextPayload);
 
       // Remember the next() results that are not returned to this provider.
       // These will be merged into the result later.
       remainingNextResult = remove(nextResult, path) || [];
-      return unwrap(nextResult, path);
+      return unwrapObject(decodeGraph(nextResult), decodedPath);
     }
 
-    const rawResult = await fn(unwrappedPayload, options, shiftedNext);
-    // console.log(rawResult, path);
-    const result = wrap(rawResult, path);
+    const porcelainResult = await fn(porcelainPayload, options, shiftedNext);
+    let result = encodeGraph(wrapObject(porcelainResult, decodedPath));
     // console.log(result);
+
+    // TODO: Get rid of this special handling by requiring read providers to
+    // finalize results themselves.
+    if (isRead && !nextCalled) {
+      // This does the opposite of "remove"; "keep"?
+      const appliedQuery = wrap(unwrap(payload, path), path);
+      result = finalize(result, appliedQuery);
+      result = wrap(unwrap(result, path), path);
+    }
 
     if (!nextCalled && remainingPayload.length) {
       remainingNextResult = await next(remainingPayload);

@@ -20,6 +20,9 @@ store.use(path, pg(options));
 - `table`, the name of the table. If not provided, the last segment of the `path` is used. This table must exist.
 - `idCol`: the name of the column to use as ID. Defaults to `id`. This column must exist and be the primary key or have a unique constraint.
 - `verCol`: the name of the column to store the Graffy version number. This column must exist, and must have a `DEFAULT` SQL expression defined - this expression is evaluated to calculate the version number. Graffy versions must monotonically increase, so this expression is typically based on `CURRENT_TIMESTAMP`.
+- `joins`: other tables that have foreign keys referencing the ID column in this table, where we want to filter this table using columns of that other table via a "join". The value is a map of join names to join options.
+  - join names are the names used to refer to joined tables in filter expressions. Typically, these are the names of those tables.
+  - join options are objects with optional properties `table`, `idCol`, `refCol` and `verCol`. `refCol` is the name of the column in the join table that references this one. 
 - `connection`: a [pg](https://github.com/brianc/node-postgres) Client or Pool object (recommended), or the arguments for constructing a new Pool object. Optional.
 
 ### Database connection
@@ -88,6 +91,9 @@ For this to work, `foo` must be a TSVector column.
 Tags must contain both *foo* and *bar*. Note that the array of conditions here does not have `OR` semantics.
 2. `{ tags: { $ctd: ['foo', 'bar', 'baz'] } }` becomes `tags <@ '{"foo","bar","baz"}'`.
 Every tag must be one of *foo*, *bar* or *baz*.
+
+#### Joins
+1. `joinName: { ...expression }`,
 
 #### Notes
 

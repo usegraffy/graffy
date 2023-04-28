@@ -232,7 +232,7 @@ describe('alias', () => {
   });
 });
 
-describe.skip('middleware_coding', () => {
+describe('middleware_coding', () => {
   test('no_path', async () => {
     const composedResult = [
       keyref({ foo: 'bar', $cursor: [3847, 'p1'] }, ['participant', 'p1'], {

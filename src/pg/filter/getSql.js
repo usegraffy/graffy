@@ -53,42 +53,55 @@ function getBinarySql(lhs, type, op, value, textLhs) {
   return sql`${lhs} ${sqlOp} ${value}`;
 }
 
-export default function getSql(filter, options) {
-  function getNodeSql(ast) {
-    if (typeof ast === 'boolean') return ast;
-    const op = ast[0];
+function getNodeSql(ast, options) {
+  if (typeof ast === 'boolean') return ast;
+  const op = ast[0];
 
-    if (op === '$and' || op === '$or') {
-      // Handle variadic operators
-      return sql`(${join(
-        ast[1].map((node) => getNodeSql(node)),
-        `) ${opSql[op]} (`,
-      )})`;
-    } else if (op === '$not') {
-      // Handle unary operators
-      return sql`${opSql[op]} (${getNodeSql(ast[1])})`;
-    }
-
-    // It is a binary operator
-
-    const [prefix, ...suffix] = ast[1].split('.');
-    const { types } = options.schema;
-    if (!types[prefix]) throw Error(`pg.no_column ${prefix}`);
-
-    if (types[prefix] === 'jsonb') {
-      const [lhs, textLhs] = suffix.length
-        ? [
-            sql`"${raw(prefix)}" #> ${suffix}`,
-            sql`"${raw(prefix)}" #>> ${suffix}`,
-          ]
-        : [sql`"${raw(prefix)}"`, sql`"${raw(prefix)}" #>> '{}'`];
-
-      return getBinarySql(lhs, 'jsonb', op, ast[2], textLhs);
-    } else {
-      if (suffix.length) throw Error(`pg.lookup_not_jsonb ${prefix}`);
-      return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
-    }
+  if (op === '$and' || op === '$or') {
+    // Handle variadic operators
+    return sql`(${join(
+      ast[1].map((node) => getNodeSql(node, options)),
+      `) ${opSql[op]} (`,
+    )})`;
+  } else if (op === '$not') {
+    // Handle unary operators
+    return sql`${opSql[op]} (${getNodeSql(ast[1], options)})`;
   }
 
-  return getNodeSql(getAst(filter));
+  if (op === '$sub') {
+    // Handle joins.
+    const joinName = ast[1];
+    if (!options.joins[joinName]) throw Error(`pg.no_join ${joinName}`);
+    const { idCol, schema } = options;
+    const joinOptions = options.joins[joinName];
+    const { table: joinTable, refCol } = options.joins[joinName];
+    return sql`"${raw(idCol)}" IN (SELECT "${raw(refCol)}"::${raw(
+      schema.types[idCol],
+    )} FROM "${raw(joinTable)}" WHERE ${getNodeSql(ast[2], joinOptions)})`;
+  }
+
+  // It is a binary operator
+
+  const [prefix, ...suffix] = ast[1].split('.');
+  const { types = {} } = options.schema;
+  if (!types[prefix]) throw Error(`pg.no_column ${prefix}`);
+
+  if (types[prefix] === 'jsonb') {
+    const [lhs, textLhs] = suffix.length
+      ? [
+          sql`"${raw(prefix)}" #> ${suffix}`,
+          sql`"${raw(prefix)}" #>> ${suffix}`,
+        ]
+      : [sql`"${raw(prefix)}"`, sql`"${raw(prefix)}" #>> '{}'`];
+
+    return getBinarySql(lhs, 'jsonb', op, ast[2], textLhs);
+  } else {
+    if (suffix.length) throw Error(`pg.lookup_not_jsonb ${prefix}`);
+    return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
+  }
+}
+
+export default function getSql(filter, options) {
+  const ast = getAst(filter);
+  return getNodeSql(ast, options);
 }
