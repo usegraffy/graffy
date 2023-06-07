@@ -114,5 +114,4 @@ function getBoundCond(orderCols, bound, kind) {
     case '$until':
       return sql`(${join(orderCols, ',')}) <= (${join(bound, ',')})`;
   }
-
 }
