@@ -106,7 +106,7 @@ describe('select_sql', () => {
         current_timestamp AS "$ver",
         array[ ${options.table}::text, "id" ]::text[] AS "$ref"
       FROM "user"
-      WHERE \"createTime\" < ${2} OR \"createTime\" = ${2} AND ( \"id\" < ${3} )
+      WHERE ("createTime", "id") < (${2}, ${3})
       ORDER BY "createTime" ASC, "id" ASC LIMIT ${4096}
     `;
 

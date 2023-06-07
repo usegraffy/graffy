@@ -100,32 +100,18 @@ export default function getArgSql(
 }
 
 function getBoundCond(orderCols, bound, kind) {
-  if (!Array.isArray(bound)) {
+  if (!Array.isArray(bound) || orderCols.length === 0 || bound.length === 0) {
     throw Error(`pg_arg.bad_query bound : ${JSON.stringify(bound)}`);
   }
 
-  const lhs = orderCols[0];
-  const rhs = bound[0];
-  if (orderCols.length > 1 && bound.length > 1) {
-    const subCond = getBoundCond(orderCols.slice(1), bound.slice(1), kind);
-    switch (kind) {
-      case '$after':
-      case '$since':
-        return sql`${lhs} > ${rhs} OR ${lhs} = ${rhs} AND (${subCond})`;
-      case '$before':
-      case '$until':
-        return sql`${lhs} < ${rhs} OR ${lhs} = ${rhs} AND (${subCond})`;
-    }
-  } else {
-    switch (kind) {
-      case '$after':
-        return sql`${lhs} > ${rhs}`;
-      case '$since':
-        return sql`${lhs} >= ${rhs}`;
-      case '$before':
-        return sql`${lhs} < ${rhs}`;
-      case '$until':
-        return sql`${lhs} <= ${rhs}`;
-    }
+  switch (kind) {
+    case '$after':
+      return sql`(${join(orderCols, ',')}) > (${join(bound, ',')}})`;
+    case '$since':
+      return sql`(${join(orderCols, ',')}) >= (${join(bound, ',')})`;
+    case '$before':
+      return sql`(${join(orderCols, ',')}) < (${join(bound, ',')})`;
+    case '$until':
+      return sql`(${join(orderCols, ',')}) <= (${join(bound, ',')})`;
   }
 }
