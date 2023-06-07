@@ -11,7 +11,7 @@ import { getJsonBuildTrusted, lookup } from './clauses.js';
   @param {{prefix: string, idCol: string, verDefault: string}} options
 
   @typedef { import('sql-template-tag').Sql } Sql
-  @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number }}
+  @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number, ensureSingleRow: boolean }}
 */
 export default function getArgSql(
   { $first, $last, $after, $before, $since, $until, $all, $cursor: _, ...rest },
@@ -40,7 +40,13 @@ export default function getArgSql(
 
   if (!isEmpty(filter)) where.push(getFilterSql(filter, options));
 
-  if (!hasRangeArg) return { meta: meta(baseKey), where, limit: 1 };
+  if (!hasRangeArg)
+    return {
+      meta: meta(baseKey),
+      where,
+      limit: 1,
+      ensureSingleRow: $group === true,
+    };
 
   const groupCols =
     Array.isArray($group) &&
@@ -89,36 +95,23 @@ export default function getArgSql(
     order,
     group,
     limit: $first || $last,
+    ensureSingleRow: true,
   };
 }
 
 function getBoundCond(orderCols, bound, kind) {
-  if (!Array.isArray(bound)) {
+  if (!Array.isArray(bound) || orderCols.length === 0 || bound.length === 0) {
     throw Error(`pg_arg.bad_query bound : ${JSON.stringify(bound)}`);
   }
 
-  const lhs = orderCols[0];
-  const rhs = bound[0];
-  if (orderCols.length > 1 && bound.length > 1) {
-    const subCond = getBoundCond(orderCols.slice(1), bound.slice(1), kind);
-    switch (kind) {
-      case '$after':
-      case '$since':
-        return sql`${lhs} > ${rhs} OR ${lhs} = ${rhs} AND (${subCond})`;
-      case '$before':
-      case '$until':
-        return sql`${lhs} < ${rhs} OR ${lhs} = ${rhs} AND (${subCond})`;
-    }
-  } else {
-    switch (kind) {
-      case '$after':
-        return sql`${lhs} > ${rhs}`;
-      case '$since':
-        return sql`${lhs} >= ${rhs}`;
-      case '$before':
-        return sql`${lhs} < ${rhs}`;
-      case '$until':
-        return sql`${lhs} <= ${rhs}`;
-    }
+  switch (kind) {
+    case '$after':
+      return sql`(${join(orderCols, ',')}) > (${join(bound, ',')}})`;
+    case '$since':
+      return sql`(${join(orderCols, ',')}) >= (${join(bound, ',')})`;
+    case '$before':
+      return sql`(${join(orderCols, ',')}) < (${join(bound, ',')})`;
+    case '$until':
+      return sql`(${join(orderCols, ',')}) <= (${join(bound, ',')})`;
   }
 }

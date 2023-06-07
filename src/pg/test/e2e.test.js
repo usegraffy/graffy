@@ -15,16 +15,16 @@ const uuidV4Regex =
 
 jest.setTimeout(30000);
 
+beforeAll(async () => {
+  await setupPgServer();
+});
+
+afterAll(async () => {
+  await teardownPgServer();
+});
+
 describe('pg_e2e', () => {
   let store;
-
-  beforeAll(async () => {
-    await setupPgServer();
-  });
-
-  afterAll(async () => {
-    await teardownPgServer();
-  });
 
   beforeEach(async () => {
     await resetTables();
@@ -35,6 +35,13 @@ describe('pg_e2e', () => {
         table: 'users',
         idCol: 'id',
         verCol: 'version',
+        joins: {
+          posts: {
+            table: 'posts',
+            refCol: 'authorId',
+            verCol: 'version',
+          },
+        },
         connection: getPool(),
       }),
     );
@@ -941,7 +948,6 @@ describe('pg_e2e', () => {
 
   describe('json_lookup_and_operators', () => {
     beforeEach(async () => {
-      await resetTables();
       await store.write('users', [
         {
           $key: uuid(),
@@ -1024,5 +1030,68 @@ describe('pg_e2e', () => {
     pgClient.release();
 
     expect(res).toEqual({ settings: null });
+  });
+
+  describe('join', () => {
+    beforeEach(async () => {
+      const uidA = uuid();
+      const uidB = uuid();
+      await store.write({
+        users: {
+          [uidA]: { $put: true, name: 'Alice', email: 'a' },
+          [uidB]: { $put: true, name: 'Bob', email: 'b' },
+        },
+        posts: {
+          [uuid()]: {
+            title: 'Extra Foo',
+            authorId: uidA,
+            $put: true,
+          },
+          [uuid()]: {
+            title: 'Extra bar',
+            authorId: uidB,
+            $put: true,
+          },
+        },
+      });
+    });
+
+    test('equals', async () => {
+      const res = await store.read('users', {
+        $key: { posts: { title: 'Extra bar' } },
+        name: true,
+      });
+      expect(res).toEqual([{ name: 'Bob' }]);
+    });
+
+    test('regex', async () => {
+      const res = await store.read('users', {
+        $key: { posts: { title: { $ire: 'foo' } } },
+        name: true,
+      });
+      expect(res).toEqual([{ name: 'Alice' }]);
+    });
+
+    test('combined_narrowing', async () => {
+      const res = await store.read('users', {
+        $key: { email: 'a', posts: { title: { $ire: 'Extra' } } },
+        name: true,
+      });
+      expect(res).toEqual([{ name: 'Alice' }]);
+    });
+
+    test('combined_negative_range', async () => {
+      const res = await store.read('users', {
+        $key: { email: 'a', posts: { title: 'Extra bar' }, $all: true },
+        name: true,
+      });
+      expect(res).toEqual(
+        page(
+          { email: 'a', posts: { title: 'Extra bar' }, $all: true },
+          null,
+          [],
+        ),
+      );
+    });
   });
 });

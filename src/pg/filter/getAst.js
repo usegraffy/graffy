@@ -31,12 +31,6 @@ export default function getAst(filter) {
   return simplify(construct(filter));
 }
 
-/* construct() might need to give unique aliases to subqueries. We use
-   counter to just use consecutive numbers for this.
-
-   Important: The counter is best reset before calling construct() for the
-   root filter, but this must not happen during recursive calls. */
-
 function construct(node, prop, op) {
   if (!node || typeof node !== 'object' || (prop && op)) {
     if (op && prop) return [op, prop, node];
@@ -63,8 +57,7 @@ function construct(node, prop, op) {
         return construct(val, prop, key);
       }
       if (prop) {
-        if (key[0] === '.') return construct(val, prop + key);
-        throw Error(`pgast.unexpected_prop: ${key}`);
+        return ['$sub', prop, construct({ [key]: val })];
       }
       return construct(val, key);
     }),
@@ -74,11 +67,16 @@ function construct(node, prop, op) {
 function simplify(node) {
   const op = node[0];
 
+  // TODO: $and/$or with multiple $subs with same prop ->
+  // single $sub with $and/$or inside
+
   // Recurse into subnodes and simplify them first.
   if (op === '$and' || op === '$or') {
     node[1] = node[1].map((subnode) => simplify(subnode));
   } else if (op === '$not') {
     node[1] = simplify(node[1]);
+  } else if (op === '$sub') {
+    node[2] = simplify(node[2]);
   }
 
   // Handle empty $and/$or and booleans
