@@ -467,18 +467,7 @@ describe('pg_e2e', () => {
     afterEach(async () => {
       await store.write(['users', id], null);
     });
-    test('key is removed', async () => {
-      const res1 = await store.write(['users', id], {
-        settings: {
-          foo: {
-            bar: null,
-          },
-        },
-      });
-      expect(Object.keys(res1.settings.foo)).toEqual(['baz']);
-    });
-
-    test('key is kept with null', async () => {
+    test('nulls kept with root $val', async () => {
       const res1 = await store.write(['users', id], {
         settings: {
           $val: true,
@@ -487,7 +476,19 @@ describe('pg_e2e', () => {
           },
         },
       });
-      expect(Object.keys(res1.settings.foo)).toEqual(['bar', 'baz']);
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar']);
+    });
+
+    test('nulls kept with nested $val', async () => {
+      const res1 = await store.write(['users', id], {
+        settings: {
+          foo: {
+            $val: true,
+            bar: null,
+          },
+        },
+      });
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar']);
     });
   });
 
