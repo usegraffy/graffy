@@ -106,7 +106,7 @@ function getBoundCond(orderCols, bound, kind) {
 
   switch (kind) {
     case '$after':
-      return sql`(${join(orderCols, ',')}) > (${join(bound, ',')}})`;
+      return sql`(${join(orderCols, ',')}) > (${join(bound, ',')})`;
     case '$since':
       return sql`(${join(orderCols, ',')}) >= (${join(bound, ',')})`;
     case '$before':
