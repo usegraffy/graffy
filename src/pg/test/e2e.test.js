@@ -1049,4 +1049,100 @@ describe('pg_e2e', () => {
       );
     });
   });
+  describe('jsonpath operators', () => {
+    const uidA = uuid();
+    const uidB = uuid();
+    beforeEach(async () => {
+      await store.write(['users', uidA], {
+        name: 'alice',
+        email: 'alice@acme.co',
+        settings: { foo: 3 },
+        $put: true,
+      });
+     await store.write(['users', uidB], {
+        name: 'bob',
+        email: 'bob@acme.co',
+        settings: { bar: 5 },
+        $put: true,
+      });
+    });
+
+    test('keycts', async () => {
+      const res1 = await store.read('users', {
+        $key: {
+          settings: {
+            $keycts: ['foo', 'bar']
+          },
+          $order: ['name'],
+          $all: true
+        },
+        name: true,
+      });
+      const exp1 = page(
+          {
+            settings: {
+              $keycts: ['foo', 'bar']
+            },
+           $order: ['name']
+          },
+          null,
+          [
+            keyref(
+                {
+                  settings: {
+                    $keycts: ['foo', 'bar']
+                  },
+                  $order:['name'],
+                  $cursor: [expect.any(String)],
+                },
+                expect.any(Array),
+                { name: 'alice' },
+            ),
+            keyref(
+                {
+                  settings: {
+                    $keycts: ['foo', 'bar']
+                  },
+                  $order:['name'],
+                  $cursor: [expect.any(String)],
+                },
+                expect.any(Array),
+                { name: 'bob' },
+            ),
+          ],
+      );
+      expect(res1).toEqual(exp1);
+      const res2 = await store.read('users', {
+        $key: {
+          settings: {
+            $keycts: ['foo']
+          },
+        },
+        name: true,
+      });
+      expect(res2).toEqual([{name: 'alice'}]);
+    });
+    test('keyctd', async () => {
+      const res1 = await store.read('users', {
+        $key: {
+          settings: {
+            $keyctd: ['foo', 'bar']
+          },
+          $order: ['name'],
+          $all: true
+        },
+        name: true,
+      });
+      expect(JSON.stringify(res1)).toBe(JSON.stringify([]));
+      const res2 = await store.read('users', {
+        $key: {
+          settings: {
+            $keyctd: ['foo']
+          },
+        },
+        name: true,
+      });
+      expect(res2).toEqual([{name: 'alice'}]);
+    });
+  });
 });

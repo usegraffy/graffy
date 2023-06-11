@@ -114,3 +114,25 @@ test('join', () => {
     sql`"id" IN (SELECT "authorId"::uuid FROM "posts" WHERE "category" = ${'programming'})`,
   );
 });
+
+test('keycts', () => {
+  expect(
+      getSql(
+          { emails: { $keycts: ['foo@bar.com', 'foo@baz.com'] } },
+          opt({ emails: 'jsonb' }),
+      ),
+  ).toEqual(
+      sql`"emails" ?| array[${join(['foo@bar.com', 'foo@baz.com'])}]`,
+  );
+});
+
+test('keyctd', () => {
+  expect(
+      getSql(
+          { emails: { $keyctd: ['foo@bar.com', 'foo@baz.com'] } },
+          opt({ emails: 'jsonb' }),
+      ),
+  ).toEqual(
+      sql`"emails" ?& array[${join(['foo@bar.com', 'foo@baz.com'])}]`,
+  );
+});
