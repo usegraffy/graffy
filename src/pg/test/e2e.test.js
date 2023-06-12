@@ -1133,7 +1133,17 @@ describe('pg_e2e', () => {
         },
         name: true,
       });
-      expect(JSON.stringify(res1)).toBe(JSON.stringify([]));
+      const expected = page(
+        {
+          settings: {
+            $keyctd: ['foo', 'bar'],
+          },
+          $order: ['name'],
+        },
+        null,
+        [],
+      );
+      expect(res1).toEqual(expected);
       const res2 = await store.read('users', {
         $key: {
           settings: {
