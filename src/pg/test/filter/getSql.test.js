@@ -116,23 +116,25 @@ test('join', () => {
 });
 
 test('keycts', () => {
+  const value = ['foo@bar.com', 'foo@baz.com'];
   expect(
       getSql(
           { emails: { $keycts: ['foo@bar.com', 'foo@baz.com'] } },
           opt({ emails: 'jsonb' }),
       ),
   ).toEqual(
-      sql`"emails" ?| array[${join(['foo@bar.com', 'foo@baz.com'])}]`,
+      sql`"emails" ?| ${value}::text[]`,
   );
 });
 
 test('keyctd', () => {
+  const value = ['foo@bar.com', 'foo@baz.com'];
   expect(
       getSql(
           { emails: { $keyctd: ['foo@bar.com', 'foo@baz.com'] } },
           opt({ emails: 'jsonb' }),
       ),
   ).toEqual(
-      sql`"emails" ?& array[${join(['foo@bar.com', 'foo@baz.com'])}]`,
+      sql`"emails" ?& ${value}::text[]`,
   );
 });

@@ -48,7 +48,7 @@ function getBinarySql(lhs, type, op, value, textLhs) {
       return sql`${textLhs} ${sqlOp} ${value}`;
     }
     if ((op === '$keycts' || op === '$keyctd') && Array.isArray(value))
-        return sql`${lhs} ${sqlOp} array[${join(value)}]`;
+        return sql`${lhs} ${sqlOp} ${value}::text[]`;
     return sql`${lhs} ${sqlOp} ${JSON.stringify(value)}::jsonb`;
   }
 

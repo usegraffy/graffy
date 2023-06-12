@@ -1049,7 +1049,7 @@ describe('pg_e2e', () => {
       );
     });
   });
-  describe('jsonpath operators', () => {
+  describe('json key existence operators', () => {
     const uidA = uuid();
     const uidB = uuid();
     beforeEach(async () => {
