@@ -18,6 +18,8 @@ const opSql = {
   $ire: sql`~*`,
   $cts: sql`@>`,
   $ctd: sql`<@`,
+  $keycts: sql`?|`,
+  $keyctd: sql`?&`,
 };
 
 function getBinarySql(lhs, type, op, value, textLhs) {
@@ -45,6 +47,8 @@ function getBinarySql(lhs, type, op, value, textLhs) {
     if (typeof value === 'string') {
       return sql`${textLhs} ${sqlOp} ${value}`;
     }
+    if ((op === '$keycts' || op === '$keyctd') && Array.isArray(value))
+      return sql`${lhs} ${sqlOp} ${value}::text[]`;
     return sql`${lhs} ${sqlOp} ${JSON.stringify(value)}::jsonb`;
   }
 

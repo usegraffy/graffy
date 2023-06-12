@@ -14,6 +14,8 @@ const valid = {
   $has: true,
   $cts: true,
   $ctd: true,
+  $keycts: true,
+  $keyctd: true,
 };
 
 const inverse = {
