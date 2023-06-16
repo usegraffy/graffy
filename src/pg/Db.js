@@ -59,7 +59,11 @@ export default class Db {
           return types.getTypeParser(oid, format);
         },
       };
-      return await this.client.query({ ...sql, text: sql.text, name: sql.name });
+      return await this.client.query({
+        ...sql,
+        text: sql.text,
+        name: sql.name,
+      });
     } catch (e) {
       const message = [
         e.message,
