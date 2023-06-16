@@ -62,7 +62,7 @@ export default class Db {
       return await this.client.query({
         ...sql,
         text: sql.text,
-        name: sql.name,
+        sql: sql.sql,
       });
     } catch (e) {
       const message = [
