@@ -33,6 +33,22 @@ export default function getAst(filter) {
   return simplify(construct(filter));
 }
 
+function isValidSubQuery(node) {
+  if (!node || typeof node !== 'object') return false;
+
+  const keys = Object.keys(node);
+  for (const key of keys) {
+    if (key[0] === '$' && !['$and', '$or', '$not'].includes(key)) return false;
+    if (key[0] !== '$') return true;
+  }
+
+  for (const key in node) {
+    if (!isValidSubQuery(node[key])) return false;
+  }
+
+  return false;  
+}
+
 function construct(node, prop, op) {
   if (!node || typeof node !== 'object' || (prop && op)) {
     if (op && prop) return [op, prop, node];
@@ -42,6 +58,11 @@ function construct(node, prop, op) {
   if (Array.isArray(node)) {
     return ['$or', node.map((item) => construct(item, prop, op))];
   }
+
+  if (prop && isValidSubQuery(node)) {
+    return ['$sub', prop, construct(node)];
+  }
+
   return [
     '$and',
     Object.entries(node).map(([key, val]) => {
@@ -57,9 +78,6 @@ function construct(node, prop, op) {
         if (op) throw Error(`pgast.unexpected_op:${op} before:${key}`);
         if (!prop) throw Error(`pgast.expected_prop_before:${key}`);
         return construct(val, prop, key);
-      }
-      if (prop) {
-        return ['$sub', prop, construct({ [key]: val })];
       }
       return construct(val, key);
     }),
