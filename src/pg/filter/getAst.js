@@ -46,7 +46,7 @@ function isValidSubQuery(node) {
     if (!isValidSubQuery(node[key])) return false;
   }
 
-  return false;  
+  return false;
 }
 
 function construct(node, prop, op) {
