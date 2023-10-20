@@ -64,7 +64,7 @@ export default function server(store, { auth } = {}) {
       try {
         const op = parsed.query.op;
         if (op !== 'write' && op !== 'read') {
-          throw Error(`httpServer.unsupported_op: ${op}`);
+          throw Error('httpServer.unsupported_op');
         }
 
         const chunks = [];
