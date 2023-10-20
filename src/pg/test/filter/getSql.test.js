@@ -115,6 +115,27 @@ test('join', () => {
   );
 });
 
+test('join with multiple col', () => {
+  expect(
+    getSql(
+      { posts: { category: 'programming', authorId: 'id1' } },
+      {
+        idCol: 'id',
+        schema: { types: { id: 'uuid' } },
+        joins: {
+          posts: {
+            table: 'posts',
+            refCol: 'authorId',
+            schema: { types: { category: 'text', authorId: 'text' } },
+          },
+        },
+      },
+    ),
+  ).toEqual(
+    sql`"id" IN (SELECT "authorId"::uuid FROM "posts" WHERE ("category" = ${'programming'}) AND ("authorId" = ${'id1'}))`,
+  );
+});
+
 test('keycts', () => {
   const value = ['foo@bar.com', 'foo@baz.com'];
   expect(
