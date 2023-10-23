@@ -1,5 +1,5 @@
 import sql, { Sql, raw, join, empty } from 'sql-template-tag';
-import { isEmpty } from '@graffy/common';
+import { isDef, isEmpty } from '@graffy/common';
 
 /*
   Important: This function assumes that the object's keys are from
@@ -88,9 +88,9 @@ export function cubeLiteralSql(value) {
   }
   return Array.isArray(value[0])
     ? sql`cube(${vertexSql(value[0], sql`'-Infinity'`)}, ${vertexSql(
-        value[1],
-        sql`'Infinity'`,
-      )})`
+      value[1],
+      sql`'Infinity'`,
+    )})`
     : sql`cube(${vertexSql(value, 0)})`;
 }
 
@@ -100,9 +100,9 @@ function castValue(value, type, name, isPut) {
   if (value === null) return sql`NULL`;
 
   if (type === 'jsonb') {
-    return isPut
-      ? JSON.stringify(stripAttributes(value))
-      : getJsonUpdate(value, name, []);
+    if (value.$val) return JSON.stringify(value);
+    if (isPut) return JSON.stringify(stripAttributes(value));
+    return getJsonUpdate(value, name, []);
   }
 
   if (type === 'cube') return cubeLiteralSql(value);
@@ -148,40 +148,56 @@ function getJsonUpdate(object, col, path) {
     !object ||
     typeof object !== 'object' ||
     Array.isArray(object) ||
-    object.$put
+    object.$put ||
+    object.$val
   ) {
+    console.log('Trivial json update for', object, getJsonBuildValue(object));
     return getJsonBuildValue(object);
   }
 
-  const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
+  let curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
   if (isEmpty(object)) return curr;
 
-  return sql`nullif(jsonb_strip_nulls((case jsonb_typeof(${curr})
-    when 'object' then ${curr}
-    else '{}'::jsonb
-  end) || jsonb_build_object(${join(
-    Object.entries(object).map(
-      ([key, value]) =>
-        /* Note: here we do not trust object keys */
-        sql`${key}::text, ${getJsonUpdate(value, col, path.concat(key))}`,
-    ),
-    ', ',
-  )})), '{}'::jsonb)`;
+  const { updates, deletes } = Object.entries(object).reduce((acc, [key, val]) => {
+    if (val === null) {
+      acc.deletes.push(key);
+    } else {
+      const jsonUpdate = getJsonUpdate(val, col, path.concat(key));
+      if (
+        typeof jsonUpdate !== 'undefined' &&
+        (typeof jsonUpdate !== 'object' || !isEmpty(jsonUpdate))
+      ) {
+        acc.updates.push(sql`${key}::text, ${jsonUpdate}`);
+      }
+    }
+    return acc;
+  }, { updates: [], deletes: [] });
+
+  console.log('prepared', object, updates, deletes);
+
+  curr = sql`case jsonb_typeof(${curr}) when 'object' then ${curr} else '{}'::jsonb end`;
+  if (updates.length) curr = sql`(${curr}) || jsonb_build_object(${join(updates, ', ')})`;
+  if (deletes.length) curr = sql`(${curr}) - ${deletes}::text[]`;
+  return sql`nullif(${curr}, '{}'::jsonb)`;
 }
 
 function stripAttributes(object) {
-  if (typeof object !== 'object' || !object) return object;
+  if (typeof object !== 'object' || !object || object.$val) return object;
   if (Array.isArray(object)) {
     return object.map((item) => stripAttributes(item));
   }
 
-  return Object.entries(object).reduce(
-    (/** @type {null|Record<string,any>} */ out, [key, val]) => {
+  const out = Object.entries(object).reduce(
+    (out, [key, val]) => {
       if (key === '$put' || val === null) return out;
-      if (out === null) out = {};
-      out[key] = stripAttributes(val);
+      const outVal = stripAttributes(val);
+      const skip = !isDef(outVal) || outVal === null || (typeof outVal === 'object' && isEmpty(outVal));
+      if (!skip) out[key] = outVal;
       return out;
     },
-    null,
+    {},
   );
+
+  if (isEmpty(out) && object.$put) return null;
+  return out;
 }

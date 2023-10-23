@@ -446,6 +446,52 @@ describe('pg_e2e', () => {
     expect(res2).toEqual(null);
   });
 
+  describe('val', () => {
+    const id = uuid();
+    beforeEach(async () => {
+      await store.write('users', [
+        {
+          $key: id,
+          $put: true,
+          name: 'A',
+          email: 'a',
+          settings: {
+            foo: {
+              bar: 'incorrect',
+              baz: 'correct',
+            },
+          },
+        },
+      ]);
+    });
+    afterEach(async () => {
+      await store.write(['users', id], null);
+    });
+    test('nulls kept with root $val', async () => {
+      const res1 = await store.write(['users', id], {
+        settings: {
+          $val: true,
+          foo: {
+            bar: null,
+          },
+        },
+      });
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar']);
+    });
+
+    test('nulls kept with nested $val', async () => {
+      const res1 = await store.write(['users', id], {
+        settings: {
+          foo: {
+            $val: true,
+            bar: null,
+          },
+        },
+      });
+      expect(Object.keys(res1.settings.foo)).toEqual(['bar']);
+    });
+  });
+
   describe('order', () => {
     beforeEach(async () => {
       await store.write('users', [
