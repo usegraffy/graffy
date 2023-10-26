@@ -1,26 +1,38 @@
 import sql from 'sql-template-tag';
-import expectSql from '../expectSql';
 import {
   getInsert,
-  getUpdates,
   getJsonBuildTrusted,
   getSelectCols,
+  getUpdates,
 } from '../../sql/clauses';
+import expectSql from '../expectSql';
 
 describe('clauses', () => {
-  const data = { a: 1, b: 1 };
-
   test('insert', () => {
-    const { cols, vals } = getInsert(data, {
+    const data = [
+      { a: 1, b: 1 },
+      { a: 2, b: 2 },
+    ];
+
+    const { cols, vals, updates } = getInsert(data, {
       verCol: 'version',
       schema: { types: { a: 'int8', b: 'float', version: 'int8' } },
       verDefault: 'current_timestamp',
     });
     expectSql(cols, sql`"a", "b", "version"`);
-    expectSql(vals, sql`${data.a} , ${data.b} , default`);
+    expectSql(
+      vals,
+      sql`(${data[0].a} , ${data[0].b} , default), (${data[1].a} , ${data[1].b} , default)`,
+    );
+    expectSql(
+      updates,
+      sql`"a" = "excluded"."a", "b" = "excluded"."b", "version" = "excluded"."version"`,
+    );
   });
 
   test('updates', () => {
+    const data = { a: 1, b: 1 };
+
     const options = {
       idCol: 'id',
       verCol: 'version',

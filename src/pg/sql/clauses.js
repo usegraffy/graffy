@@ -1,5 +1,5 @@
-import sql, { Sql, raw, join, empty } from 'sql-template-tag';
 import { isEmpty } from '@graffy/common';
+import sql, { Sql, empty, join, raw } from 'sql-template-tag';
 
 /*
   Important: This function assumes that the object's keys are from
@@ -110,19 +110,50 @@ function castValue(value, type, name, isPut) {
   return value;
 }
 
-export const getInsert = (row, options) => {
+export const getInsert = (rows, options) => {
+  const { verCol, schema } = options;
   const cols = [];
+  const colSqls = [];
+  const colIx = {};
+  const colUsed = [];
+
+  for (const col of Object.keys(options.schema.types)) {
+    colIx[col] = cols.length;
+    colUsed[cols.length] = false;
+    cols.push(col);
+    colSqls.push(sql`"${raw(col)}"`);
+  }
+
+  colUsed[colIx[verCol]] = true;
+
   const vals = [];
+  for (const row of rows) {
+    const rowVals = Array(cols.length).fill(null);
+    rowVals[colIx[verCol]] = sql`default`;
 
-  Object.entries(row)
-    .filter(([col]) => col !== options.verCol && col[0] !== '$')
-    .concat([[options.verCol, sql`default`]])
-    .forEach(([col, val]) => {
-      cols.push(sql`"${raw(col)}"`);
-      vals.push(castValue(val, options.schema.types[col], col, row.$put));
-    });
+    for (const col of cols) {
+      if (col === verCol || !(col in row)) continue;
+      const ix = colIx[col];
+      colUsed[ix] = true;
+      rowVals[ix] = castValue(row[col], schema.types[col], col, row.$put);
+    }
 
-  return { cols: join(cols, ', '), vals: join(vals, ', ') };
+    vals.push(rowVals);
+  }
+
+  const isUsed = (_, ix) => colUsed[ix];
+
+  return {
+    cols: join(colSqls.filter(isUsed), ', '),
+    vals: join(
+      vals.map((rowVals) => sql`(${join(rowVals.filter(isUsed), ', ')})`),
+      ', ',
+    ),
+    updates: join(
+      colSqls.map((col, ix) => sql`${col} =  "excluded".${col}`).filter(isUsed),
+      ', ',
+    ),
+  };
 };
 
 export const getUpdates = (row, options) => {

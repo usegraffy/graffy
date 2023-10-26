@@ -1,8 +1,8 @@
-import sql, { raw, join } from 'sql-template-tag';
 import { isPlainObject } from '@graffy/common';
+import sql, { join, raw } from 'sql-template-tag';
+import { getInsert, getSelectCols, getUpdates } from './clauses.js';
 import getArgSql from './getArgSql.js';
 import { getIdMeta } from './getMeta.js';
-import { getInsert, getSelectCols, getUpdates } from './clauses.js';
 
 function getSingleSql(arg, options) {
   const { table, idCol } = options;
@@ -33,7 +33,7 @@ export function patch(object, arg, options) {
   const { table } = options;
   const { where, meta } = getSingleSql(arg, options);
 
-  const row = object; // objectToRow(object, options);
+  const row = object;
 
   return sql`
     UPDATE "${raw(table)}" SET ${getUpdates(row, options)}
@@ -41,26 +41,40 @@ export function patch(object, arg, options) {
     RETURNING ${getSelectCols(options)}, ${meta}`;
 }
 
-export function put(object, arg, options) {
+export function put(puts, options) {
   const { idCol, table } = options;
-  const row = object; // objectToRow(object, options);
+  const sqls = [];
 
-  let meta;
-  let conflictTarget;
-  if (isPlainObject(arg)) {
-    ({ meta } = getArgSql(arg, options));
-    conflictTarget = join(Object.keys(arg).map((col) => sql`"${raw(col)}"`));
-  } else {
-    meta = getIdMeta(options);
-    conflictTarget = sql`"${raw(idCol)}"`;
+  const addSql = (rows, meta, conflictTarget) => {
+    const { cols, vals, updates } = getInsert(rows, options);
+    sqls.push(sql`
+      INSERT INTO "${raw(table)}" (${cols}) VALUES ${vals}
+      ON CONFLICT (${conflictTarget}) DO UPDATE SET ${updates}
+      RETURNING ${getSelectCols(options)}, ${meta}`);
+  };
+
+  const idRows = [];
+  for (const put of puts) {
+    const [row, arg] = put;
+    if (!isPlainObject(arg)) {
+      idRows.push(row);
+      continue;
+    }
+
+    const { meta } = getArgSql(arg, options);
+    const conflictTarget = join(
+      Object.keys(arg).map((col) => sql`"${raw(col)}"`),
+    );
+    addSql([row], meta, conflictTarget);
   }
 
-  const { cols, vals } = getInsert(row, options);
+  if (idRows.length) {
+    const meta = getIdMeta(options);
+    const conflictTarget = sql`"${raw(idCol)}"`;
+    addSql(idRows, meta, conflictTarget);
+  }
 
-  return sql`
-    INSERT INTO "${raw(table)}" (${cols}) VALUES (${vals})
-    ON CONFLICT (${conflictTarget}) DO UPDATE SET (${cols}) = (${vals})
-    RETURNING ${getSelectCols(options)}, ${meta}`;
+  return sqls;
 }
 
 export function del(arg, options) {
