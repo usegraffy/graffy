@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
+import { jest } from '@jest/globals';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
 
@@ -123,10 +123,10 @@ describe('postgres', () => {
     expect(mockQuery).toBeCalled();
 
     const sqlQuery = sql`
-      INSERT INTO "user" ("name", "id", "updatedAt")
-      VALUES (${data.name}, ${'foo'}, default)
+      INSERT INTO "user" ("id", "name", "updatedAt")
+      VALUES (${'foo'}, ${data.name}, default)
       ON CONFLICT ("id") DO UPDATE SET
-      ("name", "id", "updatedAt") = (${data.name}, ${'foo'}, default)
+      "id" = "excluded"."id", "name" = "excluded"."name", "updatedAt" = "excluded"."updatedAt"
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
@@ -140,11 +140,10 @@ describe('postgres', () => {
 
     await store.write('googleSession', data);
     const sqlQuery = sql`
-      INSERT INTO "googleSession" ( "token", "userId", "version" )
-      VALUES (${data.token}, ${'userId_01'}, default)
+      INSERT INTO "googleSession" ( "userId", "token", "version" )
+      VALUES (${'userId_01'}, ${data.token}, default)
       ON CONFLICT ( "userId" )
-      DO UPDATE SET ( "token", "userId", "version" ) =
-      (${data.token}, ${'userId_01'}, default)
+      DO UPDATE SET "userId" = "excluded"."userId", "token" = "excluded"."token", "version" = "excluded"."version"
       RETURNING *,
         ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
         current_timestamp AS "$ver",
@@ -159,12 +158,16 @@ describe('postgres', () => {
       $put: true,
     };
 
+    mockQuery.mockResolvedValueOnce({
+      rowCount: 1,
+      rows: [{ foo: true }],
+    });
+
     await store.write(['googleSession', { userId: 'userId_01' }], data);
     const sqlQuery = sql`
-      INSERT INTO "googleSession" ( "token" , "userId", "version" )
-      VALUES ( ${data.token} , ${data.userId}, default) ON CONFLICT ("userId")
-      DO UPDATE SET ( "token" ,"userId", "version" ) = 
-        (${data.token}, ${data.userId}, default)
+      INSERT INTO "googleSession" (  "userId", "token", "version" )
+      VALUES (  ${data.userId}, ${data.token}, default) ON CONFLICT ("userId")
+      DO UPDATE SET "userId" = "excluded"."userId", "token" = "excluded"."token", "version" = "excluded"."version"
       RETURNING *,
         ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
         current_timestamp AS "$ver",
@@ -181,10 +184,9 @@ describe('postgres', () => {
 
     await store.write('email.e1', data);
     const sqlQuery = sql`
-      INSERT INTO "email" ("tenantId", "userId", "id", "version" )
-      VALUES (${data.tenantId}, ${data.userId}, ${'e1'}, default)
-      ON CONFLICT ("id") DO UPDATE SET ("tenantId", "userId", "id", "version" ) =
-        (${data.tenantId} , ${data.userId} , ${'e1'}, default)
+      INSERT INTO "email" ("id", "userId", "tenantId", "version" )
+      VALUES (${'e1'}, ${data.userId}, ${data.tenantId}, default)
+      ON CONFLICT ("id") DO UPDATE SET "id" = "excluded"."id", "userId" = "excluded"."userId", "tenantId" = "excluded"."tenantId", "version" = "excluded"."version" 
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
