@@ -128,8 +128,7 @@ export const getInsert = (rows, options) => {
 
   const vals = [];
   for (const row of rows) {
-    const rowVals = Array(cols.length).fill(null);
-    rowVals[colIx[verCol]] = sql`default`;
+    const rowVals = Array(cols.length).fill(sql`default`);
 
     for (const col of cols) {
       if (col === verCol || !(col in row)) continue;
