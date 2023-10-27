@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals';
-import Graffy from '../Graffy.js';
 import GraffyFill from '@graffy/fill';
 import { page, ref } from '@graffy/testing';
+import { jest } from '@jest/globals';
+import Graffy from '../Graffy.js';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -402,4 +402,18 @@ test('onReadWithNext', async () => {
       },
     },
   });
+});
+
+test('modified_next_options', async () => {
+  // @ts-ignore bad jest mockResolvedValue definitions?
+  const mockOnRead = jest.fn().mockResolvedValue({ 123: { name: 'Alice' } });
+  const query = { 123: { name: true } };
+  const store = new Graffy();
+  store.use(GraffyFill());
+  store.onRead('user', (query, _options, next) => {
+    return next(query, { bar: true });
+  });
+  store.onRead('user', mockOnRead);
+  await store.read('user', query, { foo: 2 });
+  expect(mockOnRead).toBeCalledWith(query, { bar: true }, expect.any(Function));
 });
