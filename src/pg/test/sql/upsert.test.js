@@ -1,4 +1,4 @@
-import { put, patch } from '../../sql/upsert.js';
+import { patch, put } from '../../sql/upsert.js';
 
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql.js';
@@ -25,27 +25,76 @@ const options = {
 
 describe('byId', () => {
   test('put', async () => {
+    const sqls = put(
+      [
+        [
+          {
+            $put: true,
+            id: 'post22',
+            type: 'post',
+            name: 'hello',
+            email: 'world',
+            config: { foo: 3 },
+            tags: [1, 2],
+          },
+          'post22',
+        ],
+      ],
+      options,
+    );
     expectSql(
-      put(
-        {
-          $put: true,
-          id: 'post22',
-          type: 'post',
-          name: 'hello',
-          email: 'world',
-          config: { foo: 3 },
-          tags: [1, 2],
-        },
-        'post22',
-        options,
-      ),
-      sql`INSERT INTO "post" ("id", "type", "name", "email", "config", "tags", "version")
-      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'},
+      sqls[0],
+      sql`INSERT INTO "post" ("id", "name", "type", "email", "config", "tags", "version")
+      VALUES (${'post22'}, ${'hello'}, ${'post'}, ${'world'},
       ${JSON.stringify({ foo: 3 })}, ${JSON.stringify([1, 2])}, default)
-      ON CONFLICT ("id") DO UPDATE SET ("id", "type", "name", "email", "config", "tags", "version")
-        = (${'post22'}, ${'post'}, ${'hello'},${'world'},
-        ${JSON.stringify({ foo: 3 })},
-        ${JSON.stringify([1, 2])}, default)
+      ON CONFLICT ("id") DO UPDATE SET "id" = "excluded"."id", "name" = "excluded"."name",
+        "type" = "excluded"."type", "email" = "excluded"."email", "config" = "excluded"."config",
+        "tags" = "excluded"."tags", "version" = "excluded"."version"
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"
+    `,
+    );
+  });
+
+  test('put_multi', async () => {
+    const sqls = put(
+      [
+        [
+          {
+            $put: true,
+            id: 'post22',
+            type: 'post',
+            name: 'hello',
+            email: 'world',
+            config: { foo: 3 },
+            tags: [1, 2],
+          },
+          'post22',
+        ],
+        [
+          {
+            $put: true,
+            id: 'post24',
+            type: 'post',
+            name: 'hi there',
+            email: 'mars',
+            config: { foo: 8 },
+            tags: [0, 9],
+          },
+          'post24',
+        ],
+      ],
+      options,
+    );
+    expectSql(
+      sqls[0],
+      sql`INSERT INTO "post" ("id", "name", "type", "email", "config", "tags", "version")
+      VALUES (${'post22'}, ${'hello'}, ${'post'}, ${'world'},
+      ${JSON.stringify({ foo: 3 })}, ${JSON.stringify([1, 2])}, default),
+      (${'post24'}, ${'hi there'}, ${'post'}, ${'mars'},
+      ${JSON.stringify({ foo: 8 })}, ${JSON.stringify([0, 9])}, default)
+      ON CONFLICT ("id") DO UPDATE SET "id" = "excluded"."id", "name" = "excluded"."name",
+        "type" = "excluded"."type", "email" = "excluded"."email", "config" = "excluded"."config",
+        "tags" = "excluded"."tags", "version" = "excluded"."version"
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"
     `,
     );
@@ -84,22 +133,27 @@ describe('byId', () => {
 
 describe('byArg', () => {
   test('put', async () => {
+    const sqls = put(
+      [
+        [
+          {
+            $put: true,
+            id: 'post22',
+            type: 'post',
+            name: 'hello',
+            email: 'world',
+          },
+          { email: 'world' },
+        ],
+      ],
+      options,
+    );
     expectSql(
-      put(
-        {
-          $put: true,
-          id: 'post22',
-          type: 'post',
-          name: 'hello',
-          email: 'world',
-        },
-        { email: 'world' },
-        options,
-      ),
-      sql`INSERT INTO "post" ("id", "type", "name", "email", "version")
-      VALUES (${'post22'}, ${'post'}, ${'hello'},${'world'}, default)
-      ON CONFLICT ("email") DO UPDATE SET ("id", "type", "name", "email", "version")
-        = (${'post22'}, ${'post'}, ${'hello'},${'world'},  default)
+      sqls[0],
+      sql`INSERT INTO "post" ("id", "name", "type", "email", "version")
+      VALUES (${'post22'}, ${'hello'}, ${'post'}, ${'world'}, default)
+      ON CONFLICT ("email") DO UPDATE SET "id" = "excluded"."id", "name" = "excluded"."name",
+      "type" = "excluded"."type", "email" = "excluded"."email", "version" = "excluded"."version"
       RETURNING *,
         ${'{"email":"world"}'}::jsonb AS "$key",
         current_timestamp AS "$ver",

@@ -1,24 +1,24 @@
+import {
+  cmp,
+  decodeArgs,
+  decodeGraph,
+  decodeQuery,
+  encodeGraph,
+  encodePath,
+  finalize,
+  isEmpty,
+  isPlainObject,
+  isRange,
+  merge,
+  mergeObject,
+  unwrap,
+  wrap,
+  wrapObject,
+} from '@graffy/common';
+import debug from 'debug';
 import pg from 'pg';
 import sqlTag from 'sql-template-tag';
-import {
-  isPlainObject,
-  decodeArgs,
-  wrap,
-  unwrap,
-  finalize,
-  merge,
-  wrapObject,
-  encodeGraph,
-  isEmpty,
-  isRange,
-  decodeGraph,
-  mergeObject,
-  decodeQuery,
-  cmp,
-  encodePath,
-} from '@graffy/common';
-import { selectByArgs, selectByIds, put, patch, del } from './sql/index.js';
-import debug from 'debug';
+import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
 const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
 
@@ -88,7 +88,7 @@ export default class Db {
     if (!res.rowCount) {
       throw Error(`pg.nothing_written ${sql.text} with ${sql.values}`);
     }
-    return res.rows[0];
+    return res.rows;
   }
 
   /*
@@ -183,11 +183,11 @@ export default class Db {
         selectByIds(Object.keys(idQueries), null, tableOptions),
         tableOptions,
       );
-      result.forEach((object) => {
+      for (const object of result) {
         const wrappedGraph = encodeGraph(wrapObject(object, rawPrefix));
         log('getByIds', wrappedGraph);
         merge(results, wrappedGraph);
-      });
+      }
     };
 
     const query = unwrap(rootQuery, prefix);
@@ -227,11 +227,17 @@ export default class Db {
 
     const change = unwrap(rootChange, prefix);
 
-    const sqls = change.map((node) => {
+    const puts = [];
+    const sqls = [];
+    for (const node of change) {
       const arg = decodeArgs(node);
 
       if (isRange(node)) {
-        if (cmp(node.key, node.end) === 0) return del(arg, tableOptions);
+        if (cmp(node.key, node.end) === 0) {
+          log('delete', node);
+          sqls.push(del(arg, tableOptions));
+          continue;
+        }
         throw Error('pg_write.write_range_unsupported');
       }
 
@@ -239,22 +245,27 @@ export default class Db {
       if (isPlainObject(arg)) {
         mergeObject(object, arg);
       } else {
-        object.id = arg;
+        object[tableOptions.idCol] = arg;
       }
 
       if (object.$put && object.$put !== true) {
         throw Error('pg_write.partial_put_unsupported');
       }
 
-      return object.$put
-        ? put(object, arg, tableOptions)
-        : patch(object, arg, tableOptions);
-    });
+      if (object.$put) {
+        puts.push([object, arg]);
+      } else {
+        sqls.push(patch(object, arg, tableOptions));
+      }
+    }
+
+    if (puts.length) sqls.push(...put(puts, tableOptions));
 
     const result = [];
     await Promise.all(
       sqls.map((sql) =>
         this.writeSql(sql, tableOptions).then((object) => {
+          log('returned_object_wrapped', wrapObject(object, rawPrefix));
           merge(result, encodeGraph(wrapObject(object, rawPrefix)));
         }),
       ),
