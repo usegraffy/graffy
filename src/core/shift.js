@@ -1,17 +1,17 @@
 import {
-  wrap,
-  unwrap,
-  remove,
-  merge,
-  mergeStreams,
+  decodeGraph,
+  decodeQuery,
+  encodeGraph,
   encodePath,
   encodeQuery,
-  encodeGraph,
-  decodeQuery,
-  decodeGraph,
-  unwrapObject,
-  wrapObject,
   finalize,
+  merge,
+  mergeStreams,
+  remove,
+  unwrap,
+  unwrapObject,
+  wrap,
+  wrapObject,
 } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 
@@ -32,13 +32,13 @@ export function wrapProvider(fn, decodedPath, isRead) {
     const remainingPayload = remove(payload, path) || [];
 
     // This next function is offered to the provider function.
-    async function shiftedNext(porcelainNextPayload) {
+    async function shiftedNext(porcelainNextPayload, nextOptions) {
       nextCalled = true;
       const nextPayload = encodePayload(
         wrapObject(porcelainNextPayload, decodedPath),
       );
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
-      const nextResult = await next(nextPayload);
+      const nextResult = await next(nextPayload, nextOptions);
 
       // Remember the next() results that are not returned to this provider.
       // These will be merged into the result later.
@@ -83,7 +83,10 @@ export function shiftGen(fn, path) {
     const remainingPayload = remove(payload, path) || [];
 
     // TODO: This should probably use makeStream and propagate returns.
-    const shiftedNext = async function* shiftedNextFn(unwrappedNextPayload) {
+    const shiftedNext = async function* shiftedNextFn(
+      unwrappedNextPayload,
+      nextOptions,
+    ) {
       nextCalled = true;
       const nextPayload = wrap(unwrappedNextPayload, path);
       if (remainingPayload.length) merge(nextPayload, remainingPayload);
@@ -94,7 +97,7 @@ export function shiftGen(fn, path) {
         pushRemaining = push;
       });
 
-      for await (const value of next(nextPayload)) {
+      for await (const value of next(nextPayload, nextOptions)) {
         const unwrappedValue = unwrap(value, path);
         const remainingValue = remove(value, path);
         if (remainingValue) pushRemaining(remainingValue);
