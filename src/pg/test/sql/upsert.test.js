@@ -55,6 +55,51 @@ describe('byId', () => {
     );
   });
 
+  test('put_multi', async () => {
+    const sqls = put(
+      [
+        [
+          {
+            $put: true,
+            id: 'post22',
+            type: 'post',
+            name: 'hello',
+            email: 'world',
+            config: { foo: 3 },
+            tags: [1, 2],
+          },
+          'post22',
+        ],
+        [
+          {
+            $put: true,
+            id: 'post24',
+            type: 'post',
+            name: 'hi there',
+            email: 'mars',
+            config: { foo: 8 },
+            tags: [0, 9],
+          },
+          'post24',
+        ],
+      ],
+      options,
+    );
+    expectSql(
+      sqls[0],
+      sql`INSERT INTO "post" ("id", "name", "type", "email", "config", "tags", "version")
+      VALUES (${'post22'}, ${'hello'}, ${'post'}, ${'world'},
+      ${JSON.stringify({ foo: 3 })}, ${JSON.stringify([1, 2])}, default),
+      (${'post24'}, ${'hi there'}, ${'post'}, ${'mars'},
+      ${JSON.stringify({ foo: 8 })}, ${JSON.stringify([0, 9])}, default)
+      ON CONFLICT ("id") DO UPDATE SET "id" = "excluded"."id", "name" = "excluded"."name",
+        "type" = "excluded"."type", "email" = "excluded"."email", "config" = "excluded"."config",
+        "tags" = "excluded"."tags", "version" = "excluded"."version"
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"
+    `,
+    );
+  });
+
   test('patch', async () => {
     expectSql(
       patch(
