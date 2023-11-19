@@ -10,7 +10,7 @@ export {
   splitRef,
 } from './path.js';
 
-export { default as makeId } from './id.js';
+export { id as makeId, encode as encodeId, decode as decodeId } from './id.js';
 export { default as decorate } from './decorate.js';
 export * from './pack.js';
 export * from './encodeTree.js';
