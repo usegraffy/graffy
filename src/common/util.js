@@ -1,3 +1,7 @@
+import debug from 'debug';
+
+const log = debug('graffy');
+
 export const MIN_KEY = new Uint8Array();
 export const MAX_KEY = new Uint8Array([0xff]);
 
@@ -99,20 +103,19 @@ const stringifyDescriptor = {
   },
 };
 
+const inspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
 export function addStringify(buffer) {
+  if (!log.enabled) return buffer;
+  if ('toJSON' in buffer || inspectSymbol in buffer) {
+    return buffer;
+  }
+  Object.defineProperties(buffer, {
+    toJSON: stringifyDescriptor,
+    toString: stringifyDescriptor,
+    [inspectSymbol]: stringifyDescriptor,
+  });
   return buffer;
-  // if (
-  //   'toJSON' in buffer ||
-  //   Symbol.for('nodejs.util.inspect.custom') in buffer
-  // ) {
-  //   return buffer;
-  // }
-  // Object.defineProperties(buffer, {
-  //   toJSON: stringifyDescriptor,
-  //   toString: stringifyDescriptor,
-  //   [Symbol.for('nodejs.util.inspect.custom')]: stringifyDescriptor,
-  // });
-  // return buffer;
 }
 
 addStringify(MIN_KEY);
