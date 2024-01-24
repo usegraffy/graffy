@@ -1,5 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import getTime from './getTime.js';
 
 export default function Visitor({ avatar, name, ts, pageviews }) {
@@ -12,7 +12,7 @@ export default function Visitor({ avatar, name, ts, pageviews }) {
       </div>
       <div className="Visitor-pages">
         {pageviews.map((url, i) => (
-          // rome-ignore lint: We don't have any IDs
+          // biome-ignore lint: We don't have any IDs
           <div key={i} className="Visitor-page">
             {url}
           </div>
