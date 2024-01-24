@@ -44,9 +44,8 @@ export function isPlainObject(arg) {
 export function clone(obj) {
   if (Array.isArray(obj)) {
     return obj.slice(0);
-  } else {
-    return { ...obj };
   }
+  return { ...obj };
 }
 
 export function cmp(a, b) {
