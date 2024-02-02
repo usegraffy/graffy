@@ -1,13 +1,13 @@
 import {
+  MIN_KEY,
   add,
-  isBranch,
-  findFirst,
-  splitRef,
-  decodeArgs,
   cmp,
+  decodeArgs,
   encodeArgs,
   encodeQuery,
-  MIN_KEY,
+  findFirst,
+  isBranch,
+  splitRef,
 } from '@graffy/common';
 
 /*

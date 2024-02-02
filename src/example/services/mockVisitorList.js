@@ -25,7 +25,7 @@ export default function (s) {
     ts -= Math.floor(1 + Math.random() * 10000);
   }
 
-  (async function () {
+  (async () => {
     while (true) {
       ts = Date.now();
       store.call('write', await simulate());
@@ -33,7 +33,7 @@ export default function (s) {
     }
   })();
 
-  (async function () {
+  (async () => {
     while (true) {
       const line =
         `${id - freeIds.size} users `.padStart(16) +

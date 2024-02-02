@@ -1,8 +1,8 @@
-import sql, { join } from 'sql-template-tag';
 import { isEmpty } from '@graffy/common';
+import sql, { join } from 'sql-template-tag';
 import { getFilterSql } from '../filter/index.js';
-import { getArgMeta, getAggMeta } from './getMeta';
 import { getJsonBuildTrusted, lookup } from './clauses.js';
+import { getAggMeta, getArgMeta } from './getMeta';
 
 /**
   Uses the args object (typically passed in the $key attribute)

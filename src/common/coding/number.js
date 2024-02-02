@@ -3,9 +3,9 @@
 */
 
 function TwosComplement(view) {
-  let lo = -view.getUint32(4) >>> 0;
+  const lo = -view.getUint32(4) >>> 0;
   const carry = lo ? 0 : -1;
-  let hi = (~view.getUint32(0) + carry) >>> 0;
+  const hi = (~view.getUint32(0) + carry) >>> 0;
 
   view.setUint32(0, hi);
   view.setUint32(4, lo);

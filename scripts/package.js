@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-import { mkdir, readdir } from 'fs/promises';
 import os from 'os';
+import { mkdir, readdir } from 'fs/promises';
+import pMap from 'p-map';
 import mRimraf from 'rimraf';
 import yargs from 'yargs';
-import pMap from 'p-map';
 
-import version from './version.js';
 import build from './build.js';
-import publish from './publish.js';
-import link from './link.js';
 import interlink from './interlink.js';
+import link from './link.js';
+import publish from './publish.js';
 import tag from './tag.js';
 import types, { terminateWorkers } from './types.js';
-import { src, dst } from './utils.js';
+import { dst, src } from './utils.js';
+import version from './version.js';
 
 const { sync: rimraf } = mRimraf;
 
@@ -34,7 +34,7 @@ function onUpdate(name, fileName) {
   if (!argv.notypes) types(name, fileName);
 }
 
-(async function () {
+(async () => {
   const ver = await version(argv._[0]);
   console.log(`INFO packaging version ${ver}`);
 

@@ -1,5 +1,5 @@
-import { WebSocketServer } from 'ws';
 import { pack, unpack } from '@graffy/common';
+import { WebSocketServer } from 'ws';
 
 import debug from 'debug';
 

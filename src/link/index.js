@@ -1,15 +1,15 @@
 import {
-  wrap,
-  unwrap,
-  finalize,
   add,
   encodePath,
+  finalize,
   pack,
   unpack,
+  unwrap,
+  wrap,
 } from '@graffy/common';
+import debug from 'debug';
 import linkGraph from './linkGraph.js';
 import prepQueryLinks from './prepQueryLinks.js';
-import debug from 'debug';
 
 const log = debug('graffy:link');
 

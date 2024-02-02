@@ -1,6 +1,6 @@
-import { encode, decode } from '../path.js';
-import { decode as decodeB64 } from '../base64.js';
 import { e } from '@graffy/testing/encoder.js';
+import { decode as decodeB64 } from '../base64.js';
+import { decode, encode } from '../path.js';
 // import { MAX_KEY, MIN_KEY } from '../../util.js';
 
 const binarr = decodeB64('0kKXNM7-0B04V-');

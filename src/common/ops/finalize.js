@@ -1,5 +1,5 @@
 import { MAX_KEY, MIN_KEY } from '../util.js';
-import { slice, merge, setVersion } from './index.js';
+import { merge, setVersion, slice } from './index.js';
 
 /**
  *

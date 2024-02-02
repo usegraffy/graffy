@@ -1,6 +1,6 @@
 import isEqual from 'lodash/isEqual.js';
-import { isEmpty } from './util.js';
 import { splitArgs } from './coding/index.js';
+import { isEmpty } from './util.js';
 
 export function mergeObject(base, change) {
   if (

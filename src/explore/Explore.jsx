@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
-import { Query, useStore } from '@graffy/react';
 import * as common from '@graffy/common';
+import { Query, useStore } from '@graffy/react';
+import React, { useCallback, useState } from 'react';
 
 function Result({ result, loading, error }) {
   return (

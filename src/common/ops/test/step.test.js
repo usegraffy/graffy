@@ -1,4 +1,4 @@
-import { keyBefore, keyAfter } from '../step.js';
+import { keyAfter, keyBefore } from '../step.js';
 
 const a = (...n) => new Uint8Array(n);
 

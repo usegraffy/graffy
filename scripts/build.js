@@ -1,8 +1,8 @@
-import { mkdir, readFile, writeFile } from 'fs/promises';
 import { builtinModules } from 'module';
-import { src, dst, ownPattern, read } from './utils.js';
-import { depVersions, peerDepVersions, use } from './deps.js';
+import { mkdir, readFile, writeFile } from 'fs/promises';
 import { build as viteBuild } from 'vite';
+import { depVersions, peerDepVersions, use } from './deps.js';
+import { dst, ownPattern, read, src } from './utils.js';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 

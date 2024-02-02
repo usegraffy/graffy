@@ -1,4 +1,4 @@
-import { remove, merge, encodePath } from '@graffy/common';
+import { encodePath, merge, remove } from '@graffy/common';
 import Db from './Db.js';
 
 /**

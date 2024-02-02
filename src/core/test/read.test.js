@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals';
-import Graffy from '../Graffy.js';
 import fill from '@graffy/fill';
 import { keyref, page, put, ref } from '@graffy/testing';
+import { jest } from '@jest/globals';
+import Graffy from '../Graffy.js';
 
 let g;
 beforeEach(() => {

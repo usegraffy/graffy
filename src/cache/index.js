@@ -1,9 +1,9 @@
 import {
-  merge,
-  slice,
-  mergeStreams,
-  makeWatcher,
   getKnown,
+  makeWatcher,
+  merge,
+  mergeStreams,
+  slice,
 } from '@graffy/common';
 import { mapStream } from '@graffy/stream';
 // import { debug } from '@graffy/testing';

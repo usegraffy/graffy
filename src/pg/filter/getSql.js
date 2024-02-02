@@ -1,6 +1,6 @@
 import sql, { join, raw } from 'sql-template-tag';
-import getAst from './getAst.js';
 import { cubeLiteralSql } from '../sql/clauses.js';
+import getAst from './getAst.js';
 
 const opSql = {
   $and: 'AND', // Not SQL as these are used as delimiters

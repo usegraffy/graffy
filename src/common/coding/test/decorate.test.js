@@ -1,15 +1,10 @@
+import { page } from '@graffy/testing';
 import { e } from '@graffy/testing/encoder.js';
+import { keyAfter, keyBefore } from '../../ops/step.js';
 import { MAX_KEY, MIN_KEY } from '../../util.js';
-import {
-  keyAfter as aft,
-  keyAfter,
-  keyBefore as bef,
-  keyBefore,
-} from '../../ops/step.js';
+import { decode } from '../base64.js';
 import decorate from '../decorate.js';
 import { encodeGraph } from '../encodeTree.js';
-import { decode } from '../base64.js';
-import { page } from '@graffy/testing';
 
 const ref = (ref, obj) => {
   Object.defineProperty(obj, '$ref', { value: ref });

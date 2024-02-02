@@ -9,7 +9,7 @@
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "format": "biome check --apply-suggested . && biome format --write .",
+    "format": "biome check --apply .",
     "lint": "biome ci .",
     "package": "./scripts/package.js",
     "start": "node src/example/server.js",

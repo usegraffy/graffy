@@ -1,8 +1,8 @@
 import { e } from '@graffy/testing/encoder.js';
-import { MAX_KEY, MIN_KEY } from '../../util.js';
-import { keyAfter as aft, keyBefore as bef } from '../step.js';
-import sieve from '../sieve.js';
 import { encodeGraph } from '../../coding/index.js';
+import { MAX_KEY, MIN_KEY } from '../../util.js';
+import sieve from '../sieve.js';
+import { keyAfter as aft, keyBefore as bef } from '../step.js';
 
 test('empty', () => {
   const g = [];

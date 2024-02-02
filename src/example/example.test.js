@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { fork } from 'child_process';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { jest } from '@jest/globals';
 import puppeteer from 'puppeteer';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -80,9 +80,9 @@ describe('integration', () => {
       // console.log('Waiting for visitor');
       await page.waitForSelector('.Visitor', { timeout: 2000 });
       expect((await page.$$('.Visitor')).length).toBe(12);
-      label = await (
-        await page.$('.CurrPage')
-      ).evaluate((el) => el.textContent);
+      label = await (await page.$('.CurrPage')).evaluate(
+        (el) => el.textContent,
+      );
       attempts++;
     } while (!label.includes('First') && attempts < 2);
     expect(label).toMatch(/First/);

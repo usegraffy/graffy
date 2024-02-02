@@ -1,7 +1,7 @@
-import { parentPort } from 'worker_threads';
-import ts from 'typescript';
-import { src, dst } from './utils.js';
 import { dirname } from 'path';
+import ts from 'typescript';
+import { parentPort } from 'worker_threads';
+import { dst, src } from './utils.js';
 
 parentPort.on('message', (message) => {
   const { name, fileName } = message;

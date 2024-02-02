@@ -1,7 +1,7 @@
 import { e } from '@graffy/testing/encoder.js';
 import { MAX_KEY, MIN_KEY } from '../../util.js';
-import { keyAfter as aft, keyBefore as bef } from '../step.js';
 import slice from '../slice.js';
+import { keyAfter as aft, keyBefore as bef } from '../step.js';
 
 describe('slice', () => {
   test('empty', () => {

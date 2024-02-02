@@ -1,5 +1,5 @@
 import { e } from '@graffy/testing/encoder.js';
-import { unwrap, remove } from '../path.js';
+import { remove, unwrap } from '../path.js';
 
 describe('unwrap', () => {
   test('root', () => {

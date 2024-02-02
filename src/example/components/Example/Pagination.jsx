@@ -1,5 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import getTime from './getTime.js';
 
 export default function Pagination({ range, count, onNext, onPrev }) {

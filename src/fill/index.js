@@ -1,6 +1,6 @@
 import { merge, slice } from '@graffy/common';
-import subscribe from './subscribe.js';
 import debug from 'debug';
+import subscribe from './subscribe.js';
 
 const log = debug('graffy:fill');
 

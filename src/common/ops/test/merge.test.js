@@ -1,7 +1,7 @@
 import { e } from '@graffy/testing/encoder.js';
 import { MAX_KEY, MIN_KEY } from '../../util.js';
 import merge from '../merge.js';
-import { keyBefore as bef, keyAfter as aft } from '../step.js';
+import { keyAfter as aft, keyBefore as bef } from '../step.js';
 
 describe('merge', () => {
   test('stayEmpty', () => {

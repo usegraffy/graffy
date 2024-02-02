@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals';
-import Graffy from '@graffy/core';
 import { pack, unpack } from '@graffy/common';
+import Graffy from '@graffy/core';
 import { e } from '@graffy/testing/encoder.js';
+import { jest } from '@jest/globals';
 
 jest.unstable_mockModule('./Socket', () => ({
   default: jest.fn(() => ({
@@ -16,7 +16,7 @@ const MockSocket = (await import('./Socket.js')).default;
 
 describe('wsClient', () => {
   // @ts-ignore
-  globalThis.WebSocket = function () {};
+  globalThis.WebSocket = () => {};
 
   let store;
 

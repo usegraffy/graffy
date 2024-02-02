@@ -1,7 +1,7 @@
 import sql, { join, raw, empty } from 'sql-template-tag';
+import { getSelectCols } from './clauses.js';
 import getArgSql from './getArgSql.js';
 import { getIdMeta } from './getMeta.js';
-import { getSelectCols } from './clauses.js';
 
 const MAX_LIMIT = 4096;
 

@@ -1,20 +1,20 @@
 import {
-  decorate,
   decodeGraph,
   decodeQuery,
-  wrapObject,
-  unwrapObject,
+  decorate,
   encodeGraph,
+  encodePath,
   encodeQuery,
   finalize,
-  wrap,
   unwrap,
-  encodePath,
+  unwrapObject,
+  wrap,
+  wrapObject,
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';
-import { validateCall, validateOn } from './validate.js';
-import { wrapProvider, shiftGen } from './shift.js';
 import Core from './Core.js';
+import { shiftGen, wrapProvider } from './shift.js';
+import { validateCall, validateOn } from './validate.js';
 
 export default class Graffy {
   constructor(path = [], core = new Core()) {
@@ -46,9 +46,9 @@ export default class Graffy {
             // TODO: Implement this using mergeStreams
             throw Error(`porcelain.watch_next_unsupported: ${path}`);
           });
-          (async function () {
+          (async () => {
             try {
-              let firstValue = (await subscription.next()).value;
+              const firstValue = (await subscription.next()).value;
               push(firstValue && finalize(encodeGraph(firstValue), query));
               for await (const value of subscription) {
                 push(value && encodeGraph(value));

@@ -1,4 +1,4 @@
-import { encode, decode } from '../string.js';
+import { decode, encode } from '../string.js';
 
 function tryString(str) {
   const enc = encode(str);
