@@ -157,6 +157,7 @@ function getDefQuery(def, vars, version) {
       // We do this to ensure that range queries are made correctly.
       let porcelainQuery = { $key: path.pop() };
       let $key;
+      // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
       while (($key = path.pop())) {
         porcelainQuery = { $key, $chi: [porcelainQuery] };
       }

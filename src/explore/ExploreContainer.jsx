@@ -21,7 +21,7 @@ export default function ExploreContainer({
     setStore(store);
     window.store = store;
     window.graffy = common;
-  }, [baseUrl]);
+  }, [baseUrl, getOptions]);
 
   return store ? (
     <GraffyProvider store={store}>

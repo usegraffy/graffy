@@ -43,6 +43,7 @@ export default function Explore(options) {
   const [watching, setWatching] = useState(null);
   const store = useStore();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const onInputEnd = useCallback(
     (event) => {
       try {
@@ -54,6 +55,7 @@ export default function Explore(options) {
     [setInput, setError],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const onInputStart = useCallback(() => setError(null), [setError]);
 
   const onReadClick = async () => {
