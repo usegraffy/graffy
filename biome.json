@@ -9,6 +9,15 @@
       "recommended": true,
       "performance": {
         "noDelete": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
+      },
+      "a11y": {
+        "all": false
+      },
+      "style": {
+        "noParameterAssign": "off"
       }
     }
   },
