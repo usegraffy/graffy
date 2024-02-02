@@ -14,16 +14,17 @@ string | array, any, object -> path, payload, options
 export function validateCall(...args) {
   if (args.length === 1) {
     return [[], args[0], {}];
-  } else if (args.length === 2) {
+  }
+  if (args.length === 2) {
     if (isPlainObject(args[0])) {
       if (!isPlainObject(args[1])) {
         throw Error(`validateCall.invalid_options: ${JSON.stringify(args[1])}`);
       }
       return [[], args[0], args[1]];
-    } else {
-      return [splitPath(args[0]), args[1], {}];
     }
-  } else if (args.length === 3) {
+    return [splitPath(args[0]), args[1], {}];
+  }
+  if (args.length === 3) {
     if (!isPlainObject(args[2])) {
       throw Error(`validateCall.invalid_options: ${JSON.stringify(args[1])}`);
     }
@@ -39,7 +40,8 @@ export function validateOn(...args) {
       throw Error(`validateOn.invalid_handler: ${JSON.stringify(args[0])}`);
     }
     return [[], args[0]];
-  } else if (args.length === 2) {
+  }
+  if (args.length === 2) {
     if (typeof args[1] !== 'function') {
       throw Error(`validateOn.invalid_handler: ${JSON.stringify(args[1])}`);
     }

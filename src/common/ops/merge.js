@@ -55,11 +55,10 @@ export function insertNode(current, change, start = 0) {
     return isRange(node)
       ? insertNodeIntoRange(current, index, change)
       : updateNode(current, index, change);
-  } else {
-    // This change does not overlap with any existing knowledge. Insert it
-    current.splice(index, 0, change);
-    return index + 1;
   }
+  // This change does not overlap with any existing knowledge. Insert it
+  current.splice(index, 0, change);
+  return index + 1;
 }
 
 function insertNodeIntoRange(current, index, change) {
@@ -105,10 +104,9 @@ function getNewer(node, base) {
     const children = [{ key: MIN_KEY, end: MAX_KEY, version }];
     merge(children, node.children);
     return children.length === 1 ? null : { ...node, children };
-  } else {
-    // assertVersion(node, version);
-    return node.version >= version ? node : null;
   }
+  // assertVersion(node, version);
+  return node.version >= version ? node : null;
 }
 
 // function assertVersion(node, version) {

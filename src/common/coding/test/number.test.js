@@ -24,6 +24,6 @@ describe('dencorder', () => {
 
   test('nan', () => {
     const v = NaN;
-    expect(isNaN(decode(encode(v)))).toBe(true);
+    expect(Number.isNaN(decode(encode(v)))).toBe(true);
   });
 });

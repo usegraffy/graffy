@@ -24,7 +24,7 @@ export default function server(store, { auth } = {}) {
       const qParam = parsed.query.q && String(parsed.query.q);
       const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
       try {
-        if (req.headers['accept'] === 'text/event-stream') {
+        if (req.headers.accept === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');
 
           const keepAlive = setInterval(() => {

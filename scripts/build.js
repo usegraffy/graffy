@@ -92,11 +92,10 @@ export default async function build(name, version, watch, onUpdate) {
 
     console.log(`INFO [${name}] built, watching for changes...`);
     return true;
-  } else {
-    writePackageJson(imports);
-    console.log(`INFO [${name}] built`);
-    return true;
   }
+  writePackageJson(imports);
+  console.log(`INFO [${name}] built`);
+  return true;
 
   async function writePackageJson(imports) {
     let dependencies;
