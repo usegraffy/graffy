@@ -27,11 +27,11 @@ export const lookup = (prop, options) => {
   const { types } = options.schema;
   if (types[prefix] === 'jsonb') {
     return sql`"${raw(prefix)}" #> ${suffix}`;
-  } else if (types[prefix] === 'cube' && suffix.length === 1) {
-    return sql`"${raw(prefix)}" ~> ${parseInt(suffix[0])}`;
-  } else {
-    throw Error(`pg.cannot_lookup ${prop}`);
   }
+  if (types[prefix] === 'cube' && suffix.length === 1) {
+    return sql`"${raw(prefix)}" ~> ${parseInt(suffix[0])}`;
+  }
+  throw Error(`pg.cannot_lookup ${prop}`);
 };
 
 export const lookupNumeric = (prop) => {

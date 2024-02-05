@@ -1,13 +1,13 @@
+import Graffy from '@graffy/core';
+import { keyref, page, put, ref } from '@graffy/testing';
 import { jest } from '@jest/globals';
 import { v4 as uuid } from 'uuid';
-import Graffy from '@graffy/core';
-import { put, ref, keyref, page } from '@graffy/testing';
 import { pg } from '../index.js';
 import {
+  getPool,
+  resetTables,
   setupPgServer,
   teardownPgServer,
-  resetTables,
-  getPool,
 } from './setup.js';
 
 const uuidV4Regex =
@@ -964,7 +964,7 @@ describe('pg_e2e', () => {
   });
 
   test('update_single_child_null', async () => {
-    let id = uuid();
+    const id = uuid();
     await store.write('users', [
       {
         $key: id,

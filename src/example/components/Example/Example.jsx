@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
 import { useQuery } from '@graffy/react';
+import React, { useState } from 'react';
 
-import VisitorList from './VisitorList.jsx';
 import Pagination from './Pagination.jsx';
 import Spinner from './Spinner.jsx';
+import VisitorList from './VisitorList.jsx';
 // import Query from './Query.jsx';
 
 const PAGE_SIZE = 12;
@@ -36,7 +36,7 @@ export default function Example() {
   }
 
   // Extract page info, this is used in several places
-  let { $next, $prev } = data.visitors;
+  const { $next, $prev } = data.visitors;
 
   const visitors = data.visitors;
 

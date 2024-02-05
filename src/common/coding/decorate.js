@@ -1,24 +1,24 @@
-import { decodeGraph } from './decodeTree.js';
+import { findFirst, isRange } from '../node/index.js';
+import { IS_VAL, getNodeValue, unwrap } from '../ops/index.js';
 import {
-  encode as encodePath,
-  decode as decodePath,
-  splitRef,
-} from './path.js';
-import {
-  splitArgs,
-  encode as encodeArgs,
-  decode as decodeArgs,
-} from './args.js';
-import { unwrap, getNodeValue, IS_VAL } from '../ops/index.js';
-import {
+  MIN_KEY,
+  cmp,
   isDef,
-  isPlainObject,
   isEmpty,
   isMinKey,
-  cmp,
-  MIN_KEY,
+  isPlainObject,
 } from '../util.js';
-import { isRange, findFirst } from '../node/index.js';
+import {
+  decode as decodeArgs,
+  encode as encodeArgs,
+  splitArgs,
+} from './args.js';
+import { decodeGraph } from './decodeTree.js';
+import {
+  decode as decodePath,
+  encode as encodePath,
+  splitRef,
+} from './path.js';
 
 const REF = Symbol();
 const PRE = Symbol();
@@ -204,14 +204,14 @@ function addPageMeta(graph, args) {
     }
   }
 
-  // rome-ignore format: ternary chain
+  // biome-ignore format: ternary chain
   const $prev =
     isDef($page.$after) ? { ...filter, $last: count, $until: $page.$after } :
     isDef($page.$since) ? { ...filter, $last: count, $before: $page.$since } :
     null;
 
-  // rome-ignore format: ternary chain
-  let $next =
+  // biome-ignore format: ternary chain
+  const $next =
     isDef($page.$before) ? { ...filter, $first: count, $since: $page.$before } :
     isDef($page.$until) ? { ...filter, $first: count, $after: $page.$until } :
     null;

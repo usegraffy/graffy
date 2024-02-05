@@ -2,14 +2,14 @@
  * @jest-environment ../scripts/jestDomEnvironment.cjs
  */
 
-import { jest } from '@jest/globals';
-import React from 'react';
-import { act, renderHook, waitFor } from '@testing-library/react';
-import Graffy from '@graffy/core';
 import { encodeQuery } from '@graffy/common';
+import Graffy from '@graffy/core';
 import { mockBackend } from '@graffy/testing';
-import { useQuery } from './index.js';
+import { jest } from '@jest/globals';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
 import { GraffyProvider } from './GraffyContext.jsx';
+import { useQuery } from './index.js';
 
 describe('useQuery', () => {
   let g;

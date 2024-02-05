@@ -1,9 +1,9 @@
-import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
+import { jest } from '@jest/globals';
 import sql from 'sql-template-tag';
 import expectSql from '../expectSql';
 
-let mockQuery = jest.fn();
+const mockQuery = jest.fn();
 
 jest.unstable_mockModule('pg', () => ({
   default: {

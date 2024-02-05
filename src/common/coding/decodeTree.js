@@ -1,8 +1,8 @@
+import { isBranch, isLink, isPrefix, isRange } from '../node/index.js';
+import { keyAfter } from '../ops/index.js';
+import { clone, cmp, isDef, isEmpty, isMaxKey, isMinKey } from '../util.js';
 import { decode as decodeArgs, splitArgs } from './args.js';
 import { decode as decodePath } from './path.js';
-import { isEmpty, isDef, isMinKey, isMaxKey, cmp, clone } from '../util.js';
-import { keyAfter } from '../ops/index.js';
-import { isRange, isBranch, isPrefix, isLink } from '../node/index.js';
 
 const PRE_CHI_PUT = Symbol('PREFIX_CHILDREN_$PUT');
 
@@ -93,7 +93,7 @@ function decode(nodes = [], { isGraph } = {}) {
             $val = clone($val);
             Object.defineProperty($val, '$val', { value: true });
           }
-          // rome-ignore format: tertnary chain
+          // biome-ignore format: tertnary chain
           collection[$key] = (
             isDef($val) ? $val :
               !isEmpty(item) || item.$ref || item.$put ? item :

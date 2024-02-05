@@ -1,6 +1,6 @@
 import Graffy from '@graffy/core';
-import Memory from './index.js';
 import { page } from '@graffy/testing';
+import Memory from './index.js';
 
 describe('final', () => {
   let store;

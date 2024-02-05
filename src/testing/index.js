@@ -37,12 +37,12 @@ export const page = ($page, size, obj = []) => {
   obj.$next = $before
     ? { ...filter, $last: size, $since: $before }
     : $until
-    ? { ...filter, $first: size, $after: $until }
-    : null;
+      ? { ...filter, $first: size, $after: $until }
+      : null;
   obj.$prev = $after
     ? { ...filter, $last: size, $until: $after }
     : $since
-    ? { ...filter, $last: size, $before: $since }
-    : null;
+      ? { ...filter, $last: size, $before: $since }
+      : null;
   return obj;
 };

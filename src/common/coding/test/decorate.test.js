@@ -1,15 +1,10 @@
+import { page } from '@graffy/testing';
 import { e } from '@graffy/testing/encoder.js';
+import { keyAfter as aft, keyBefore as bef } from '../../ops/step.js';
 import { MAX_KEY, MIN_KEY } from '../../util.js';
-import {
-  keyAfter as aft,
-  keyAfter,
-  keyBefore as bef,
-  keyBefore,
-} from '../../ops/step.js';
+import { decode } from '../base64.js';
 import decorate from '../decorate.js';
 import { encodeGraph } from '../encodeTree.js';
-import { decode } from '../base64.js';
-import { page } from '@graffy/testing';
 
 const ref = (ref, obj) => {
   Object.defineProperty(obj, '$ref', { value: ref });
@@ -89,9 +84,9 @@ describe('pagination', () => {
           key: e.baz,
           version: 0,
           children: [
-            { key: MIN_KEY, end: keyBefore(decode('0VKW')), version: 0 },
+            { key: MIN_KEY, end: bef(decode('0VKW')), version: 0 },
             { key: decode('0VKW'), version: 0, path: [e.foo] },
-            { key: keyAfter(decode('0VKW')), end: MAX_KEY, version: 0 },
+            { key: aft(decode('0VKW')), end: MAX_KEY, version: 0 },
           ],
         },
         { key: e.foo, version: 0, value: 42 },
@@ -137,7 +132,7 @@ test('alias', () => {
             children: [
               {
                 key: MIN_KEY,
-                end: keyBefore(decode('0Azk')),
+                end: bef(decode('0Azk')),
                 version: 1628955868126,
               },
               {
@@ -146,8 +141,8 @@ test('alias', () => {
                 children: [{ key: e.x, version: 1628955868126, value: 100 }],
               },
               {
-                key: keyAfter(decode('0Azk')),
-                end: keyBefore(decode('0B-')),
+                key: aft(decode('0Azk')),
+                end: bef(decode('0B-')),
                 version: 1628955868126,
               },
               {

@@ -1,10 +1,10 @@
 import {
-  merge,
-  slice,
-  setVersion,
-  makeWatcher,
-  MIN_KEY,
   MAX_KEY,
+  MIN_KEY,
+  makeWatcher,
+  merge,
+  setVersion,
+  slice,
 } from '@graffy/common';
 
 export default function () {

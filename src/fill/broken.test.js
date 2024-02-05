@@ -1,5 +1,5 @@
-import Graffy from '@graffy/core';
 import { encodeGraph } from '@graffy/common';
+import Graffy from '@graffy/core';
 import { mockBackend } from '@graffy/testing';
 import fill from './index.js';
 

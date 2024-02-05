@@ -1,4 +1,4 @@
-import { merge, slice, sieve, add, finalize } from '@graffy/common';
+import { add, finalize, merge, sieve, slice } from '@graffy/common';
 import { makeStream } from '@graffy/stream';
 import debug from 'debug';
 
@@ -9,7 +9,7 @@ export default function subscribe(store, originalQuery, { raw }) {
   let push;
   let end;
   let upstream;
-  let query = [];
+  const query = [];
   let data = empty();
   let payload = [];
 

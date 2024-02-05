@@ -28,6 +28,7 @@ export default function makeStream(init, options = {}) {
   const end = (error) => {
     complete = error ? Promise.reject(error) : normalCompletion;
     let resolve;
+    // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
     while ((resolve = requests.shift())) resolve(complete);
   };
 

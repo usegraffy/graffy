@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
-import { Query, useStore } from '@graffy/react';
 import * as common from '@graffy/common';
+import { Query, useStore } from '@graffy/react';
+import React, { useCallback, useState } from 'react';
 
 function Result({ result, loading, error }) {
   return (
@@ -43,6 +43,7 @@ export default function Explore(options) {
   const [watching, setWatching] = useState(null);
   const store = useStore();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const onInputEnd = useCallback(
     (event) => {
       try {
@@ -54,6 +55,7 @@ export default function Explore(options) {
     [setInput, setError],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const onInputStart = useCallback(() => setError(null), [setError]);
 
   const onReadClick = async () => {

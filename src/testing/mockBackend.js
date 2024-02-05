@@ -1,4 +1,4 @@
-import { merge, makeWatcher, slice } from '@graffy/common';
+import { makeWatcher, merge, slice } from '@graffy/common';
 // import debug from 'debug';
 
 // const log = debug('graffy:mockBackend');

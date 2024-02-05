@@ -1,16 +1,16 @@
 import {
-  isBranch,
-  isRange,
-  isLink,
-  isOlder,
   findFirst,
   findLast,
+  isBranch,
+  isLink,
+  isOlder,
+  isRange,
 } from '../node/index.js';
-import { keyAfter, keyBefore } from './step.js';
-import { wrap } from './path.js';
-import merge from './merge.js';
+import { MAX_KEY, MIN_KEY, cmp, isMinKey } from '../util.js';
 import add from './add.js';
-import { cmp, isMinKey, MAX_KEY, MIN_KEY } from '../util.js';
+import merge from './merge.js';
+import { wrap } from './path.js';
+import { keyAfter, keyBefore } from './step.js';
 
 class Result {
   constructor(root) {
@@ -36,7 +36,7 @@ class Result {
 }
 
 export default function slice(graph, query, root) {
-  let result = new Result(root);
+  const result = new Result(root);
   let currentQuery = query;
   while (currentQuery) {
     let index = 0;

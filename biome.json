@@ -1,13 +1,24 @@
 {
   "$schema": "./node_modules/rome/configuration_schema.json",
   "files": {
-    "ignore": ["dist","ref","pages"]
+    "ignore": ["dist", "ref", "pages", ".vscode"]
   },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
-      "performance": { "noDelete": "off" }
+      "performance": {
+        "noDelete": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
+      },
+      "a11y": {
+        "all": false
+      },
+      "style": {
+        "noParameterAssign": "off"
+      }
     }
   },
   "formatter": {

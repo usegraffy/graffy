@@ -1,6 +1,6 @@
 import isEqual from 'lodash/isEqual.js';
-import { isEmpty } from './util.js';
 import { splitArgs } from './coding/index.js';
+import { isEmpty } from './util.js';
 
 export function mergeObject(base, change) {
   if (
@@ -77,12 +77,11 @@ export function unwrapObject(object, path) {
       if (page && !page.$cursor) {
         // TODO: Return a slice of this array
         return object;
-      } else {
-        const target = page?.$cursor
-          ? { ...filter, $cursor: page.$cursor }
-          : filter;
-        object = object.find(({ $key }) => isEqual($key, target));
       }
+      const target = page?.$cursor
+        ? { ...filter, $cursor: page.$cursor }
+        : filter;
+      object = object.find(({ $key }) => isEqual($key, target));
     }
   }
   return object;

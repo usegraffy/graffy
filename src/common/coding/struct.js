@@ -1,6 +1,6 @@
-import { encode as encodeString, decode as decodeString } from './string.js';
-import { encode as encodeNumber, decode as decodeNumber } from './number.js';
 import { addStringify } from '../util.js';
+import { decode as decodeNumber, encode as encodeNumber } from './number.js';
+import { decode as decodeString, encode as encodeString } from './string.js';
 
 /*
   Sortable encoding of JSON objects for Graffy keys.
@@ -102,7 +102,7 @@ export function decode(buffer) {
   const stack = [[]];
 
   function readString() {
-    let start = i;
+    const start = i;
     while (i < buffer.length && buffer[i] !== END) i++;
     const str = decodeString(buffer.subarray(start, i));
     i++;

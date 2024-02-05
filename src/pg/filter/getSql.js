@@ -1,6 +1,6 @@
 import sql, { join, raw } from 'sql-template-tag';
-import getAst from './getAst.js';
 import { cubeLiteralSql } from '../sql/clauses.js';
+import getAst from './getAst.js';
 
 const opSql = {
   $and: 'AND', // Not SQL as these are used as delimiters
@@ -67,7 +67,8 @@ function getNodeSql(ast, options) {
       ast[1].map((node) => getNodeSql(node, options)),
       `) ${opSql[op]} (`,
     )})`;
-  } else if (op === '$not') {
+  }
+  if (op === '$not') {
     // Handle unary operators
     return sql`${opSql[op]} (${getNodeSql(ast[1], options)})`;
   }
@@ -99,10 +100,9 @@ function getNodeSql(ast, options) {
       : [sql`"${raw(prefix)}"`, sql`"${raw(prefix)}" #>> '{}'`];
 
     return getBinarySql(lhs, 'jsonb', op, ast[2], textLhs);
-  } else {
-    if (suffix.length) throw Error(`pg.lookup_not_jsonb ${prefix}`);
-    return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
   }
+  if (suffix.length) throw Error(`pg.lookup_not_jsonb ${prefix}`);
+  return getBinarySql(sql`"${raw(prefix)}"`, types[prefix], op, ast[2]);
 }
 
 export default function getSql(filter, options) {

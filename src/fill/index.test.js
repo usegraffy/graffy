@@ -1,8 +1,8 @@
+import { encodeGraph, encodeQuery } from '@graffy/common';
+import Graffy from '@graffy/core';
+import { mockBackend } from '@graffy/testing';
 // index.test.js
 import { e } from '@graffy/testing/encoder.js';
-import Graffy from '@graffy/core';
-import { encodeGraph, encodeQuery } from '@graffy/common';
-import { mockBackend } from '@graffy/testing';
 import live from './index.js';
 
 let g;

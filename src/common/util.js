@@ -1,3 +1,7 @@
+import debug from 'debug';
+
+const isDebugMode = debug('graffy*').enabled;
+
 export const MIN_KEY = new Uint8Array();
 export const MAX_KEY = new Uint8Array([0xff]);
 
@@ -40,9 +44,8 @@ export function isPlainObject(arg) {
 export function clone(obj) {
   if (Array.isArray(obj)) {
     return obj.slice(0);
-  } else {
-    return { ...obj };
   }
+  return { ...obj };
 }
 
 export function cmp(a, b) {
@@ -77,40 +80,34 @@ export function find(items, compare, first = 0, last = items.length) {
   return currentFirst;
 }
 
-const stringifyDescriptor = {
-  value: function () {
-    if (this?.length === 0) return '\u00b7';
-    let str = '';
-    let bull = false;
+function stringify() {
+  if (this?.length === 0) return '\u00b7';
+  let str = '';
+  let bull = false;
 
-    this?.forEach?.((value, i) => {
-      if (value >= 32 && value <= 126) {
-        str += String.fromCharCode(value);
-        bull = true;
-      } else {
-        str +=
-          (bull ? '\u00b7' : '') +
-          `0${value.toString(16)}`.slice(-2) +
-          (i < this.length - 1 ? '\u00b7' : '');
-        bull = false;
-      }
-    });
-    return str;
-  },
-};
+  this?.forEach?.((value, i) => {
+    if (value >= 32 && value <= 126) {
+      str += String.fromCharCode(value);
+      bull = true;
+    } else {
+      str +=
+        (bull ? '\u00b7' : '') +
+        `0${value.toString(16)}`.slice(-2) +
+        (i < this.length - 1 ? '\u00b7' : '');
+      bull = false;
+    }
+  });
+  return str;
+}
+
+const inspectSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 export function addStringify(buffer) {
-  if (
-    'toJSON' in buffer ||
-    Symbol.for('nodejs.util.inspect.custom') in buffer
-  ) {
-    return buffer;
-  }
-  Object.defineProperties(buffer, {
-    toJSON: stringifyDescriptor,
-    toString: stringifyDescriptor,
-    [Symbol.for('nodejs.util.inspect.custom')]: stringifyDescriptor,
-  });
+  if (!isDebugMode) return buffer;
+  if ('toJSON' in buffer || inspectSymbol in buffer) return buffer;
+  buffer.toJSON = stringify;
+  buffer.toString = stringify;
+  buffer[inspectSymbol] = stringify;
   return buffer;
 }
 

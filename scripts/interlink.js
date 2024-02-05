@@ -1,4 +1,4 @@
-import { yarn, ownPattern, read } from './utils.js';
+import { ownPattern, read, yarn } from './utils.js';
 
 export default async function link(name) {
   try {

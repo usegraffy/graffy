@@ -1,4 +1,4 @@
-import { findFirst, isRange, isBranch } from '../node/index.js';
+import { findFirst, isBranch, isRange } from '../node/index.js';
 import { cmp } from '../util.js';
 
 export const IS_VAL = Symbol('IS_VAL');

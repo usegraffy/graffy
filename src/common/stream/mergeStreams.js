@@ -13,7 +13,7 @@ export default async function* mergeStreams(...streams) {
       if (typeof value !== 'undefined') yield value;
     }
   } else {
-    let merged = [];
+    const merged = [];
     for (const value of firstValues) merge(merged, value);
     yield merged;
   }

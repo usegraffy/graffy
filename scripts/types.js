@@ -1,5 +1,5 @@
-import { root } from './utils.js';
 import { Worker } from 'worker_threads';
+import { root } from './utils.js';
 
 const workerPool = [];
 

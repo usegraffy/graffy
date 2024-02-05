@@ -1,5 +1,5 @@
-import { isBranch, isRange, findFirst, findLast } from '../node/index.js';
-import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
+import { findFirst, findLast, isBranch, isRange } from '../node/index.js';
+import { MAX_KEY, MIN_KEY, cmp } from '../util.js';
 import { keyAfter, keyBefore } from './step.js';
 
 export default function merge(current, changes) {
@@ -55,11 +55,10 @@ export function insertNode(current, change, start = 0) {
     return isRange(node)
       ? insertNodeIntoRange(current, index, change)
       : updateNode(current, index, change);
-  } else {
-    // This change does not overlap with any existing knowledge. Insert it
-    current.splice(index, 0, change);
-    return index + 1;
   }
+  // This change does not overlap with any existing knowledge. Insert it
+  current.splice(index, 0, change);
+  return index + 1;
 }
 
 function insertNodeIntoRange(current, index, change) {
@@ -105,10 +104,9 @@ function getNewer(node, base) {
     const children = [{ key: MIN_KEY, end: MAX_KEY, version }];
     merge(children, node.children);
     return children.length === 1 ? null : { ...node, children };
-  } else {
-    // assertVersion(node, version);
-    return node.version >= version ? node : null;
   }
+  // assertVersion(node, version);
+  return node.version >= version ? node : null;
 }
 
 // function assertVersion(node, version) {

@@ -1,8 +1,8 @@
+import { splitArgs } from '@graffy/common';
+import fill from '@graffy/fill';
+import { page, ref } from '@graffy/testing';
 import { jest } from '@jest/globals';
 import Graffy from '../Graffy.js';
-import fill from '@graffy/fill';
-import { splitArgs } from '@graffy/common';
-import { page, ref } from '@graffy/testing';
 
 describe('ref', () => {
   describe('author', () => {
@@ -82,7 +82,7 @@ describe('ref', () => {
         return res;
       });
 
-      postProvider = jest.fn((/** @type {array} */query) => {
+      postProvider = jest.fn((/** @type {array} */ query) => {
         const res = [];
         for (const { $key } of query) {
           const [_, filter] = splitArgs($key);

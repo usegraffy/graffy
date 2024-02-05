@@ -1,8 +1,8 @@
-import { mkdir, readFile, writeFile } from 'fs/promises';
 import { builtinModules } from 'module';
-import { src, dst, ownPattern, read } from './utils.js';
-import { depVersions, peerDepVersions, use } from './deps.js';
+import { mkdir, readFile, writeFile } from 'fs/promises';
 import { build as viteBuild } from 'vite';
+import { depVersions, peerDepVersions, use } from './deps.js';
+import { dst, ownPattern, read, src } from './utils.js';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 
@@ -92,11 +92,10 @@ export default async function build(name, version, watch, onUpdate) {
 
     console.log(`INFO [${name}] built, watching for changes...`);
     return true;
-  } else {
-    writePackageJson(imports);
-    console.log(`INFO [${name}] built`);
-    return true;
   }
+  writePackageJson(imports);
+  console.log(`INFO [${name}] built`);
+  return true;
 
   async function writePackageJson(imports) {
     let dependencies;

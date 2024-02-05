@@ -1,5 +1,5 @@
-import { isBranch, isRange, findFirst, findLast } from '../node/index.js';
-import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
+import { findFirst, findLast, isBranch, isRange } from '../node/index.js';
+import { MAX_KEY, MIN_KEY, cmp } from '../util.js';
 import { keyAfter, keyBefore } from './step.js';
 
 export default function sieve(current, changes, result = []) {
@@ -111,11 +111,10 @@ export function insertNode(current, change, result, start = 0) {
     return isRange(node)
       ? insertNodeIntoRange(current, index, change, result)
       : updateNode(current, index, change, result);
-  } else {
-    // This change does not overlap with any existing knowledge. Skip it
-    // current.splice(index, 0, change);
-    return index;
   }
+  // This change does not overlap with any existing knowledge. Skip it
+  // current.splice(index, 0, change);
+  return index;
 }
 
 function insertNodeIntoRange(current, index, change, result) {
@@ -186,10 +185,9 @@ function getNewerNode(node, base) {
     return children.length === 1 && children[0] === emptyNode
       ? null
       : { ...node, children };
-  } else {
-    // assertVersion(node, version);
-    return node.version >= base.version ? node : null;
   }
+  // assertVersion(node, version);
+  return node.version >= base.version ? node : null;
 }
 
 function getNewerChange(node, base) {
@@ -198,10 +196,9 @@ function getNewerChange(node, base) {
       getNewerChange(child, base),
     );
     return children.length && { ...node, children };
-  } else {
-    // assertVersion(node, version);
-    return node.version >= base.version ? node : null;
   }
+  // assertVersion(node, version);
+  return node.version >= base.version ? node : null;
 }
 
 // function assertVersion(node, version) {

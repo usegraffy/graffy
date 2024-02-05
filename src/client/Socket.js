@@ -101,7 +101,7 @@ export default function Socket(
   function maybeConnect() {
     const connDelay =
       lastAttempt +
-      Math.min(MAX_DELAY, MIN_DELAY * Math.pow(DELAY_GROWTH, attempts)) -
+      Math.min(MAX_DELAY, MIN_DELAY * DELAY_GROWTH ** attempts) -
       Date.now();
 
     log('Will reconnect in', connDelay, 'ms');

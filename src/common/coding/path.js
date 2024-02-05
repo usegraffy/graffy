@@ -1,7 +1,7 @@
-import { isPlainObject, MIN_KEY } from '../util.js';
+import { MIN_KEY, isPlainObject } from '../util.js';
 import {
-  encode as encodeArgs,
   decode as decodeArgs,
+  encode as encodeArgs,
   splitArgs,
 } from './args.js';
 

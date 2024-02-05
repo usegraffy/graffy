@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import GraffyClient from '@graffy/client';
+import * as common from '@graffy/common';
 import Graffy from '@graffy/core';
 import GraffyFill from '@graffy/fill';
-import GraffyClient from '@graffy/client';
 import { GraffyProvider } from '@graffy/react';
-import * as common from '@graffy/common';
+import React, { useState, useEffect } from 'react';
 
 import Explore from './Explore.jsx';
 
@@ -21,7 +21,7 @@ export default function ExploreContainer({
     setStore(store);
     window.store = store;
     window.graffy = common;
-  }, [baseUrl]);
+  }, [baseUrl, getOptions]);
 
   return store ? (
     <GraffyProvider store={store}>

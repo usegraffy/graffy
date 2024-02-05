@@ -1,16 +1,16 @@
 import isEqual from 'lodash/isEqual.js';
+import { add, finalize, merge, setVersion, wrap } from '../ops/index.js';
+import {
+  MAX_KEY,
+  MIN_KEY,
+  clone,
+  cmp,
+  isDef,
+  isEmpty,
+  isPlainObject,
+} from '../util.js';
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
-import {
-  isEmpty,
-  isDef,
-  isPlainObject,
-  cmp,
-  MIN_KEY,
-  MAX_KEY,
-  clone,
-} from '../util.js';
-import { merge, add, wrap, finalize, setVersion } from '../ops/index.js';
 
 const ROOT_KEY = Symbol();
 
@@ -27,10 +27,10 @@ function encode(value, { version, isGraph } = {}) {
     const node = !isEmpty(props)
       ? makeNode(range ? [{ $key: range, ...props }] : props, undefined, $ver)
       : isDef($chi)
-      ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
-      : null;
+        ? makeNode(range ? [{ $key: range, $chi }] : $chi, undefined, $ver)
+        : null;
 
-    // rome-ignore format: ternary chain
+    // biome-ignore format: ternary chain
     const children =
       node ? node.children :
         isDef($val) ? $val :
@@ -133,7 +133,7 @@ function encode(value, { version, isGraph } = {}) {
     }
 
     let putRange = [];
-    let prefixPuts = [];
+    const prefixPuts = [];
     // If this is a plain array (without keyed objects), we should "put" the
     // entire positive integer range to give it atomic write behavior.
     if (
@@ -253,7 +253,7 @@ function encode(value, { version, isGraph } = {}) {
   }
 
   if (value?.$key) value = [value];
-  let result = makeNode(value, ROOT_KEY, version)?.children || [];
+  const result = makeNode(value, ROOT_KEY, version)?.children || [];
 
   while (links.length) {
     combine(result, [links.pop()]);

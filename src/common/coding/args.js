@@ -1,16 +1,16 @@
-import { encode as encodeValue, decode as decodeValue } from './struct.js';
-import { keyStep, keyAfter, keyBefore } from '../ops/step.js';
+import { keyAfter, keyBefore, keyStep } from '../ops/step.js';
 import {
-  MIN_KEY,
   MAX_KEY,
+  MIN_KEY,
+  cmp,
   errIf,
-  isEmpty,
-  isPlainObject,
   isDef,
+  isEmpty,
   isMaxKey,
   isMinKey,
-  cmp,
+  isPlainObject,
 } from '../util.js';
+import { decode as decodeValue, encode as encodeValue } from './struct.js';
 
 function decodeBound(bound) {
   const { key, step } = keyStep(bound);

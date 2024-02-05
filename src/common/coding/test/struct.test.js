@@ -1,5 +1,5 @@
 import { cmp } from '../../util.js';
-import { encode, decode } from '../struct.js';
+import { decode, encode } from '../struct.js';
 
 function tryValue(value) {
   const enc = encode(value);

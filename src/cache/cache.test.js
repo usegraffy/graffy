@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals';
 import Graffy from '@graffy/core';
+import { jest } from '@jest/globals';
 import Cache from './index.js';
 
 describe('cache', () => {

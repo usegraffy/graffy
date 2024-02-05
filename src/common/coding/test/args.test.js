@@ -1,5 +1,5 @@
-import { addStringify, MAX_KEY, MIN_KEY } from '../../util.js';
-import { encode, decode } from '../args.js';
+import { MAX_KEY, MIN_KEY, addStringify } from '../../util.js';
+import { decode, encode } from '../args.js';
 
 const a = (...n) => addStringify(new Uint8Array(n));
 

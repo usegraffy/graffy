@@ -1,17 +1,17 @@
 import {
-  merge,
-  wrap,
-  unwrap,
-  findFirst,
-  encodePath,
-  splitRef,
-  splitArgs,
   cmp,
   encodeArgs,
+  encodePath,
+  findFirst,
+  merge,
+  splitArgs,
+  splitRef,
+  unwrap,
+  wrap,
 } from '@graffy/common';
 
 export default function linkGraph(rootGraph, defs) {
-  let version = rootGraph[0].version;
+  const version = rootGraph[0].version;
 
   /*
     Braids and Strands are different representations of the set of paths
@@ -148,7 +148,7 @@ export default function linkGraph(rootGraph, defs) {
     }
 
     const encodedKey = encodeArgs(key).key;
-    let node = graph[findFirst(graph, encodedKey)];
+    const node = graph[findFirst(graph, encodedKey)];
     if (!node || cmp(node.key, encodedKey) !== 0 || node.end) return [];
     return recurse(node, rest, vars);
   }

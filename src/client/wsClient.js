@@ -1,5 +1,5 @@
-import { makeStream } from '@graffy/stream';
 import { makeWatcher, pack, unpack } from '@graffy/common';
+import { makeStream } from '@graffy/stream';
 import Socket from './Socket.js';
 
 const wsClient =

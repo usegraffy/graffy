@@ -1,10 +1,10 @@
 import { MAX_KEY, MIN_KEY } from '@graffy/common';
-import { jest } from '@jest/globals';
-import Graffy from '@graffy/core';
 import { encodeGraph, encodeQuery } from '@graffy/common';
+import Graffy from '@graffy/core';
 import { mockBackend } from '@graffy/testing';
-import fill from './index.js';
 import { e } from '@graffy/testing/encoder.js';
+import { jest } from '@jest/globals';
+import fill from './index.js';
 
 const expectNext = async (subscription, expected, version = 0) => {
   // console.log('assert', expected);
@@ -145,7 +145,7 @@ describe('changes', () => {
     backend.write(encodeGraph({ foo: [{ $key: ['b'] }] }, 1));
     await expectNext(
       subscription,
-      // rome-ignore format: deep tree
+      // biome-ignore format: deep tree
       { $ver: 1, foo: [
           { $key: { $since: ['b'], $until: ['b'] } },
           { $key: { $after: ['c'], $before: ['d'] }, $ver: 0 },
@@ -348,7 +348,7 @@ describe('values', () => {
 
     await expectNext(
       subscription,
-      // rome-ignore format: deep tree
+      // biome-ignore format: deep tree
       {
         $ver: 1,
         foo: [
@@ -398,7 +398,7 @@ describe('values', () => {
     });
 
     backend.write(
-      // rome-ignore format: deep tree
+      // biome-ignore format: deep tree
       encodeGraph({
         foo: [
           { $key: ['b'], $val: 2 },
@@ -520,7 +520,7 @@ describe('values', () => {
     );
     await expectNext(
       subscription,
-      // rome-ignore format: deep tree
+      // biome-ignore format: deep tree
       [{ key: e.users, version: 1, children: encodeGraph({
           '1': { name: 'alice' },
           '3': { name: 'carol' },

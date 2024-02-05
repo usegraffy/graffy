@@ -1,13 +1,13 @@
 import {
+  MIN_KEY,
   add,
-  isBranch,
-  findFirst,
-  splitRef,
-  decodeArgs,
   cmp,
+  decodeArgs,
   encodeArgs,
   encodeQuery,
-  MIN_KEY,
+  findFirst,
+  isBranch,
+  splitRef,
 } from '@graffy/common';
 
 /*
@@ -56,9 +56,8 @@ export default function prepQueryLinks(rootQuery, defs) {
             ),
           };
         });
-      } else {
-        return [{ path, def: prepareDef(def, vars) }];
       }
+      return [{ path, def: prepareDef(def, vars) }];
     }
 
     function prefixKey(defs, key) {
@@ -78,13 +77,12 @@ export default function prepQueryLinks(rootQuery, defs) {
           vars[key.slice(1)] = decodeArgs(node);
           return addDefQuery(node.children);
         });
-      } else {
-        const ix = findFirst(query, encodedKey);
-        if (!query[ix] || cmp(query[ix].key, encodedKey) !== 0) return []; // Not using this def
-        // Remove the request for the link itself.
-        const [{ children: subQuery }] = query.splice(ix, 1);
-        return addDefQuery(subQuery);
       }
+      const ix = findFirst(query, encodedKey);
+      if (!query[ix] || cmp(query[ix].key, encodedKey) !== 0) return []; // Not using this def
+      // Remove the request for the link itself.
+      const [{ children: subQuery }] = query.splice(ix, 1);
+      return addDefQuery(subQuery);
     }
 
     let used = [];
@@ -159,6 +157,7 @@ function getDefQuery(def, vars, version) {
       // We do this to ensure that range queries are made correctly.
       let porcelainQuery = { $key: path.pop() };
       let $key;
+      // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
       while (($key = path.pop())) {
         porcelainQuery = { $key, $chi: [porcelainQuery] };
       }
