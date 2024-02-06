@@ -16,6 +16,8 @@ import Core from './Core.js';
 import { shiftGen, wrapProvider } from './shift.js';
 import { validateCall, validateOn } from './validate.js';
 
+export { unchanged } from './shift.js';
+
 export default class Graffy {
   constructor(path = [], core = new Core()) {
     this.core = core;

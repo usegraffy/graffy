@@ -21,12 +21,15 @@ async function mapStream(stream, fn) {
   }
 }
 
+export const unchanged = Symbol('Payload or result unchanged by handler');
+
 export function wrapProvider(fn, decodedPath, isRead) {
   const decodePayload = isRead ? decodeQuery : decodeGraph;
   const encodePayload = isRead ? encodeQuery : encodeGraph;
   const path = encodePath(decodedPath);
   return async function wrappedProvider(payload, options, next) {
     let nextCalled = false;
+    let nextResult;
     let remainingNextResult;
     const porcelainPayload = unwrapObject(decodePayload(payload), decodedPath);
     const remainingPayload = remove(payload, path) || [];
@@ -34,11 +37,18 @@ export function wrapProvider(fn, decodedPath, isRead) {
     // This next function is offered to the provider function.
     async function shiftedNext(porcelainNextPayload, nextOptions) {
       nextCalled = true;
-      const nextPayload = encodePayload(
-        wrapObject(porcelainNextPayload, decodedPath),
-      );
-      if (remainingPayload.length) merge(nextPayload, remainingPayload);
-      const nextResult = await next(nextPayload, nextOptions);
+
+      let nextPayload;
+      if (porcelainNextPayload === unchanged) {
+        nextPayload = payload;
+      } else {
+        nextPayload = encodePayload(
+          wrapObject(porcelainNextPayload, decodedPath),
+        );
+        if (remainingPayload.length) merge(nextPayload, remainingPayload);
+      }
+
+      nextResult = await next(nextPayload, nextOptions);
 
       // Remember the next() results that are not returned to this provider.
       // These will be merged into the result later.
@@ -47,24 +57,29 @@ export function wrapProvider(fn, decodedPath, isRead) {
     }
 
     const porcelainResult = await fn(porcelainPayload, options, shiftedNext);
-    let result = encodeGraph(wrapObject(porcelainResult, decodedPath));
-    // console.log(result);
 
-    // TODO: Get rid of this special handling by requiring read providers to
-    // finalize results themselves.
-    if (isRead && !nextCalled) {
-      // This does the opposite of "remove"; "keep"?
-      const appliedQuery = wrap(unwrap(payload, path), path);
-      result = finalize(result, appliedQuery);
-      result = wrap(unwrap(result, path), path);
-    }
+    let result;
+    if (porcelainResult === unchanged) {
+      result = nextResult;
+    } else {
+      result = encodeGraph(wrapObject(porcelainResult, decodedPath));
 
-    if (!nextCalled && remainingPayload.length) {
-      remainingNextResult = await next(remainingPayload);
-    }
+      // TODO: Get rid of this special handling by requiring read providers to
+      // finalize results themselves.
+      if (isRead && !nextCalled) {
+        // This does the opposite of "remove"; "keep"?
+        const appliedQuery = wrap(unwrap(payload, path), path);
+        result = finalize(result, appliedQuery);
+        result = wrap(unwrap(result, path), path);
+      }
 
-    if (remainingNextResult?.length) {
-      merge(result, remainingNextResult);
+      if (!nextCalled && remainingPayload.length) {
+        remainingNextResult = await next(remainingPayload);
+      }
+
+      if (remainingNextResult?.length) {
+        merge(result, remainingNextResult);
+      }
     }
 
     // console.log('Shifted', path, format(payload), format(result));
