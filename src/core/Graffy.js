@@ -13,7 +13,7 @@ import {
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';
 import Core from './Core.js';
-import { shiftGen, wrapProvider } from './shift.js';
+import { shiftGen, unchanged, wrapProvider } from './shift.js';
 import { validateCall, validateOn } from './validate.js';
 
 export { unchanged } from './shift.js';
@@ -106,3 +106,5 @@ export default class Graffy {
     return unwrapObject(decodeGraph(writtenChange), path);
   }
 }
+
+Graffy.unchanged = unchanged;
