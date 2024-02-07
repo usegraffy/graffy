@@ -15,16 +15,12 @@ export default async function version(str) {
   try {
     const { stdout } = await git('tag');
 
-    console.log(stdout);
-
     const [major = 0, minor = 0, patch = 0, pre = '', number = 0] = stdout
       .split('\n')
       .reduce((latest, vstring) => {
         const version = vstring
           .split(/[.-]/)
           .map((seg, i) => (i === 3 ? seg : parseInt(seg)));
-
-        console.log('latest', latest, vstring, version);
 
         for (let i = 0; i < 5; i++) {
           const atPre = i === 3;
@@ -35,8 +31,6 @@ export default async function version(str) {
         }
         return latest;
       }, []);
-
-    console.log({ major, minor, patch, pre, number });
 
     switch (str) {
       case 'major':
