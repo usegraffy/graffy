@@ -1,7 +1,7 @@
 import GraffyFill from '@graffy/fill';
 import { page, ref } from '@graffy/testing';
 import { jest } from '@jest/globals';
-import Graffy from '../Graffy.js';
+import Graffy, { unchanged } from '../Graffy.js';
 
 test('Porcelain read', async () => {
   const store = new Graffy();
@@ -416,4 +416,62 @@ test('modified_next_options', async () => {
   store.onRead('user', mockOnRead);
   await store.read('user', query, { foo: 2 });
   expect(mockOnRead).toBeCalledWith(query, { bar: true }, expect.any(Function));
+});
+
+describe('unchanged', () => {
+  let store;
+
+  const originalQuery = { foo: true };
+  const changedQuery = { foo: true, bar: true };
+  const originalChange = { foo: 5 };
+  const changedChange = { foo: 8, bar: 6 };
+  const originalResult = { foo: 10 };
+  const changedResult = { foo: 8 };
+
+  const cases = [
+    [false, false],
+    [false, true],
+    [true, false],
+    [true, true],
+  ];
+
+  beforeEach(() => {
+    store = new Graffy();
+  });
+
+  test.each(cases)(
+    'read nextChanged:%j retChanged:%j',
+    async (nextChanged, retChanged) => {
+      store.onRead('example', async (_query, _options, next) => {
+        await next(nextChanged ? changedQuery : unchanged);
+        return retChanged ? changedResult : unchanged;
+      });
+
+      store.onRead('example', async (query, _options) => {
+        expect(query).toEqual(nextChanged ? changedQuery : originalQuery);
+        return originalResult;
+      });
+
+      const result = await store.read('example', originalQuery);
+      expect(result).toEqual(retChanged ? changedResult : originalResult);
+    },
+  );
+
+  test.each(cases)(
+    'write nextChanged:%j retChanged:%j',
+    async (nextChanged, retChanged) => {
+      store.onWrite('example', async (_change, _options, next) => {
+        await next(nextChanged ? changedChange : unchanged);
+        return retChanged ? changedResult : unchanged;
+      });
+
+      store.onWrite('example', async (change, _options) => {
+        expect(change).toEqual(nextChanged ? changedChange : originalChange);
+        return originalResult;
+      });
+
+      const result = await store.write('example', originalChange);
+      expect(result).toEqual(retChanged ? changedResult : originalResult);
+    },
+  );
 });
