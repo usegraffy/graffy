@@ -1,6 +1,6 @@
 import {
-  decodeGraph,
-  decodeQuery,
+  decodeGraph as origDecodeGraph,
+  decodeQuery as origDecodeQuery,
   encodeGraph,
   encodePath,
   encodeQuery,
@@ -22,6 +22,18 @@ async function mapStream(stream, fn) {
 }
 
 export const unchanged = Symbol('Payload or result unchanged by handler');
+
+const decodeCache = new WeakMap();
+function memoizeDecode(origDecode) {
+  return (payload) => {
+    if (decodeCache.has(payload)) return decodeCache.get(payload);
+    const decoded = origDecode(payload);
+    decodeCache.set(payload, decoded);
+    return decoded;
+  };
+}
+const decodeGraph = memoizeDecode(origDecodeGraph);
+const decodeQuery = memoizeDecode(origDecodeQuery);
 
 export function wrapProvider(fn, decodedPath, isRead) {
   const decodePayload = isRead ? decodeQuery : decodeGraph;
