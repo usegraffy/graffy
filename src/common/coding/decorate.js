@@ -75,7 +75,7 @@ export default function decorate(rootGraph, rootQuery) {
           .map((node) => {
             const $key = decodeArgs(node);
             const subResult = construct(getValue(node), subQuery);
-            if (typeof subResult === 'object') {
+            if (typeof subResult === 'object' && subResult) {
               subResult.$key =
                 children[PRE] && !isMinKey(children[PRE])
                   ? { ...children[PRE], $cursor: $key }
@@ -136,7 +136,7 @@ export default function decorate(rootGraph, rootQuery) {
 
     if (node.path) {
       result = unwrap(rootGraph, node.path);
-      if (typeof result === 'object') result[REF] = node.path;
+      if (typeof result === 'object' && result) result[REF] = node.path;
     } else {
       result = getNodeValue(node);
     }
