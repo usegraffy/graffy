@@ -28,7 +28,7 @@ function memoizeDecode(origDecode) {
   return (payload) => {
     if (decodeCache.has(payload)) return decodeCache.get(payload);
     const decoded = origDecode(payload);
-    decodeCache.set(payload, decoded);
+    if(payload.type === 'object' && payload) decodeCache.set(payload, decoded);
     return decoded;
   };
 }
