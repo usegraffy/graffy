@@ -987,6 +987,30 @@ describe('pg_e2e', () => {
     expect(res).toEqual({ settings: null });
   });
 
+  test('update_set_val_null', async () => {
+    const id = uuid();
+    await store.write('users', [
+      {
+        $key: id,
+        $put: true,
+        name: 'A',
+        settings: { foo: { bar: 33 } },
+      },
+    ]);
+
+    await store.write(['users', id], {
+      settings: { foo: { bar: null }, baz: { $val: null } },
+    });
+
+    const pgClient = await getPool().connect();
+    const res = (
+      await pgClient.query(`SELECT "settings" from "users" where id = '${id}'`)
+    ).rows[0];
+    pgClient.release();
+
+    expect(res).toEqual({ settings: { baz: { $val: null } } });
+  });
+
   describe('join', () => {
     beforeEach(async () => {
       const uidA = uuid();
