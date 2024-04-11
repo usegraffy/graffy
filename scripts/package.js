@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import os from 'os';
-import { mkdir, readdir } from 'fs/promises';
+import { mkdir, readdir } from 'node:fs/promises';
+import os from 'node:os';
 import pMap from 'p-map';
 import mRimraf from 'rimraf';
 import yargs from 'yargs';

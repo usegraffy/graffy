@@ -1,5 +1,5 @@
-import { builtinModules } from 'module';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { builtinModules } from 'node:module';
 import { build as viteBuild } from 'vite';
 import { depVersions, peerDepVersions, use } from './deps.js';
 import { dst, ownPattern, read, src } from './utils.js';

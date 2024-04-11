@@ -109,7 +109,7 @@ function sliceNode(graph, query, result) {
 }
 
 export function sliceRange(graph, query, result) {
-  let { key, end, limit = Infinity, version } = query;
+  let { key, end, limit = Number.POSITIVE_INFINITY, version } = query;
   const step = cmp(key, end) < 0 ? 1 : -1;
 
   // Prefixes are used to combine filtering and pagination. In schemas where

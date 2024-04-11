@@ -11,7 +11,11 @@ export default function makeStream(init, options = {}) {
   let complete;
   let drain;
 
-  const { highWatermark = Infinity, lowWatermark = 0, debugId } = options;
+  const {
+    highWatermark = Number.POSITIVE_INFINITY,
+    lowWatermark = 0,
+    debugId,
+  } = options;
 
   const push = (value) => {
     if (complete) return;

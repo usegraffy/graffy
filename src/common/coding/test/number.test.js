@@ -18,12 +18,12 @@ describe('dencorder', () => {
   });
 
   test('infinity', () => {
-    const v = -Infinity;
+    const v = Number.NEGATIVE_INFINITY;
     expect(v).toEqual(decode(encode(v)));
   });
 
   test('nan', () => {
-    const v = NaN;
+    const v = Number.NaN;
     expect(Number.isNaN(decode(encode(v)))).toBe(true);
   });
 });

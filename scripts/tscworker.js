@@ -1,6 +1,6 @@
-import { dirname } from 'path';
+import { dirname } from 'node:path';
+import { parentPort } from 'node:worker_threads';
 import ts from 'typescript';
-import { parentPort } from 'worker_threads';
 import { dst, src } from './utils.js';
 
 parentPort.on('message', (message) => {

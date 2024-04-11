@@ -29,7 +29,7 @@ export const lookup = (prop, options) => {
     return sql`"${raw(prefix)}" #> ${suffix}`;
   }
   if (types[prefix] === 'cube' && suffix.length === 1) {
-    return sql`"${raw(prefix)}" ~> ${parseInt(suffix[0])}`;
+    return sql`"${raw(prefix)}" ~> ${Number.parseInt(suffix[0])}`;
   }
   throw Error(`pg.cannot_lookup ${prop}`);
 };

@@ -75,7 +75,7 @@ function decode(nodes = [], { isGraph } = {}) {
       (allNums &&
         putRanges.length === 1 &&
         cmp(putRanges[0].key, 0) === 0 &&
-        cmp(putRanges[0].end, +Infinity) === 0)
+        cmp(putRanges[0].end, Number.POSITIVE_INFINITY) === 0)
     ) {
       result = result.reduce(
         (collection, item) => {

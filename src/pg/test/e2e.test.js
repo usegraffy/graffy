@@ -797,10 +797,10 @@ describe('pg_e2e', () => {
 
     // Implicit array $put
     Object.defineProperty(exp1[pid1].commenters, '$put', {
-      value: [{ $since: 0, $until: Infinity }],
+      value: [{ $since: 0, $until: Number.POSITIVE_INFINITY }],
     });
     Object.defineProperty(exp1[pid2].commenters, '$put', {
-      value: [{ $since: 0, $until: Infinity }],
+      value: [{ $since: 0, $until: Number.POSITIVE_INFINITY }],
     });
 
     expect(res1).toEqual(exp1);

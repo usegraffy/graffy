@@ -152,7 +152,7 @@ export default function decorate(rootGraph, rootQuery) {
       children = descend(children, MIN_KEY);
     }
 
-    const { key, end, limit = Infinity } = encodeArgs(range);
+    const { key, end, limit = Number.POSITIVE_INFINITY } = encodeArgs(range);
     const ix = findFirst(children, key);
     let i = ix;
     let result;

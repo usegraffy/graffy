@@ -14,7 +14,8 @@
         "noForEach": "off"
       },
       "a11y": {
-        "all": false
+        "all": false,
+        "useButtonType": { "level": "off" }
       },
       "style": {
         "noParameterAssign": "off"

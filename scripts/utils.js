@@ -1,8 +1,8 @@
-import { execFile as cExecFile } from 'child_process';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-import { promisify } from 'util';
+import { execFile as cExecFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 const execFile = promisify(cExecFile);
 
