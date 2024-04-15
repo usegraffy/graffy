@@ -61,6 +61,45 @@ describe('graph', () => {
     roundTrip({ foo: { $val: null } });
   });
 
+  test('val_scalar', () => {
+    roundTrip({ foo: { $val: 42 } }, { foo: 42 });
+  });
+
+  test('val_object', () => {
+    roundTrip(
+      { foo: { $val: true, bar: 20 } },
+      { foo: { bar: 20 } },
+      (decoded) => {
+        expect(decoded.foo.$val).toBe(true);
+      },
+    );
+  });
+
+  test('val_object_2', () => {
+    roundTrip(
+      { foo: { $val: { bar: 20 } } },
+      { foo: { bar: 20 } },
+      (decoded) => {
+        expect(decoded.foo.$val).toBe(true);
+      },
+    );
+  });
+
+  test('val_array', () => {
+    /** @type number[] & { $val?: true } */
+    const array = [1, 2, 3];
+    array.$val = true;
+    roundTrip({ foo: array }, { foo: [1, 2, 3] }, (decoded) => {
+      expect(decoded.foo.$val).toBe(true);
+    });
+  });
+
+  test('val_array_2', () => {
+    roundTrip({ foo: { $val: [1, 2, 3] } }, { foo: [1, 2, 3] }, (decoded) => {
+      expect(decoded.foo.$val).toBe(true);
+    });
+  });
+
   test('point_deletion', () => {
     roundTrip({ foo: null });
   });
