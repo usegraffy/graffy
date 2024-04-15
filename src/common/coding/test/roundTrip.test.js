@@ -57,6 +57,10 @@ describe('graph', () => {
     );
   });
 
+  test('val_null', () => {
+    roundTrip({ foo: { $val: null } });
+  });
+
   test('point_deletion', () => {
     roundTrip({ foo: null });
   });

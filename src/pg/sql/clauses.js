@@ -185,15 +185,15 @@ function getJsonUpdate(object, col, path) {
     !object ||
     typeof object !== 'object' ||
     Array.isArray(object) ||
-    object.$put ||
-    object.$val
+    object.$put
   ) {
-    let patch = stripAttributes(object);
-
-    // decodeGraph normally produces the { $val: true, ... } form.
-    // Convert it to { $val: <actual value> }
-    if (object?.$val) patch = { $val: patch };
+    const patch = stripAttributes(object);
     return [sql`${JSON.stringify(patch)}::jsonb`, patch === null];
+  }
+
+  if ('$val' in object) {
+    const value = object.$val === true ? stripAttributes(object) : object.$val;
+    return [sql`${JSON.stringify({ $val: value })}::jsonb`, false];
   }
 
   const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;

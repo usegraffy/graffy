@@ -89,7 +89,9 @@ function decode(nodes = [], { isGraph } = {}) {
           delete item.$key;
           delete item.$val;
 
-          if (typeof $val === 'object') {
+          if ($val === null) {
+            $val = { $val };
+          } else if (typeof $val === 'object') {
             $val = clone($val);
             Object.defineProperty($val, '$val', { value: true });
           }
