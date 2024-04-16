@@ -174,7 +174,7 @@ describe('val_null', () => {
       ],
       { foo: 1 },
     );
-    expect(result).toEqual({ foo: { bar: { $val: null } } });
+    expect(result).toEqual({ foo: { bar: null } });
   });
 
   test('explicit', () => {
