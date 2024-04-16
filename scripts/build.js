@@ -7,7 +7,8 @@ import { dst, ownPattern, read, src } from './utils.js';
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
 
 // ESM-only deps are built into the bundle rather than
-// keeping them external, to prevent
+// keeping them external, to prevent installation errors
+// in commonJS projects.
 const esmOnlyDeps = ['sql-template-tag', 'nanoid'];
 
 export default async function build(name, version, watch, onUpdate) {
@@ -113,7 +114,7 @@ export default async function build(name, version, watch, onUpdate) {
           dependencies[dep] = version;
         } else if (depVersions[dep]) {
           dependencies[dep] = depVersions[dep];
-        } else if (builtinModules.includes(dep)) {
+        } else if (builtinModules.includes(dep) || dep.startsWith('node:')) {
           console.log(`INFO [${name}] ignoring built-in ${dep}`);
         } else {
           console.warn(`WARN [${name}] unversioned package ${dep}`);
