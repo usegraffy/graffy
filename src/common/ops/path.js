@@ -1,4 +1,5 @@
 import { findFirst, isBranch, isRange } from '../node/index.js';
+import { NULL_VAL } from '../object.js';
 import { cmp } from '../util.js';
 
 export const IS_VAL = Symbol('IS_VAL');
@@ -53,7 +54,8 @@ export function unwrap(tree, path) {
 
 export function getNodeValue(node) {
   if (node.children) return node.children;
-  if (node.value && typeof node.value === 'object') {
+  if (node.value === null) return NULL_VAL;
+  if (typeof node.value === 'object') {
     node.value[IS_VAL] = true;
   }
   return node.value;

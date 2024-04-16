@@ -2,6 +2,10 @@ import isEqual from 'lodash/isEqual.js';
 import { splitArgs } from './coding/index.js';
 import { isEmpty } from './util.js';
 
+export const NULL_VAL = {};
+Object.defineProperty(NULL_VAL, '$val', { value: null });
+Object.defineProperty(NULL_VAL, 'toJSON', { value: () => null });
+
 export function mergeObject(base, change) {
   if (
     typeof change !== 'object' ||

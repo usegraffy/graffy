@@ -1,3 +1,4 @@
+import { NULL_VAL } from '../../object.js';
 import {
   decodeGraph,
   decodeQuery,
@@ -58,7 +59,7 @@ describe('graph', () => {
   });
 
   test('val_null', () => {
-    roundTrip({ foo: { $val: null } });
+    roundTrip({ foo: { $val: null } }, { foo: NULL_VAL });
   });
 
   test('val_scalar', () => {

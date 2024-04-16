@@ -1,5 +1,6 @@
 import { page } from '@graffy/testing';
 import { e } from '@graffy/testing/encoder.js';
+import { NULL_VAL } from '../../object.js';
 import { keyAfter as aft, keyBefore as bef } from '../../ops/step.js';
 import { MAX_KEY, MIN_KEY } from '../../util.js';
 import { decode } from '../base64.js';
@@ -174,13 +175,13 @@ describe('val_null', () => {
       ],
       { foo: 1 },
     );
-    expect(result).toEqual({ foo: { bar: null } });
+    expect(result).toEqual({ foo: { bar: NULL_VAL } });
   });
 
   test('explicit', () => {
     const result = decorate([{ key: e.foo, version: 0, value: null }], {
       foo: 1,
     });
-    expect(result).toEqual({ foo: null });
+    expect(result).toEqual({ foo: NULL_VAL });
   });
 });

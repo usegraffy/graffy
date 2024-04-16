@@ -1,4 +1,5 @@
 import { isBranch, isLink, isPrefix, isRange } from '../node/index.js';
+import { NULL_VAL } from '../object.js';
 import { keyAfter } from '../ops/index.js';
 import { clone, cmp, isDef, isEmpty, isMaxKey, isMinKey } from '../util.js';
 import { decode as decodeArgs, splitArgs } from './args.js';
@@ -90,7 +91,7 @@ function decode(nodes = [], { isGraph } = {}) {
           delete item.$val;
 
           if ($val === null) {
-            $val = { $val };
+            $val = NULL_VAL;
           } else if (typeof $val === 'object') {
             $val = clone($val);
             Object.defineProperty($val, '$val', { value: true });

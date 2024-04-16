@@ -1,4 +1,5 @@
 import { findFirst, isRange } from '../node/index.js';
+import { NULL_VAL } from '../object.js';
 import { IS_VAL, getNodeValue, unwrap } from '../ops/index.js';
 import {
   MIN_KEY,
@@ -26,7 +27,7 @@ const PRE = Symbol();
 export default function decorate(rootGraph, rootQuery) {
   // console.log('Decorating', rootGraph, rootQuery);
   function construct(plumGraph, query) {
-    if (plumGraph === null) return null;
+    if (plumGraph === null || plumGraph === NULL_VAL) return plumGraph;
     if (!isDef(plumGraph)) plumGraph = [];
     if (query.$key) query = [query];
 
@@ -95,7 +96,7 @@ export default function decorate(rootGraph, rootQuery) {
     } else if (query) {
       if (Array.isArray(plumGraph) && !plumGraph.length) {
         graph = undefined;
-      } else if (typeof plumGraph !== 'object' || !plumGraph) {
+      } else if (typeof plumGraph !== 'object') {
         graph = plumGraph;
       } else if (plumGraph[IS_VAL]) {
         graph = Array.isArray(plumGraph)
@@ -103,7 +104,7 @@ export default function decorate(rootGraph, rootQuery) {
           : { ...plumGraph };
         graph.$val = true;
       } else if (Array.isArray(plumGraph)) {
-        graph = deValNull(decodeGraph(plumGraph));
+        graph = decodeGraph(plumGraph);
       } else {
         throw Error('decorate.unexpected_graph');
       }
@@ -178,16 +179,6 @@ export default function decorate(rootGraph, rootQuery) {
   const result = construct(rootGraph, rootQuery);
   // console.log('Decorate', result, rootGraph, rootQuery);
   return result;
-}
-
-// Replace $val: null produced by
-function deValNull(graph) {
-  if (typeof graph !== 'object' || !graph) return graph;
-  if ('$val' in graph && graph.$val !== true) return graph.$val;
-
-  // Important: update graph in-place to avoid losing non-enumerable props.
-  for (const prop in graph) graph[prop] = deValNull(graph[prop]);
-  return graph;
 }
 
 function addPageMeta(graph, args) {
