@@ -57,8 +57,12 @@ export default function server(store, { auth } = {}) {
       } catch (e) {
         log(e.message);
         log(e.stack);
-        res.writeHead(400);
-        res.end(`${e.message}`);
+        const body = `${e.message}`;
+        res.writeHead(400, {
+          'Content-Type': 'text/plain',
+          'Content-Length': Buffer.byteLength(body),
+        });
+        res.end(body);
       }
     } else if (req.method === 'POST') {
       try {
@@ -79,23 +83,39 @@ export default function server(store, { auth } = {}) {
             options,
           ))
         ) {
-          res.writeHead(401);
-          res.end('unauthorized');
+          const body = 'unauthorized';
+          res.writeHead(401, {
+            'Content-Type': 'text/plain',
+            'Content-Length': Buffer.byteLength(body),
+          });
+          res.end(body);
           return;
         }
 
         const value = await store.call(op, payload, options);
-        res.writeHead(200);
-        res.end(JSON.stringify(pack(value)));
+        const body = JSON.stringify(pack(value));
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        });
+        res.end(body);
       } catch (e) {
         log(e.message);
         log(e.stack);
-        res.writeHead(400);
-        res.end(`${e.message}`);
+        const body = `${e.message}`;
+        res.writeHead(400, {
+          'Content-Type': 'text/plain',
+          'Content-Length': Buffer.byteLength(body),
+        });
+        res.end(body);
       }
     } else {
-      res.writeHead(501);
-      res.end('Not implemented');
+      const body = 'Not implemented';
+      res.writeHead(501, {
+        'Content-Type': 'text/plain',
+        'Content-Length': Buffer.byteLength(body),
+      });
+      res.end(body);
     }
   };
 }
