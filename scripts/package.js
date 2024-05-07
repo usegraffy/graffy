@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import os from 'os';
-import { mkdir, readdir } from 'fs/promises';
+import { mkdir, readdir } from 'node:fs/promises';
+import os from 'node:os';
 import pMap from 'p-map';
-import mRimraf from 'rimraf';
+import { rimrafSync as rimraf } from 'rimraf';
 import yargs from 'yargs';
 
 import build from './build.js';
@@ -14,8 +14,6 @@ import tag from './tag.js';
 import types, { terminateWorkers } from './types.js';
 import { dst, src } from './utils.js';
 import version from './version.js';
-
-const { sync: rimraf } = mRimraf;
 
 const argv = yargs(process.argv.slice(2))
   .usage('$0 <version> [--publish] [--link] [--watch] [--notypes]')

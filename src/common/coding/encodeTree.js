@@ -142,7 +142,7 @@ function encode(value, { version, isGraph } = {}) {
       !isDef($val) &&
       !object.some((it) => isDef(it?.$key))
     ) {
-      putRange = [encodeArgs({ $since: 0, $until: +Infinity })];
+      putRange = [encodeArgs({ $since: 0, $until: Number.POSITIVE_INFINITY })];
     }
 
     function classifyPut(put) {

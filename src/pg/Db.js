@@ -38,12 +38,12 @@ export default class Db {
   async query(sql, tableOptions) {
     log(`Making SQL query: ${sql.text}`, sql.values);
     const cubeOid =
-      parseInt(tableOptions?.schema?.typeOids?.cube || '0') || null;
+      Number.parseInt(tableOptions?.schema?.typeOids?.cube || '0') || null;
     try {
       sql.types = {
         getTypeParser: (oid, format) => {
           if (oid === types.builtins.INT8) {
-            return (value) => parseInt(value, 10);
+            return (value) => Number.parseInt(value, 10);
           }
           if (oid === cubeOid) {
             return (value) => {
@@ -51,7 +51,9 @@ export default class Db {
                 .slice(1, -1)
                 .split(/\)\s*,\s*\(/)
                 .map((corner) =>
-                  corner.split(',').map((coord) => parseFloat(coord.trim())),
+                  corner
+                    .split(',')
+                    .map((coord) => Number.parseFloat(coord.trim())),
                 );
               return array.length > 1 ? array : array[0];
             };

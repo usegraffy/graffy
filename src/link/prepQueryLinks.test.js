@@ -100,8 +100,8 @@ test('cube_args', () => {
 
   const quantities = {
     $ctd: [
-      [-Infinity, -Infinity],
-      [Infinity, Infinity],
+      [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
+      [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
     ],
   };
 

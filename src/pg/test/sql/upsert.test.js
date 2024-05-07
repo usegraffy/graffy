@@ -119,8 +119,8 @@ describe('byId', () => {
         "type" = ${'post'},
         "name" = ${'hello'},
         "email" = ${'world'},
-        "config" = nullif(jsonb_strip_nulls((case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end) ||
-          jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb)), '{}'::jsonb),
+        "config" = case jsonb_typeof("config") when 'object' then "config" else '{}'::jsonb end ||
+          jsonb_build_object ( ${'foo'}::text , ${'3'}::jsonb ),
         "tags" = ${JSON.stringify([1, 2, 3])}::jsonb,
         "quantities" = cube ( array[${100000} , ${75000} , ${0}]::float8[] ),
         "version" =  default

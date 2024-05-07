@@ -797,10 +797,10 @@ describe('pg_e2e', () => {
 
     // Implicit array $put
     Object.defineProperty(exp1[pid1].commenters, '$put', {
-      value: [{ $since: 0, $until: Infinity }],
+      value: [{ $since: 0, $until: Number.POSITIVE_INFINITY }],
     });
     Object.defineProperty(exp1[pid2].commenters, '$put', {
-      value: [{ $since: 0, $until: Infinity }],
+      value: [{ $since: 0, $until: Number.POSITIVE_INFINITY }],
     });
 
     expect(res1).toEqual(exp1);
@@ -985,6 +985,30 @@ describe('pg_e2e', () => {
     pgClient.release();
 
     expect(res).toEqual({ settings: null });
+  });
+
+  test('update_set_val_null', async () => {
+    const id = uuid();
+    await store.write('users', [
+      {
+        $key: id,
+        $put: true,
+        name: 'A',
+        settings: { foo: { bar: 33 } },
+      },
+    ]);
+
+    await store.write(['users', id], {
+      settings: { foo: { bar: null }, baz: { $val: null } },
+    });
+
+    const pgClient = await getPool().connect();
+    const res = (
+      await pgClient.query(`SELECT "settings" from "users" where id = '${id}'`)
+    ).rows[0];
+    pgClient.release();
+
+    expect(res).toEqual({ settings: { baz: { $val: null } } });
   });
 
   describe('join', () => {

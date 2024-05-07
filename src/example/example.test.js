@@ -1,6 +1,6 @@
-import { fork } from 'child_process';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fork } from 'node:child_process';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { jest } from '@jest/globals';
 import puppeteer from 'puppeteer';
 

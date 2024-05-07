@@ -1,4 +1,4 @@
-import util from 'util';
+import util from 'node:util';
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Promise Rejection:', reason);

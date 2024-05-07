@@ -29,7 +29,7 @@ export const lookup = (prop, options) => {
     return sql`"${raw(prefix)}" #> ${suffix}`;
   }
   if (types[prefix] === 'cube' && suffix.length === 1) {
-    return sql`"${raw(prefix)}" ~> ${parseInt(suffix[0])}`;
+    return sql`"${raw(prefix)}" ~> ${Number.parseInt(suffix[0])}`;
   }
   throw Error(`pg.cannot_lookup ${prop}`);
 };
@@ -102,7 +102,7 @@ function castValue(value, type, name, isPut) {
   if (type === 'jsonb') {
     return isPut
       ? JSON.stringify(stripAttributes(value))
-      : getJsonUpdate(value, name, []);
+      : getJsonUpdate(value, name, [])[0];
   }
 
   if (type === 'cube') return cubeLiteralSql(value);
@@ -173,6 +173,13 @@ export const getUpdates = (row, options) => {
   );
 };
 
+/**
+ * @param {any} object
+ * @param {string} col
+ * @param {string[]} path
+ * @returns {[Sql, boolean]}
+ * The boolean is true if the SQL may evaluate to null
+ */
 function getJsonUpdate(object, col, path) {
   if (
     !object ||
@@ -180,23 +187,43 @@ function getJsonUpdate(object, col, path) {
     Array.isArray(object) ||
     object.$put
   ) {
-    return getJsonBuildValue(object);
+    const patch = stripAttributes(object);
+    return [sql`${JSON.stringify(patch)}::jsonb`, patch === null];
+  }
+
+  if ('$val' in object) {
+    const value = object.$val === true ? stripAttributes(object) : object.$val;
+    return [sql`${JSON.stringify({ $val: value })}::jsonb`, false];
   }
 
   const curr = sql`"${raw(col)}"${path.length ? sql`#>${path}` : empty}`;
-  if (isEmpty(object)) return curr;
+  if (isEmpty(object)) return [curr, false];
 
-  return sql`nullif(jsonb_strip_nulls((case jsonb_typeof(${curr})
+  const baseSql = sql`case jsonb_typeof(${curr})
     when 'object' then ${curr}
     else '{}'::jsonb
-  end) || jsonb_build_object(${join(
-    Object.entries(object).map(
-      ([key, value]) =>
-        /* Note: here we do not trust object keys */
-        sql`${key}::text, ${getJsonUpdate(value, col, path.concat(key))}`,
-    ),
-    ', ',
-  )})), '{}'::jsonb)`;
+  end`;
+
+  let maybeNull = true; // Is it possible for this object to lose *all* its properties?
+  let hasNulls = false; // Is it possible that one of the properties becomes null?
+
+  const patchSqls = Object.entries(object).map(([key, value]) => {
+    const [valSql, nullable] = getJsonUpdate(value, col, path.concat(key));
+    maybeNull &&= nullable;
+    hasNulls ||= nullable;
+    return sql`${key}::text, ${valSql}`;
+  });
+
+  let clause = sql`${baseSql} || jsonb_build_object(${join(patchSqls, ', ')})`;
+  if (hasNulls) {
+    clause = sql`(select jsonb_object_agg(key, value)
+      from jsonb_each(${clause}) where value <> 'null'::jsonb)`;
+  }
+  if (maybeNull) {
+    clause = sql`nullif(${clause}, '{}'::jsonb)`;
+  }
+
+  return [clause, maybeNull];
 }
 
 function stripAttributes(object) {

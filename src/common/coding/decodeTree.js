@@ -75,7 +75,7 @@ function decode(nodes = [], { isGraph } = {}) {
       (allNums &&
         putRanges.length === 1 &&
         cmp(putRanges[0].key, 0) === 0 &&
-        cmp(putRanges[0].end, +Infinity) === 0)
+        cmp(putRanges[0].end, Number.POSITIVE_INFINITY) === 0)
     ) {
       result = result.reduce(
         (collection, item) => {
@@ -89,7 +89,9 @@ function decode(nodes = [], { isGraph } = {}) {
           delete item.$key;
           delete item.$val;
 
-          if (typeof $val === 'object') {
+          if ($val === null) {
+            $val = { $val };
+          } else if (typeof $val === 'object') {
             $val = clone($val);
             Object.defineProperty($val, '$val', { value: true });
           }

@@ -20,7 +20,7 @@ export default async function version(str) {
       .reduce((latest, vstring) => {
         const version = vstring
           .split(/[.-]/)
-          .map((seg, i) => (i === 3 ? seg : parseInt(seg)));
+          .map((seg, i) => (i === 3 ? seg : Number.parseInt(seg)));
 
         for (let i = 0; i < 5; i++) {
           const atPre = i === 3;

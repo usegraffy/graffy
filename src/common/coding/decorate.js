@@ -103,7 +103,7 @@ export default function decorate(rootGraph, rootQuery) {
           : { ...plumGraph };
         graph.$val = true;
       } else if (Array.isArray(plumGraph)) {
-        graph = decodeGraph(plumGraph);
+        graph = deValNull(decodeGraph(plumGraph));
       } else {
         throw Error('decorate.unexpected_graph');
       }
@@ -152,7 +152,7 @@ export default function decorate(rootGraph, rootQuery) {
       children = descend(children, MIN_KEY);
     }
 
-    const { key, end, limit = Infinity } = encodeArgs(range);
+    const { key, end, limit = Number.POSITIVE_INFINITY } = encodeArgs(range);
     const ix = findFirst(children, key);
     let i = ix;
     let result;
@@ -178,6 +178,16 @@ export default function decorate(rootGraph, rootQuery) {
   const result = construct(rootGraph, rootQuery);
   // console.log('Decorate', result, rootGraph, rootQuery);
   return result;
+}
+
+// Replace $val: null produced by
+function deValNull(graph) {
+  if (typeof graph !== 'object' || !graph) return graph;
+  if ('$val' in graph && graph.$val !== true) return graph.$val;
+
+  // Important: update graph in-place to avoid losing non-enumerable props.
+  for (const prop in graph) graph[prop] = deValNull(graph[prop]);
+  return graph;
 }
 
 function addPageMeta(graph, args) {

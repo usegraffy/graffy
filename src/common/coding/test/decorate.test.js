@@ -161,3 +161,26 @@ test('alias', () => {
   expect(result).toEqual({ bar: expectedArray });
   expect(result.bar.$ref).toEqual(expectedArray.$ref);
 });
+
+describe('val_null', () => {
+  test('implicit', () => {
+    const result = decorate(
+      [
+        {
+          key: e.foo,
+          version: 0,
+          children: [{ key: e.bar, version: 0, value: null }],
+        },
+      ],
+      { foo: 1 },
+    );
+    expect(result).toEqual({ foo: { bar: null } });
+  });
+
+  test('explicit', () => {
+    const result = decorate([{ key: e.foo, version: 0, value: null }], {
+      foo: 1,
+    });
+    expect(result).toEqual({ foo: null });
+  });
+});

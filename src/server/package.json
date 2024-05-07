@@ -3,7 +3,5 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
-  "browserslist": [
-    "maintained node versions"
-  ]
+  "browserslist": ["maintained node versions"]
 }

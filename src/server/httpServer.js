@@ -1,4 +1,4 @@
-import url from 'url';
+import url from 'node:url';
 import { decodeGraph, decodeQuery, pack, unpack } from '@graffy/common';
 import debug from 'debug';
 
