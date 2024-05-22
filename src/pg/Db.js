@@ -100,7 +100,7 @@ export default class Db {
     if (tableOptions.schema) return;
     const { table, verCol, joins } = tableOptions;
 
-    let tableInfoSchema = (
+    const tableInfoSchema = (
         await this.query(sqlTag`
         SELECT table_schema, table_type
         FROM information_schema.tables
