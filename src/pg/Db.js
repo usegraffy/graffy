@@ -101,7 +101,7 @@ export default class Db {
     const { table, verCol, joins } = tableOptions;
 
     const tableInfoSchema = (
-        await this.query(sqlTag`
+      await this.query(sqlTag`
         SELECT table_schema, table_type
         FROM information_schema.tables
         WHERE table_name = ${table}
@@ -143,7 +143,7 @@ export default class Db {
           column_name = ${verCol}`)
     ).rows[0].column_default;
 
-    if (!verDefault && tableType!=='VIEW') {
+    if (!verDefault && tableType !== 'VIEW') {
       throw Error(`pg.verCol_without_default ${verCol}`);
     }
 
