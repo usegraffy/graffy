@@ -100,14 +100,16 @@ export default class Db {
     if (tableOptions.schema) return;
     const { table, verCol, joins } = tableOptions;
 
-    const tableSchema = (
-      await this.query(sqlTag`
-        SELECT table_schema
+    let tableInfoSchema = (
+        await this.query(sqlTag`
+        SELECT table_schema, table_type
         FROM information_schema.tables
         WHERE table_name = ${table}
         ORDER BY array_position(current_schemas(false)::text[], table_schema::text) ASC
         LIMIT 1`)
-    ).rows[0].table_schema;
+    ).rows[0];
+    const tableSchema = tableInfoSchema.table_schema;
+    const tableType = tableInfoSchema.table_type;
 
     const types = (
       await this.query(sqlTag`
@@ -141,7 +143,7 @@ export default class Db {
           column_name = ${verCol}`)
     ).rows[0].column_default;
 
-    if (!verDefault) {
+    if (!verDefault && tableType!=='VIEW') {
       throw Error(`pg.verCol_without_default ${verCol}`);
     }
 
