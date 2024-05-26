@@ -1,19 +1,17 @@
-import { yarn } from './utils.js';
+import { npm } from './utils.js';
 
 export default async function publish(name, version) {
   const isPre = version.includes('alpha') || version.includes('beta');
+  console.log('Called publish', isPre);
   try {
-    await yarn(
+    const res = await npm(
       name,
       'publish',
       '--access',
       'public',
-      '--new-version',
-      version,
       ...(isPre ? ['--tag', 'pre'] : []),
-      '--non-interactive',
-      '--no-git-tag-version',
     );
+    console.log('Publish result', res);
     console.log(`INFO [${name}] published`);
   } catch (e) {
     console.error(`ERROR [${name}] publishing failed`);

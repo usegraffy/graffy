@@ -14,14 +14,14 @@ export const root = (...args) => join(base, ...args.filter(Boolean));
 export const src = (...args) => join(base, 'src', ...args.filter(Boolean));
 export const dst = (...args) => join(base, 'dist', ...args.filter(Boolean));
 
-const yarnPath = process.env.npm_execpath;
-export const yarn = (name, ...args) =>
-  execFile(yarnPath, args.filter(Boolean), { cwd: dst(name) });
+const npmPath = process.env.npm_execpath;
+export const npm = (name, ...args) =>
+  execFile(npmPath, args.filter(Boolean), { cwd: dst(name) });
 export const git = (...args) =>
   execFile('git', args.filter(Boolean), { cwd: base });
-export const yarnx = (...args) =>
-  execFile(yarnPath, args.filter(Boolean), { cwd: base });
+export const npmx = (...args) =>
+  execFile(npmPath, args.filter(Boolean), { cwd: base });
 
 export const ownPattern = /^@graffy\//;
 
-export default { src, dst, yarn, git, yarnx, ownPattern };
+export default { src, dst, npm, git, npmx, ownPattern };
