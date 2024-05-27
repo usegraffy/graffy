@@ -1,8 +1,8 @@
-import { yarn } from './utils.js';
+import { npm } from './utils.js';
 
 export default async function link(name) {
   try {
-    await yarn(name, 'link');
+    await npm(name, 'link');
     console.log(`INFO [${name}] linked`);
   } catch (e) {
     console.error(`ERROR [${name}] link failed`);

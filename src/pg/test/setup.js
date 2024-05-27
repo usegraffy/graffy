@@ -47,7 +47,7 @@ export async function setupPgServer() {
         'Possible reasons:\n' +
         '1. You might not have Docker installed.\n' +
         '2. The last test run might not have exited properly.\n' +
-        '   Run yarn pg:clean to fix this.\n' +
+        '   Run npm run pg:clean to fix this.\n' +
         'Docker might have printed a detailed error message above.',
     );
 
