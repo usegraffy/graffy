@@ -21,9 +21,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn install
-      - run: yarn lint
-      - run: yarn test
+          cache: 'npm'
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
         env:
           PGHOST: localhost
           PGPORT: 5432
