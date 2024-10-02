@@ -59,13 +59,13 @@ All the Graffy packages are published under the [@graffy scope](https://www.npmj
 | react    | React container and hooks API       |
 | stream   | Utility for making AsyncIterables   |
 | testing  | Testing and debugging utilities     |
-| graphql  | Translate GraphQL to Graffy      |
+| graphql  | Translate GraphQL to Graffy         |
 | schema   | ⌛ Validation, introspection API    |
 | viewer   | ⌛ Schema introspection client      |
 | auth     | ⌛ Authentication and authorization |
 | limit    | ⌛ Resource consumption accounting  |
 | mysql    | ⌛ Data source connector            |
-| postgres | ⌛ Data source connector            |
+| postgres |  Data source connector              |
 
 ⌛ = On the roadmap.
 
