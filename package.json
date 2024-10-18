@@ -9,7 +9,7 @@
     "url": "git+https://github.com/aravindet/graffy.git"
   },
   "scripts": {
-    "format": "biome check --apply .",
+    "format": "biome check --write .",
     "lint": "biome ci .",
     "package": "./scripts/package.js",
     "start": "node src/example/server.js",
@@ -26,7 +26,7 @@
   "homepage": "https://graffy.org",
   "devDependencies": {
     "@babel/preset-react": "^7.16.7",
-    "@biomejs/biome": "^1.7.3",
+    "@biomejs/biome": "^1.9.4",
     "@faker-js/faker": "^8.4.1",
     "@testing-library/react": "^15.0.6",
     "@types/debug": "^4.1.7",
