@@ -1,10 +1,25 @@
+import { cpSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { parentPort } from 'node:worker_threads';
 import ts from 'typescript';
 import { dst, src } from './utils.js';
 
-parentPort.on('message', (message) => {
+parentPort.on('message', async (message) => {
   const { name, fileName } = message;
+
+  // Copy hand-written type definitions if they exist.
+  try {
+    cpSync(src(name, 'types'), dst(name, 'types'), { recursive: true });
+    // const defs = (await readFile(src(name, 'types', 'index.d.ts'))).toString();
+    console.log(`INFO [${name}] copying type definitions`);
+    // await mkdir(dst(name, 'types'));
+    // await writeFile(dst(name, 'types', 'index.d.ts'), defs);
+    parentPort.postMessage(true);
+    return;
+  } catch (e) {
+    // console.log(e);
+    console.log(`INFO [${name}] no hand-written type definitions`);
+  }
 
   const args = fileName ? getFileArgs(name, fileName) : getPkgArgs(name);
 
