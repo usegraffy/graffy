@@ -1,3 +1,5 @@
+export type AnyLeaf = string | number | boolean | null;
+
 // biome-ignore lint/suspicious/noExplicitAny: This is used to match concrete types in "extends" expressions.
 export type AnyObject = Record<string, any>;
 
@@ -6,6 +8,15 @@ type AnyFunction = (...args: any[]) => any;
 
 // biome-ignore lint/suspicious/noExplicitAny: Keys can be anything.
 type Key = any;
+
+// biome-ignore lint/suspicious/noExplicitAny: Any value is for results.
+type AnyValue = any;
+
+type AnyProjection =
+  | boolean
+  | { $key: Key }
+  | { [key: string]: AnyProjection }
+  | AnyProjection[];
 
 export type GraffyCollection<CollectionSchema extends AnyObject> = {
   [name: string]: CollectionSchema;
@@ -25,6 +36,15 @@ export default class Graffy<S> {
     options?: GraffyReadOptions,
   ): Promise<ReadResult<S, Q>>;
 
+  // Generic one, when the path is not known at compile time.
+  // Should we have this?
+  //
+  // read<Q extends AnyProjection>(
+  //   path: string | Key[],
+  //   projection: Q,
+  //   options?: GraffyReadOptions,
+  // ): Promise<BlindReadResult<Q>>;
+
   on: AnyFunction;
   call: AnyFunction;
   use: AnyFunction;
@@ -34,6 +54,10 @@ export default class Graffy<S> {
   write: AnyFunction;
   watch: AnyFunction;
 }
+
+// TODO: To avoid the "too deep" error, these need to be tail-recursive.
+// This may be possible with an "accummulator" type parameter.
+// https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#tail-recursion-elimination-on-conditional-types
 
 export type PathOf<S> = S extends GraffyCollection<AnyObject>
   ? Key
@@ -53,21 +77,45 @@ export type Descend<S, P> = P extends [Key]
     ? Descend<Get<S, P[0]>, R>
     : Get<S, P>;
 
-export type Project<S> = S extends GraffyCollection<AnyObject>
-  ?
-      | (Project<S[string]> & { $key: Key })
-      | (Project<S[string]> & { $key: Key })[]
-  : S extends AnyObject
-    ? Partial<{ [K in keyof S]: Project<S[K]> }>
-    : boolean;
+export type Project<S> = S extends AnyLeaf
+  ? boolean
+  : S extends GraffyCollection<AnyObject>
+    ?
+        | { [key: string]: Project<S[string]> } //  Object form
+        | (Project<S[string]> & { $key: Key }) //   Single $key
+        | (Project<S[string]> & { $key: Key })[] // Array $key
+    : S extends AnyObject
+      ? 'string' extends keyof S // No named properties?
+        ? AnyProjection
+        : Partial<{ [K in keyof S]: Project<S[K]> }> | boolean
+      : never;
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 type ResultArray<R> = R[] & { $page: any; $next: any; $prev: any };
 
 type ReadResult<S, Q> = S extends GraffyCollection<AnyObject>
-  ? (S[string] & { $key: Key }) | ResultArray<S[string] & { $key: Key }>
-  : S extends AnyObject
-    ? { [K in keyof S & keyof Q]: ReadResult<S[K], Q[K]> }
-    : S;
+  ? Q extends Array<infer QItem>
+    ? ResultArray<PlainReadResult<S[string], QItem> & { $key: Key }> // Array $key
+    : Q extends { $key: Key }
+      ? ResultArray<PlainReadResult<S[string], Q> & { $key: Key }> //   Single $key
+      : { [K in keyof Q]: PlainReadResult<S[string], Q[K]> } //         Object form
+  : PlainReadResult<S, Q>;
+
+// Ignore $key in Q
+type PlainReadResult<S, Q> = Q extends AnyObject
+  ? { [K in keyof S & keyof Q]: ReadResult<S[K], Q[K]> }
+  : S;
+
+// What can we tell about ReadResult when schema isn’t known?
+// type BlindReadResult<Q> = Q extends Array<infer QItem>
+//   ? ResultArray<BlindPlainReadResult<QItem>>
+//   : Q extends { $key: Key }
+//     ? ResultArray<BlindPlainReadResult<Q>>
+//     : BlindPlainReadResult<Q>;
+
+// // Ignore $key in Q
+// type BlindPlainReadResult<Q> = Q extends AnyObject
+//   ? { [K in keyof Q]: BlindReadResult<Q[K]> }
+//   : AnyValue;
 
 type GraffyReadOptions = AnyObject;
