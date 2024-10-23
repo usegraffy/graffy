@@ -18,6 +18,9 @@ import { validateCall, validateOn } from './validate.js';
 
 export { unchanged } from './shift.js';
 
+/**
+ * @template S
+ */
 export default class Graffy {
   constructor(path = [], core = new Core()) {
     this.core = core;

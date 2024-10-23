@@ -29,7 +29,7 @@ describe('integration', () => {
       puppeteer
         .launch({
           headless: true,
-          // slowMo: 200,
+          slowMo: 10,
         })
         .then((b) => {
           browser = b;
