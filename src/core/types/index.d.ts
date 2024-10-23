@@ -7,7 +7,11 @@ export type AnyObject = Record<string, any>;
 type AnyFunction = (...args: any[]) => any;
 
 // biome-ignore lint/suspicious/noExplicitAny: Keys can be anything.
-type Key = any;
+export type Key = any;
+export type RangeKey =
+  | { $all: boolean }
+  | { $first: number }
+  | { $last: number };
 
 // biome-ignore lint/suspicious/noExplicitAny: Any value is for results.
 type AnyValue = any;
@@ -36,14 +40,16 @@ export default class Graffy<S> {
     options?: GraffyReadOptions,
   ): Promise<ReadResult<S, Q>>;
 
-  // Generic one, when the path is not known at compile time.
-  // Should we have this?
-  //
-  // read<Q extends AnyProjection>(
-  //   path: string | Key[],
-  //   projection: Q,
-  //   options?: GraffyReadOptions,
-  // ): Promise<BlindReadResult<Q>>;
+  // Generic mode, when the path is not known at compile time, but projection is.
+  read<Q extends AnyProjection>(
+    path: string | Key[],
+    projection: Q,
+    options?: GraffyReadOptions,
+  ): Promise<BlindReadResult<Q>>;
+
+  // Consider also:
+  // 1. Read when path is known at compile time but projection is not?
+  // 2. Read when neither path nor projection is known at compile time?
 
   on: AnyFunction;
   call: AnyFunction;
@@ -97,7 +103,9 @@ type ReadResult<S, Q> = S extends GraffyCollection<AnyObject>
   ? Q extends Array<infer QItem>
     ? ResultArray<PlainReadResult<S[string], QItem> & { $key: Key }> // Array $key
     : Q extends { $key: Key }
-      ? ResultArray<PlainReadResult<S[string], Q> & { $key: Key }> //   Single $key
+      ? Q extends { $key: string }
+        ? { [key in Q['$key']]: PlainReadResult<S, Q> }
+        : ResultArray<PlainReadResult<S[string], Q> & { $key: Key }> //   Single $key
       : { [K in keyof Q]: PlainReadResult<S[string], Q[K]> } //         Object form
   : PlainReadResult<S, Q>;
 
@@ -107,15 +115,17 @@ type PlainReadResult<S, Q> = Q extends AnyObject
   : S;
 
 // What can we tell about ReadResult when schema isn’t known?
-// type BlindReadResult<Q> = Q extends Array<infer QItem>
-//   ? ResultArray<BlindPlainReadResult<QItem>>
-//   : Q extends { $key: Key }
-//     ? ResultArray<BlindPlainReadResult<Q>>
-//     : BlindPlainReadResult<Q>;
+type BlindReadResult<Q> = Q extends Array<infer QItem>
+  ? ResultArray<BlindPlainReadResult<QItem>>
+  : Q extends { $key: Key }
+    ? Q extends { $key: string }
+      ? { [key in Q['$key']]: BlindPlainReadResult<Q> }
+      : ResultArray<BlindPlainReadResult<Q>>
+    : BlindPlainReadResult<Q>;
 
-// // Ignore $key in Q
-// type BlindPlainReadResult<Q> = Q extends AnyObject
-//   ? { [K in keyof Q]: BlindReadResult<Q[K]> }
-//   : AnyValue;
+// Ignore $key in Q
+type BlindPlainReadResult<Q> = Q extends AnyObject
+  ? { [K in keyof Q]: BlindReadResult<Q[K]> }
+  : AnyValue;
 
 type GraffyReadOptions = AnyObject;

@@ -20,7 +20,7 @@ interface Person {
   id: string & { __brand: 'SomePerson' };
   name: string;
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  settings: Record<string, any> | null;
+  config: Record<string, any> | null;
 }
 
 type TestSchema = {
@@ -30,29 +30,47 @@ type TestSchema = {
 
 const store: Graffy<TestSchema> = {} as Graffy<TestSchema>;
 
-const t = 'Activity' as const;
-
-const q = { name: true, id: true, $key: 'arst' };
-
-await store.read('Activity', q);
-
+const t = 'Activity';
+const q = { name: true, id: true, config: true, $key: 'arst' };
+const res0 = await store.read(t, q);
 const res1 = await store.read(['Activity', '123'], q);
-const res2 = store.read({ Activity: [{ $key: 10, name: true, config: true }] });
-const res3 = store.read({
+const res2 = await store.read({
+  Activity: [{ $key: 10, name: true, config: true }],
+});
+const res3 = await store.read({
   Activity: {
     arst: {
       name: true,
-      config: { foo: { bar: true, baz: '3' } },
+      config: { foo: { bar: true, baz: true } },
     },
   },
 });
+const res4 = await store.read('Activity', {
+  $key: 'arst',
+  name: true,
+  config: { foo: true },
+});
+
+const res5 = await store.read({
+  Activity: { $key: 'arst', name: true, config: { foo: true } },
+});
+
+type Q = { $key: 'arst'; name: true; config: { foo: true } };
+
+type B = Q extends {
+  $key: string;
+}
+  ? { [K in Q['$key']]: true }
+  : false;
+
+type G = TestSchema['Activity'][string];
 
 type P = Project<{ conf: Record<string, any> | null }>;
 
-type T = PlainReadResult<
+type T = ReadResult<
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  { conf: Record<string, any> | null },
-  { conf: { foo: { bar: true; baz: true } } }
+  { Activity: GraffyCollection<any> },
+  { Activity: { $key: 'arst'; id: true } }
 >;
 
 // type TestDescend1 = Descend<TestSchema, 'Activity'>;
