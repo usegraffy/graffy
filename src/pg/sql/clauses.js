@@ -1,4 +1,4 @@
-import { isEmpty } from '@graffy/common';
+import { isEmpty, isPlainObject } from '@graffy/common';
 import sql, { Sql, empty, join, raw } from 'sql-template-tag';
 
 /*
@@ -100,14 +100,40 @@ function castValue(value, type, name, isPut) {
   if (value === null) return sql`NULL`;
 
   if (type === 'jsonb') {
-    return isPut
-      ? JSON.stringify(stripAttributes(value))
-      : getJsonUpdate(value, name, [])[0];
+    return buildJsonPartial(value, isPut);
   }
 
   if (type === 'cube') return cubeLiteralSql(value);
 
-  return value;
+  if (typeof value === 'object' && value.$val) {
+    return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
+  }
+
+  if (typeof value === 'number') return value;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return sql`${value}`;
+  if (Array.isArray(value)) return sql`${JSON.stringify(value)}::jsonb`;
+
+  return sql`${JSON.stringify(value)}::jsonb`;
+}
+
+function buildJsonPartial(value, isPut) {
+  if (!isPlainObject(value)) {
+    return sql`${JSON.stringify(value)}::jsonb`;
+  }
+
+  if (Object.keys(value).length === 0 && !isPut) return sql`NULL`;
+
+  const parts = [];
+  for (const k of Object.keys(value)) {
+    parts.push(sql`${k}::text, ${buildJsonPartial(value[k], isPut)}`);
+  }
+
+  if (!parts.length && isPut) return sql`${JSON.stringify(value)}::jsonb`;
+
+  const objSql = sql`jsonb_build_object(${join(parts, ', ')})`;
+  const filtered = sql`(select jsonb_object_agg(key, value) from jsonb_each(${objSql}) where value <> 'null'::jsonb)`;
+  return filtered;
 }
 
 export const getInsert = (rows, options) => {
@@ -228,17 +254,13 @@ function getJsonUpdate(object, col, path) {
 
 function stripAttributes(object) {
   if (typeof object !== 'object' || !object) return object;
-  if (Array.isArray(object)) {
-    return object.map((item) => stripAttributes(item));
+  if (Array.isArray(object)) return object.map((item) => stripAttributes(item));
+  const res = {};
+  for (const k in object) {
+    if (k === '$put') continue;
+    const val = stripAttributes(object[k]);
+    if (val === null) continue;
+    res[k] = val;
   }
-
-  return Object.entries(object).reduce(
-    (/** @type {null|Record<string,any>} */ out, [key, val]) => {
-      if (key === '$put' || val === null) return out;
-      if (out === null) out = {};
-      out[key] = stripAttributes(val);
-      return out;
-    },
-    null,
-  );
+  return Object.keys(res).length ? res : null;
 }
