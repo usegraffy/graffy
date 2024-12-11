@@ -67,20 +67,20 @@ describe('clauses', () => {
     expectSql(query, sql`*`);
   });
 
-  describe("JSONB partial projection SQL", () => {
+  describe('JSONB partial projection SQL', () => {
     const options = {
-      verCol: "version",
+      verCol: 'version',
       schema: {
         types: {
-          id: "uuid",
-          data: "jsonb",
-          version: "int8",
+          id: 'uuid',
+          data: 'jsonb',
+          version: 'int8',
         },
       },
-      verDefault: "default",
+      verDefault: 'default',
     };
 
-    test("getUpdates with partial json object", () => {
+    test('getUpdates with partial json object', () => {
       const row = {
         data: { foo: { bar: 33, baz: null }, qux: true },
         version: 10,
@@ -101,7 +101,7 @@ describe('clauses', () => {
       expect(res.text).toContain('"version" =  default');
     });
 
-    test("getUpdates with empty object and put", () => {
+    test('getUpdates with empty object and put', () => {
       const row = {
         data: {},
         version: 5,
@@ -113,19 +113,19 @@ describe('clauses', () => {
       expect(res.text).toMatch(/jsonb_build_object\(\)/);
     });
 
-    test("getInsert with multiple rows", () => {
+    test('getInsert with multiple rows', () => {
       const rows = [
         {
-          id: "abcd-1234",
+          id: 'abcd-1234',
           data: {
             alpha: 1,
-            nested: { foo: "bar", removeMe: null },
+            nested: { foo: 'bar', removeMe: null },
             arr: [1, 2],
           },
           $put: true,
         },
         {
-          id: "abcd-5678",
+          id: 'abcd-5678',
           data: { onlyNulls: { a: null, b: null } },
           $put: true,
         },
@@ -133,14 +133,14 @@ describe('clauses', () => {
 
       const { cols, vals, updates } = getInsert(rows, options);
       expect(cols.text).toContain('"id", "data", "version"');
-      expect(vals.text).toContain("jsonb_build_object");
-      expect(vals.text).not.toContain("removeMe"); // null filtered
-      expect(vals.text).toContain("arr");
+      expect(vals.text).toContain('jsonb_build_object');
+      expect(vals.text).not.toContain('removeMe'); // null filtered
+      expect(vals.text).toContain('arr');
       expect(vals.text).toContain('"onlyNulls"'); // becomes empty object?
       expect(updates.text).toContain('"data" = "excluded"."data"');
     });
 
-    test("no json partial needed", () => {
+    test('no json partial needed', () => {
       const row = {
         data: { foo: true },
         version: 3,
