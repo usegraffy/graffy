@@ -66,4 +66,87 @@ describe('clauses', () => {
     const query = getSelectCols(options);
     expectSql(query, sql`*`);
   });
+
+  describe("JSONB partial projection SQL", () => {
+    const options = {
+      verCol: "version",
+      schema: {
+        types: {
+          id: "uuid",
+          data: "jsonb",
+          version: "int8",
+        },
+      },
+      verDefault: "default",
+    };
+
+    test("getUpdates with partial json object", () => {
+      const row = {
+        data: { foo: { bar: 33, baz: null }, qux: true },
+        version: 10,
+        $put: true, // Indicates a full put operation
+      };
+
+      const res = getUpdates(row, options);
+
+      // Check that it includes jsonb_build_object and filters null.
+      expect(res.text).toMatch(/jsonb_build_object/);
+      expect(res.text).toMatch(/jsonb_each/);
+      expect(res.text).not.toMatch(/"baz"/); // should be filtered out
+      expect(res.text).toMatch(/"bar"/); // 'bar' should still be present
+      expect(res.text).toMatch(/"qux"/);
+
+      // Just ensure it compiles as SQL without syntax errors.
+      expect(res.text).toContain('"data" = ');
+      expect(res.text).toContain('"version" =  default');
+    });
+
+    test("getUpdates with empty object and put", () => {
+      const row = {
+        data: {},
+        version: 5,
+        $put: true,
+      };
+      const res = getUpdates(row, options);
+      // If $put and no fields, we return jsonb '{}' rather than null
+      // as we are doing a PUT operation.
+      expect(res.text).toMatch(/jsonb_build_object\(\)/);
+    });
+
+    test("getInsert with multiple rows", () => {
+      const rows = [
+        {
+          id: "abcd-1234",
+          data: {
+            alpha: 1,
+            nested: { foo: "bar", removeMe: null },
+            arr: [1, 2],
+          },
+          $put: true,
+        },
+        {
+          id: "abcd-5678",
+          data: { onlyNulls: { a: null, b: null } },
+          $put: true,
+        },
+      ];
+
+      const { cols, vals, updates } = getInsert(rows, options);
+      expect(cols.text).toContain('"id", "data", "version"');
+      expect(vals.text).toContain("jsonb_build_object");
+      expect(vals.text).not.toContain("removeMe"); // null filtered
+      expect(vals.text).toContain("arr");
+      expect(vals.text).toContain('"onlyNulls"'); // becomes empty object?
+      expect(updates.text).toContain('"data" = "excluded"."data"');
+    });
+
+    test("no json partial needed", () => {
+      const row = {
+        data: { foo: true },
+        version: 3,
+      };
+      const res = getUpdates(row, options);
+      expect(res.text).toContain("jsonb_build_object('foo',"); // no null filtering needed
+    });
+  });
 });
