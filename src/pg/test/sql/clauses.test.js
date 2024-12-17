@@ -66,4 +66,20 @@ describe('clauses', () => {
     const query = getSelectCols(options);
     expectSql(query, sql`*`);
   });
+
+  test('OptimisedJsonBuild', () => {
+    const data = {
+      name: 1,
+      email: 2,
+      profile: {
+        id: 3,
+        name: 4,
+      },
+    };
+    const query = getJsonBuildTrusted(data);
+    expectSql(
+      query,
+      sql`jsonb_build_object('name', ${'1'}::jsonb, 'email', ${'2'}::jsonb, 'profile', ${'{"id":3,"name":4}'}::jsonb)`,
+    );
+  });
 });

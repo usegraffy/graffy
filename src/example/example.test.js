@@ -29,6 +29,7 @@ describe('integration', () => {
       puppeteer
         .launch({
           headless: true,
+          args: ['--no-sandbox'],
           // slowMo: 200,
         })
         .then((b) => {

@@ -3,7 +3,7 @@
   Consecutive sizes differ by the cube root of 3 (rounded to the nearest
   integer.) Font size doubles every 3 steps.
 */
- @import url('https://fonts.googleapis.com/css?family=IBM+Plex+Mono|IBM+Plex+Sans:400,400i,700&display=swap');
+@import url("https://fonts.googleapis.com/css?family=IBM+Plex+Mono|IBM+Plex+Sans:400,400i,700&display=swap");
 
 body {
   margin: 0;
@@ -28,12 +28,17 @@ th {
     'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
     'Droid Sans', 'Helvetica Neue', sans-serif; */
 
-  font-family: 'IBM Plex Sans', monospace;
+  font-family: "IBM Plex Sans", monospace;
   color: #333;
   font-size: 15px;
   line-height: 1.5em;
 }
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: normal;
   line-height: 1.26em;
   padding: 0;
@@ -62,7 +67,8 @@ h5 {
   letter-spacing: 1px;
 }
 
-blockquote, pre {
+blockquote,
+pre {
   padding: 0 16px;
   margin: 16px 0;
   border-left: 1px solid #555;
@@ -81,7 +87,6 @@ a:hover {
   color: #fff;
   text-decoration: none;
 }
-
 
 /** Styles for the example **/
 
@@ -144,7 +149,7 @@ a:hover {
   left: -60%;
   height: 100%;
   width: 60%;
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
   font-size: 16px;
   line-height: 1.5em;
@@ -239,7 +244,7 @@ a:hover {
 }
 
 .Visitor-page::before {
-  content: '';
+  content: "";
   position: absolute;
   border: 2px solid #999;
   height: 8px;
@@ -259,44 +264,44 @@ a:hover {
   grid-gap: 1em;
 }
 
-
 /**
  * a11y-light theme for JavaScript, CSS, and HTML
  * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/themes/prism-okaidia.css
  * @author ericwbailey
  */
 
-code, pre {
-	color: #555;
-	background: none;
-  font-family: 'IBM Plex Mono', monospace;
+code,
+pre {
+  color: #555;
+  background: none;
+  font-family: "IBM Plex Mono", monospace;
   font-size: 15px;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.13;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.13;
 
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
 
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
 }
 
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-	color: #696969;
+  color: #696969;
 }
 
 .token.punctuation {
-	color: #545454;
+  color: #545454;
 }
 
 .token.property,
@@ -304,12 +309,12 @@ code, pre {
 .token.constant,
 .token.symbol,
 .token.deleted {
-	color: #007faa;
+  color: #007faa;
 }
 
 .token.boolean,
 .token.number {
-	color: #008000;
+  color: #008000;
 }
 
 .token.selector,
@@ -318,7 +323,7 @@ code, pre {
 .token.char,
 .token.builtin,
 .token.inserted {
-	color: #aa5d00;
+  color: #aa5d00;
 }
 
 .token.operator,
@@ -327,76 +332,76 @@ code, pre {
 .language-css .token.string,
 .style .token.string,
 .token.variable {
-	color: #008000;
+  color: #008000;
 }
 
 .token.atrule,
 .token.attr-value,
 .token.function {
-	color: #aa5d00;
+  color: #aa5d00;
 }
 
 .token.keyword {
-	color: #d91e18;
+  color: #d91e18;
 }
 
 .token.regex,
 .token.important {
-	color: #d91e18;
+  color: #d91e18;
 }
 
 .token.important,
 .token.bold {
-	font-weight: bold;
+  font-weight: bold;
 }
 .token.italic {
-	font-style: italic;
+  font-style: italic;
 }
 
 .token.entity {
-	cursor: help;
+  cursor: help;
 }
 
-@media screen and (-ms-high-contrast: active) {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		color: windowText;
-		background: window;
-	}
+@media screen and (prefers-contrast: more) {
+  code[class*="language-"],
+  pre[class*="language-"] {
+    color: windowText;
+    background: window;
+  }
 
-	:not(pre) > code[class*="language-"],
-	pre[class*="language-"] {
-		background: window;
-	}
+  :not(pre) > code[class*="language-"],
+  pre[class*="language-"] {
+    background: window;
+  }
 
-	.token.important {
-		background: highlight;
-		color: window;
-		font-weight: normal;
-	}
+  .token.important {
+    background: highlight;
+    color: window;
+    font-weight: normal;
+  }
 
-	.token.atrule,
-	.token.attr-value,
-	.token.function,
-	.token.keyword,
-	.token.operator,
-	.token.selector {
-		font-weight: bold;
-	}
+  .token.atrule,
+  .token.attr-value,
+  .token.function,
+  .token.keyword,
+  .token.operator,
+  .token.selector {
+    font-weight: bold;
+  }
 
-	.token.attr-value,
-	.token.comment,
-	.token.doctype,
-	.token.function,
-	.token.keyword,
-	.token.operator,
-	.token.property,
-	.token.string {
-		color: highlight;
-	}
+  .token.attr-value,
+  .token.comment,
+  .token.doctype,
+  .token.function,
+  .token.keyword,
+  .token.operator,
+  .token.property,
+  .token.string {
+    color: highlight;
+  }
 
-	.token.attr-value,
-	.token.url {
-		font-weight: normal;
-	}
+  .token.attr-value,
+  .token.url {
+    font-weight: normal;
+  }
 }

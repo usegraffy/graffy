@@ -50,6 +50,37 @@ const aggSql = {
   $min: (prop) => sql`min((${lookupNumeric(prop)})::numeric)`,
 };
 
+const getOptimisedJsonBuild = (object, path, parentPropertyName, options) => {
+  const propertyNames = Object.keys(object);
+  const propertyPath = [...path, parentPropertyName];
+  const buildConfig = [];
+
+  path = path || [];
+
+  propertyNames.forEach((propertyName) => {
+    const property = object[propertyName];
+    if (typeof property === 'object') {
+      const childJSONBuild = getOptimisedJsonBuild(
+        property,
+        propertyPath,
+        propertyName,
+        options,
+      );
+      buildConfig.push(
+        sql`${propertyName}::text, jsonb_build_object(${join(childJSONBuild, ', ')})`,
+      );
+    } else {
+      if (property === true) {
+        buildConfig.push(
+          sql`${propertyName}::text, ${lookup([...propertyPath, propertyName].join('.'), options)}`,
+        );
+      }
+    }
+  });
+
+  return buildConfig;
+};
+
 export const getSelectCols = (options, projection = null) => {
   if (!projection) return sql`*`;
 
@@ -66,7 +97,20 @@ export const getSelectCols = (options, projection = null) => {
         sql`jsonb_build_object(${join(subSqls, ', ')}) AS "${raw(key)}"`,
       );
     } else {
-      sqls.push(sql`"${raw(key)}"`);
+      if (typeof projection[key] === 'object') {
+        const optimisedJsonBuild = getOptimisedJsonBuild(
+          projection[key],
+          [],
+          key,
+          options,
+        );
+
+        sqls.push(
+          sql`jsonb_build_object(${join(optimisedJsonBuild, ', ')}) AS "${raw(key)}"`,
+        );
+      } else {
+        sqls.push(sql`"${raw(key)}"`);
+      }
     }
   }
 
