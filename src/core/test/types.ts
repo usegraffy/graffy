@@ -7,26 +7,35 @@ import type Graffy from '../types';
 import type {
   AnyObject,
   Descend,
-  Get,
+  // Get,
   GraffyCollection,
+  GraffyRecord,
   Key,
   PathOf,
-  PlainReadResult,
+  // PlainReadResult,
   Project,
-  ReadResult,
+  // ReadResult,
 } from '../types';
+import type { KeyOf, RecPathOf } from '../types/path';
 
 interface Person {
   id: string & { __brand: 'SomePerson' };
   name: string;
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   config: Record<string, any> | null;
+  friend: Person;
 }
 
-type TestSchema = {
+type TestSchema = GraffyRecord<{
   Activity: GraffyCollection<Person>;
   Person: GraffyCollection<Person>;
-};
+}>;
+
+type Path = PathOf<TestSchema>;
+type Path2 = RecPathOf<{ node: TestSchema; curr: []; path: [] }>;
+type Path3 = KeyOf<TestSchema>;
+
+type Projection = Project<TestSchema>;
 
 const store: Graffy<TestSchema> = {} as Graffy<TestSchema>;
 
@@ -55,44 +64,53 @@ const res5 = await store.read({
   Activity: { $key: 'arst', name: true, config: { foo: true } },
 });
 
-type Q = { $key: 'arst'; name: true; config: { foo: true } };
+const res6 = await store.read({
+  Activity: { $key: { id: 'arst' }, name: true, config: { foo: true } },
+});
 
-type B = Q extends {
-  $key: string;
-}
-  ? { [K in Q['$key']]: true }
-  : false;
+type T = PathOf<TestSchema>;
+type X = T extends T ? T : never;
 
-type G = TestSchema['Activity'][string];
+// type Q = { $key: 'arst'; name: true; config: { foo: true } };
 
-type P = Project<{ conf: Record<string, any> | null }>;
+// type B = Q extends {
+//   $key: string;
+// }
+//   ? { [K in Q['$key']]: true }
+//   : false;
 
-type T = ReadResult<
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  { Activity: GraffyCollection<any> },
-  { Activity: { $key: 'arst'; id: true } }
->;
+// type G = TestSchema['Activity'][string];
 
-// type TestDescend1 = Descend<TestSchema, 'Activity'>;
-// const x: Project<TestDescend1> = { $key: '123', name: true };
+// type P = Project<{ conf: Record<string, any> | null }>;
 
-// type TestDescend2 = Descend<TestSchema, ['Activity', 'arst']>;
+// type T = ReadResult<
+//   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+//   { Activity: GraffyCollection<any> },
+//   { Activity: { $key: 'arst'; id: true } }
+// >;
 
-// type Foo1 = ['Activity', 'arst'] extends [Key, ...infer R] ? R : false;
-// type Foo2 = ['Activity', 'arst'] extends [Key] ? true : false;
+// // type TestDescend1 = Descend<TestSchema, 'Activity'>;
+// // const x: Project<TestDescend1> = { $key: '123', name: true };
 
-// type Foo3 = Get<Get<TestSchema, 'Activity'>, 'arst'>;
+// // type TestDescend2 = Descend<TestSchema, ['Activity', 'arst']>;
 
-// type Foo4 = Project<Descend<TestSchema, 'Activity'>>;
+// // type Foo1 = ['Activity', 'arst'] extends [Key, ...infer R] ? R : false;
+// // type Foo2 = ['Activity', 'arst'] extends [Key] ? true : false;
 
-// type Foo5 = { [k in keyof boolean]: k };
+// // type Foo3 = Get<Get<TestSchema, 'Activity'>, 'arst'>;
 
-// type Foo6 = boolean extends AnyObject ? true : false;
+// // type Foo4 = Project<Descend<TestSchema, 'Activity'>>;
 
-// type Foo7 = string extends Project<TestDescend1> ? true : false;
+// // type Foo5 = { [k in keyof boolean]: k };
 
-// type T = { $key: 'arst'; foo: 1 };
+// // type Foo6 = boolean extends AnyObject ? true : false;
 
-// type Y = T extends { $key: Key } & infer U ? U : never;
+// // type Foo7 = string extends Project<TestDescend1> ? true : false;
 
-type Z = 'string' extends keyof Record<string, any> ? true : false;
+// // type T = { $key: 'arst'; foo: 1 };
+
+// // type Y = T extends { $key: Key } & infer U ? U : never;
+
+// type Z = 'string' extends keyof Record<string, any> ? true : false;
+
+// type X = Project<Record<string, any>>;
