@@ -9,6 +9,8 @@ import {
   setupPgServer,
   teardownPgServer,
 } from './setup.js';
+import expectSql from './expectSql.js';
+import sql from 'sql-template-tag';
 
 const uuidV4Regex =
   /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
@@ -1177,6 +1179,35 @@ describe('pg_e2e', () => {
         name: true,
       });
       expect(res2).toEqual([{ name: 'alice' }]);
+    });
+  });
+
+  describe('inspection', () => {
+    beforeEach(async () => {
+      await store.write(['users', uuid()], {
+        name: 'alice',
+        email: 'alice@acme.co',
+        settings: { foo: 3 },
+        $put: true,
+      });
+      await store.write(['users', uuid()], {
+        name: 'bob',
+        email: 'bob@acme.co',
+        settings: { bar: 5 },
+        $put: true,
+      });
+    });
+    test('sql', async () => {
+      const result = await store.read(['users'], {
+        $key: { name: 'alice' },
+        $sql: true,
+      });
+      expect(result[0].$sql).toEqual(
+        'SELECT TRUE AS "$", \'{"name":"alice"}\'::jsonb AS "$key", ' +
+          '(EXTRACT(epoch FROM CURRENT_TIMESTAMP) * (1000)::numeric) AS "$ver", ' +
+          'array[ \'users\'::text, "id" ]::text[] AS "$ref" FROM "users" ' +
+          'WHERE "id" = ( SELECT "id" FROM "users" WHERE "name" = \'alice\' LIMIT 2 )',
+      );
     });
   });
 });

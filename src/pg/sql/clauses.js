@@ -96,25 +96,28 @@ export const getSelectCols = (options, projection = null) => {
       sqls.push(
         sql`jsonb_build_object(${join(subSqls, ', ')}) AS "${raw(key)}"`,
       );
-    } else {
-      if (typeof projection[key] === 'object') {
-        const optimisedJsonBuild = getOptimisedJsonBuild(
-          projection[key],
-          [],
-          key,
-          options,
-        );
+    }
 
-        sqls.push(
-          sql`jsonb_build_object(${join(optimisedJsonBuild, ', ')}) AS "${raw(key)}"`,
-        );
-      } else {
-        sqls.push(sql`"${raw(key)}"`);
-      }
+    if (key[0] === '$') continue;
+
+    if (typeof projection[key] === 'object') {
+      const optimisedJsonBuild = getOptimisedJsonBuild(
+        projection[key],
+        [],
+        key,
+        options,
+      );
+
+      sqls.push(
+        sql`jsonb_build_object(${join(optimisedJsonBuild, ', ')}) AS "${raw(key)}"`,
+      );
+    } else {
+      sqls.push(sql`"${raw(key)}"`);
     }
   }
 
-  return join(sqls, ', ');
+  // It needs at least one column.
+  return sqls.length ? join(sqls, ', ') : sql`TRUE AS "$"`;
 };
 
 function vertexSql(array, nullValue) {

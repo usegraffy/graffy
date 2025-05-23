@@ -19,6 +19,7 @@ import debug from 'debug';
 import pg from 'pg';
 import sqlTag from 'sql-template-tag';
 import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
+import formatSql from './sql/format.js';
 const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
 
@@ -96,7 +97,7 @@ export default class Db {
   /*
     Adds .schema to tableOptions if it doesn't exist yet.
     It mutates the argument, to "persist" the results and
-    avoid this query in every operation. 
+    avoid this query in every operation.
   */
   async ensureSchema(tableOptions, typeOids) {
     if (tableOptions.schema) return;
@@ -170,10 +171,15 @@ export default class Db {
     await this.ensureSchema(tableOptions);
 
     const getByArgs = async (args, projection) => {
-      const result = await this.readSql(
-        selectByArgs(args, projection, tableOptions),
-        tableOptions,
-      );
+      const sql = selectByArgs(args, projection, tableOptions);
+      // console.log('SQL', sql);
+      const result = await this.readSql(sql, tableOptions);
+      if (projection.$sql) {
+        for (const object of result) {
+          object.$sql = formatSql(sql);
+        }
+      }
+      // console.log('Result', result);
       const wrappedGraph = encodeGraph(wrapObject(result, rawPrefix));
       log('getByArgs', wrappedGraph);
       merge(results, wrappedGraph);
@@ -183,10 +189,8 @@ export default class Db {
       // TODO: Calculate a combined projection.
       // Bonus: Strategically split into multiple read operations
       // based on projection.
-      const result = await this.readSql(
-        selectByIds(Object.keys(idQueries), null, tableOptions),
-        tableOptions,
-      );
+      const sql = selectByIds(Object.keys(idQueries), null, tableOptions);
+      const result = await this.readSql(sql, tableOptions);
       for (const object of result) {
         const wrappedGraph = encodeGraph(wrapObject(object, rawPrefix));
         log('getByIds', wrappedGraph);
