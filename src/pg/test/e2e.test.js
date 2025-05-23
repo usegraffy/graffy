@@ -1,16 +1,16 @@
 import Graffy from '@graffy/core';
 import { keyref, page, put, ref } from '@graffy/testing';
 import { jest } from '@jest/globals';
+import sql from 'sql-template-tag';
 import { v4 as uuid } from 'uuid';
 import { pg } from '../index.js';
+import expectSql from './expectSql.js';
 import {
   getPool,
   resetTables,
   setupPgServer,
   teardownPgServer,
 } from './setup.js';
-import expectSql from './expectSql.js';
-import sql from 'sql-template-tag';
 
 const uuidV4Regex =
   /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;

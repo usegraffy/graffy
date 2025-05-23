@@ -18,8 +18,8 @@ import {
 import debug from 'debug';
 import pg from 'pg';
 import sqlTag from 'sql-template-tag';
-import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
 import formatSql from './sql/format.js';
+import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
 const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
 
