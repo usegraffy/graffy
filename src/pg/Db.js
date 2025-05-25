@@ -17,7 +17,7 @@ import {
 } from '@graffy/common';
 import debug from 'debug';
 import pg from 'pg';
-import sqlTag from 'sql-template-tag';
+import sqlTag, { join as sqlJoin } from 'sql-template-tag';
 import formatSql from './sql/format.js';
 import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
 const log = debug('graffy:pg:db');
@@ -172,16 +172,30 @@ export default class Db {
 
     const getByArgs = async (args, projection) => {
       const sql = selectByArgs(args, projection, tableOptions);
-      // console.log('SQL', sql);
       const result = await this.readSql(sql, tableOptions);
-      if (projection.$sql) {
-        for (const object of result) {
-          object.$sql = formatSql(sql);
-        }
-      }
-      // console.log('Result', result);
       const wrappedGraph = encodeGraph(wrapObject(result, rawPrefix));
       log('getByArgs', wrappedGraph);
+      merge(results, wrappedGraph);
+    };
+
+    const explainArgs = async (args, projection) => {
+      const { $analyze, ...qArgs } = args.$explain;
+      const qSql = selectByArgs(qArgs, null, tableOptions);
+      const sql = sqlTag`EXPLAIN (${
+        $analyze ? sqlTag`ANALYZE, BUFFERS, TIMING, ` : sqlTag``
+      }COSTS, VERBOSE, FORMAT JSON) ${qSql}`;
+      const result = await this.readSql(sql, tableOptions);
+      const wrappedGraph = encodeGraph(
+        wrapObject(
+          {
+            $key: args,
+            sql: formatSql(qSql),
+            plan: result[0]['QUERY PLAN'][0],
+          },
+          rawPrefix,
+        ),
+      );
+      log('explainArgs', wrappedGraph);
       merge(results, wrappedGraph);
     };
 
@@ -213,7 +227,11 @@ export default class Db {
           }
         } else {
           const projection = node.children ? decodeQuery(node.children) : null;
-          promises.push(getByArgs(args, projection));
+          if (args.$explain) {
+            promises.push(explainArgs(args, projection));
+          } else {
+            promises.push(getByArgs(args, projection));
+          }
         }
       } else {
         idQueries[args] = node.children;

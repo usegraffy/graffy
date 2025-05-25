@@ -1197,17 +1197,34 @@ describe('pg_e2e', () => {
         $put: true,
       });
     });
-    test('sql', async () => {
+    test('explain', async () => {
       const result = await store.read(['users'], {
-        $key: { name: 'alice' },
-        $sql: true,
+        $key: { $explain: { name: 'alice' } },
+        sql: true,
+        plan: true,
       });
-      expect(result[0].$sql).toEqual(
-        'SELECT TRUE AS "$", \'{"name":"alice"}\'::jsonb AS "$key", ' +
-          '(EXTRACT(epoch FROM CURRENT_TIMESTAMP) * (1000)::numeric) AS "$ver", ' +
-          'array[ \'users\'::text, "id" ]::text[] AS "$ref" FROM "users" ' +
-          'WHERE "id" = ( SELECT "id" FROM "users" WHERE "name" = \'alice\' LIMIT 2 )',
+      expect(result[0].sql).toEqual(
+        'SELECT *, \'{"name":"alice"}\'::jsonb AS "$key", (EXTRACT(epoch FROM CURRENT_TIMESTAMP) * (1000)::numeric) AS "$ver", array[ \'users\'::text, "id" ]::text[] AS "$ref" FROM "users" WHERE "id" = ( SELECT "id" FROM "users" WHERE "name" = \'alice\' LIMIT 2 )',
       );
+      expect(result[0].plan.Plan).toEqual(expect.any(Object));
+      expect(result[0].plan.Planning).toBeUndefined();
+      expect(result[0].plan['Planning Time']).toBeUndefined();
+      expect(result[0].plan['Execution Time']).toBeUndefined();
+    });
+
+    test('explain analyze', async () => {
+      const result = await store.read(['users'], {
+        $key: { $explain: { name: 'alice', $analyze: true } },
+        sql: true,
+        plan: true,
+      });
+      expect(result[0].sql).toEqual(
+        'SELECT *, \'{"name":"alice"}\'::jsonb AS "$key", (EXTRACT(epoch FROM CURRENT_TIMESTAMP) * (1000)::numeric) AS "$ver", array[ \'users\'::text, "id" ]::text[] AS "$ref" FROM "users" WHERE "id" = ( SELECT "id" FROM "users" WHERE "name" = \'alice\' LIMIT 2 )',
+      );
+      expect(result[0].plan.Plan).toEqual(expect.any(Object));
+      expect(result[0].plan.Planning).toEqual(expect.any(Object));
+      expect(result[0].plan['Planning Time']).toEqual(expect.any(Number));
+      expect(result[0].plan['Execution Time']).toEqual(expect.any(Number));
     });
   });
 });
