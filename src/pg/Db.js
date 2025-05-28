@@ -17,7 +17,7 @@ import {
 } from '@graffy/common';
 import debug from 'debug';
 import pg from 'pg';
-import sqlTag, { join as sqlJoin } from 'sql-template-tag';
+import sqlTag from 'sql-template-tag';
 import formatSql from './sql/format.js';
 import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
 const log = debug('graffy:pg:db');
