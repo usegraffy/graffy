@@ -9,7 +9,7 @@ export default function formatSql(sql) {
   const values = sql.values.slice(0);
   const output = [];
   while (strings.length) {
-    output.push(strings.shift().replace(/\s+/g, ' '));
+    output.push(strings.shift());
 
     if (!values.length) break;
     const value = values.shift();
@@ -21,5 +21,5 @@ export default function formatSql(sql) {
           : `'${value}'`,
     );
   }
-  return format(output.join('').trim(), { language: 'postgresql' });
+  return format(output.join(''), { language: 'postgresql' });
 }
