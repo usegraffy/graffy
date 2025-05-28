@@ -19,9 +19,17 @@ import debug from 'debug';
 import pg from 'pg';
 import sqlTag, { join as sqlJoin } from 'sql-template-tag';
 import formatSql from './sql/format.js';
+import { format } from 'sql-formatter';
 import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
 const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
+
+const formatSqlValue = (value) =>
+  typeof value === 'number'
+    ? value.toString()
+    : typeof value === 'object'
+      ? `'${JSON.stringify(value)}'`
+      : `'${value}'`;
 
 export default class Db {
   constructor(connection) {
@@ -179,10 +187,10 @@ export default class Db {
     };
 
     const explainArgs = async (args, projection) => {
-      const { $analyze, ...qArgs } = args.$explain;
+      const { analyze, $explain: qArgs } = args;
       const qSql = selectByArgs(qArgs, null, tableOptions);
       const sql = sqlTag`EXPLAIN (${
-        $analyze ? sqlTag`ANALYZE, BUFFERS, TIMING, ` : sqlTag``
+        analyze ? sqlTag`ANALYZE, BUFFERS, TIMING, ` : sqlTag``
       }COSTS, VERBOSE, FORMAT JSON) ${qSql}`;
       const result = await this.readSql(sql, tableOptions);
       const wrappedGraph = encodeGraph(

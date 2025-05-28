@@ -1,3 +1,9 @@
+import { format } from 'sql-formatter';
+
+/**
+ * @param {import('sql-template-tag').Sql} sql
+ * @returns {string}
+ */
 export default function formatSql(sql) {
   const strings = sql.strings.slice(0);
   const values = sql.values.slice(0);
@@ -15,5 +21,5 @@ export default function formatSql(sql) {
           : `'${value}'`,
     );
   }
-  return output.join('').trim();
+  return format(output.join('').trim(), { language: 'postgresql' });
 }

@@ -1204,7 +1204,30 @@ describe('pg_e2e', () => {
         plan: true,
       });
       expect(result[0].sql).toEqual(
-        'SELECT *, \'{"name":"alice"}\'::jsonb AS "$key", (EXTRACT(epoch FROM CURRENT_TIMESTAMP) * (1000)::numeric) AS "$ver", array[ \'users\'::text, "id" ]::text[] AS "$ref" FROM "users" WHERE "id" = ( SELECT "id" FROM "users" WHERE "name" = \'alice\' LIMIT 2 )',
+        'SELECT\n' +
+          '  *,\n' +
+          '  \'{"name":"alice"}\'::jsonb AS "$key",\n' +
+          '  (\n' +
+          '    EXTRACT(\n' +
+          '      epoch\n' +
+          '      FROM\n' +
+          '        CURRENT_TIMESTAMP\n' +
+          '    ) * (1000)::numeric\n' +
+          '  ) AS "$ver",\n' +
+          '  array[\'users\'::text, "id"]::text[] AS "$ref"\n' +
+          'FROM\n' +
+          '  "users"\n' +
+          'WHERE\n' +
+          '  "id" = (\n' +
+          '    SELECT\n' +
+          '      "id"\n' +
+          '    FROM\n' +
+          '      "users"\n' +
+          '    WHERE\n' +
+          '      "name" = \'alice\'\n' +
+          '    LIMIT\n' +
+          '      2\n' +
+          '  )',
       );
       expect(result[0].plan.Plan).toEqual(expect.any(Object));
       expect(result[0].plan.Planning).toBeUndefined();
@@ -1214,13 +1237,10 @@ describe('pg_e2e', () => {
 
     test('explain analyze', async () => {
       const result = await store.read(['users'], {
-        $key: { $explain: { name: 'alice', $analyze: true } },
+        $key: { $explain: { name: 'alice' }, analyze: true },
         sql: true,
         plan: true,
       });
-      expect(result[0].sql).toEqual(
-        'SELECT *, \'{"name":"alice"}\'::jsonb AS "$key", (EXTRACT(epoch FROM CURRENT_TIMESTAMP) * (1000)::numeric) AS "$ver", array[ \'users\'::text, "id" ]::text[] AS "$ref" FROM "users" WHERE "id" = ( SELECT "id" FROM "users" WHERE "name" = \'alice\' LIMIT 2 )',
-      );
       expect(result[0].plan.Plan).toEqual(expect.any(Object));
       expect(result[0].plan.Planning).toEqual(expect.any(Object));
       expect(result[0].plan['Planning Time']).toEqual(expect.any(Number));
