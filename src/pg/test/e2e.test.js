@@ -1,10 +1,8 @@
 import Graffy from '@graffy/core';
 import { keyref, page, put, ref } from '@graffy/testing';
 import { jest } from '@jest/globals';
-import sql from 'sql-template-tag';
 import { v4 as uuid } from 'uuid';
 import { pg } from '../index.js';
-import expectSql from './expectSql.js';
 import {
   getPool,
   resetTables,
