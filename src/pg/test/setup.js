@@ -30,6 +30,12 @@ const isPgReady = async () => {
 export async function setupPgServer() {
   // const start = Date.now();
   try {
+    await execFile('docker', ['rm', '-f', 'graffypg']);
+  } catch (_) {
+    // Do nothing if remove failed.
+  }
+
+  try {
     await execFile('docker', [
       'run',
       '-d',
@@ -44,10 +50,6 @@ export async function setupPgServer() {
   } catch (e) {
     console.error(
       'Could not start a test Postgres server using Docker.\n' +
-        'Possible reasons:\n' +
-        '1. You might not have Docker installed.\n' +
-        '2. The last test run might not have exited properly.\n' +
-        '   Run npm run pg:clean to fix this.\n' +
         'Docker might have printed a detailed error message above.',
     );
 

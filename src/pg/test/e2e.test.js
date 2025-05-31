@@ -1179,4 +1179,70 @@ describe('pg_e2e', () => {
       expect(res2).toEqual([{ name: 'alice' }]);
     });
   });
+
+  describe('inspection', () => {
+    beforeEach(async () => {
+      await store.write(['users', uuid()], {
+        name: 'alice',
+        email: 'alice@acme.co',
+        settings: { foo: 3 },
+        $put: true,
+      });
+      await store.write(['users', uuid()], {
+        name: 'bob',
+        email: 'bob@acme.co',
+        settings: { bar: 5 },
+        $put: true,
+      });
+    });
+    test('explain', async () => {
+      const result = await store.read(['users'], {
+        $key: { $explain: { name: 'alice' } },
+        sql: true,
+        plan: true,
+      });
+      expect(result[0].sql).toEqual(
+        'SELECT\n' +
+          '  *,\n' +
+          '  \'{"name":"alice"}\'::jsonb AS "$key",\n' +
+          '  (\n' +
+          '    EXTRACT(\n' +
+          '      epoch\n' +
+          '      FROM\n' +
+          '        CURRENT_TIMESTAMP\n' +
+          '    ) * (1000)::numeric\n' +
+          '  ) AS "$ver",\n' +
+          '  array[\'users\'::text, "id"]::text[] AS "$ref"\n' +
+          'FROM\n' +
+          '  "users"\n' +
+          'WHERE\n' +
+          '  "id" = (\n' +
+          '    SELECT\n' +
+          '      "id"\n' +
+          '    FROM\n' +
+          '      "users"\n' +
+          '    WHERE\n' +
+          '      "name" = \'alice\'\n' +
+          '    LIMIT\n' +
+          '      2\n' +
+          '  )',
+      );
+      expect(result[0].plan.Plan).toEqual(expect.any(Object));
+      expect(result[0].plan.Planning).toBeUndefined();
+      expect(result[0].plan['Planning Time']).toBeUndefined();
+      expect(result[0].plan['Execution Time']).toBeUndefined();
+    });
+
+    test('explain analyze', async () => {
+      const result = await store.read(['users'], {
+        $key: { $explain: { name: 'alice' }, analyze: true },
+        sql: true,
+        plan: true,
+      });
+      expect(result[0].plan.Plan).toEqual(expect.any(Object));
+      expect(result[0].plan.Planning).toEqual(expect.any(Object));
+      expect(result[0].plan['Planning Time']).toEqual(expect.any(Number));
+      expect(result[0].plan['Execution Time']).toEqual(expect.any(Number));
+    });
+  });
 });
