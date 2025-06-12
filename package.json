@@ -51,7 +51,7 @@
     "react-dom": "^18.3.1",
     "react-test-renderer": "^18.3.1",
     "rimraf": "^5.0.5",
-    "sql-formatter": "^15.6.2",
+    "sql-formatter": "^15.6.4",
     "sql-template-tag": "^5.2.1",
     "typescript": "^5.4.5",
     "uuid": "^9.0.0",
