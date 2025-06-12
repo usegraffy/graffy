@@ -17,7 +17,9 @@
     "pg:clean": "docker rm -f graffypg",
     "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl"
   },
-  "workspaces": ["src/*"],
+  "workspaces": [
+    "src/*"
+  ],
   "author": "aravindet",
   "license": "Apache-2.0",
   "bugs": {
@@ -28,6 +30,7 @@
     "@babel/preset-react": "^7.27.1",
     "@biomejs/biome": "^1.7.3",
     "@faker-js/faker": "^9.8.0",
+    "@playwright/test": "^1.53.0",
     "@testing-library/react": "^16.3.0",
     "@types/debug": "^4.1.7",
     "@types/jest": "^29.5.12",
@@ -35,7 +38,7 @@
     "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.5.2",
     "debug": "^4.4.1",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "lodash": "^4.17.19",
@@ -44,7 +47,6 @@
     "p-map": "^7.0.2",
     "pg": "^8.16.0",
     "prop-types": "^15.8.1",
-    "puppeteer": "^24.10.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-test-renderer": "^19.1.0",

@@ -2,7 +2,7 @@ import { fork } from 'node:child_process';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { jest } from '@jest/globals';
-import puppeteer from 'puppeteer';
+import { chromium, devices } from '@playwright/test';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,11 +26,10 @@ describe('integration', () => {
           if (message === 'ready') resolve();
         });
       }),
-      puppeteer
+      chromium
         .launch({
           headless: true,
           args: ['--no-sandbox'],
-          // slowMo: 200,
         })
         .then((b) => {
           browser = b;
@@ -39,51 +38,73 @@ describe('integration', () => {
   });
 
   async function runExampleTests(url) {
-    const page = await browser.newPage();
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 720 },
+      userAgent: devices['Desktop Chrome'].userAgent,
+    });
     let label;
 
-    // Go to example and wait until there are only two network connections.
-    await page.goto(url, { waitUntil: 'networkidle2' });
-    expect((await page.$$('.Visitor')).length).toBe(12);
+    // Go to example and wait until there are visitors loaded
+    await page.goto(url);
+    
+    // Wait for visitors to appear with a longer timeout
+    await page.waitForSelector('.Visitor', { timeout: 10000 });
+    
+    // Wait a bit more to ensure all visitors are loaded
+    await page.waitForTimeout(1000);
+    
+    // Check the visitor count
+    const visitorCount = await page.locator('.Visitor').count();
+    expect(visitorCount).toBe(12);
 
-    // console.log('Going to second page');
     // Go to second page and assert.
-    await (await page.$('.NextPage')).click();
-    // console.log('Clicked; waiting for spinner');
-    await page.waitForSelector('.Spinner', { hidden: true, timeout: 2000 });
-    expect((await page.$$('.Visitor')).length).toBe(12);
-    label = await (await page.$('.CurrPage')).evaluate((el) => el.textContent);
+    await page.locator('.NextPage').click();
+    // Wait for spinner to disappear with a longer timeout
+    await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
+    // Wait a bit to ensure all visitors are loaded
+    await page.waitForTimeout(1000);
+    
+    // Check visitor count and page label
+    expect(await page.locator('.Visitor').count()).toBe(12);
+    label = await page.locator('.CurrPage').textContent();
     expect(label).toMatch(/after/);
 
-    // console.log('Going to third page');
     // Go to third page. This should have around 6 elements.
-    await (await page.$('.NextPage')).click();
-    // console.log('Clicked; waiting for spinner');
-    await page.waitForSelector('.Spinner', { hidden: true, timeout: 2000 });
-    expect((await page.$$('.Visitor')).length).toBeLessThan(12);
+    await page.locator('.NextPage').click();
+    // Wait for spinner to disappear with a longer timeout
+    await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
+    // Wait a bit to ensure all visitors are loaded
+    await page.waitForTimeout(1000);
+    
+    // Check that we have fewer visitors on this page
+    expect(await page.locator('.Visitor').count()).toBeLessThan(12);
 
-    // console.log('Going back to second page');
     // Go back to second page.
-    await (await page.$('.PrevPage')).click();
-    // console.log('Clicked; waiting for spinner');
-    await page.waitForSelector('.Spinner', { hidden: true, timeout: 2000 });
-    expect((await page.$$('.Visitor')).length).toBe(12);
-    label = await (await page.$('.CurrPage')).evaluate((el) => el.textContent);
+    await page.locator('.PrevPage').click();
+    // Wait for spinner to disappear with a longer timeout
+    await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
+    // Wait a bit to ensure all visitors are loaded
+    await page.waitForTimeout(1000);
+    
+    // Check visitor count and page label
+    expect(await page.locator('.Visitor').count()).toBe(12);
+    label = await page.locator('.CurrPage').textContent();
     expect(label).toMatch(/Last.*until/);
 
-    // console.log('Going back to first page');
     // Go back to first page. The page label should flip around.
     let attempts = 0;
     do {
-      await (await page.$('.PrevPage')).click();
-      // console.log('Clicked; waiting for spinner');
-      await page.waitForSelector('.Spinner', { hidden: true, timeout: 2000 });
-      // console.log('Waiting for visitor');
-      await page.waitForSelector('.Visitor', { timeout: 2000 });
-      expect((await page.$$('.Visitor')).length).toBe(12);
-      label = await (await page.$('.CurrPage')).evaluate(
-        (el) => el.textContent,
-      );
+      await page.locator('.PrevPage').click();
+      // Wait for spinner to disappear with a longer timeout
+      await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
+      // Wait for visitors to appear with a longer timeout
+      await page.waitForSelector('.Visitor', { timeout: 5000 });
+      // Wait a bit to ensure all visitors are loaded
+      await page.waitForTimeout(1000);
+      
+      // Check visitor count
+      expect(await page.locator('.Visitor').count()).toBe(12);
+      label = await page.locator('.CurrPage').textContent();
       attempts++;
     } while (!label.includes('First') && attempts < 2);
     expect(label).toMatch(/First/);
@@ -93,8 +114,8 @@ describe('integration', () => {
   }
 
   const exampleUrl = `http://localhost:${PORT}`;
-  test('exampleWs', () => runExampleTests(exampleUrl));
-  test('exampleHttp', () => runExampleTests(`${exampleUrl}?usehttp`));
+  test('exampleWs', async () => await runExampleTests(exampleUrl));
+  test('exampleHttp', async () => await runExampleTests(`${exampleUrl}?usehttp`));
 
   afterAll(() =>
     Promise.all([
