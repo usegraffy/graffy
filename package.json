@@ -42,7 +42,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "lodash": "^4.17.19",
     "merge-async-iterators": "^0.2.1",
-    "nanoid": "^5.0.7",
+    "nanoid": "^5.1.5",
     "p-map": "^7.0.2",
     "pg": "^8.7.1",
     "prop-types": "^15.8.1",
