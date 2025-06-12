@@ -17,9 +17,7 @@
     "pg:clean": "docker rm -f graffypg",
     "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl"
   },
-  "workspaces": [
-    "src/*"
-  ],
+  "workspaces": ["src/*"],
   "author": "aravindet",
   "license": "Apache-2.0",
   "bugs": {
@@ -37,7 +35,7 @@
     "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.5.2",
     "debug": "^4.4.1",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "lodash": "^4.17.19",

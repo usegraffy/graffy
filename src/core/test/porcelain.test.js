@@ -133,7 +133,7 @@ test('write array value', async () => {
   store.onWrite(provider);
 
   await store.write({ foo: { $val: ['hello', 'world'] } });
-  expect(provider).toBeCalled();
+  expect(provider).toHaveBeenCalled();
 });
 
 test('read array value', async () => {
@@ -146,7 +146,7 @@ test('read array value', async () => {
   store.onRead(provider);
 
   const result = await store.read({ foo: 1 });
-  expect(provider).toBeCalled();
+  expect(provider).toHaveBeenCalled();
 
   /** @type {string[] & { $val?: true }} */
   const expected = ['hello', 'world'];
@@ -415,7 +415,7 @@ test('modified_next_options', async () => {
   });
   store.onRead('user', mockOnRead);
   await store.read('user', query, { foo: 2 });
-  expect(mockOnRead).toBeCalledWith(query, { bar: true }, expect.any(Function));
+  expect(mockOnRead).toHaveBeenCalledWith(query, { bar: true }, expect.any(Function));
 });
 
 describe('unchanged', () => {

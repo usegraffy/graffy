@@ -65,7 +65,7 @@ describe('range-getKnown', () => {
     const result = await g.read({
       foo: { $key: { $first: 100 }, bar: 1 },
     });
-    expect(provider).toBeCalledWith(
+    expect(provider).toHaveBeenCalledWith(
       { foo: [{ $key: { $first: 100 }, bar: true }] },
       {},
       expect.any(Function),

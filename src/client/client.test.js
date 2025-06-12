@@ -50,7 +50,7 @@ describe('wsClient', () => {
   test('reconnect', async () => {
     await store.write('connection', { status: true });
     const results = MockSocket.mock.results;
-    expect(results[results.length - 1].value.isAlive).toBeCalled();
+    expect(results[results.length - 1].value.isAlive).toHaveBeenCalled();
   });
 });
 

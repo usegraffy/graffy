@@ -138,7 +138,7 @@ describe('link', () => {
       },
     ]);
 
-    expect(backend.read).toBeCalledWith(
+    expect(backend.read).toHaveBeenCalledWith(
       encodeQuery({
         post: {
           $key: { $first: 1, authorId: 'bob' },

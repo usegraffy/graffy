@@ -59,7 +59,7 @@ describe('postgres', () => {
       version: true,
     });
 
-    expect(mockQuery).toBeCalled();
+    expect(mockQuery).toHaveBeenCalled();
     expectSql(
       mockQuery.mock.calls[0][0],
       sql`SELECT *, "id" AS "$key", current_timestamp AS "$ver"
