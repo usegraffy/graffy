@@ -415,7 +415,11 @@ test('modified_next_options', async () => {
   });
   store.onRead('user', mockOnRead);
   await store.read('user', query, { foo: 2 });
-  expect(mockOnRead).toHaveBeenCalledWith(query, { bar: true }, expect.any(Function));
+  expect(mockOnRead).toHaveBeenCalledWith(
+    query,
+    { bar: true },
+    expect.any(Function),
+  );
 });
 
 describe('unchanged', () => {

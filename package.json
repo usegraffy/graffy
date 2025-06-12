@@ -17,9 +17,7 @@
     "pg:clean": "docker rm -f graffypg",
     "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl"
   },
-  "workspaces": [
-    "src/*"
-  ],
+  "workspaces": ["src/*"],
   "author": "aravindet",
   "license": "Apache-2.0",
   "bugs": {

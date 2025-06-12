@@ -46,13 +46,13 @@ describe('integration', () => {
 
     // Go to example and wait until there are visitors loaded
     await page.goto(url);
-    
+
     // Wait for visitors to appear with a longer timeout
     await page.waitForSelector('.Visitor', { timeout: 10000 });
-    
+
     // Wait a bit more to ensure all visitors are loaded
     await page.waitForTimeout(1000);
-    
+
     // Check the visitor count
     const visitorCount = await page.locator('.Visitor').count();
     expect(visitorCount).toBe(12);
@@ -63,7 +63,7 @@ describe('integration', () => {
     await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
     // Wait a bit to ensure all visitors are loaded
     await page.waitForTimeout(1000);
-    
+
     // Check visitor count and page label
     expect(await page.locator('.Visitor').count()).toBe(12);
     label = await page.locator('.CurrPage').textContent();
@@ -75,7 +75,7 @@ describe('integration', () => {
     await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
     // Wait a bit to ensure all visitors are loaded
     await page.waitForTimeout(1000);
-    
+
     // Check that we have fewer visitors on this page
     expect(await page.locator('.Visitor').count()).toBeLessThan(12);
 
@@ -85,7 +85,7 @@ describe('integration', () => {
     await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
     // Wait a bit to ensure all visitors are loaded
     await page.waitForTimeout(1000);
-    
+
     // Check visitor count and page label
     expect(await page.locator('.Visitor').count()).toBe(12);
     label = await page.locator('.CurrPage').textContent();
@@ -96,12 +96,15 @@ describe('integration', () => {
     do {
       await page.locator('.PrevPage').click();
       // Wait for spinner to disappear with a longer timeout
-      await page.waitForSelector('.Spinner', { state: 'hidden', timeout: 5000 });
+      await page.waitForSelector('.Spinner', {
+        state: 'hidden',
+        timeout: 5000,
+      });
       // Wait for visitors to appear with a longer timeout
       await page.waitForSelector('.Visitor', { timeout: 5000 });
       // Wait a bit to ensure all visitors are loaded
       await page.waitForTimeout(1000);
-      
+
       // Check visitor count
       expect(await page.locator('.Visitor').count()).toBe(12);
       label = await page.locator('.CurrPage').textContent();
@@ -115,7 +118,8 @@ describe('integration', () => {
 
   const exampleUrl = `http://localhost:${PORT}`;
   test('exampleWs', async () => await runExampleTests(exampleUrl));
-  test('exampleHttp', async () => await runExampleTests(`${exampleUrl}?usehttp`));
+  test('exampleHttp', async () =>
+    await runExampleTests(`${exampleUrl}?usehttp`));
 
   afterAll(() =>
     Promise.all([
