@@ -24,6 +24,7 @@ async function createServer() {
   // Create vite server in middleware mode.
   const vite = await createViteServer({
     server: { middlewareMode: true },
+    appType: 'spa',
   });
 
   app.use('/api', httpServer(store));

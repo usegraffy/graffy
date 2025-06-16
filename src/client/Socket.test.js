@@ -64,7 +64,7 @@ describe('Socket', () => {
   test('close_ping_timeout', () => {
     ws.onopen();
     jest.advanceTimersByTime(41000);
-    expect(ws.close).toBeCalled();
+    expect(ws.close).toHaveBeenCalled();
   });
 
   test('no_close_if_pings', () => {
@@ -88,7 +88,7 @@ describe('Socket', () => {
     });
     test('reconnect_on_start', () => {
       socket.start(['example']);
-      expect(ws.close).toBeCalled();
+      expect(ws.close).toHaveBeenCalled();
     });
   });
 });

@@ -12,7 +12,7 @@ describe('write', () => {
     const handler = jest.fn((change) => change);
     g.onWrite(handler);
     await g.write({ foo: 42 });
-    expect(handler).toBeCalledWith({ foo: 42 }, {}, expect.any(Function));
+    expect(handler).toHaveBeenCalledWith({ foo: 42 }, {}, expect.any(Function));
   });
 
   // describe('middleware_coding', () => {

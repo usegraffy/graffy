@@ -102,7 +102,7 @@ describe('postgres', () => {
     };
     const id = 'foo';
     await store.write('user.foo', data);
-    expect(mockQuery).toBeCalled();
+    expect(mockQuery).toHaveBeenCalled();
 
     const sqlQuery = sql`
       UPDATE "user" SET
@@ -120,7 +120,7 @@ describe('postgres', () => {
       $put: true,
     };
     await store.write('user.foo', data);
-    expect(mockQuery).toBeCalled();
+    expect(mockQuery).toHaveBeenCalled();
 
     const sqlQuery = sql`
       INSERT INTO "user" ("id", "name", "updatedAt")

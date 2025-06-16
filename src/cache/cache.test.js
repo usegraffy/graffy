@@ -16,10 +16,10 @@ describe('cache', () => {
   test('simple', async () => {
     const result1 = await store.read({ foo: 1 });
     expect(result1).toEqual({ foo: 42 });
-    expect(provider).toBeCalledTimes(1);
+    expect(provider).toHaveBeenCalledTimes(1);
     const result2 = await store.read({ foo: 1 });
     expect(result2).toEqual({ foo: 42 });
-    expect(provider).toBeCalledTimes(1);
+    expect(provider).toHaveBeenCalledTimes(1);
   });
 });
 

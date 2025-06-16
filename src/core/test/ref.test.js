@@ -51,11 +51,11 @@ describe('ref', () => {
         },
       };
 
-      expect(postProvider).toBeCalledTimes(1);
+      expect(postProvider).toHaveBeenCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual({
         abc: { title: true, author: { name: true } },
       });
-      expect(userProvider).toBeCalledTimes(1);
+      expect(userProvider).toHaveBeenCalledTimes(1);
       expect(userProvider.mock.calls[0][0]).toEqual({ uabc: { name: true } });
       expect(res).toEqual(expected);
     });
@@ -116,7 +116,7 @@ describe('ref', () => {
       ]);
       const expected = { users: { abc: { name: 'User abc', posts } } };
 
-      expect(postProvider).toBeCalledTimes(1);
+      expect(postProvider).toHaveBeenCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual([
         { $key: { $first: 2, tag: 'x', userId: 'abc' }, title: true },
       ]);
@@ -139,7 +139,7 @@ describe('ref', () => {
       ]);
       const expected = { users: { abc: { name: 'User abc', posts } } };
 
-      expect(postProvider).toBeCalledTimes(1);
+      expect(postProvider).toHaveBeenCalledTimes(1);
       expect(postProvider.mock.calls[0][0]).toEqual([
         { $key: { $first: 2, userId: 'abc' }, title: true },
       ]);
