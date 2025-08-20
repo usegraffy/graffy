@@ -75,21 +75,21 @@ test('in_null', () => {
   expect(
     getAst({
       foo: [null, 1, 2, 3],
-    })
+    }),
   ).toEqual([
     '$or',
     [
       ['$eq', 'foo', null],
       ['$in', 'foo', [1, 2, 3]],
-    ]
+    ],
   ]);
 });
 
 test('nin_null', () => {
   expect(
     getAst({
-      foo: { $not: [null, 1, 2, 3] }
-    })
+      foo: { $not: [null, 1, 2, 3] },
+    }),
   ).toEqual([
     '$not',
     [
@@ -97,7 +97,7 @@ test('nin_null', () => {
       [
         ['$eq', 'foo', null],
         ['$in', 'foo', [1, 2, 3]],
-      ]
-    ]
+      ],
+    ],
   ]);
 });
