@@ -70,3 +70,34 @@ test('logic_inversion', () => {
     ],
   ]);
 });
+
+test('in_null', () => {
+  expect(
+    getAst({
+      foo: [null, 1, 2, 3],
+    })
+  ).toEqual([
+    '$or',
+    [
+      ['$eq', 'foo', null],
+      ['$in', 'foo', [1, 2, 3]],
+    ]
+  ]);
+});
+
+test('nin_null', () => {
+  expect(
+    getAst({
+      foo: { $not: [null, 1, 2, 3] }
+    })
+  ).toEqual([
+    '$not',
+    [
+      '$or',
+      [
+        ['$eq', 'foo', null],
+        ['$in', 'foo', [1, 2, 3]],
+      ]
+    ]
+  ]);
+});
