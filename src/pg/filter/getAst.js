@@ -116,7 +116,7 @@ function simplify(node) {
   if (op === '$or') {
     const { eqmap, noneq, change } = node[1].reduce(
       (acc, item) => {
-        if (item[0] !== '$eq') {
+        if (item[0] !== '$eq' || item[2] === null) {
           acc.noneq.push(item);
         } else if (acc.eqmap[item[1]]) {
           acc.change = true;

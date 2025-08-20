@@ -16,9 +16,11 @@ export default function formatSql(sql) {
     output.push(
       typeof value === 'number'
         ? value.toString()
-        : typeof value === 'object'
-          ? `'${JSON.stringify(value)}'`
-          : `'${value}'`,
+        : value === null
+          ? 'null'
+          : typeof value === 'object'
+            ? `'${JSON.stringify(value)}'`
+            : `'${value}'`,
     );
   }
   return format(output.join(''), { language: 'postgresql' });
