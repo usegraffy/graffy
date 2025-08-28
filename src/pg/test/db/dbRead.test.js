@@ -6,6 +6,7 @@ import expectSql from '../expectSql';
 const mockQuery = jest.fn();
 
 jest.unstable_mockModule('pg', () => ({
+  escapeLiteral: (s) => `'${s.replace("'", "''")}'`,
   default: {
     Pool: class {
       query = mockQuery;
