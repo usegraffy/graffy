@@ -90,6 +90,23 @@ describe('postgres', () => {
         verDefault: 'current_timestamp',
       }),
     );
+
+    store.use(
+      'sfWrite',
+      pg({
+        table: 'sfWrite',
+        idCol: 'id',
+        verCol: 'updatedAt',
+        schema: {
+          types: {
+            id: 'uuid',
+            write: 'jsonb',
+            updatedAt: 'int8',
+          },
+        },
+        verDefault: 'current_timestamp',
+      }),
+    );
   });
 
   afterEach(async () => {
@@ -189,6 +206,24 @@ describe('postgres', () => {
       VALUES (${'e1'}, ${data.userId}, ${data.tenantId}, default)
       ON CONFLICT ("id") DO UPDATE SET "id" = "excluded"."id", "userId" = "excluded"."userId", "tenantId" = "excluded"."tenantId", "version" = "excluded"."version" 
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
+    expectSql(mockQuery.mock.calls[0][0], sqlQuery);
+  });
+
+  test('jsonb_null_patch_uses_plain_null', async () => {
+    await store.write('sfWrite.foo', {
+      write: { WhatId: { $val: null } },
+    });
+
+    const sqlQuery = sql`
+      UPDATE "sfWrite" SET
+        "write" = case jsonb_typeof("write")
+          when 'object' then "write"
+          else '{}'::jsonb
+        end || jsonb_build_object(${'WhatId'}::text, ${'{"WhatId":null}'}::jsonb),
+        "updatedAt" = default
+      WHERE "id" = ${'foo'}
+      RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
+
     expectSql(mockQuery.mock.calls[0][0], sqlQuery);
   });
 });
