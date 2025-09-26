@@ -219,7 +219,7 @@ describe('postgres', () => {
         "write" = case jsonb_typeof("write")
           when 'object' then "write"
           else '{}'::jsonb
-        end || jsonb_build_object(${'WhatId'}::text, ${'{"WhatId":null}'}::jsonb),
+        end || jsonb_build_object(${'WhatId'}::text, ${'{"$val":null}'}::jsonb),
         "updatedAt" = default
       WHERE "id" = ${'foo'}
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
