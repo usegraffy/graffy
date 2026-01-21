@@ -39,7 +39,7 @@
     "express": "^4.21.2",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.23",
     "merge-async-iterators": "^0.2.1",
     "nanoid": "^5.1.5",
     "p-map": "^7.0.2",
