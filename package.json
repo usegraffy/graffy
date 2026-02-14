@@ -36,7 +36,7 @@
     "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.5.2",
     "debug": "^4.4.1",
-    "express": "^4.21.2",
+    "express": "^4.22.1",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "lodash": "^4.17.19",
