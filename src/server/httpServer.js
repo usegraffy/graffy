@@ -21,9 +21,9 @@ export default function server(store, { auth } = {}) {
     const options = optParam && JSON.parse(decodeURIComponent(optParam));
 
     if (req.method === 'GET') {
-      const qParam = parsed.query.q && String(parsed.query.q);
-      const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
       try {
+        const qParam = parsed.query.q && String(parsed.query.q);
+        const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
         if (req.headers.accept === 'text/event-stream') {
           res.setHeader('content-type', 'text/event-stream');
 
