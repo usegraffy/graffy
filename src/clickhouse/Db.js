@@ -1,6 +1,7 @@
 import { createClient } from '@clickhouse/client';
 import {
   decodeArgs,
+  decodeQuery,
   encodeGraph,
   encodePath,
   finalize,
@@ -36,6 +37,15 @@ function deepCloneJson(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function applyAggregateAliases(object, aggregateAliases) {
+  Object.entries(aggregateAliases).forEach(([alias, { op, prop }]) => {
+    if (!(alias in object)) return;
+    if (!object[op] || typeof object[op] !== 'object') object[op] = {};
+    object[op][prop] = object[alias];
+    delete object[alias];
+  });
+}
+
 export default class Db {
   constructor(connection) {
     if (connection?.query && typeof connection.query === 'function') {
@@ -68,23 +78,29 @@ export default class Db {
   }
 
   async ensureSchema(tableOptions) {
-    if (tableOptions.schema?.types) return;
+    if (!tableOptions.schema?.types) {
+      const rows = await this.query(`
+        SELECT name, type
+        FROM system.columns
+        WHERE database = ${literal(tableOptions.database || 'default')}
+        AND table = ${literal(tableOptions.table)}
+        ORDER BY position
+      `);
 
-    const rows = await this.query(`
-      SELECT name, type
-      FROM system.columns
-      WHERE database = ${literal(tableOptions.database || 'default')}
-      AND table = ${literal(tableOptions.table)}
-      ORDER BY position
-    `);
+      if (!rows.length) {
+        throw Error(`clickhouse.missing_table ${tableOptions.table}`);
+      }
 
-    if (!rows.length) {
-      throw Error(`clickhouse.missing_table ${tableOptions.table}`);
+      tableOptions.schema = {
+        types: Object.fromEntries(rows.map(({ name, type }) => [name, type])),
+      };
     }
 
-    tableOptions.schema = {
-      types: Object.fromEntries(rows.map(({ name, type }) => [name, type])),
-    };
+    await Promise.all(
+      Object.values(tableOptions.joins || {}).map((joinOptions) =>
+        this.ensureSchema(joinOptions),
+      ),
+    );
   }
 
   normalizeRow(row, schema) {
@@ -133,8 +149,8 @@ export default class Db {
 
     await this.ensureSchema(tableOptions);
 
-    const getByArgs = async (args) => {
-      const selection = selectByArgs(args, tableOptions);
+    const getByArgs = async (args, projection) => {
+      const selection = selectByArgs(args, projection, tableOptions);
       const rows = await this.query(selection.sql);
       if (selection.ensureSingleRow && rows.length > 1) {
         throw Error(`clickhouse.more_than_one_row ${tableOptions.table}`);
@@ -142,15 +158,26 @@ export default class Db {
 
       const wrappedRows = rows.map((row) => {
         const object = this.normalizeRow(row, tableOptions.schema);
+        applyAggregateAliases(object, selection.aggregateAliases || {});
+
         const key = deepCloneJson(selection.keyBase);
-        if (selection.hasRangeArg) {
+        if (selection.isAggregate && selection.groupAliases?.length) {
+          key.$cursor = selection.groupAliases.map((alias) => object[alias]);
+        } else if (selection.hasRangeArg && selection.hasCursor) {
           key.$cursor = selection.orderSpec.map((orderItem) =>
             this.getCursorValue(object, orderItem),
           );
         }
+
+        (selection.groupAliases || []).forEach((alias) => {
+          delete object[alias];
+        });
+
         object.$key = key;
         object.$ver = object[tableOptions.verCol] ?? object._version ?? null;
-        object.$ref = [...rawPrefix, object[tableOptions.idCol]];
+        if (!selection.isAggregate) {
+          object.$ref = [...rawPrefix, object[tableOptions.idCol]];
+        }
         return object;
       });
 
@@ -175,10 +202,14 @@ export default class Db {
         if (node.prefix) {
           for (const childNode of node.children) {
             const childArgs = decodeArgs(childNode);
-            promises.push(getByArgs({ ...args, ...childArgs }));
+            const projection = childNode.children
+              ? decodeQuery(childNode.children)
+              : null;
+            promises.push(getByArgs({ ...args, ...childArgs }, projection));
           }
         } else {
-          promises.push(getByArgs(args));
+          const projection = node.children ? decodeQuery(node.children) : null;
+          promises.push(getByArgs(args, projection));
         }
       } else {
         idQueries[args] = node.children;

@@ -12,5 +12,8 @@ tracker-like workloads:
 - Dot-path filters on JSON-encoded string columns (for example
   `sources.messageId`)
 - Nested projection from JSON-encoded string columns
+- Join filters via subqueries (for example `$key: { syncJob: { ... } }`)
+- Aggregates: `$count`, `$sum`, `$avg`, `$max`, `$min`, `$card` with
+  `$group: true` and `$group: [..]`
 
-Writes, joins, and aggregations are out of scope.
+Writes are out of scope.

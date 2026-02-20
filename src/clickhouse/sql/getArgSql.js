@@ -36,8 +36,12 @@ export default function getArgSql(
   options,
 ) {
   const { $order, $group, ...filter } = rest;
-
-  if ($group) throw Error('clickhouse_arg.group_unsupported');
+  const groupSpec =
+    $group === true
+      ? true
+      : Array.isArray($group) && $group.length
+        ? $group
+        : null;
 
   const hasRangeArg = !!(
     $before ||
@@ -49,7 +53,11 @@ export default function getArgSql(
     $all
   );
 
-  if ($order && !hasRangeArg) {
+  if ($order && $group) {
+    throw Error('clickhouse_arg.order_and_group_unsupported');
+  }
+
+  if (($order || ($group && $group !== true)) && !hasRangeArg) {
     throw Error('clickhouse_arg.range_arg_expected');
   }
 
@@ -62,16 +70,32 @@ export default function getArgSql(
   if (!hasRangeArg) {
     return {
       where,
-      limit: 2,
-      orderSpec: [options.idCol],
+      limit: groupSpec ? 1 : 2,
+      orderSpec: groupSpec && groupSpec !== true ? groupSpec : [options.idCol],
       order: null,
-      ensureSingleRow: true,
+      groupSpec,
+      ensureSingleRow: !groupSpec,
       hasRangeArg: false,
+      hasCursor: false,
       keyBase: rest,
     };
   }
 
-  const orderSpec = $order || [options.idCol];
+  if (groupSpec === true) {
+    return {
+      where,
+      orderSpec: [],
+      order: null,
+      groupSpec,
+      limit: 1,
+      ensureSingleRow: false,
+      hasRangeArg: true,
+      hasCursor: false,
+      keyBase: rest,
+    };
+  }
+
+  const orderSpec = groupSpec || $order || [options.idCol];
 
   const boundCols = orderSpec.map((orderItem) => {
     if (orderItem[0] === '!') {
@@ -106,9 +130,11 @@ export default function getArgSql(
     where,
     orderSpec,
     order,
+    groupSpec,
     limit: Math.min(MAX_LIMIT, $first || $last || MAX_LIMIT),
     ensureSingleRow: false,
     hasRangeArg: true,
+    hasCursor: true,
     keyBase: rest,
   };
 }

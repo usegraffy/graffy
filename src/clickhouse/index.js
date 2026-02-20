@@ -8,23 +8,61 @@ import Db from './Db.js';
  *  verCol?: string,
  *  schema?: any,
  *  database?: string,
- *  final?: boolean
+ *  final?: boolean,
+ *  joins?: Record<string, {
+ *    table?: string,
+ *    idCol?: string,
+ *    verCol?: string,
+ *    schema?: any,
+ *    database?: string,
+ *    final?: boolean,
+ *    refCol?: string,
+ *    joins?: Record<string, any>
+ *  }>
  * }} ClickhouseOptions
  */
 
 /**
  * @param {string} name
  * @param {ClickhouseOptions} [options]
+ * @param {string|null} [parentName]
+ * @param {{database?: string, final?: boolean}} [parentDefaults]
  */
-function getTableOpts(name, options = {}) {
+function getTableOpts(
+  name,
+  options = {},
+  parentName = null,
+  parentDefaults = {},
+) {
   const { table, idCol, verCol, schema, database, final } = options;
+  const tableName = table || name;
+  const tableDatabase = database || parentDefaults.database || 'default';
+  const tableFinal = final ?? parentDefaults.final ?? true;
+
+  const joins = Object.fromEntries(
+    Object.entries(options.joins || {}).map(([joinName, joinRaw = {}]) => {
+      const { refCol = parentName, ...joinOptions } = joinRaw;
+      return [
+        joinName,
+        {
+          refCol: refCol || parentName || tableName,
+          ...getTableOpts(joinName, joinOptions, tableName, {
+            database: tableDatabase,
+            final: tableFinal,
+          }),
+        },
+      ];
+    }),
+  );
+
   return {
-    table: table || name,
+    table: tableName,
     idCol: idCol || 'id',
     verCol: verCol || 'updatedAt',
-    database: database || 'default',
-    final: final !== false,
+    database: tableDatabase,
+    final: tableFinal,
     schema,
+    joins,
   };
 }
 

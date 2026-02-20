@@ -1,6 +1,16 @@
-import { isPlainObject, isStringishType, literal } from '../sql/escape.js';
+import {
+  isPlainObject,
+  isStringishType,
+  literal,
+  quoteIdent,
+} from '../sql/escape.js';
 import { getLookup } from '../sql/lookup.js';
 import getAst from './getAst.js';
+
+function getTableSql({ database = 'default', table, final = true }) {
+  const tableSql = `${quoteIdent(database)}.${quoteIdent(table)}`;
+  return final ? `${tableSql} FINAL` : tableSql;
+}
 
 function getNullCheckSql(lookup, op) {
   if (lookup.isJsonPath) {
@@ -131,7 +141,19 @@ function getNodeSql(ast, options) {
   }
 
   if (op === '$sub') {
-    throw Error('clickhouse.unsupported_join_filter');
+    const joinName = ast[1];
+    const joinOptions = options.joins?.[joinName];
+    if (!joinOptions) throw Error(`clickhouse.no_join ${joinName}`);
+
+    const where = [];
+    if (joinOptions.final !== false && joinOptions.schema?.types?._sign) {
+      where.push('`_sign` = 1');
+    }
+    where.push(getNodeSql(ast[2], joinOptions));
+
+    const rootIdCol = quoteIdent(options.idCol);
+    const joinRefCol = quoteIdent(joinOptions.refCol);
+    return `${rootIdCol} IN (SELECT ${joinRefCol} FROM ${getTableSql(joinOptions)} WHERE ${where.join(' AND ')})`;
   }
 
   return getBinarySql(ast, options);
