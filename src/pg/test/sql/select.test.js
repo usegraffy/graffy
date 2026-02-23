@@ -147,7 +147,9 @@ describe('select_sql', () => {
       schema: { types: { id: 'text' } },
       verDefault: 'current_timestamp',
     };
-    expect(() => selectByArgs(arg, null, options)).toThrow('pg.no_column unknown');
+    expect(() => selectByArgs(arg, null, options)).toThrow(
+      'pg.no_column unknown',
+    );
   });
 
   test('selectByArgs_group_unknown_column_throws', () => {
@@ -160,7 +162,9 @@ describe('select_sql', () => {
       schema: { types: {} },
       verDefault: 'current_timestamp',
     };
-    expect(() => selectByArgs(arg, null, options)).toThrow('pg.no_column unknown');
+    expect(() => selectByArgs(arg, null, options)).toThrow(
+      'pg.no_column unknown',
+    );
   });
 
   // test('selectByArgs_json manipulation', () => {});

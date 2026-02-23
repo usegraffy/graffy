@@ -55,8 +55,7 @@ export default function getArgSql(
     $group.length &&
     $group.map((prop) => {
       const colPrefix = prop.split('.')[0];
-      if (!types[colPrefix])
-        throw Error(`pg.no_column ${colPrefix}`);
+      if (!types[colPrefix]) throw Error(`pg.no_column ${colPrefix}`);
       return lookup(prop, options);
     });
 
@@ -65,8 +64,7 @@ export default function getArgSql(
   const orderCols = ($order || [idCol]).map((orderItem) => {
     const col = orderItem[0] === '!' ? orderItem.slice(1) : orderItem;
     const colPrefix = col.split('.')[0];
-    if ($order && !types[colPrefix])
-      throw Error(`pg.no_column ${colPrefix}`);
+    if ($order && !types[colPrefix]) throw Error(`pg.no_column ${colPrefix}`);
     return orderItem[0] === '!'
       ? sql`-(${lookup(col, options)})::float8`
       : lookup(orderItem, options);
@@ -83,7 +81,8 @@ export default function getArgSql(
     join(
       ($order || [idCol]).map((orderItem) =>
         orderItem[0] === '!'
-          ? sql`${lookup(orderItem.slice(1), options)} ${$last ? sql`ASC` : sql`DESC`
+          ? sql`${lookup(orderItem.slice(1), options)} ${
+              $last ? sql`ASC` : sql`DESC`
             }`
           : sql`${lookup(orderItem, options)} ${$last ? sql`DESC` : sql`ASC`}`,
       ),
