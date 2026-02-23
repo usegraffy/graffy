@@ -1,4 +1,4 @@
-import { pack, unpack } from '@graffy/common';
+import { decodeGraph, decodeQuery, pack, unpack } from '@graffy/common';
 import { WebSocketServer } from 'ws';
 
 import debug from 'debug';
@@ -7,7 +7,15 @@ const log = debug('graffy:server:ws');
 
 const PING_INTERVAL = 30000;
 
-export default function server(store) {
+/**
+ * @typedef {import('@graffy/core').default} GraffyStore
+ * @param {GraffyStore} store
+ * @param {{
+ *   auth?: (operation: string, payload: any, options: any) => Promise<boolean>
+ * } | undefined} options
+ * @returns
+ */
+export default function server(store, { auth } = {}) {
   if (!store) throw new Error('server.store_undef');
 
   const wss = new WebSocketServer({ noServer: true });
@@ -22,6 +30,15 @@ export default function server(store) {
         if (id === ':pong') {
           ws.pingPending = false;
           return;
+        }
+
+        if (auth && op !== 'unwatch') {
+          const decoded =
+            op === 'write' ? decodeGraph(payload) : decodeQuery(payload);
+          if (!(await auth(op, decoded, options))) {
+            ws.send(JSON.stringify([id, 'unauthorized']));
+            return;
+          }
         }
 
         switch (op) {
