@@ -122,6 +122,7 @@ describe('select_sql', () => {
       prefix: ['user'],
       idCol: 'id',
       verCol: 'version',
+      schema: { types: { createTime: 'timestamp', id: 'text' } },
       verDefault: 'current_timestamp',
     };
     const expectedResult = sql`
