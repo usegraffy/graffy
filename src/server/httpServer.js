@@ -25,6 +25,16 @@ export default function server(store, { auth } = {}) {
         const qParam = parsed.query.q && String(parsed.query.q);
         const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
         if (req.headers.accept === 'text/event-stream') {
+          if (auth && !(await auth('watch', decodeQuery(query), options))) {
+            const body = 'unauthorized';
+            res.writeHead(401, {
+              'Content-Type': 'text/plain',
+              'Content-Length': Buffer.byteLength(body),
+            });
+            res.end(body);
+            return;
+          }
+
           res.setHeader('content-type', 'text/event-stream');
 
           const keepAlive = setInterval(() => {
