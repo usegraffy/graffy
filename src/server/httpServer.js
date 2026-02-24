@@ -18,14 +18,15 @@ export default function server(store, { auth } = {}) {
     const parsed = url.parse(req.url, true);
 
     const optParam = parsed.query.opts && String(parsed.query.opts);
-    const options = optParam && JSON.parse(decodeURIComponent(optParam));
+    const rawOptions = optParam && JSON.parse(decodeURIComponent(optParam));
+    const { pgClient: _, ...safeOptions } = rawOptions || {};
 
     if (req.method === 'GET') {
       try {
         const qParam = parsed.query.q && String(parsed.query.q);
         const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
         if (req.headers.accept === 'text/event-stream') {
-          if (auth && !(await auth('watch', decodeQuery(query), options))) {
+          if (auth && !(await auth('watch', decodeQuery(query), safeOptions))) {
             const body = 'unauthorized';
             res.writeHead(401, {
               'Content-Type': 'text/plain',
@@ -49,7 +50,7 @@ export default function server(store, { auth } = {}) {
           // const lastId = req.headers['last-event-id'];
           try {
             const stream = store.call('watch', query, {
-              ...options,
+              ...safeOptions,
               raw: true,
             });
             for await (const value of stream) {
@@ -90,7 +91,7 @@ export default function server(store, { auth } = {}) {
           !(await auth(
             op,
             (op === 'write' ? decodeGraph : decodeQuery)(payload),
-            options,
+            safeOptions,
           ))
         ) {
           const body = 'unauthorized';
@@ -102,7 +103,7 @@ export default function server(store, { auth } = {}) {
           return;
         }
 
-        const value = await store.call(op, payload, options);
+        const value = await store.call(op, payload, safeOptions);
         const body = JSON.stringify(pack(value));
         res.writeHead(200, {
           'Content-Type': 'application/json',

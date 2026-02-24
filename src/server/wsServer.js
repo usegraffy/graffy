@@ -24,7 +24,8 @@ export default function server(store, { auth } = {}) {
     ws.graffyStreams = {}; // We use this to keep track of streams to close.
     ws.on('message', async function message(msg) {
       try {
-        const [id, op, packedPayload, options] = JSON.parse(msg);
+        const [id, op, packedPayload, rawOptions] = JSON.parse(msg);
+        const { pgClient: _, ...safeOptions } = rawOptions || {};
         const payload = unpack(packedPayload);
 
         if (id === ':pong') {
@@ -35,7 +36,7 @@ export default function server(store, { auth } = {}) {
         if (auth && op !== 'unwatch') {
           const decoded =
             op === 'write' ? decodeGraph(payload) : decodeQuery(payload);
-          if (!(await auth(op, decoded, options))) {
+          if (!(await auth(op, decoded, safeOptions))) {
             ws.send(JSON.stringify([id, 'unauthorized']));
             return;
           }
@@ -45,7 +46,7 @@ export default function server(store, { auth } = {}) {
           case 'read':
           case 'write':
             try {
-              const result = await store.call(op, payload, options);
+              const result = await store.call(op, payload, safeOptions);
               ws.send(JSON.stringify([id, null, pack(result)]));
             } catch (e) {
               log(`${op}error:${e.message} ${payload}`);
@@ -55,7 +56,7 @@ export default function server(store, { auth } = {}) {
           case 'watch':
             try {
               const stream = store.call('watch', payload, {
-                ...options,
+                ...safeOptions,
                 raw: true,
               });
 
