@@ -8,7 +8,7 @@ import { getAggMeta, getArgMeta } from './getMeta';
   Uses the args object (typically passed in the $key attribute)
 
   @param {object} args
-  @param {{prefix: string, idCol: string, verDefault: string}} options
+  @param {{prefix: string, idCol: string, verDefault: string, schema: { types: Record<string, any> } }} options
 
   @typedef { import('sql-template-tag').Sql } Sql
   @return {{ meta: Sql, where: Sql[], order?: Sql, group?: Sql, limit: number, ensureSingleRow: boolean }}
