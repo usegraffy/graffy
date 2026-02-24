@@ -89,6 +89,25 @@ describe('httpServer pgClient stripping', () => {
       const [, , options] = store.call.mock.calls[0];
       expect(options).toEqual({});
     });
+
+    test('strips pgClient before passing options to auth', async () => {
+      const auth = jest.fn().mockResolvedValue(true);
+      const handler = httpServer(store, { auth });
+      const opts = encodeURIComponent(
+        JSON.stringify({ pgClient: { host: 'evil.com' }, userId: 'alice' }),
+      );
+      const req = makeReq({
+        method: 'POST',
+        query: { op: 'read', opts },
+        body: '[]',
+      });
+      await handler(req, makeRes());
+
+      expect(auth).toHaveBeenCalledTimes(1);
+      const [, , authOptions] = auth.mock.calls[0];
+      expect(authOptions).not.toHaveProperty('pgClient');
+      expect(authOptions).toHaveProperty('userId', 'alice');
+    });
   });
 
   describe('GET (EventStream / watch)', () => {
@@ -128,6 +147,26 @@ describe('httpServer pgClient stripping', () => {
 
       const [, , options] = store.call.mock.calls[0];
       expect(options).toEqual({ userId: 'carol', raw: true });
+    });
+
+    test('strips pgClient before passing options to auth (watch)', async () => {
+      const auth = jest.fn().mockResolvedValue(true);
+      store.call = jest.fn(async function* () {});
+      const handler = httpServer(store, { auth });
+      const opts = encodeURIComponent(
+        JSON.stringify({ pgClient: { host: 'evil.com' }, userId: 'alice' }),
+      );
+      const req = makeReq({
+        method: 'GET',
+        query: { opts },
+        headers: { accept: 'text/event-stream' },
+      });
+      await handler(req, makeRes());
+
+      expect(auth).toHaveBeenCalledTimes(1);
+      const [, , authOptions] = auth.mock.calls[0];
+      expect(authOptions).not.toHaveProperty('pgClient');
+      expect(authOptions).toHaveProperty('userId', 'alice');
     });
   });
 });

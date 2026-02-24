@@ -90,6 +90,24 @@ describe('wsServer pgClient stripping', () => {
       const [, , options] = store.call.mock.calls[0];
       expect(options).toEqual({});
     });
+
+    test('strips pgClient from write options before store.call', async () => {
+      const { ws, wsHandlers } = makeMockWs();
+      serverHandlers.connection(ws);
+
+      const msg = JSON.stringify([
+        'req1',
+        'write',
+        null,
+        { pgClient: { host: 'evil.com' }, userId: 'alice' },
+      ]);
+      await wsHandlers.message(msg);
+
+      expect(store.call).toHaveBeenCalledTimes(1);
+      const [, , options] = store.call.mock.calls[0];
+      expect(options).not.toHaveProperty('pgClient');
+      expect(options).toHaveProperty('userId', 'alice');
+    });
   });
 
   describe('watch', () => {
@@ -128,6 +146,33 @@ describe('wsServer pgClient stripping', () => {
 
       const [, , options] = store.call.mock.calls[0];
       expect(options).toEqual({ userId: 'carol', raw: true });
+    });
+  });
+
+  describe('auth callback', () => {
+    let auth;
+
+    beforeEach(() => {
+      auth = jest.fn().mockResolvedValue(true);
+      wsServer(store, { auth });
+    });
+
+    test('strips pgClient before passing options to auth', async () => {
+      const { ws, wsHandlers } = makeMockWs();
+      serverHandlers.connection(ws);
+
+      const msg = JSON.stringify([
+        'req1',
+        'read',
+        [],
+        { pgClient: { host: 'evil.com' }, userId: 'alice' },
+      ]);
+      await wsHandlers.message(msg);
+
+      expect(auth).toHaveBeenCalledTimes(1);
+      const [, , authOptions] = auth.mock.calls[0];
+      expect(authOptions).not.toHaveProperty('pgClient');
+      expect(authOptions).toHaveProperty('userId', 'alice');
     });
   });
 });
