@@ -90,7 +90,9 @@ describe('clauses', () => {
 
   test('lookup_cannot_lookup_throws', () => {
     const options = { schema: { types: { name: 'text' } } };
-    expect(() => lookup('name.sub', options)).toThrow('pg.cannot_lookup name.sub');
+    expect(() => lookup('name.sub', options)).toThrow(
+      'pg.cannot_lookup name.sub',
+    );
   });
 
   test('OptimisedJsonBuild', () => {

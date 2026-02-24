@@ -137,9 +137,9 @@ export function cubeLiteralSql(value) {
   }
   return Array.isArray(value[0])
     ? sql`cube(${vertexSql(value[0], sql`'-Infinity'`)}, ${vertexSql(
-      value[1],
-      sql`'Infinity'`,
-    )})`
+        value[1],
+        sql`'Infinity'`,
+      )})`
     : sql`cube(${vertexSql(value, 0)})`;
 }
 
