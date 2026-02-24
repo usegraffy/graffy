@@ -48,27 +48,18 @@ export default function getArgSql(
       ensureSingleRow: $group === true,
     };
 
-  const { types = {} } = options.schema;
-
   const groupCols =
     Array.isArray($group) &&
     $group.length &&
-    $group.map((prop) => {
-      const colPrefix = prop.split('.')[0];
-      if (!types[colPrefix]) throw Error(`pg.no_column ${colPrefix}`);
-      return lookup(prop, options);
-    });
+    $group.map((prop) => lookup(prop, options));
 
   const group = groupCols ? join(groupCols, ', ') : undefined;
 
-  const orderCols = ($order || [idCol]).map((orderItem) => {
-    const col = orderItem[0] === '!' ? orderItem.slice(1) : orderItem;
-    const colPrefix = col.split('.')[0];
-    if ($order && !types[colPrefix]) throw Error(`pg.no_column ${colPrefix}`);
-    return orderItem[0] === '!'
-      ? sql`-(${lookup(col, options)})::float8`
-      : lookup(orderItem, options);
-  });
+  const orderCols = ($order || [idCol]).map((orderItem) =>
+    orderItem[0] === '!'
+      ? sql`-(${lookup(orderItem.slice(1), options)})::float8`
+      : lookup(orderItem, options),
+  );
 
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([name, value]) => {

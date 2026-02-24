@@ -20,9 +20,14 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
+function colName(prefix, options) {
+  if (!options.schema.types[prefix]) throw Error(`pg.no_column ${prefix}`);
+  return raw(prefix);
+}
+
 export const lookup = (prop, options) => {
   const [prefix, ...suffix] = prop.split('.');
-  if (!suffix.length) return sql`"${raw(prefix)}"`;
+  if (!suffix.length) return sql`"${colName(prefix, options)}"`;
 
   const { types } = options.schema;
   if (types[prefix] === 'jsonb') {
@@ -132,9 +137,9 @@ export function cubeLiteralSql(value) {
   }
   return Array.isArray(value[0])
     ? sql`cube(${vertexSql(value[0], sql`'-Infinity'`)}, ${vertexSql(
-        value[1],
-        sql`'Infinity'`,
-      )})`
+      value[1],
+      sql`'Infinity'`,
+    )})`
     : sql`cube(${vertexSql(value, 0)})`;
 }
 

@@ -4,6 +4,7 @@ import {
   getJsonBuildTrusted,
   getSelectCols,
   getUpdates,
+  lookup,
 } from '../../sql/clauses';
 import expectSql from '../expectSql';
 
@@ -65,6 +66,31 @@ describe('clauses', () => {
     };
     const query = getSelectCols(options);
     expectSql(query, sql`*`);
+  });
+
+  test('lookup_known_column', () => {
+    const options = { schema: { types: { name: 'text' } } };
+    expectSql(lookup('name', options), sql`"name"`);
+  });
+
+  test('lookup_unknown_column_throws', () => {
+    const options = { schema: { types: { name: 'text' } } };
+    expect(() => lookup('unknown', options)).toThrow('pg.no_column unknown');
+  });
+
+  test('lookup_jsonb_path', () => {
+    const options = { schema: { types: { data: 'jsonb' } } };
+    expectSql(lookup('data.field', options), sql`"data" #> ${['field']}`);
+  });
+
+  test('lookup_cube_index', () => {
+    const options = { schema: { types: { coords: 'cube' } } };
+    expectSql(lookup('coords.0', options), sql`"coords" ~> ${0}`);
+  });
+
+  test('lookup_cannot_lookup_throws', () => {
+    const options = { schema: { types: { name: 'text' } } };
+    expect(() => lookup('name.sub', options)).toThrow('pg.cannot_lookup name.sub');
   });
 
   test('OptimisedJsonBuild', () => {
