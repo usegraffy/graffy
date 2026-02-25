@@ -1,6 +1,5 @@
-import { selectByArgs, selectByIds } from '../../sql/select.js';
-
 import sql from 'sql-template-tag';
+import { selectByArgs, selectByIds } from '../../sql/select.js';
 import expectSql from '../expectSql.js';
 
 describe('select_sql', () => {

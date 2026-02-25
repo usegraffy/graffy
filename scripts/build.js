@@ -102,7 +102,7 @@ export default async function build(name, version, watch, onUpdate) {
     let dependencies;
     let peerDependencies;
 
-    Object.keys(imports).map((imp) => {
+    Object.keys(imports).forEach((imp) => {
       const dep = imp.match(depPattern)[0];
       use(dep);
       if (peerDepVersions[dep]) {

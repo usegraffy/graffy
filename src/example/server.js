@@ -1,11 +1,10 @@
-import express from 'express';
-import { createServer as createViteServer } from 'vite';
-
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
 import memory from '@graffy/memory';
 import { httpServer, wsServer } from '@graffy/server';
 import debug from 'debug';
+import express from 'express';
+import { createServer as createViteServer } from 'vite';
 import mock from './services/mockVisitorList.js';
 
 const log = debug('graffy:website:server');

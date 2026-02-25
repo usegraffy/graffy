@@ -1,7 +1,5 @@
 import { keyAfter, keyBefore, keyStep } from '../ops/step.js';
 import {
-  MAX_KEY,
-  MIN_KEY,
   cmp,
   errIf,
   isDef,
@@ -9,6 +7,8 @@ import {
   isMaxKey,
   isMinKey,
   isPlainObject,
+  MAX_KEY,
+  MIN_KEY,
 } from '../util.js';
 import { decode as decodeValue, encode as encodeValue } from './struct.js';
 
@@ -49,7 +49,7 @@ export function encode(arg) {
   if (!page) return { key: encodeValue(filter || {}) };
 
   const { $cursor, ...range } = page;
-  // @ts-ignore
+  // @ts-expect-error
   const { $first, $all, $last, $after, $before, $since, $until } = range;
   const hasRange = !isEmpty(range);
 

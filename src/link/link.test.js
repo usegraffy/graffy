@@ -1,8 +1,7 @@
-import { MAX_KEY, MIN_KEY, encodeGraph, encodeQuery } from '@graffy/common';
+import { encodeGraph, encodeQuery, MAX_KEY, MIN_KEY } from '@graffy/common';
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
-import { mockBackend, page } from '@graffy/testing';
-import { keyref, ref } from '@graffy/testing';
+import { keyref, mockBackend, page, ref } from '@graffy/testing';
 import { jest } from '@jest/globals';
 import link from './index.js';
 

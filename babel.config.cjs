@@ -8,7 +8,7 @@
 */
 
 module.exports = {
-  presets: ['@babel/preset-react'],
+  presets: [['@babel/preset-react', { runtime: 'automatic' }]],
   targets: {
     browsers: 'last 2 versions',
     esmodules: true,

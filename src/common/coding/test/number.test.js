@@ -1,4 +1,5 @@
 import { decode, encode } from '../number.js';
+
 // import { string, number, boolean } from './types.js';
 
 describe('dencorder', () => {

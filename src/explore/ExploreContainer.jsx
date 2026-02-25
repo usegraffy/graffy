@@ -3,7 +3,7 @@ import * as common from '@graffy/common';
 import Graffy from '@graffy/core';
 import GraffyFill from '@graffy/fill';
 import { GraffyProvider } from '@graffy/react';
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import Explore from './Explore.jsx';
 

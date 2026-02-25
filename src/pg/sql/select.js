@@ -1,4 +1,4 @@
-import sql, { join, raw, empty } from 'sql-template-tag';
+import sql, { empty, join, raw } from 'sql-template-tag';
 import { getSelectCols } from './clauses.js';
 import getArgSql from './getArgSql.js';
 import { getIdMeta } from './getMeta.js';

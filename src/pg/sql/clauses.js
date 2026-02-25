@@ -1,5 +1,5 @@
 import { isEmpty } from '@graffy/common';
-import sql, { Sql, empty, join, raw } from 'sql-template-tag';
+import sql, { empty, join, raw, Sql } from 'sql-template-tag';
 
 /*
   Important: This function assumes that the object's keys are from
@@ -34,7 +34,7 @@ export const lookup = (prop, options) => {
     return sql`"${raw(prefix)}" #> ${suffix}`;
   }
   if (types[prefix] === 'cube' && suffix.length === 1) {
-    return sql`"${raw(prefix)}" ~> ${Number.parseInt(suffix[0])}`;
+    return sql`"${raw(prefix)}" ~> ${Number.parseInt(suffix[0], 10)}`;
   }
   throw Error(`pg.cannot_lookup ${prop}`);
 };
@@ -198,7 +198,9 @@ export const getInsert = (rows, options) => {
       ', ',
     ),
     updates: join(
-      colSqls.map((col, ix) => sql`${col} =  "excluded".${col}`).filter(isUsed),
+      colSqls
+        .map((col, _ix) => sql`${col} =  "excluded".${col}`)
+        .filter(isUsed),
       ', ',
     ),
   };

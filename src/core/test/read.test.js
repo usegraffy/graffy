@@ -258,7 +258,7 @@ describe('middleware_coding', () => {
       expect(result).toEqual({ participant: decomposedResult });
       return result;
     });
-    g.onRead(async (query) => {
+    g.onRead(async (_query) => {
       return { participant: composedResult };
     });
 
@@ -294,7 +294,7 @@ describe('middleware_coding', () => {
       expect(result).toEqual({ participant: decomposedResult });
       return result;
     });
-    g.onRead('participant', async (query) => {
+    g.onRead('participant', async (_query) => {
       return composedResult;
     });
 

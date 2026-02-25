@@ -1,13 +1,13 @@
 import isEqual from 'lodash/isEqual.js';
-import { add, finalize, merge, setVersion, wrap } from '../ops/index.js';
+import { add, merge, setVersion, wrap } from '../ops/index.js';
 import {
-  MAX_KEY,
-  MIN_KEY,
   clone,
   cmp,
   isDef,
   isEmpty,
   isPlainObject,
+  MAX_KEY,
+  MIN_KEY,
 } from '../util.js';
 import { encode as encodeArgs, splitArgs } from './args.js';
 import { encode as encodePath, splitRef } from './path.js';
