@@ -7,25 +7,36 @@ const log = debug('graffy:server:http');
 /**
  * @typedef {import('@graffy/core').default} GraffyStore
  * @param {GraffyStore} store
- * @param {{
- *   auth?: (operation: string, payload: any, options: any) => Promise<boolean>
- * } | undefined} options
+ * @param {object} [options]
+ * @param {(operation: string, payload: any, options: any) => Promise<boolean>} [options.auth]
+ *   Optional callback to authorize each request. Receives the operation name,
+ *   decoded payload, and the filtered options. Return `true` to allow, `false`
+ *   (or a rejected promise) to reject with 401.
+ * @param {string[]} [options.allowedOptions]
+ *   Allowlist of option keys that clients are permitted to pass through to
+ *   `store.call` and the `auth` callback. Any key not in this list is stripped
+ *   from the client-supplied options before use. Defaults to `[]` (strip all).
  * @returns
  */
-export default function server(store, { auth } = {}) {
+export default function server(store, { auth, allowedOptions = [] } = {}) {
   if (!store) throw new Error('server.store_undef');
   return async (req, res) => {
     const parsed = url.parse(req.url, true);
 
     const optParam = parsed.query.opts && String(parsed.query.opts);
-    const options = optParam && JSON.parse(decodeURIComponent(optParam));
+    const rawOptions = optParam && JSON.parse(decodeURIComponent(optParam));
+    const safeOptions = Object.fromEntries(
+      Object.entries(rawOptions || {}).filter(([k]) =>
+        allowedOptions.includes(k),
+      ),
+    );
 
     if (req.method === 'GET') {
       try {
         const qParam = parsed.query.q && String(parsed.query.q);
         const query = qParam && unpack(JSON.parse(decodeURIComponent(qParam)));
         if (req.headers.accept === 'text/event-stream') {
-          if (auth && !(await auth('watch', decodeQuery(query), options))) {
+          if (auth && !(await auth('watch', decodeQuery(query), safeOptions))) {
             const body = 'unauthorized';
             res.writeHead(401, {
               'Content-Type': 'text/plain',
@@ -49,7 +60,7 @@ export default function server(store, { auth } = {}) {
           // const lastId = req.headers['last-event-id'];
           try {
             const stream = store.call('watch', query, {
-              ...options,
+              ...safeOptions,
               raw: true,
             });
             for await (const value of stream) {
@@ -90,7 +101,7 @@ export default function server(store, { auth } = {}) {
           !(await auth(
             op,
             (op === 'write' ? decodeGraph : decodeQuery)(payload),
-            options,
+            safeOptions,
           ))
         ) {
           const body = 'unauthorized';
@@ -102,7 +113,7 @@ export default function server(store, { auth } = {}) {
           return;
         }
 
-        const value = await store.call(op, payload, options);
+        const value = await store.call(op, payload, safeOptions);
         const body = JSON.stringify(pack(value));
         res.writeHead(200, {
           'Content-Type': 'application/json',

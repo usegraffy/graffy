@@ -10,12 +10,18 @@ const PING_INTERVAL = 30000;
 /**
  * @typedef {import('@graffy/core').default} GraffyStore
  * @param {GraffyStore} store
- * @param {{
- *   auth?: (operation: string, payload: any, options: any) => Promise<boolean>
- * } | undefined} options
+ * @param {object} [options]
+ * @param {(operation: string, payload: any, options: any) => Promise<boolean>} [options.auth]
+ *   Optional callback to authorize each request. Receives the operation name,
+ *   decoded payload, and the filtered options. Return `true` to allow, `false`
+ *   (or a rejected promise) to reject with an error response.
+ * @param {string[]} [options.allowedOptions]
+ *   Allowlist of option keys that clients are permitted to pass through to
+ *   `store.call` and the `auth` callback. Any key not in this list is stripped
+ *   from the client-supplied options before use. Defaults to `[]` (strip all).
  * @returns
  */
-export default function server(store, { auth } = {}) {
+export default function server(store, { auth, allowedOptions = [] } = {}) {
   if (!store) throw new Error('server.store_undef');
 
   const wss = new WebSocketServer({ noServer: true });
@@ -24,7 +30,12 @@ export default function server(store, { auth } = {}) {
     ws.graffyStreams = {}; // We use this to keep track of streams to close.
     ws.on('message', async function message(msg) {
       try {
-        const [id, op, packedPayload, options] = JSON.parse(msg);
+        const [id, op, packedPayload, rawOptions] = JSON.parse(msg);
+        const safeOptions = Object.fromEntries(
+          Object.entries(rawOptions || {}).filter(([k]) =>
+            allowedOptions.includes(k),
+          ),
+        );
         const payload = unpack(packedPayload);
 
         if (id === ':pong') {
@@ -35,7 +46,7 @@ export default function server(store, { auth } = {}) {
         if (auth && op !== 'unwatch') {
           const decoded =
             op === 'write' ? decodeGraph(payload) : decodeQuery(payload);
-          if (!(await auth(op, decoded, options))) {
+          if (!(await auth(op, decoded, safeOptions))) {
             ws.send(JSON.stringify([id, 'unauthorized']));
             return;
           }
@@ -45,7 +56,7 @@ export default function server(store, { auth } = {}) {
           case 'read':
           case 'write':
             try {
-              const result = await store.call(op, payload, options);
+              const result = await store.call(op, payload, safeOptions);
               ws.send(JSON.stringify([id, null, pack(result)]));
             } catch (e) {
               log(`${op}error:${e.message} ${payload}`);
@@ -55,7 +66,7 @@ export default function server(store, { auth } = {}) {
           case 'watch':
             try {
               const stream = store.call('watch', payload, {
-                ...options,
+                ...safeOptions,
                 raw: true,
               });
 
