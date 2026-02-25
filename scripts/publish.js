@@ -1,6 +1,6 @@
 import { npm } from './utils.js';
 
-export default async function publish(name, version) {
+export default async function publish(name, version, provenance = false) {
   const isPre = version.includes('alpha') || version.includes('beta');
   try {
     await npm(
@@ -9,6 +9,7 @@ export default async function publish(name, version) {
       '--access',
       'public',
       ...(isPre ? ['--tag', 'pre'] : []),
+      ...(provenance ? ['--provenance'] : []),
     );
     console.log(`INFO [${name}] published`);
   } catch (e) {
