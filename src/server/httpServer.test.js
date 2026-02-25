@@ -33,7 +33,7 @@ function makeRes() {
   };
 }
 
-describe('httpServer pgClient stripping', () => {
+describe('httpServer allowedOptions filtering', () => {
   let store;
 
   beforeEach(() => {
@@ -42,8 +42,8 @@ describe('httpServer pgClient stripping', () => {
   });
 
   describe('POST (read/write)', () => {
-    test('strips pgClient from options before store.call', async () => {
-      const handler = httpServer(store);
+    test('strips options not in allowedOptions before store.call', async () => {
+      const handler = httpServer(store, { allowedOptions: ['userId'] });
       const opts = encodeURIComponent(
         JSON.stringify({ pgClient: { host: 'evil.com' }, userId: 'alice' }),
       );
@@ -60,8 +60,8 @@ describe('httpServer pgClient stripping', () => {
       expect(options).toHaveProperty('userId', 'alice');
     });
 
-    test('preserves non-pgClient options', async () => {
-      const handler = httpServer(store);
+    test('passes through allowedOptions', async () => {
+      const handler = httpServer(store, { allowedOptions: ['userId', 'role'] });
       const opts = encodeURIComponent(
         JSON.stringify({ userId: 'bob', role: 'admin' }),
       );
@@ -90,9 +90,9 @@ describe('httpServer pgClient stripping', () => {
       expect(options).toEqual({});
     });
 
-    test('strips pgClient before passing options to auth', async () => {
+    test('strips non-allowedOptions before passing options to auth', async () => {
       const auth = jest.fn().mockResolvedValue(true);
-      const handler = httpServer(store, { auth });
+      const handler = httpServer(store, { auth, allowedOptions: ['userId'] });
       const opts = encodeURIComponent(
         JSON.stringify({ pgClient: { host: 'evil.com' }, userId: 'alice' }),
       );
@@ -114,9 +114,9 @@ describe('httpServer pgClient stripping', () => {
     beforeEach(() => jest.useFakeTimers());
     afterEach(() => jest.useRealTimers());
 
-    test('strips pgClient from watch options', async () => {
+    test('strips non-allowedOptions from watch options', async () => {
       store.call = jest.fn(async function* () {});
-      const handler = httpServer(store);
+      const handler = httpServer(store, { allowedOptions: ['userId'] });
       const opts = encodeURIComponent(
         JSON.stringify({ pgClient: { host: 'evil.com' }, userId: 'alice' }),
       );
@@ -134,9 +134,9 @@ describe('httpServer pgClient stripping', () => {
       expect(options).toHaveProperty('raw', true);
     });
 
-    test('preserves non-pgClient options for watch', async () => {
+    test('passes through allowedOptions for watch', async () => {
       store.call = jest.fn(async function* () {});
-      const handler = httpServer(store);
+      const handler = httpServer(store, { allowedOptions: ['userId'] });
       const opts = encodeURIComponent(JSON.stringify({ userId: 'carol' }));
       const req = makeReq({
         method: 'GET',
@@ -149,10 +149,10 @@ describe('httpServer pgClient stripping', () => {
       expect(options).toEqual({ userId: 'carol', raw: true });
     });
 
-    test('strips pgClient before passing options to auth (watch)', async () => {
+    test('strips non-allowedOptions before passing options to auth (watch)', async () => {
       const auth = jest.fn().mockResolvedValue(true);
       store.call = jest.fn(async function* () {});
-      const handler = httpServer(store, { auth });
+      const handler = httpServer(store, { auth, allowedOptions: ['userId'] });
       const opts = encodeURIComponent(
         JSON.stringify({ pgClient: { host: 'evil.com' }, userId: 'alice' }),
       );

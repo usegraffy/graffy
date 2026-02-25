@@ -31,7 +31,7 @@ function makeMockWs() {
   return { ws, wsHandlers };
 }
 
-describe('wsServer pgClient stripping', () => {
+describe('wsServer allowedOptions filtering', () => {
   let store;
 
   // Prevent setInterval (ping loop) from leaking into test output.
@@ -41,11 +41,11 @@ describe('wsServer pgClient stripping', () => {
   beforeEach(() => {
     // null is a valid Graffy leaf: pack(null)=null, unpack(null)=null
     store = { call: jest.fn().mockResolvedValue(null) };
-    wsServer(store);
+    wsServer(store, { allowedOptions: ['userId', 'role'] });
   });
 
   describe('read / write', () => {
-    test('strips pgClient from options before store.call', async () => {
+    test('strips options not in allowedOptions before store.call', async () => {
       const { ws, wsHandlers } = makeMockWs();
       serverHandlers.connection(ws);
 
@@ -63,7 +63,7 @@ describe('wsServer pgClient stripping', () => {
       expect(options).toHaveProperty('userId', 'alice');
     });
 
-    test('preserves non-pgClient options', async () => {
+    test('passes through allowedOptions', async () => {
       const { ws, wsHandlers } = makeMockWs();
       serverHandlers.connection(ws);
 
@@ -91,7 +91,7 @@ describe('wsServer pgClient stripping', () => {
       expect(options).toEqual({});
     });
 
-    test('strips pgClient from write options before store.call', async () => {
+    test('strips non-allowedOptions from write options before store.call', async () => {
       const { ws, wsHandlers } = makeMockWs();
       serverHandlers.connection(ws);
 
@@ -111,7 +111,7 @@ describe('wsServer pgClient stripping', () => {
   });
 
   describe('watch', () => {
-    test('strips pgClient from watch options', async () => {
+    test('strips non-allowedOptions from watch options', async () => {
       store.call = jest.fn(async function* () {});
       const { ws, wsHandlers } = makeMockWs();
       serverHandlers.connection(ws);
@@ -131,7 +131,7 @@ describe('wsServer pgClient stripping', () => {
       expect(options).toHaveProperty('raw', true);
     });
 
-    test('preserves non-pgClient options for watch', async () => {
+    test('passes through allowedOptions for watch', async () => {
       store.call = jest.fn(async function* () {});
       const { ws, wsHandlers } = makeMockWs();
       serverHandlers.connection(ws);
@@ -154,10 +154,10 @@ describe('wsServer pgClient stripping', () => {
 
     beforeEach(() => {
       auth = jest.fn().mockResolvedValue(true);
-      wsServer(store, { auth });
+      wsServer(store, { auth, allowedOptions: ['userId'] });
     });
 
-    test('strips pgClient before passing options to auth', async () => {
+    test('strips non-allowedOptions before passing options to auth', async () => {
       const { ws, wsHandlers } = makeMockWs();
       serverHandlers.connection(ws);
 
