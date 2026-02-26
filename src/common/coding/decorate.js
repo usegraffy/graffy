@@ -1,12 +1,12 @@
 import { findFirst, isRange } from '../node/index.js';
-import { IS_VAL, getNodeValue, unwrap } from '../ops/index.js';
+import { getNodeValue, IS_VAL, unwrap } from '../ops/index.js';
 import {
-  MIN_KEY,
   cmp,
   isDef,
   isEmpty,
   isMinKey,
   isPlainObject,
+  MIN_KEY,
 } from '../util.js';
 import {
   decode as decodeArgs,

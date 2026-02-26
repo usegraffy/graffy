@@ -1,4 +1,4 @@
-import { MIN_KEY, encodeGraph } from '../common/index.js';
+import { encodeGraph, MIN_KEY } from '../common/index.js';
 import linkGraph from './linkGraph.js';
 
 test('simple', () => {

@@ -405,7 +405,7 @@ test('onReadWithNext', async () => {
 });
 
 test('modified_next_options', async () => {
-  // @ts-ignore bad jest mockResolvedValue definitions?
+  // @ts-expect-error bad jest mockResolvedValue definitions?
   const mockOnRead = jest.fn().mockResolvedValue({ 123: { name: 'Alice' } });
   const query = { 123: { name: true } };
   const store = new Graffy();
@@ -443,39 +443,37 @@ describe('unchanged', () => {
     store = new Graffy();
   });
 
-  test.each(cases)(
-    'read nextChanged:%j retChanged:%j',
-    async (nextChanged, retChanged) => {
-      store.onRead('example', async (_query, _options, next) => {
-        await next(nextChanged ? changedQuery : unchanged);
-        return retChanged ? changedResult : unchanged;
-      });
+  test.each(
+    cases,
+  )('read nextChanged:%j retChanged:%j', async (nextChanged, retChanged) => {
+    store.onRead('example', async (_query, _options, next) => {
+      await next(nextChanged ? changedQuery : unchanged);
+      return retChanged ? changedResult : unchanged;
+    });
 
-      store.onRead('example', async (query, _options) => {
-        expect(query).toEqual(nextChanged ? changedQuery : originalQuery);
-        return originalResult;
-      });
+    store.onRead('example', async (query, _options) => {
+      expect(query).toEqual(nextChanged ? changedQuery : originalQuery);
+      return originalResult;
+    });
 
-      const result = await store.read('example', originalQuery);
-      expect(result).toEqual(retChanged ? changedResult : originalResult);
-    },
-  );
+    const result = await store.read('example', originalQuery);
+    expect(result).toEqual(retChanged ? changedResult : originalResult);
+  });
 
-  test.each(cases)(
-    'write nextChanged:%j retChanged:%j',
-    async (nextChanged, retChanged) => {
-      store.onWrite('example', async (_change, _options, next) => {
-        await next(nextChanged ? changedChange : unchanged);
-        return retChanged ? changedResult : unchanged;
-      });
+  test.each(
+    cases,
+  )('write nextChanged:%j retChanged:%j', async (nextChanged, retChanged) => {
+    store.onWrite('example', async (_change, _options, next) => {
+      await next(nextChanged ? changedChange : unchanged);
+      return retChanged ? changedResult : unchanged;
+    });
 
-      store.onWrite('example', async (change, _options) => {
-        expect(change).toEqual(nextChanged ? changedChange : originalChange);
-        return originalResult;
-      });
+    store.onWrite('example', async (change, _options) => {
+      expect(change).toEqual(nextChanged ? changedChange : originalChange);
+      return originalResult;
+    });
 
-      const result = await store.write('example', originalChange);
-      expect(result).toEqual(retChanged ? changedResult : originalResult);
-    },
-  );
+    const result = await store.write('example', originalChange);
+    expect(result).toEqual(retChanged ? changedResult : originalResult);
+  });
 });

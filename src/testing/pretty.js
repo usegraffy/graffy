@@ -5,7 +5,7 @@ export default function pretty(query) {
       (_, space, inner) => `[${space}${inner.replace(/\n\s+/g, ' ')}},`,
     )
     .replace(
-      // biome-ignore lint/suspicious/noControlCharactersInRegex: <explanation>
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: unicode range intentionally includes control chars to escape them
       /[^\u0020-\u007e,\u000a]/g,
       (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4)}`,
     );

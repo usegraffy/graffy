@@ -6,7 +6,7 @@ import {
   isOlder,
   isRange,
 } from '../node/index.js';
-import { MAX_KEY, MIN_KEY, cmp, isMinKey } from '../util.js';
+import { cmp, isMinKey, MAX_KEY, MIN_KEY } from '../util.js';
 import add from './add.js';
 import merge from './merge.js';
 import { wrap } from './path.js';

@@ -1,7 +1,6 @@
 import { decodeGraph, decodeQuery, pack, unpack } from '@graffy/common';
-import { WebSocketServer } from 'ws';
-
 import debug from 'debug';
+import { WebSocketServer } from 'ws';
 
 const log = debug('graffy:server:ws');
 
@@ -102,7 +101,10 @@ export default function server(store, { auth, allowedOptions = [] } = {}) {
 
   setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
-      if (ws.pingPending) return ws.terminate();
+      if (ws.pingPending) {
+        ws.terminate();
+        return;
+      }
       ws.pingPending = true;
       ws.send(JSON.stringify([':ping', Date.now()]));
     });

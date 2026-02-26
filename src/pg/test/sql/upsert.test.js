@@ -1,6 +1,5 @@
-import { patch, put } from '../../sql/upsert.js';
-
 import sql from 'sql-template-tag';
+import { patch, put } from '../../sql/upsert.js';
 import expectSql from '../expectSql.js';
 
 const options = {

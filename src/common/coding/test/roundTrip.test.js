@@ -1,11 +1,10 @@
+import { keyref, put } from '@graffy/testing';
 import {
   decodeGraph,
   decodeQuery,
   encodeGraph,
   encodeQuery,
 } from '../index.js';
-
-import { keyref, put } from '@graffy/testing';
 
 describe('graph', () => {
   function roundTrip(original, expected = original, callback = null) {

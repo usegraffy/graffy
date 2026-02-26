@@ -2,9 +2,9 @@ import client from '@graffy/client';
 import Graffy from '@graffy/core';
 import fill from '@graffy/fill';
 import { GraffyProvider } from '@graffy/react';
-import React from 'react';
 
 import Example from './Example.jsx';
+
 // import './index.css';
 
 const store = new Graffy();
