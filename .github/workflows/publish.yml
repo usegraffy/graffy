@@ -16,9 +16,18 @@ jobs:
           fetch-tags: true
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      - run: npx playwright install
+      - run: npm run lint
+      - run: npm test
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
       - name: Read version from package.json
         id: pkg
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
@@ -30,5 +39,3 @@ jobs:
           fi
       - run: npm install
       - run: npm run package -- ${{ steps.pkg.outputs.version }} --publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
