@@ -16,15 +16,23 @@ import { dst, src } from './utils.js';
 import version from './version.js';
 
 const argv = yargs(process.argv.slice(2))
-  .usage('$0 <version> [--publish] [--link] [--watch] [--notypes]')
+  .usage(
+    '$0 <version> [--publish] [--link] [--watch] [--notypes] [--provenance]',
+  )
   .boolean('publish')
   .boolean('link')
   .boolean('watch')
   .boolean('notypes')
+  .boolean('provenance')
   .demandCommand(1).argv;
 
 if (argv.publish && argv.watch) {
   console.log("ERR Can't both --publish and --watch");
+  process.exit(-1);
+}
+
+if (argv.provenance && !argv.publish) {
+  console.log('ERR --provenance requires --publish');
   process.exit(-1);
 }
 
@@ -50,7 +58,7 @@ function onUpdate(name, fileName) {
         console.log(`INFO [${name}] started`);
         if (!(await build(name, ver, argv.watch, onUpdate))) return;
         if (!argv.notypes) await types(name);
-        if (argv.publish) await publish(name, ver);
+        if (argv.publish) await publish(name, ver, argv.provenance);
         if (argv.link) await link(name);
         return name;
       },

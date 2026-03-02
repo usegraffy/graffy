@@ -4,8 +4,6 @@
 name: Node.js CI
 
 on:
-  push:
-    branches: [next]
   pull_request:
     branches: [next]
 
@@ -14,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x, 22.x, 24.x]
+        node-version: [20.x, 22.x, 24.x, 25.x]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -31,3 +29,12 @@ jobs:
           PGPORT: 5432
           PGUSER: postgres
           PGPASSWORD: postgres
+      - name: Read version from package.json
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Fail if tag already exists
+        run: |
+          if git tag --list "${{ steps.pkg.outputs.version }}" | grep -q .; then
+            echo "Error: tag ${{ steps.pkg.outputs.version }} already exists" >&2
+            exit 1
+          fi
