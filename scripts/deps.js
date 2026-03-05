@@ -13,7 +13,7 @@ function use(dep) {
 }
 
 function printUnused() {
-  [extraDeps, depVersions, peerDepVersions].map((deps) => {
+  [extraDeps, depVersions, peerDepVersions].forEach((deps) => {
     for (const dep in deps) {
       if (!used[dep]) console.log(dep);
     }

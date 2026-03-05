@@ -1,7 +1,7 @@
 {
-  "$schema": "./node_modules/rome/configuration_schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "ignore": ["dist", "ref", "pages", ".vscode"]
+    "includes": ["**", "!**/dist", "!**/ref", "!**/pages", "!**/.vscode"]
   },
   "linter": {
     "enabled": true,
@@ -14,8 +14,7 @@
         "noForEach": "off"
       },
       "a11y": {
-        "all": false,
-        "useButtonType": { "level": "off" }
+        "useButtonType": "off"
       },
       "style": {
         "noParameterAssign": "off"

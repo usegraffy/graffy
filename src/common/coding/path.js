@@ -1,4 +1,4 @@
-import { MIN_KEY, isPlainObject } from '../util.js';
+import { isPlainObject, MIN_KEY } from '../util.js';
 import {
   decode as decodeArgs,
   encode as encodeArgs,

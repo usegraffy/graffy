@@ -1,6 +1,8 @@
 import { faker } from '@faker-js/faker';
 import debug from 'debug';
+
 const log = debug('graffy:website:server');
+
 import { encodeGraph } from '@graffy/common';
 
 const TARGET = 30;
@@ -64,7 +66,7 @@ function simulate() {
 
 function visitorInfo() {
   return {
-    name: faker.internet.userName(),
+    name: faker.internet.username(),
     avatar: faker.image.avatar(),
     pageviews: [{ $key: [ts], $val: faker.system.directoryPath() }],
   };

@@ -1,6 +1,5 @@
 import { isBranch } from '../node/index.js';
-import { find } from '../util.js';
-import { cmp as compareKey } from '../util.js';
+import { cmp as compareKey, find } from '../util.js';
 
 export default function add(base, diff) {
   let changed = false;

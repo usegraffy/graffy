@@ -3,12 +3,9 @@ import {
   decodeQuery,
   decorate,
   encodeGraph,
-  encodePath,
   encodeQuery,
   finalize,
-  unwrap,
   unwrapObject,
-  wrap,
   wrapObject,
 } from '@graffy/common';
 import { makeStream, mapStream } from '@graffy/stream';

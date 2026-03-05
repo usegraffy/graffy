@@ -7,7 +7,6 @@ import Graffy from '@graffy/core';
 import { mockBackend } from '@graffy/testing';
 import { jest } from '@jest/globals';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import React from 'react';
 import { GraffyProvider } from './GraffyContext.jsx';
 import { useQuery } from './index.js';
 

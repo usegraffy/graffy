@@ -1,4 +1,4 @@
-import { MIN_KEY, encodeQuery } from '@graffy/common';
+import { encodeQuery, MIN_KEY } from '@graffy/common';
 import prepQueryLinks from './prepQueryLinks.js';
 
 test('prepQueryLinks', () => {

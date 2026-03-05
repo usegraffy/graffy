@@ -1,6 +1,5 @@
-import { selectByArgs, selectByIds } from '../../sql/select.js';
-
 import sql from 'sql-template-tag';
+import { selectByArgs, selectByIds } from '../../sql/select.js';
 import expectSql from '../expectSql.js';
 
 describe('select_sql', () => {
@@ -11,7 +10,7 @@ describe('select_sql', () => {
       prefix: ['user'],
       idCol: 'id',
       verCol: 'version',
-      schema: { types: {} },
+      schema: { types: { name: 'text', id: 'text' } },
       verDefault: 'current_timestamp',
     };
     const expectedResult = sql`
@@ -74,6 +73,7 @@ describe('select_sql', () => {
       prefix: ['user'],
       idCol: 'id',
       verCol: 'version',
+      schema: { types: { createTime: 'timestamp', id: 'text' } },
       verDefault: 'current_timestamp',
     };
     const expectedResult = sql`
@@ -96,6 +96,7 @@ describe('select_sql', () => {
       prefix: ['user'],
       idCol: 'id',
       verCol: 'version',
+      schema: { types: { createTime: 'timestamp', id: 'text' } },
       verDefault: 'current_timestamp',
     };
     const expectedResult = sql`
@@ -120,6 +121,7 @@ describe('select_sql', () => {
       prefix: ['user'],
       idCol: 'id',
       verCol: 'version',
+      schema: { types: { createTime: 'timestamp', id: 'text' } },
       verDefault: 'current_timestamp',
     };
     const expectedResult = sql`
@@ -133,6 +135,36 @@ describe('select_sql', () => {
     `;
 
     expectSql(selectByArgs(arg, null, options), expectedResult);
+  });
+
+  test('selectByArgs_order_unknown_column_throws', () => {
+    const arg = { $order: ['unknown', 'id'], $first: 10 };
+    const options = {
+      table: 'user',
+      prefix: ['user'],
+      idCol: 'id',
+      verCol: 'version',
+      schema: { types: { id: 'text' } },
+      verDefault: 'current_timestamp',
+    };
+    expect(() => selectByArgs(arg, null, options)).toThrow(
+      'pg.no_column unknown',
+    );
+  });
+
+  test('selectByArgs_group_unknown_column_throws', () => {
+    const arg = { $group: ['unknown'], $first: 10 };
+    const options = {
+      table: 'user',
+      prefix: ['user'],
+      idCol: 'id',
+      verCol: 'version',
+      schema: { types: {} },
+      verDefault: 'current_timestamp',
+    };
+    expect(() => selectByArgs(arg, null, options)).toThrow(
+      'pg.no_column unknown',
+    );
   });
 
   // test('selectByArgs_json manipulation', () => {});

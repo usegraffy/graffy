@@ -1,5 +1,4 @@
 import {
-  MIN_KEY,
   add,
   cmp,
   decodeArgs,
@@ -7,6 +6,7 @@ import {
   encodeQuery,
   findFirst,
   isBranch,
+  MIN_KEY,
   splitRef,
 } from '@graffy/common';
 
@@ -157,7 +157,7 @@ function getDefQuery(def, vars, version) {
       // We do this to ensure that range queries are made correctly.
       let porcelainQuery = { $key: path.pop() };
       let $key;
-      // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+      // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic while-pop pattern
       while (($key = path.pop())) {
         porcelainQuery = { $key, $chi: [porcelainQuery] };
       }

@@ -19,7 +19,7 @@ describe('Socket', () => {
     jest.useFakeTimers();
     MockWebSocket.instances.splice(0);
     actualWebSocket = globalThis.WebSocket;
-    // @ts-ignore
+    // @ts-expect-error
     globalThis.WebSocket = MockWebSocket;
     socket = Socket('ws://localhost:3684');
     ws = MockWebSocket.instances[0];

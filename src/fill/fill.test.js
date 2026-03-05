@@ -1,5 +1,4 @@
-import { MAX_KEY, MIN_KEY } from '@graffy/common';
-import { encodeGraph, encodeQuery } from '@graffy/common';
+import { encodeGraph, encodeQuery, MAX_KEY, MIN_KEY } from '@graffy/common';
 import Graffy from '@graffy/core';
 import { mockBackend } from '@graffy/testing';
 import { e } from '@graffy/testing/encoder.js';

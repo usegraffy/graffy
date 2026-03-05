@@ -20,6 +20,7 @@ import pg from 'pg';
 import sqlTag from 'sql-template-tag';
 import formatSql from './sql/format.js';
 import { del, patch, put, selectByArgs, selectByIds } from './sql/index.js';
+
 const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
 
@@ -39,7 +40,7 @@ export default class Db {
   async query(sql, tableOptions) {
     log(`Making SQL query: ${sql.text}`, sql.values);
     const cubeOid =
-      Number.parseInt(tableOptions?.schema?.typeOids?.cube || '0') || null;
+      Number.parseInt(tableOptions?.schema?.typeOids?.cube || '0', 10) || null;
     try {
       sql.types = {
         getTypeParser: (oid, format) => {
@@ -178,7 +179,7 @@ export default class Db {
       merge(results, wrappedGraph);
     };
 
-    const explainArgs = async (args, projection) => {
+    const explainArgs = async (args, _projection) => {
       const { analyze, $explain: qArgs } = args;
       const qSql = selectByArgs(qArgs, null, tableOptions);
       const sql = sqlTag`EXPLAIN (${

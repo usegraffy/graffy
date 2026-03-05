@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  push:
+    branches: [next]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      - run: npx playwright install
+      - run: npm run lint
+      - run: npm test
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+      - name: Read version from package.json
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Fail if tag already exists
+        run: |
+          if git tag --list "${{ steps.pkg.outputs.version }}" | grep -q .; then
+            echo "Error: tag ${{ steps.pkg.outputs.version }} already exists" >&2
+            exit 1
+          fi
+      - run: npm install
+      - run: npm run package -- ${{ steps.pkg.outputs.version }} --publish --provenance

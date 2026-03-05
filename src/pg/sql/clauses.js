@@ -1,5 +1,5 @@
 import { isEmpty } from '@graffy/common';
-import sql, { Sql, empty, join, raw } from 'sql-template-tag';
+import sql, { empty, join, raw, Sql } from 'sql-template-tag';
 
 /*
   Important: This function assumes that the object's keys are from
@@ -20,16 +20,21 @@ const getJsonBuildValue = (value) => {
   return sql`${JSON.stringify(stripAttributes(value))}::jsonb`;
 };
 
+function colName(prefix, options) {
+  if (!options.schema.types[prefix]) throw Error(`pg.no_column ${prefix}`);
+  return raw(prefix);
+}
+
 export const lookup = (prop, options) => {
   const [prefix, ...suffix] = prop.split('.');
-  if (!suffix.length) return sql`"${raw(prefix)}"`;
+  if (!suffix.length) return sql`"${colName(prefix, options)}"`;
 
   const { types } = options.schema;
   if (types[prefix] === 'jsonb') {
     return sql`"${raw(prefix)}" #> ${suffix}`;
   }
   if (types[prefix] === 'cube' && suffix.length === 1) {
-    return sql`"${raw(prefix)}" ~> ${Number.parseInt(suffix[0])}`;
+    return sql`"${raw(prefix)}" ~> ${Number.parseInt(suffix[0], 10)}`;
   }
   throw Error(`pg.cannot_lookup ${prop}`);
 };
@@ -193,7 +198,9 @@ export const getInsert = (rows, options) => {
       ', ',
     ),
     updates: join(
-      colSqls.map((col, ix) => sql`${col} =  "excluded".${col}`).filter(isUsed),
+      colSqls
+        .map((col, _ix) => sql`${col} =  "excluded".${col}`)
+        .filter(isUsed),
       ', ',
     ),
   };

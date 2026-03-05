@@ -15,7 +15,7 @@ const client = (await import('./index.js')).default;
 const MockSocket = (await import('./Socket.js')).default;
 
 describe('wsClient', () => {
-  // @ts-ignore
+  // @ts-expect-error
   globalThis.WebSocket = () => {};
 
   let store;
@@ -80,7 +80,7 @@ describe('httpClient connInfoPath', () => {
 
 // async refers to the getOptions implementation
 describe.each(['httpClient', 'async httpClient'])('%s', (description) => {
-  // @ts-ignore
+  // @ts-expect-error
   globalThis.fetch = jest.fn().mockResolvedValue({
     status: 200,
     json: jest.fn().mockResolvedValue([['foo', 42]]),

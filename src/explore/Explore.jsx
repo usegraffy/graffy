@@ -1,6 +1,6 @@
 import * as common from '@graffy/common';
 import { Query, useStore } from '@graffy/react';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 function Result({ result, loading, error }) {
   return (
@@ -31,6 +31,7 @@ function Result({ result, loading, error }) {
 function evaluate(expression) {
   const names = Object.keys(common);
   const fn = new Function(...names, `return ${expression};`);
+  // biome-ignore lint/performance/noDynamicNamespaceImportAccess: intentional — exposes all exports to user eval
   return fn(...names.map((name) => common[name]));
 }
 
@@ -43,7 +44,6 @@ export default function Explore(options) {
   const [watching, setWatching] = useState(null);
   const store = useStore();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const onInputEnd = useCallback(
     (event) => {
       try {
@@ -55,7 +55,6 @@ export default function Explore(options) {
     [setInput, setError],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const onInputStart = useCallback(() => setError(null), [setError]);
 
   const onReadClick = async () => {
