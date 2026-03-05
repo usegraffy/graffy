@@ -15,6 +15,23 @@ describe('clickhouse_filter_sql', () => {
     );
   });
 
+  test('dot path null uses missing-key semantics', () => {
+    expect(
+      getSql({ 'sources.messageId': null }, opt({ sources: 'String' })),
+    ).toContain(
+      "isNull(nullIf(JSONExtractRaw(ifNull(`sources`, '{}'), 'messageId'), ''))",
+    );
+
+    expect(
+      getSql(
+        { 'sources.messageId': { $not: null } },
+        opt({ sources: 'String' }),
+      ),
+    ).toContain(
+      "NOT (isNull(nullIf(JSONExtractRaw(ifNull(`sources`, '{}'), 'messageId'), '')))",
+    );
+  });
+
   test('ire uses case-insensitive regex', () => {
     expect(
       getSql({ lookup: { $ire: '^ab' } }, opt({ lookup: 'Nullable(String)' })),
@@ -108,5 +125,47 @@ describe('clickhouse_filter_sql', () => {
     expect(sql).toContain(
       '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL',
     );
+  });
+
+  test('join explicit $and stays inside one subquery', () => {
+    const sql = getSql(
+      {
+        posts: {
+          $and: [{ title: 'Extra bar' }, { title: { $ire: 'foo' } }],
+        },
+      },
+      {
+        idCol: 'id',
+        schema: {
+          types: {
+            id: 'String',
+          },
+        },
+        joins: {
+          posts: {
+            table: 'posts',
+            idCol: 'id',
+            refCol: 'authorId',
+            database: 'default',
+            final: true,
+            schema: {
+              types: {
+                id: 'String',
+                authorId: 'String',
+                title: 'String',
+              },
+            },
+            joins: {},
+          },
+        },
+      },
+    );
+
+    expect(sql).toContain(
+      '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL WHERE',
+    );
+    expect(sql).toContain("`title` = 'Extra bar'");
+    expect(sql).toContain("match(ifNull(`title`, ''), concat('(?i)', 'foo'))");
+    expect((sql.match(/SELECT `authorId` FROM/g) || []).length).toEqual(1);
   });
 });

@@ -14,9 +14,10 @@ function getTableSql({ database = 'default', table, final = true }) {
 
 function getNullCheckSql(lookup, op) {
   if (lookup.isJsonPath) {
+    const missingExpr = `isNull(nullIf(${lookup.rawExpr}, ''))`;
     return op === '$eq'
-      ? `${lookup.rawExpr} = 'null'`
-      : `NOT (${lookup.rawExpr} = 'null')`;
+      ? missingExpr
+      : `NOT (${missingExpr})`;
   }
   return op === '$eq'
     ? `isNull(${lookup.rawExpr})`
