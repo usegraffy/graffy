@@ -210,6 +210,50 @@ describe('clickhouse_db_read', () => {
     );
   });
 
+  test('aggregate_group_true_range_count_and_sum', async () => {
+    mockQuery.mockResolvedValueOnce({
+      json: async () => [
+        {
+          $count: 2,
+          __agg_0: 10100,
+        },
+      ],
+    });
+
+    const result = await store.read('prospect', {
+      $key: { isDeleted: false, $group: true, $first: 1 },
+      $count: true,
+      $sum: { 'data.Amount': true },
+    });
+
+    expect(Array.isArray(result)).toEqual(true);
+    expect(result).toHaveLength(1);
+    expect(result[0].$count).toEqual(2);
+    expect(result[0].$sum).toEqual({ 'data.Amount': 10100 });
+  });
+
+  test('aggregate_group_true_last_range_count_and_sum', async () => {
+    mockQuery.mockResolvedValueOnce({
+      json: async () => [
+        {
+          $count: 2,
+          __agg_0: 10100,
+        },
+      ],
+    });
+
+    const result = await store.read('prospect', {
+      $key: { isDeleted: false, $group: true, $last: 1 },
+      $count: true,
+      $sum: { 'data.Amount': true },
+    });
+
+    expect(Array.isArray(result)).toEqual(true);
+    expect(result).toHaveLength(1);
+    expect(result[0].$count).toEqual(2);
+    expect(result[0].$sum).toEqual({ 'data.Amount': 10100 });
+  });
+
   test('aggregate_grouped_card_and_avg', async () => {
     mockQuery.mockResolvedValueOnce({
       json: async () => [

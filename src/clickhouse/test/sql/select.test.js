@@ -136,4 +136,54 @@ describe('clickhouse_select_sql', () => {
     expect(normalize(selection.sql)).toContain('GROUP BY `isDeleted`');
     expect(normalize(selection.sql)).toContain('LIMIT 4096');
   });
+
+  test('aggregate_all_ops_in_single_query', () => {
+    const selection = selectByArgs(
+      {
+        $group: true,
+        isDeleted: false,
+      },
+      {
+        $count: true,
+        $sum: { updatedAt: true, 'participants.0.count': true },
+        $avg: { updatedAt: true },
+        $max: { updatedAt: true },
+        $min: { updatedAt: true },
+        $card: { id: true },
+      },
+      options,
+    );
+
+    expect(selection.isAggregate).toEqual(true);
+    expect(selection.groupSpec).toEqual(true);
+    expect(selection.aggregateAliases).toEqual({
+      __agg_0: { op: '$sum', prop: 'updatedAt' },
+      __agg_1: { op: '$sum', prop: 'participants.0.count' },
+      __agg_2: { op: '$avg', prop: 'updatedAt' },
+      __agg_3: { op: '$max', prop: 'updatedAt' },
+      __agg_4: { op: '$min', prop: 'updatedAt' },
+      __agg_5: { op: '$card', prop: 'id' },
+    });
+    expect(normalize(selection.sql)).toContain(normalize('count() AS `$count`'));
+    expect(normalize(selection.sql)).toContain(
+      normalize('sum(toFloat64OrZero(`updatedAt`)) AS `__agg_0`'),
+    );
+    expect(normalize(selection.sql)).toContain(
+      normalize(
+        "sum(toFloat64OrZero(JSONExtractString(ifNull(`participants`,'{}'),'0','count'))) AS `__agg_1`",
+      ),
+    );
+    expect(normalize(selection.sql)).toContain(
+      normalize('avg(toFloat64OrZero(`updatedAt`)) AS `__agg_2`'),
+    );
+    expect(normalize(selection.sql)).toContain(
+      normalize('max(toFloat64OrZero(`updatedAt`)) AS `__agg_3`'),
+    );
+    expect(normalize(selection.sql)).toContain(
+      normalize('min(toFloat64OrZero(`updatedAt`)) AS `__agg_4`'),
+    );
+    expect(normalize(selection.sql)).toContain(
+      normalize('uniqExact(`id`) AS `__agg_5`'),
+    );
+  });
 });

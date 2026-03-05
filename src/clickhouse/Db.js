@@ -163,6 +163,14 @@ export default class Db {
         const key = deepCloneJson(selection.keyBase);
         if (selection.isAggregate && selection.groupAliases?.length) {
           key.$cursor = selection.groupAliases.map((alias) => object[alias]);
+        } else if (
+          selection.isAggregate &&
+          selection.groupSpec === true &&
+          selection.hasRangeArg
+        ) {
+          // Keep parity with PG: grouped aggregate + range args uses a
+          // synthetic cursor so range finalization can preserve the row.
+          key.$cursor = '';
         } else if (selection.hasRangeArg && selection.hasCursor) {
           key.$cursor = selection.orderSpec.map((orderItem) =>
             this.getCursorValue(object, orderItem),

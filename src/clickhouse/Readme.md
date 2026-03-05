@@ -17,3 +17,11 @@ tracker-like workloads:
   `$group: true` and `$group: [..]`
 
 Writes are out of scope.
+
+## E2E tests
+
+ClickHouse e2e coverage lives in `src/clickhouse/test/e2e.test.js`.
+
+- Start server: `npm run ch:up`
+- Stop/clean server: `npm run ch:clean`
+- Run ClickHouse tests (unit + e2e): `npm test -- src/clickhouse`
