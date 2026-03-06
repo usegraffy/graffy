@@ -2,5 +2,6 @@
   "name": "@graffy/clickhouse",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.js"
+  "main": "index.js",
+  "types": "index.d.ts"
 }
