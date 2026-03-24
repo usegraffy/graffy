@@ -156,7 +156,11 @@ describe('clickhouse_e2e', () => {
       settings: true,
     });
 
-    expect(getRows(allUsers).map(({ email }) => email)).toEqual(['a', 'b', 'c']);
+    expect(getRows(allUsers).map(({ email }) => email)).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
     expect(getRows(allUsers)[0].settings).toEqual({ foo: [1, 2, 3] });
 
     const containsFoo = await store.read('users', {
@@ -228,7 +232,13 @@ describe('clickhouse_e2e', () => {
       await seedUsers([
         { id: 'u1', updatedAt: 1, name: 'A', email: 'a', settings: { num: 1 } },
         { id: 'u2', updatedAt: 2, name: 'B', email: 'b', settings: { num: 3 } },
-        { id: 'u3', updatedAt: 3, name: 'C', email: 'c', settings: { bar: [5] } },
+        {
+          id: 'u3',
+          updatedAt: 3,
+          name: 'C',
+          email: 'c',
+          settings: { bar: [5] },
+        },
         { id: 'u4', updatedAt: 4, name: 'C', email: 'c2' },
       ]);
 
@@ -451,7 +461,11 @@ describe('clickhouse_e2e', () => {
       expect(getRows(equalsRes).map((row) => row.name)).toEqual(['Bob']);
 
       const regexRes = await store.read('users', {
-        $key: { posts: { title: { $ire: 'foo' } }, $all: true, $order: ['name'] },
+        $key: {
+          posts: { title: { $ire: 'foo' } },
+          $all: true,
+          $order: ['name'],
+        },
         name: true,
       });
       expect(getRows(regexRes).map((row) => row.name)).toEqual(['Alice']);
@@ -513,7 +527,10 @@ describe('clickhouse_e2e', () => {
       const sameRowAndRes = await store.read('users', {
         $key: {
           posts: {
-            $and: [{ title: 'Second title' }, { commenters: { $cts: ['bob'] } }],
+            $and: [
+              { title: 'Second title' },
+              { commenters: { $cts: ['bob'] } },
+            ],
           },
           $all: true,
           $order: ['name'],
