@@ -46,12 +46,10 @@ describe('integration', () => {
 
     // Go to example and wait until there are visitors loaded
     await page.goto(url);
-
-    // Wait for visitors to appear with a longer timeout
-    await page.waitForSelector('.Visitor', { timeout: 10000 });
-
-    // Wait a bit more to ensure all visitors are loaded
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(
+      () => document.querySelectorAll('.Visitor').length === 12,
+      { timeout: 20000 },
+    );
 
     // Check the visitor count
     const visitorCount = await page.locator('.Visitor').count();
