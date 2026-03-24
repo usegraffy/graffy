@@ -164,7 +164,9 @@ describe('clickhouse_select_sql', () => {
       __agg_4: { op: '$min', prop: 'updatedAt' },
       __agg_5: { op: '$card', prop: 'id' },
     });
-    expect(normalize(selection.sql)).toContain(normalize('count() AS `$count`'));
+    expect(normalize(selection.sql)).toContain(
+      normalize('count() AS `$count`'),
+    );
     expect(normalize(selection.sql)).toContain(
       normalize('sum(toFloat64OrZero(`updatedAt`)) AS `__agg_0`'),
     );

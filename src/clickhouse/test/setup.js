@@ -101,11 +101,15 @@ export async function teardownClickhouseServer() {
 export async function resetTables() {
   if (!client) throw Error('No client; setupClickhouseServer was not called.');
 
-  await client.command({ query: `CREATE DATABASE IF NOT EXISTS ${testDatabase}` });
+  await client.command({
+    query: `CREATE DATABASE IF NOT EXISTS ${testDatabase}`,
+  });
 
   await client.command({ query: `DROP TABLE IF EXISTS ${testDatabase}.users` });
   await client.command({ query: `DROP TABLE IF EXISTS ${testDatabase}.posts` });
-  await client.command({ query: `DROP TABLE IF EXISTS ${testDatabase}.prospect` });
+  await client.command({
+    query: `DROP TABLE IF EXISTS ${testDatabase}.prospect`,
+  });
 
   await client.command({
     query: `
