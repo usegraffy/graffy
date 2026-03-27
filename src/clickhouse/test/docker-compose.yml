@@ -1,0 +1,13 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: graffych
+    environment:
+      CLICKHOUSE_USER: api
+      CLICKHOUSE_PASSWORD: api
+    ports:
+      - '18123:8123'
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144

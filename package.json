@@ -15,7 +15,9 @@
     "start": "node src/example/server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=testing jest",
     "pg:clean": "docker rm -f graffypg",
-    "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl"
+    "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl",
+    "ch:clean": "docker compose -f src/clickhouse/test/docker-compose.yml down -v --remove-orphans",
+    "ch:up": "docker compose -f src/clickhouse/test/docker-compose.yml up -d"
   },
   "workspaces": [
     "src/*"
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@babel/preset-react": "^7.28.5",
     "@biomejs/biome": "^2.4.4",
+    "@clickhouse/client": "^1.17.0",
     "@faker-js/faker": "^10.3.0",
     "@playwright/test": "^1.58.2",
     "@testing-library/react": "^16.3.2",
@@ -60,6 +63,7 @@
     "yargs": "^18.0.0"
   },
   "peerDependencies": {
+    "@clickhouse/client": "^1.17.0",
     "pg": "^8.0.0",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
   }
