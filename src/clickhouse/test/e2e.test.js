@@ -82,7 +82,7 @@ describe('clickhouse_e2e', () => {
   });
 
   describe('write', () => {
-    test('put_replaces_existing_row', async () => {
+    test('put_with_existing_row_is_unsupported', async () => {
       const created = await store.write(['users', 'u1'], {
         name: 'Alice',
         email: 'alice@acme.co',
@@ -109,24 +109,15 @@ describe('clickhouse_e2e', () => {
         settings: { foo: 10 },
       });
 
-      await store.write('users', {
-        $key: { id: 'u1' },
-        name: 'Alicia',
-        email: 'alice@acme.co',
-        settings: { bar: 5 },
-        $put: true,
-      });
-
-      const afterPatch = await store.read('users.u1', {
-        name: true,
-        email: true,
-        settings: true,
-      });
-      expect(afterPatch).toEqual({
-        name: 'Alicia',
-        email: 'alice@acme.co',
-        settings: { bar: 5 },
-      });
+      await expect(
+        store.write('users', {
+          $key: { id: 'u1' },
+          name: 'Alicia',
+          email: 'alice@acme.co',
+          settings: { bar: 5 },
+          $put: true,
+        }),
+      ).rejects.toThrow('clickhouse_write.update_unsupported');
     });
 
     test('write_without_put_is_unsupported', async () => {
@@ -301,8 +292,8 @@ describe('clickhouse_e2e', () => {
       $put: true,
     });
 
-    await store.write(['workLogJson', 'w1'], {
-      id: 'w1',
+    await store.write(['workLogJson', 'w2'], {
+      id: 'w2',
       tenantId: 't1',
       code: 'sf_sync_read',
       recordIds: {
@@ -336,10 +327,9 @@ describe('clickhouse_e2e', () => {
         sfSyncJobId: 'job-1',
       },
       data: {
-        stage: 'written_to_clickhouse',
+        stage: 'initial',
         nested: {
-          source: 'lego',
-          status: 'ok',
+          source: 'pg',
         },
       },
     });
@@ -355,9 +345,16 @@ describe('clickhouse_e2e', () => {
       data: true,
     });
 
-    expect(filtered).toHaveLength(1);
+    expect(filtered).toHaveLength(2);
     expect(filtered[0]).toMatchObject({
       id: 'w1',
+      code: 'sf_sync_read',
+      data: {
+        stage: 'initial',
+      },
+    });
+    expect(filtered[1]).toMatchObject({
+      id: 'w2',
       code: 'sf_sync_read',
       data: {
         stage: 'written_to_clickhouse',

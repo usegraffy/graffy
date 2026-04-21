@@ -58,7 +58,7 @@ describe('clickhouse_db_write', () => {
     });
   });
 
-  test('put_by_filter_replaces_row_and_bumps_version', async () => {
+  test('put_by_filter_is_unsupported_when_row_exists', async () => {
     const query = jest.fn().mockResolvedValue([
       {
         id: 'u1',
@@ -71,26 +71,20 @@ describe('clickhouse_db_write', () => {
     const insert = jest.fn().mockResolvedValue(undefined);
     const store = setupStore({ query, insert });
 
-    await store.write('users', {
-      $key: { email: 'alice@acme.co' },
-      name: 'Alicia',
-      email: 'alice@acme.co',
-      settings: { bar: 5 },
-      $put: true,
-    });
-
+    await expect(
+      store.write('users', {
+        $key: { email: 'alice@acme.co' },
+        name: 'Alicia',
+        email: 'alice@acme.co',
+        settings: { bar: 5 },
+        $put: true,
+      }),
+    ).rejects.toThrow('clickhouse_write.update_unsupported');
     expect(query).toHaveBeenCalledTimes(1);
     expect(query.mock.calls[0][0].query).toContain(
       "WHERE `email` = 'alice@acme.co' LIMIT 2",
     );
-    expect(insert).toHaveBeenCalledTimes(1);
-    expect(insert.mock.calls[0][0].values[0]).toMatchObject({
-      id: 'u1',
-      name: 'Alicia',
-      email: 'alice@acme.co',
-      settings: '{"bar":5}',
-    });
-    expect(insert.mock.calls[0][0].values[0].updatedAt).toBeGreaterThan(100);
+    expect(insert).not.toHaveBeenCalled();
   });
 
   test('write_without_put_is_unsupported', async () => {

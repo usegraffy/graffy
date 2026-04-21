@@ -16,11 +16,10 @@ Current scope is intentionally minimal and focused on tracker-like workloads:
   `$group: true` and `$group: [..]`
 - Writes: single-row id writes and single-row filter writes with `$put`
 
-Write support is append-based. The adapter reads the current row, applies the
-replacement in JavaScript, and inserts a replacement row with a newer `verCol`
-value. `$put` is mandatory; patch-style updates and deletes are not supported.
-Tables should use
-`ReplacingMergeTree(verCol)` with reads going through `FINAL`.
+Write support is append-only. `$put` is mandatory, and each write must create a
+new row. If a write matches an existing row, the adapter throws
+`clickhouse_write.update_unsupported`. Patch-style updates and deletes are not
+supported.
 
 ## E2E tests
 

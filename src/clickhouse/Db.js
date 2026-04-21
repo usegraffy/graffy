@@ -52,50 +52,26 @@ function formatDateTime(value, includeMilliseconds) {
     : iso.slice(0, 19).replace('T', ' ');
 }
 
-function nextVersionValue(type, previousValue, providedValue) {
+function nextVersionValue(type, providedValue) {
   if (providedValue !== undefined && providedValue !== null) return providedValue;
 
   if (type?.startsWith('DateTime64')) {
-    const previousMs = Number.parseInt(
-      new Date(previousValue || 0).getTime().toString(),
-      10,
-    );
-    const nextMs = Number.isFinite(previousMs)
-      ? Math.max(Date.now(), previousMs + 1)
-      : Date.now();
-    return formatDateTime(nextMs, true);
+    return formatDateTime(Date.now(), true);
   }
 
   if (type?.startsWith('DateTime')) {
-    const previousMs = Number.parseInt(
-      new Date(previousValue || 0).getTime().toString(),
-      10,
-    );
-    const nextMs = Number.isFinite(previousMs)
-      ? Math.max(Date.now(), previousMs + 1000)
-      : Date.now();
-    return formatDateTime(nextMs, false);
+    return formatDateTime(Date.now(), false);
   }
 
   if (isNumericType(type)) {
-    const previousNum = Number(previousValue);
-    return Number.isFinite(previousNum)
-      ? Math.max(Date.now(), previousNum + 1)
-      : Date.now();
+    return Date.now();
   }
 
   if (isStringishType(type)) {
-    const previousNum = Number(previousValue);
-    const nextNum = Number.isFinite(previousNum)
-      ? Math.max(Date.now(), previousNum + 1)
-      : Date.now();
-    return String(nextNum);
+    return String(Date.now());
   }
 
-  const previousNum = Number(previousValue);
-  return Number.isFinite(previousNum)
-    ? Math.max(Date.now(), previousNum + 1)
-    : Date.now();
+  return Date.now();
 }
 
 function toGraphVersion(type, value) {
@@ -306,12 +282,8 @@ export default class Db {
     }
   }
 
-  getWriteRow(existing, change, arg, tableOptions) {
-    const row =
-      existing?.[tableOptions.idCol] !== undefined &&
-      existing?.[tableOptions.idCol] !== null
-        ? { [tableOptions.idCol]: existing[tableOptions.idCol] }
-        : {};
+  getWriteRow(change, arg, tableOptions) {
+    const row = {};
     const providedVersion = change[tableOptions.verCol];
 
     this.applyRowChange(row, change, tableOptions);
@@ -319,7 +291,6 @@ export default class Db {
 
     row[tableOptions.verCol] = nextVersionValue(
       tableOptions.schema?.types?.[tableOptions.verCol],
-      existing?.[tableOptions.verCol],
       providedVersion,
     );
 
@@ -473,8 +444,11 @@ export default class Db {
       }
 
       const existing = await this.getExistingRow(arg, tableOptions);
+      if (existing) {
+        throw Error('clickhouse_write.update_unsupported');
+      }
 
-      const writtenRow = this.getWriteRow(existing, object, arg, tableOptions);
+      const writtenRow = this.getWriteRow(object, arg, tableOptions);
 
       await this.insert(tableOptions, [
         this.getInsertRow(writtenRow, tableOptions),
