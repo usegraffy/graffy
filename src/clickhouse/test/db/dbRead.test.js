@@ -304,7 +304,7 @@ describe('clickhouse_db_read', () => {
       name: 'Alice',
     });
     expect(getSqlFromCall(mockQuery.mock.calls[0])).toContain(
-      'IN (SELECT `authorId` FROM `default`.`posts` FINAL',
+      'IN (SELECT `authorId` FROM `default`.`posts`',
     );
   });
 });

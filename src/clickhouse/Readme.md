@@ -16,6 +16,10 @@ Current scope is intentionally minimal and focused on tracker-like workloads:
   `$group: true` and `$group: [..]`
 - Writes: single-row id writes and single-row filter writes with `$put`
 
+The default table model is append-only `MergeTree`. Reads do not add `FINAL`
+unless you explicitly opt into `final: true` for a legacy
+`ReplacingMergeTree` table.
+
 Write support is append-only. `$put` is mandatory, and each write must create a
 new row. If a write matches an existing row, the adapter throws
 `clickhouse_write.update_unsupported`. Patch-style updates and deletes are not

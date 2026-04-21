@@ -180,8 +180,9 @@ describe('clickhouse_e2e', () => {
           recordIds Map(LowCardinality(String), String),
           data Nullable(String)
         )
-        ENGINE = ReplacingMergeTree(updatedAt)
-        ORDER BY id
+        ENGINE = MergeTree
+        PRIMARY KEY (tenantId, updatedAt)
+        ORDER BY (tenantId, updatedAt, id)
       `,
     });
 
@@ -260,9 +261,13 @@ describe('clickhouse_e2e', () => {
           recordIds Map(LowCardinality(String), String),
           data JSON
         )
-        ENGINE = ReplacingMergeTree(time)
-        ORDER BY id
+        ENGINE = MergeTree
+        PRIMARY KEY (tenantId, code, time)
+        ORDER BY (tenantId, code, time, id)
       `,
+      clickhouse_settings: {
+        allow_experimental_json_type: 1,
+      },
     });
 
     store.use(

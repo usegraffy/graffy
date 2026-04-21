@@ -125,7 +125,7 @@ export async function resetTables() {
         email Nullable(String),
         settings Nullable(String)
       )
-      ENGINE = ReplacingMergeTree(updatedAt)
+      ENGINE = MergeTree
       ORDER BY id
     `,
   });
@@ -140,7 +140,7 @@ export async function resetTables() {
         commenters Nullable(String),
         scores Nullable(String)
       )
-      ENGINE = ReplacingMergeTree(updatedAt)
+      ENGINE = MergeTree
       ORDER BY id
     `,
   });
@@ -153,7 +153,7 @@ export async function resetTables() {
         data Nullable(String),
         isDeleted UInt8
       )
-      ENGINE = ReplacingMergeTree(updatedAt)
+      ENGINE = MergeTree
       ORDER BY id
     `,
   });

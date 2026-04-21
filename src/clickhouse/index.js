@@ -37,7 +37,7 @@ function getTableOpts(
   const { table, idCol, verCol, schema, database, final } = options;
   const tableName = table || name;
   const tableDatabase = database || parentDefaults.database || 'default';
-  const tableFinal = final ?? parentDefaults.final ?? true;
+  const tableFinal = final ?? parentDefaults.final ?? false;
 
   const joins = Object.fromEntries(
     Object.entries(options.joins || {}).map(([joinName, joinRaw = {}]) => {

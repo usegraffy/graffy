@@ -7,7 +7,7 @@ import {
 import { getLookup } from '../sql/lookup.js';
 import getAst from './getAst.js';
 
-function getTableSql({ database = 'default', table, final = true }) {
+function getTableSql({ database = 'default', table, final = false }) {
   const tableSql = `${quoteIdent(database)}.${quoteIdent(table)}`;
   return final ? `${tableSql} FINAL` : tableSql;
 }
