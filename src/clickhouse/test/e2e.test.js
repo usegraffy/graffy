@@ -82,7 +82,7 @@ describe('clickhouse_e2e', () => {
   });
 
   describe('write', () => {
-    test('put_patch_and_delete', async () => {
+    test('put_and_patch', async () => {
       const created = await store.write(['users', 'u1'], {
         name: 'Alice',
         email: 'alice@acme.co',
@@ -95,7 +95,6 @@ describe('clickhouse_e2e', () => {
         name: 'Alice',
         email: 'alice@acme.co',
         settings: { foo: 10 },
-        _sign: 1,
       });
       expect(asNum(created.updatedAt)).toBeGreaterThan(0);
 
@@ -137,17 +136,12 @@ describe('clickhouse_e2e', () => {
       expect(afterJsonPatch).toEqual({
         settings: { bar: 5 },
       });
+    });
 
-      await store.write(['users', 'u1'], null);
-
-      const afterDelete = await store.read('users.u1', {
-        name: true,
-        email: true,
-      });
-      expect(afterDelete).toEqual({
-        name: null,
-        email: null,
-      });
+    test('delete_is_unsupported', async () => {
+      await expect(store.write(['users', 'u1'], null)).rejects.toThrow(
+        'clickhouse_write.delete_unsupported',
+      );
     });
 
     test('filter_put_inserts_new_row', async () => {
@@ -194,8 +188,7 @@ describe('clickhouse_e2e', () => {
           updatedAt Int64,
           tenantId LowCardinality(String),
           recordIds Map(LowCardinality(String), String),
-          data Nullable(String),
-          _sign Int8 DEFAULT 1
+          data Nullable(String)
         )
         ENGINE = ReplacingMergeTree(updatedAt)
         ORDER BY id
@@ -275,8 +268,7 @@ describe('clickhouse_e2e', () => {
           tenantId LowCardinality(String),
           code LowCardinality(String),
           recordIds Map(LowCardinality(String), String),
-          data JSON,
-          _sign Int8 DEFAULT 1
+          data JSON
         )
         ENGINE = ReplacingMergeTree(time)
         ORDER BY id

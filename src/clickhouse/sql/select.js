@@ -105,13 +105,9 @@ export function selectByArgs(args, projection, options) {
 }
 
 export function selectByIds(ids, options) {
-  const where = [];
-  if (options.final !== false && options.schema?.types?._sign) {
-    where.push('`_sign` = 1');
-  }
-  where.push(
+  const where = [
     `${quoteIdent(options.idCol)} IN (${ids.map((id) => literal(id)).join(', ')})`,
-  );
+  ];
   return {
     sql: `SELECT * FROM ${getTableSql(options)} WHERE ${where.join(' AND ')}`,
   };

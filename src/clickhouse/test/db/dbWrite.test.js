@@ -17,7 +17,6 @@ function setupStore(connection) {
           name: 'Nullable(String)',
           email: 'Nullable(String)',
           settings: 'Nullable(String)',
-          _sign: 'Int8',
         },
       },
       connection,
@@ -41,7 +40,7 @@ describe('clickhouse_db_write', () => {
 
     expect(query).toHaveBeenCalledTimes(1);
     expect(query.mock.calls[0][0].query).toContain(
-      "WHERE `_sign` = 1 AND `id` IN ('u1')",
+      "WHERE `id` IN ('u1')",
     );
     expect(insert).toHaveBeenCalledTimes(1);
     expect(insert.mock.calls[0][0]).toMatchObject({
@@ -53,7 +52,6 @@ describe('clickhouse_db_write', () => {
           name: 'Alice',
           email: 'alice@acme.co',
           settings: '{"foo":10}',
-          _sign: 1,
           updatedAt: expect.any(Number),
         },
       ],
@@ -68,7 +66,6 @@ describe('clickhouse_db_write', () => {
         name: 'Alice',
         email: 'alice@acme.co',
         settings: '{"foo":10}',
-        _sign: 1,
       },
     ]);
     const insert = jest.fn().mockResolvedValue(undefined);
@@ -82,7 +79,7 @@ describe('clickhouse_db_write', () => {
 
     expect(query).toHaveBeenCalledTimes(1);
     expect(query.mock.calls[0][0].query).toContain(
-      "WHERE `_sign` = 1 AND `email` = 'alice@acme.co' LIMIT 2",
+      "WHERE `email` = 'alice@acme.co' LIMIT 2",
     );
     expect(insert).toHaveBeenCalledTimes(1);
     expect(insert.mock.calls[0][0].values[0]).toMatchObject({
@@ -90,35 +87,19 @@ describe('clickhouse_db_write', () => {
       name: 'Alicia',
       email: 'alice@acme.co',
       settings: '{"foo":10,"bar":5}',
-      _sign: 1,
     });
     expect(insert.mock.calls[0][0].values[0].updatedAt).toBeGreaterThan(100);
   });
 
-  test('delete_by_id_inserts_tombstone', async () => {
-    const query = jest.fn().mockResolvedValue([
-      {
-        id: 'u1',
-        updatedAt: 100,
-        name: 'Alice',
-        email: 'alice@acme.co',
-        settings: '{"foo":10}',
-        _sign: 1,
-      },
-    ]);
+  test('delete_by_id_is_unsupported', async () => {
+    const query = jest.fn().mockResolvedValue([]);
     const insert = jest.fn().mockResolvedValue(undefined);
     const store = setupStore({ query, insert });
 
-    await store.write(['users', 'u1'], null);
-
-    expect(insert).toHaveBeenCalledTimes(1);
-    expect(insert.mock.calls[0][0].values[0]).toMatchObject({
-      id: 'u1',
-      name: 'Alice',
-      email: 'alice@acme.co',
-      settings: '{"foo":10}',
-      _sign: 0,
-    });
-    expect(insert.mock.calls[0][0].values[0].updatedAt).toBeGreaterThan(100);
+    await expect(store.write(['users', 'u1'], null)).rejects.toThrow(
+      'clickhouse_write.delete_unsupported',
+    );
+    expect(query).not.toHaveBeenCalled();
+    expect(insert).not.toHaveBeenCalled();
   });
 });

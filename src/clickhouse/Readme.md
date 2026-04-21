@@ -14,14 +14,12 @@ Current scope is intentionally minimal and focused on tracker-like workloads:
 - Join filters via subqueries (for example `$key: { syncJob: { ... } }`)
 - Aggregates: `$count`, `$sum`, `$avg`, `$max`, `$min`, `$card` with
   `$group: true` and `$group: [..]`
-- Writes: single-row id writes, single-row filter writes, `$put`, patch, and
-  delete
+- Writes: single-row id writes, single-row filter writes, `$put`, and patch
 
 Write support is append-based. The adapter reads the current row, applies the
 change in JavaScript, and inserts a replacement row with a newer `verCol`
-value. Deletes require an `_sign` column so the adapter can write tombstones,
-and the table should use `ReplacingMergeTree(verCol)` with reads going through
-`FINAL`.
+value. Deletes are not supported. Tables should use
+`ReplacingMergeTree(verCol)` with reads going through `FINAL`.
 
 ## E2E tests
 

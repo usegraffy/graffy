@@ -18,7 +18,6 @@ describe('clickhouse_select_sql', () => {
         updatedAt: 'Int64',
         isDeleted: 'UInt8',
         participants: 'Nullable(String)',
-        _sign: 'Int8',
       },
     },
     final: true,
@@ -38,7 +37,7 @@ describe('clickhouse_select_sql', () => {
     expect(normalize(sql)).toEqual(
       normalize(`
         SELECT * FROM \`default\`.\`user\` FINAL
-        WHERE \`_sign\` = 1 AND \`isDeleted\` = 0
+        WHERE \`isDeleted\` = 0
         ORDER BY \`id\` ASC
         LIMIT 10
       `),
@@ -50,7 +49,7 @@ describe('clickhouse_select_sql', () => {
     expect(normalize(sql)).toEqual(
       normalize(`
         SELECT * FROM \`default\`.\`user\` FINAL
-        WHERE \`_sign\` = 1 AND \`id\` IN ('a', 'b')
+        WHERE \`id\` IN ('a', 'b')
       `),
     );
   });
@@ -84,7 +83,7 @@ describe('clickhouse_select_sql', () => {
     expect(normalize(selection.sql)).toContain(
       normalize(`
         FROM \`default\`.\`user\` FINAL
-        WHERE \`_sign\` = 1 AND \`isDeleted\` = 0
+        WHERE \`isDeleted\` = 0
         LIMIT 1
       `),
     );

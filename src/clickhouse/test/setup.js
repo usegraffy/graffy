@@ -123,8 +123,7 @@ export async function resetTables() {
         updatedAt Int64,
         name Nullable(String),
         email Nullable(String),
-        settings Nullable(String),
-        _sign Int8 DEFAULT 1
+        settings Nullable(String)
       )
       ENGINE = ReplacingMergeTree(updatedAt)
       ORDER BY id
@@ -139,8 +138,7 @@ export async function resetTables() {
         authorId Nullable(String),
         title Nullable(String),
         commenters Nullable(String),
-        scores Nullable(String),
-        _sign Int8 DEFAULT 1
+        scores Nullable(String)
       )
       ENGINE = ReplacingMergeTree(updatedAt)
       ORDER BY id
@@ -153,8 +151,7 @@ export async function resetTables() {
         id String,
         updatedAt Int64,
         data Nullable(String),
-        isDeleted UInt8,
-        _sign Int8 DEFAULT 1
+        isDeleted UInt8
       )
       ENGINE = ReplacingMergeTree(updatedAt)
       ORDER BY id
@@ -171,7 +168,6 @@ export async function seedUsers(rows) {
       name: row.name ?? null,
       email: row.email ?? null,
       settings: encodeJsonString(row.settings),
-      _sign: row._sign ?? 1,
     })),
   );
 }
@@ -186,7 +182,6 @@ export async function seedPosts(rows) {
       title: row.title ?? null,
       commenters: encodeJsonString(row.commenters),
       scores: encodeJsonString(row.scores),
-      _sign: row._sign ?? 1,
     })),
   );
 }
@@ -199,7 +194,6 @@ export async function seedProspects(rows) {
       updatedAt: row.updatedAt ?? Date.now() + ix,
       data: encodeJsonString(row.data),
       isDeleted: row.isDeleted ? 1 : 0,
-      _sign: row._sign ?? 1,
     })),
   );
 }

@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@clickhouse/client';
 import {
-  cmp,
   decodeArgs,
   decodeGraph,
   decodeQuery,
@@ -336,18 +335,12 @@ export default class Db {
     }
   }
 
-  getWriteRow(existing, change, arg, tableOptions, isPut, isDelete = false) {
+  getWriteRow(existing, change, arg, tableOptions, isPut) {
     const row = existing ? deepCloneJson(existing) : {};
     const providedVersion = change[tableOptions.verCol];
 
     this.applyRowChange(row, change, tableOptions, isPut);
     this.ensureRowId(row, arg, tableOptions);
-
-    if (tableOptions.schema?.types?._sign) {
-      row._sign = isDelete ? 0 : 1;
-    } else if (isDelete) {
-      throw Error('clickhouse.delete_requires_sign');
-    }
 
     row[tableOptions.verCol] = nextVersionValue(
       tableOptions.schema?.types?.[tableOptions.verCol],
@@ -370,8 +363,6 @@ export default class Db {
         out[col] = null;
       } else if (isUInt8Type(type)) {
         out[col] = value ? 1 : 0;
-      } else if (col === '_sign') {
-        out[col] = Number(value);
       } else if (isStringishType(type) && typeof value === 'object') {
         out[col] = JSON.stringify(value);
       } else {
@@ -486,33 +477,11 @@ export default class Db {
     const result = [];
 
     for (const node of change) {
-      const arg = decodeArgs(node);
-
       if (isRange(node)) {
-        if (cmp(node.key, node.end) !== 0) {
-          throw Error('clickhouse_write.write_range_unsupported');
-        }
-
-        const existing = await this.getExistingRow(arg, tableOptions);
-        if (!existing) {
-          throw Error(`clickhouse.nothing_written ${JSON.stringify(arg)}`);
-        }
-
-        const tombstone = this.getWriteRow(
-          existing,
-          {},
-          arg,
-          tableOptions,
-          false,
-          true,
-        );
-        await this.insert(tableOptions, [
-          this.getInsertRow(tombstone, tableOptions),
-        ]);
-        merge(result, encodeGraph(wrapObject({ $key: arg }, rawPrefix)));
-        continue;
+        throw Error('clickhouse_write.delete_unsupported');
       }
 
+      const arg = decodeArgs(node);
       const object = decodeGraph(node.children) || {};
       if (isPlainObject(arg)) {
         mergeObject(object, arg);

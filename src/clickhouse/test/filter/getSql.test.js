@@ -70,7 +70,6 @@ describe('clickhouse_filter_sql', () => {
           types: {
             id: 'String',
             email: 'String',
-            _sign: 'Int8',
           },
         },
         joins: {
@@ -85,7 +84,6 @@ describe('clickhouse_filter_sql', () => {
                 id: 'String',
                 authorId: 'String',
                 title: 'String',
-                _sign: 'Int8',
               },
             },
             joins: {},
@@ -97,7 +95,7 @@ describe('clickhouse_filter_sql', () => {
     expect(sql).toContain(
       '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL',
     );
-    expect(sql).toContain("`_sign` = 1 AND `title` = 'Extra bar'");
+    expect(sql).toContain("WHERE `title` = 'Extra bar'");
   });
 
   test('join subquery and root filter combination', () => {
