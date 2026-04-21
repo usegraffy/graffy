@@ -99,6 +99,28 @@ function nextVersionValue(type, previousValue, providedValue) {
     : Date.now();
 }
 
+function toGraphVersion(type, value) {
+  if (value === undefined || value === null) return null;
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+
+  if (type?.startsWith('DateTime')) {
+    const isoValue =
+      typeof value === 'string' ? value.replace(' ', 'T').concat('Z') : value;
+    const timestamp = new Date(isoValue).getTime();
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 function stripJsonValue(value) {
   if (value === undefined || value === null) return value ?? null;
   if (Array.isArray(value)) return value.map((item) => stripJsonValue(item));
@@ -401,7 +423,10 @@ export default class Db {
         });
 
         object.$key = key;
-        object.$ver = object[tableOptions.verCol] ?? object._version ?? null;
+        object.$ver = toGraphVersion(
+          tableOptions.schema?.types?.[tableOptions.verCol],
+          object[tableOptions.verCol] ?? object._version ?? null,
+        );
         if (!selection.isAggregate) {
           object.$ref = [...rawPrefix, object[tableOptions.idCol]];
         }
@@ -417,7 +442,10 @@ export default class Db {
       for (const row of rows) {
         const object = this.normalizeRow(row, tableOptions.schema);
         object.$key = object[tableOptions.idCol];
-        object.$ver = object[tableOptions.verCol] ?? object._version ?? null;
+        object.$ver = toGraphVersion(
+          tableOptions.schema?.types?.[tableOptions.verCol],
+          object[tableOptions.verCol] ?? object._version ?? null,
+        );
         merge(results, encodeGraph(wrapObject(object, rawPrefix)));
       }
     };
@@ -521,7 +549,10 @@ export default class Db {
             {
               ...writtenRow,
               $key: writtenRow[tableOptions.idCol],
-              $ver: writtenRow[tableOptions.verCol] ?? null,
+              $ver: toGraphVersion(
+                tableOptions.schema?.types?.[tableOptions.verCol],
+                writtenRow[tableOptions.verCol] ?? null,
+              ),
             },
             rawPrefix,
           ),

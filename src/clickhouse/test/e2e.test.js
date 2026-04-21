@@ -259,6 +259,113 @@ describe('clickhouse_e2e', () => {
     });
   });
 
+  test('native_json_with_datetime64_version_round_trip', async () => {
+    const database = getTestDatabase();
+    const connection = getClient();
+
+    await connection.command({
+      query: `DROP TABLE IF EXISTS ${database}.workLogJson`,
+    });
+
+    await connection.command({
+      query: `
+        CREATE TABLE ${database}.workLogJson (
+          id String,
+          time DateTime64(3),
+          tenantId LowCardinality(String),
+          code LowCardinality(String),
+          recordIds Map(LowCardinality(String), String),
+          data JSON,
+          _sign Int8 DEFAULT 1
+        )
+        ENGINE = ReplacingMergeTree(time)
+        ORDER BY id
+      `,
+    });
+
+    store.use(
+      'workLogJson',
+      clickhouse({
+        database,
+        table: 'workLogJson',
+        idCol: 'id',
+        verCol: 'time',
+        connection,
+      }),
+    );
+
+    await store.write(['workLogJson', 'w1'], {
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'initial',
+        nested: {
+          source: 'pg',
+        },
+      },
+      $put: true,
+    });
+
+    await store.write(['workLogJson', 'w1'], {
+      data: {
+        stage: 'written_to_clickhouse',
+        nested: {
+          source: 'lego',
+          status: 'ok',
+        },
+      },
+    });
+
+    const byId = await store.read('workLogJson.w1', {
+      time: true,
+      tenantId: true,
+      code: true,
+      recordIds: true,
+      data: true,
+    });
+
+    expect(byId).toEqual({
+      time: expect.any(String),
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'written_to_clickhouse',
+        nested: {
+          source: 'lego',
+          status: 'ok',
+        },
+      },
+    });
+
+    const filtered = await store.read('workLogJson', {
+      $key: {
+        'recordIds.sfSyncJobId': 'job-1',
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+      code: true,
+      data: true,
+    });
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]).toMatchObject({
+      id: 'w1',
+      code: 'sf_sync_read',
+      data: {
+        stage: 'written_to_clickhouse',
+      },
+    });
+  });
+
   test('id_lookup_with_nested_projection', async () => {
     await seedUsers([
       { id: 'u1', updatedAt: 1, name: 'Alice', settings: { foo: 10, bar: 5 } },
