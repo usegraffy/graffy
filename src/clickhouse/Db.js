@@ -137,32 +137,6 @@ function stripJsonValue(value) {
   return isEmpty(out) ? null : out;
 }
 
-function mergeJsonValue(baseValue, changeValue) {
-  if (
-    changeValue === null ||
-    changeValue === undefined ||
-    Array.isArray(changeValue) ||
-    !isPlainObject(changeValue) ||
-    changeValue.$put === true ||
-    '$val' in changeValue
-  ) {
-    return stripJsonValue(changeValue);
-  }
-
-  const source = isPlainObject(baseValue) ? deepCloneJson(baseValue) : {};
-  for (const [key, item] of Object.entries(changeValue)) {
-    if (key[0] === '$') continue;
-    const next = mergeJsonValue(source[key], item);
-    if (next === undefined || next === null) {
-      delete source[key];
-    } else {
-      source[key] = next;
-    }
-  }
-
-  return isEmpty(source) ? null : source;
-}
-
 function applyAggregateAliases(object, aggregateAliases) {
   Object.entries(aggregateAliases).forEach(([alias, { op, prop }]) => {
     if (!(alias in object)) return;
@@ -316,7 +290,7 @@ export default class Db {
     return row[idCol];
   }
 
-  applyRowChange(row, change, tableOptions, isPut) {
+  applyRowChange(row, change, tableOptions) {
     for (const [col, value] of Object.entries(change)) {
       if (col[0] === '$') continue;
 
@@ -325,21 +299,22 @@ export default class Db {
         isStringishType(type) &&
         (value === null || Array.isArray(value) || isPlainObject(value))
       ) {
-        row[col] =
-          isPut || Array.isArray(value)
-            ? stripJsonValue(value)
-            : mergeJsonValue(row[col], value);
+        row[col] = stripJsonValue(value);
       } else {
         row[col] = value;
       }
     }
   }
 
-  getWriteRow(existing, change, arg, tableOptions, isPut) {
-    const row = existing ? deepCloneJson(existing) : {};
+  getWriteRow(existing, change, arg, tableOptions) {
+    const row =
+      existing?.[tableOptions.idCol] !== undefined &&
+      existing?.[tableOptions.idCol] !== null
+        ? { [tableOptions.idCol]: existing[tableOptions.idCol] }
+        : {};
     const providedVersion = change[tableOptions.verCol];
 
-    this.applyRowChange(row, change, tableOptions, isPut);
+    this.applyRowChange(row, change, tableOptions);
     this.ensureRowId(row, arg, tableOptions);
 
     row[tableOptions.verCol] = nextVersionValue(
@@ -493,19 +468,13 @@ export default class Db {
         throw Error('clickhouse_write.partial_put_unsupported');
       }
 
-      const isPut = object.$put === true;
-      const existing = await this.getExistingRow(arg, tableOptions);
-      if (!isPut && !existing) {
-        throw Error(`clickhouse.nothing_written ${JSON.stringify(arg)}`);
+      if (object.$put !== true) {
+        throw Error('clickhouse_write.put_required');
       }
 
-      const writtenRow = this.getWriteRow(
-        existing,
-        object,
-        arg,
-        tableOptions,
-        isPut,
-      );
+      const existing = await this.getExistingRow(arg, tableOptions);
+
+      const writtenRow = this.getWriteRow(existing, object, arg, tableOptions);
 
       await this.insert(tableOptions, [
         this.getInsertRow(writtenRow, tableOptions),

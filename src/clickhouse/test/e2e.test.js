@@ -82,7 +82,7 @@ describe('clickhouse_e2e', () => {
   });
 
   describe('write', () => {
-    test('put_and_patch', async () => {
+    test('put_replaces_existing_row', async () => {
       const created = await store.write(['users', 'u1'], {
         name: 'Alice',
         email: 'alice@acme.co',
@@ -110,9 +110,11 @@ describe('clickhouse_e2e', () => {
       });
 
       await store.write('users', {
-        $key: { email: 'alice@acme.co' },
+        $key: { id: 'u1' },
         name: 'Alicia',
+        email: 'alice@acme.co',
         settings: { bar: 5 },
+        $put: true,
       });
 
       const afterPatch = await store.read('users.u1', {
@@ -123,19 +125,16 @@ describe('clickhouse_e2e', () => {
       expect(afterPatch).toEqual({
         name: 'Alicia',
         email: 'alice@acme.co',
-        settings: { foo: 10, bar: 5 },
-      });
-
-      await store.write(['users', 'u1'], {
-        settings: { foo: null },
-      });
-
-      const afterJsonPatch = await store.read('users.u1', {
-        settings: true,
-      });
-      expect(afterJsonPatch).toEqual({
         settings: { bar: 5 },
       });
+    });
+
+    test('write_without_put_is_unsupported', async () => {
+      await expect(
+        store.write(['users', 'u1'], {
+          name: 'Alice',
+        }),
+      ).rejects.toThrow('clickhouse_write.put_required');
     });
 
     test('delete_is_unsupported', async () => {
@@ -303,6 +302,13 @@ describe('clickhouse_e2e', () => {
     });
 
     await store.write(['workLogJson', 'w1'], {
+      id: 'w1',
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
       data: {
         stage: 'written_to_clickhouse',
         nested: {
@@ -310,6 +316,7 @@ describe('clickhouse_e2e', () => {
           status: 'ok',
         },
       },
+      $put: true,
     });
 
     const byId = await store.read('workLogJson.w1', {

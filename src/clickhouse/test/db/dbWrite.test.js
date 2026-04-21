@@ -58,7 +58,7 @@ describe('clickhouse_db_write', () => {
     });
   });
 
-  test('patch_by_filter_merges_json_and_bumps_version', async () => {
+  test('put_by_filter_replaces_row_and_bumps_version', async () => {
     const query = jest.fn().mockResolvedValue([
       {
         id: 'u1',
@@ -74,7 +74,9 @@ describe('clickhouse_db_write', () => {
     await store.write('users', {
       $key: { email: 'alice@acme.co' },
       name: 'Alicia',
+      email: 'alice@acme.co',
       settings: { bar: 5 },
+      $put: true,
     });
 
     expect(query).toHaveBeenCalledTimes(1);
@@ -86,9 +88,23 @@ describe('clickhouse_db_write', () => {
       id: 'u1',
       name: 'Alicia',
       email: 'alice@acme.co',
-      settings: '{"foo":10,"bar":5}',
+      settings: '{"bar":5}',
     });
     expect(insert.mock.calls[0][0].values[0].updatedAt).toBeGreaterThan(100);
+  });
+
+  test('write_without_put_is_unsupported', async () => {
+    const query = jest.fn().mockResolvedValue([]);
+    const insert = jest.fn().mockResolvedValue(undefined);
+    const store = setupStore({ query, insert });
+
+    await expect(
+      store.write(['users', 'u1'], {
+        name: 'Alice',
+      }),
+    ).rejects.toThrow('clickhouse_write.put_required');
+    expect(query).not.toHaveBeenCalled();
+    expect(insert).not.toHaveBeenCalled();
   });
 
   test('delete_by_id_is_unsupported', async () => {
