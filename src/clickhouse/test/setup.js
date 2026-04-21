@@ -5,12 +5,13 @@ import { promisify } from 'node:util';
 import { createClient } from '@clickhouse/client';
 
 const connOptions = {
-  url: 'http://localhost:18123',
-  username: 'api',
-  password: 'api',
+  url: process.env.CLICKHOUSE_URL || 'http://localhost:18123',
+  username: process.env.CLICKHOUSE_USER || 'api',
+  password: process.env.CLICKHOUSE_PASSWORD || 'api',
 };
 
 const testDatabase = 'graffy_test';
+const useExternalServer = !!process.env.CLICKHOUSE_URL;
 
 const composeFile = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -61,20 +62,22 @@ async function insertRows(table, rows) {
 }
 
 export async function setupClickhouseServer() {
-  try {
-    await runCompose(['down', '-v', '--remove-orphans']);
-  } catch (_) {
-    // Ignore cleanup failures.
-  }
+  if (!useExternalServer) {
+    try {
+      await runCompose(['down', '-v', '--remove-orphans']);
+    } catch (_) {
+      // Ignore cleanup failures.
+    }
 
-  try {
-    await runCompose(['up', '-d']);
-  } catch (e) {
-    console.error(
-      'Could not start a test ClickHouse server using Docker Compose.\n' +
-        'Docker might have printed a detailed error message above.',
-    );
-    throw e;
+    try {
+      await runCompose(['up', '-d']);
+    } catch (e) {
+      console.error(
+        'Could not start a test ClickHouse server using Docker Compose.\n' +
+          'Docker might have printed a detailed error message above.',
+      );
+      throw e;
+    }
   }
 
   for (let i = 0; i < 180; i += 1) {
@@ -95,7 +98,9 @@ export async function teardownClickhouseServer() {
     client = null;
   }
 
-  await runCompose(['down', '-v', '--remove-orphans']);
+  if (!useExternalServer) {
+    await runCompose(['down', '-v', '--remove-orphans']);
+  }
 }
 
 export async function resetTables() {

@@ -15,6 +15,17 @@ describe('clickhouse_filter_sql', () => {
     );
   });
 
+  test('map dot path equals string', () => {
+    expect(
+      getSql(
+        { 'recordIds.gmailMessageId': 'abc' },
+        opt({ recordIds: 'Map(LowCardinality(String), String)' }),
+      ),
+    ).toContain(
+      "if(mapContains(`recordIds`, 'gmailMessageId'), `recordIds`['gmailMessageId'], NULL) = 'abc'",
+    );
+  });
+
   test('dot path null uses missing-key semantics', () => {
     expect(
       getSql({ 'sources.messageId': null }, opt({ sources: 'String' })),

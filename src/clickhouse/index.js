@@ -74,6 +74,7 @@ export const clickhouse =
   (store) => {
     const { connection, ...rawOptions } = options;
     store.on('read', read);
+    store.on('write', write);
 
     const prefix = store.path;
     const tableOpts = getTableOpts(prefix[prefix.length - 1], rawOptions);
@@ -89,6 +90,23 @@ export const clickhouse =
       return Promise.all([readPromise, nextPromise]).then(
         ([readRes, nextRes]) => {
           return merge(readRes, nextRes);
+        },
+      );
+    }
+
+    function write(change, writeOptions, next) {
+      const { chClient, clickhouseClient } = writeOptions || {};
+      const db =
+        chClient || clickhouseClient
+          ? new Db(chClient || clickhouseClient)
+          : defaultDb;
+      const writePromise = db.write(change, tableOpts);
+      const remainingChange = remove(change, encodePath(prefix));
+      const nextPromise = next(remainingChange);
+
+      return Promise.all([writePromise, nextPromise]).then(
+        ([writeRes, nextRes]) => {
+          return merge(writeRes, nextRes);
         },
       );
     }

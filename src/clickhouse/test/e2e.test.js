@@ -81,6 +81,184 @@ describe('clickhouse_e2e', () => {
     );
   });
 
+  describe('write', () => {
+    test('put_patch_and_delete', async () => {
+      const created = await store.write(['users', 'u1'], {
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+        $put: true,
+      });
+
+      expect(created).toMatchObject({
+        id: 'u1',
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+        _sign: 1,
+      });
+      expect(asNum(created.updatedAt)).toBeGreaterThan(0);
+
+      const afterCreate = await store.read('users.u1', {
+        name: true,
+        email: true,
+        settings: true,
+      });
+      expect(afterCreate).toEqual({
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+      });
+
+      await store.write('users', {
+        $key: { email: 'alice@acme.co' },
+        name: 'Alicia',
+        settings: { bar: 5 },
+      });
+
+      const afterPatch = await store.read('users.u1', {
+        name: true,
+        email: true,
+        settings: true,
+      });
+      expect(afterPatch).toEqual({
+        name: 'Alicia',
+        email: 'alice@acme.co',
+        settings: { foo: 10, bar: 5 },
+      });
+
+      await store.write(['users', 'u1'], {
+        settings: { foo: null },
+      });
+
+      const afterJsonPatch = await store.read('users.u1', {
+        settings: true,
+      });
+      expect(afterJsonPatch).toEqual({
+        settings: { bar: 5 },
+      });
+
+      await store.write(['users', 'u1'], null);
+
+      const afterDelete = await store.read('users.u1', {
+        name: true,
+        email: true,
+      });
+      expect(afterDelete).toEqual({
+        name: null,
+        email: null,
+      });
+    });
+
+    test('filter_put_inserts_new_row', async () => {
+      await store.write(['users', { email: 'new@acme.co' }], {
+        name: 'New User',
+        settings: { foo: 1 },
+        $put: true,
+      });
+
+      const rows = await store.read('users', {
+        $key: {
+          email: 'new@acme.co',
+          $order: ['id'],
+          $all: true,
+        },
+        id: true,
+        name: true,
+        email: true,
+        settings: true,
+      });
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        name: 'New User',
+        email: 'new@acme.co',
+        settings: { foo: 1 },
+      });
+      expect(typeof rows[0].id).toEqual('string');
+    });
+  });
+
+  test('dot_path_filter_on_native_map', async () => {
+    const database = getTestDatabase();
+    const connection = getClient();
+
+    await connection.command({
+      query: `DROP TABLE IF EXISTS ${database}.workLog`,
+    });
+
+    await connection.command({
+      query: `
+        CREATE TABLE ${database}.workLog (
+          id String,
+          updatedAt Int64,
+          tenantId LowCardinality(String),
+          recordIds Map(LowCardinality(String), String),
+          data Nullable(String),
+          _sign Int8 DEFAULT 1
+        )
+        ENGINE = ReplacingMergeTree(updatedAt)
+        ORDER BY id
+      `,
+    });
+
+    store.use(
+      'workLog',
+      clickhouse({
+        database,
+        table: 'workLog',
+        idCol: 'id',
+        verCol: 'updatedAt',
+        connection,
+      }),
+    );
+
+    await store.write(['workLog', 'w1'], {
+      tenantId: 't1',
+      recordIds: {
+        gmailMessageId: 'gm-1',
+        sfTaskId: 'sf-1',
+      },
+      data: {
+        code: 'kept',
+      },
+      $put: true,
+    });
+
+    await store.write(['workLog', 'w2'], {
+      tenantId: 't1',
+      recordIds: {
+        gmailMessageId: 'gm-2',
+        sfTaskId: 'sf-2',
+      },
+      data: {
+        code: 'dropped',
+      },
+      $put: true,
+    });
+
+    const result = await store.read('workLog', {
+      $key: {
+        'recordIds.gmailMessageId': 'gm-1',
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+      recordIds: true,
+      tenantId: true,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 'w1',
+      tenantId: 't1',
+      recordIds: {
+        gmailMessageId: 'gm-1',
+        sfTaskId: 'sf-1',
+      },
+    });
+  });
+
   test('id_lookup_with_nested_projection', async () => {
     await seedUsers([
       { id: 'u1', updatedAt: 1, name: 'Alice', settings: { foo: 10, bar: 5 } },
