@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { createClient } from '@clickhouse/client';
 import {
   decodeArgs,
@@ -11,7 +10,6 @@ import {
   isPlainObject,
   isRange,
   merge,
-  mergeObject,
   unwrap,
   wrap,
   wrapObject,
@@ -39,62 +37,6 @@ function maybeParseJson(value) {
 
 function deepCloneJson(value) {
   return JSON.parse(JSON.stringify(value));
-}
-
-function isNumericType(type) {
-  return /\b(?:U?Int|Float|Decimal)\d*\b/.test(type || '');
-}
-
-function formatDateTime(value, includeMilliseconds) {
-  const iso = new Date(value).toISOString();
-  return includeMilliseconds
-    ? iso.replace('T', ' ').replace('Z', '')
-    : iso.slice(0, 19).replace('T', ' ');
-}
-
-function nextVersionValue(type, providedValue) {
-  if (providedValue !== undefined && providedValue !== null)
-    return providedValue;
-
-  if (type?.startsWith('DateTime64')) {
-    return formatDateTime(Date.now(), true);
-  }
-
-  if (type?.startsWith('DateTime')) {
-    return formatDateTime(Date.now(), false);
-  }
-
-  if (isNumericType(type)) {
-    return Date.now();
-  }
-
-  if (isStringishType(type)) {
-    return String(Date.now());
-  }
-
-  return Date.now();
-}
-
-function toGraphVersion(type, value) {
-  if (value === undefined || value === null) return null;
-
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null;
-  }
-
-  if (typeof value === 'bigint') {
-    return Number(value);
-  }
-
-  if (type?.startsWith('DateTime')) {
-    const isoValue =
-      typeof value === 'string' ? value.replace(' ', 'T').concat('Z') : value;
-    const timestamp = new Date(isoValue).getTime();
-    return Number.isFinite(timestamp) ? timestamp : null;
-  }
-
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
 }
 
 function stripJsonValue(value) {
@@ -234,39 +176,6 @@ export default class Db {
     return -numeric;
   }
 
-  async getExistingRow(arg, tableOptions) {
-    const selection = isPlainObject(arg)
-      ? selectByArgs(arg, null, tableOptions)
-      : selectByIds([arg], tableOptions);
-    const rows = await this.query(selection.sql);
-    if (rows.length > 1) {
-      throw Error(`clickhouse.more_than_one_row ${tableOptions.table}`);
-    }
-    return rows[0] ? this.normalizeRow(rows[0], tableOptions.schema) : null;
-  }
-
-  ensureRowId(row, arg, tableOptions) {
-    const { idCol } = tableOptions;
-
-    if (row[idCol] !== undefined && row[idCol] !== null) return row[idCol];
-    if (!isPlainObject(arg)) {
-      row[idCol] = arg;
-      return row[idCol];
-    }
-    if (arg[idCol] !== undefined && arg[idCol] !== null) {
-      row[idCol] = arg[idCol];
-      return row[idCol];
-    }
-
-    const idType = tableOptions.schema?.types?.[idCol];
-    if (!isStringishType(idType)) {
-      throw Error(`clickhouse.write_missing_id ${idCol}`);
-    }
-
-    row[idCol] = randomUUID();
-    return row[idCol];
-  }
-
   applyRowChange(row, change, tableOptions) {
     for (const [col, value] of Object.entries(change)) {
       if (col[0] === '$') continue;
@@ -283,18 +192,9 @@ export default class Db {
     }
   }
 
-  getWriteRow(change, arg, tableOptions) {
+  getWriteRow(change, tableOptions) {
     const row = {};
-    const providedVersion = change[tableOptions.verCol];
-
     this.applyRowChange(row, change, tableOptions);
-    this.ensureRowId(row, arg, tableOptions);
-
-    row[tableOptions.verCol] = nextVersionValue(
-      tableOptions.schema?.types?.[tableOptions.verCol],
-      providedVersion,
-    );
-
     return row;
   }
 
@@ -363,10 +263,7 @@ export default class Db {
         });
 
         object.$key = key;
-        object.$ver = toGraphVersion(
-          tableOptions.schema?.types?.[tableOptions.verCol],
-          object[tableOptions.verCol] ?? object._version ?? null,
-        );
+        object.$ver = object[tableOptions.verCol];
         if (!selection.isAggregate) {
           object.$ref = [...rawPrefix, object[tableOptions.idCol]];
         }
@@ -382,10 +279,7 @@ export default class Db {
       for (const row of rows) {
         const object = this.normalizeRow(row, tableOptions.schema);
         object.$key = object[tableOptions.idCol];
-        object.$ver = toGraphVersion(
-          tableOptions.schema?.types?.[tableOptions.verCol],
-          object[tableOptions.verCol] ?? object._version ?? null,
-        );
+        object.$ver = object[tableOptions.verCol];
         merge(results, encodeGraph(wrapObject(object, rawPrefix)));
       }
     };
@@ -433,25 +327,16 @@ export default class Db {
       const arg = decodeArgs(node);
       const object = decodeGraph(node.children) || {};
       if (isPlainObject(arg)) {
-        mergeObject(object, arg);
-      } else {
-        object[tableOptions.idCol] = arg;
+        throw Error('clickhouse_write.object_arg_unsupported');
       }
 
-      if (object.$put && object.$put !== true) {
-        throw Error('clickhouse_write.partial_put_unsupported');
-      }
-
-      if (object.$put !== true) {
+      if (!object.$put || object.$put !== true) {
         throw Error('clickhouse_write.put_required');
       }
 
-      const existing = await this.getExistingRow(arg, tableOptions);
-      if (existing) {
-        throw Error('clickhouse_write.update_unsupported');
-      }
+      object[tableOptions.idCol] = arg;
 
-      const writtenRow = this.getWriteRow(object, arg, tableOptions);
+      const writtenRow = this.getWriteRow(object, tableOptions);
 
       await this.insert(tableOptions, [
         this.getInsertRow(writtenRow, tableOptions),
@@ -464,30 +349,12 @@ export default class Db {
             {
               ...writtenRow,
               $key: writtenRow[tableOptions.idCol],
-              $ver: toGraphVersion(
-                tableOptions.schema?.types?.[tableOptions.verCol],
-                writtenRow[tableOptions.verCol] ?? null,
-              ),
+              $ver: writtenRow[tableOptions.verCol],
             },
             rawPrefix,
           ),
         ),
       );
-
-      if (isPlainObject(arg)) {
-        merge(
-          result,
-          encodeGraph(
-            wrapObject(
-              {
-                $key: arg,
-                $ref: [...rawPrefix, writtenRow[tableOptions.idCol]],
-              },
-              rawPrefix,
-            ),
-          ),
-        );
-      }
     }
 
     return result;

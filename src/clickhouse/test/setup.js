@@ -120,7 +120,7 @@ export async function resetTables() {
     query: `
       CREATE TABLE ${testDatabase}.users (
         id String,
-        updatedAt Int64,
+        updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         name Nullable(String),
         email Nullable(String),
         settings Nullable(String)
@@ -134,7 +134,7 @@ export async function resetTables() {
     query: `
       CREATE TABLE ${testDatabase}.posts (
         id String,
-        updatedAt Int64,
+        updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         authorId Nullable(String),
         title Nullable(String),
         commenters Nullable(String),
@@ -149,7 +149,7 @@ export async function resetTables() {
     query: `
       CREATE TABLE ${testDatabase}.prospect (
         id String,
-        updatedAt Int64,
+        updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         data Nullable(String),
         isDeleted UInt8
       )

@@ -82,7 +82,7 @@ describe('clickhouse_e2e', () => {
   });
 
   describe('write', () => {
-    test('put_with_existing_row_is_unsupported', async () => {
+    test('put_by_id_blindly_inserts_and_db_sets_default_ver_col', async () => {
       const created = await store.write(['users', 'u1'], {
         name: 'Alice',
         email: 'alice@acme.co',
@@ -96,28 +96,20 @@ describe('clickhouse_e2e', () => {
         email: 'alice@acme.co',
         settings: { foo: 10 },
       });
-      expect(asNum(created.updatedAt)).toBeGreaterThan(0);
+      expect(created.updatedAt).toBeUndefined();
 
       const afterCreate = await store.read('users.u1', {
+        updatedAt: true,
         name: true,
         email: true,
         settings: true,
       });
       expect(afterCreate).toEqual({
+        updatedAt: expect.any(Number),
         name: 'Alice',
         email: 'alice@acme.co',
         settings: { foo: 10 },
       });
-
-      await expect(
-        store.write('users', {
-          $key: { id: 'u1' },
-          name: 'Alicia',
-          email: 'alice@acme.co',
-          settings: { bar: 5 },
-          $put: true,
-        }),
-      ).rejects.toThrow('clickhouse_write.update_unsupported');
     });
 
     test('write_without_put_is_unsupported', async () => {
@@ -134,32 +126,14 @@ describe('clickhouse_e2e', () => {
       );
     });
 
-    test('filter_put_inserts_new_row', async () => {
-      await store.write(['users', { email: 'new@acme.co' }], {
-        name: 'New User',
-        settings: { foo: 1 },
-        $put: true,
-      });
-
-      const rows = await store.read('users', {
-        $key: {
-          email: 'new@acme.co',
-          $order: ['id'],
-          $all: true,
-        },
-        id: true,
-        name: true,
-        email: true,
-        settings: true,
-      });
-
-      expect(rows).toHaveLength(1);
-      expect(rows[0]).toMatchObject({
-        name: 'New User',
-        email: 'new@acme.co',
-        settings: { foo: 1 },
-      });
-      expect(typeof rows[0].id).toEqual('string');
+    test('filter_put_is_unsupported', async () => {
+      await expect(
+        store.write(['users', { email: 'new@acme.co' }], {
+          name: 'New User',
+          settings: { foo: 1 },
+          $put: true,
+        }),
+      ).rejects.toThrow('clickhouse_write.object_arg_unsupported');
     });
   });
 
@@ -175,7 +149,7 @@ describe('clickhouse_e2e', () => {
       query: `
         CREATE TABLE ${database}.workLog (
           id String,
-          updatedAt Int64,
+          updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
           tenantId LowCardinality(String),
           recordIds Map(LowCardinality(String), String),
           data Nullable(String)
@@ -255,7 +229,7 @@ describe('clickhouse_e2e', () => {
       query: `
         CREATE TABLE ${database}.workLogJson (
           id String,
-          time DateTime64(3),
+          time DateTime64(3) DEFAULT now64(3),
           tenantId LowCardinality(String),
           code LowCardinality(String),
           recordIds Map(LowCardinality(String), String),
@@ -298,7 +272,6 @@ describe('clickhouse_e2e', () => {
     });
 
     await store.write(['workLogJson', 'w2'], {
-      id: 'w2',
       tenantId: 't1',
       code: 'sf_sync_read',
       recordIds: {

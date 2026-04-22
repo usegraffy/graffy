@@ -12,10 +12,6 @@ const connection = createClient({
 const database = 'graffy_smoke';
 const table = 'workLog';
 
-function formatDateTime64(value) {
-  return value.toISOString().replace('T', ' ').replace('Z', '');
-}
-
 async function main() {
   await connection.command({
     query: `CREATE DATABASE IF NOT EXISTS ${database}`,
@@ -29,7 +25,7 @@ async function main() {
     query: `
       CREATE TABLE ${database}.${table} (
         id String,
-        time DateTime64(3),
+        time DateTime64(3) DEFAULT now64(3),
         tenantId LowCardinality(String),
         code LowCardinality(String),
         recordIds Map(LowCardinality(String), String),
@@ -56,15 +52,12 @@ async function main() {
     }),
   );
 
-  const time1 = formatDateTime64(new Date());
-  const time2 = formatDateTime64(new Date(Date.now() + 10));
   const firstId = randomUUID();
   const secondId = randomUUID();
 
   const firstWrite = await store.write(['workLog', firstId], {
     tenantId: 'tenant-1',
     code: 'screened_in',
-    time: time1,
     recordIds: {
       gmailMessageId: 'gm-1',
       sfTaskId: 'task-1',
@@ -79,7 +72,6 @@ async function main() {
   const secondWrite = await store.write(['workLog', secondId], {
     tenantId: 'tenant-1',
     code: 'screened_in',
-    time: time2,
     recordIds: {
       gmailMessageId: 'gm-1',
       sfTaskId: 'task-1',

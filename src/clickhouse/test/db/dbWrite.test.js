@@ -38,8 +38,7 @@ describe('clickhouse_db_write', () => {
       $put: true,
     });
 
-    expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][0].query).toContain("WHERE `id` IN ('u1')");
+    expect(query).not.toHaveBeenCalled();
     expect(insert).toHaveBeenCalledTimes(1);
     expect(insert.mock.calls[0][0]).toMatchObject({
       table: 'default.users',
@@ -50,22 +49,37 @@ describe('clickhouse_db_write', () => {
           name: 'Alice',
           email: 'alice@acme.co',
           settings: '{"foo":10}',
-          updatedAt: expect.any(Number),
         },
       ],
     });
   });
 
-  test('put_by_filter_is_unsupported_when_row_exists', async () => {
-    const query = jest.fn().mockResolvedValue([
-      {
-        id: 'u1',
-        updatedAt: 100,
-        name: 'Alice',
-        email: 'alice@acme.co',
-        settings: '{"foo":10}',
-      },
-    ]);
+  test('put_by_id_preserves_provided_ver_col', async () => {
+    const query = jest.fn().mockResolvedValue([]);
+    const insert = jest.fn().mockResolvedValue(undefined);
+    const store = setupStore({ query, insert });
+
+    await store.write(['users', 'u1'], {
+      updatedAt: 123,
+      name: 'Alice',
+      $put: true,
+    });
+
+    expect(query).not.toHaveBeenCalled();
+    expect(insert).toHaveBeenCalledTimes(1);
+    expect(insert.mock.calls[0][0]).toMatchObject({
+      values: [
+        {
+          id: 'u1',
+          updatedAt: 123,
+          name: 'Alice',
+        },
+      ],
+    });
+  });
+
+  test('put_by_filter_is_unsupported', async () => {
+    const query = jest.fn().mockResolvedValue([]);
     const insert = jest.fn().mockResolvedValue(undefined);
     const store = setupStore({ query, insert });
 
@@ -77,11 +91,8 @@ describe('clickhouse_db_write', () => {
         settings: { bar: 5 },
         $put: true,
       }),
-    ).rejects.toThrow('clickhouse_write.update_unsupported');
-    expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][0].query).toContain(
-      "WHERE `email` = 'alice@acme.co' LIMIT 2",
-    );
+    ).rejects.toThrow('clickhouse_write.object_arg_unsupported');
+    expect(query).not.toHaveBeenCalled();
     expect(insert).not.toHaveBeenCalled();
   });
 
