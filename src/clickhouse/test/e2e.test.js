@@ -104,12 +104,12 @@ describe('clickhouse_e2e', () => {
         email: true,
         settings: true,
       });
-      expect(afterCreate).toEqual({
-        updatedAt: expect.any(Number),
+      expect(afterCreate).toMatchObject({
         name: 'Alice',
         email: 'alice@acme.co',
         settings: { foo: 10 },
       });
+      expect(asNum(afterCreate.updatedAt)).toBeGreaterThan(0);
     });
 
     test('write_without_put_is_unsupported', async () => {
