@@ -39,9 +39,7 @@ describe('clickhouse_db_write', () => {
     });
 
     expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][0].query).toContain(
-      "WHERE `id` IN ('u1')",
-    );
+    expect(query.mock.calls[0][0].query).toContain("WHERE `id` IN ('u1')");
     expect(insert).toHaveBeenCalledTimes(1);
     expect(insert.mock.calls[0][0]).toMatchObject({
       table: 'default.users',

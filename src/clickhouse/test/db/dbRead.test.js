@@ -129,7 +129,9 @@ describe('clickhouse_db_read', () => {
 
     expect(result).toEqual({ data: { subject: 'Hello' } });
     expect(mockQuery).toHaveBeenCalledTimes(1);
-    expect(getSqlFromCall(mockQuery.mock.calls[0])).toContain("WHERE `id` IN ('m1')");
+    expect(getSqlFromCall(mockQuery.mock.calls[0])).toContain(
+      "WHERE `id` IN ('m1')",
+    );
   });
 
   test('range_read_with_cts_and_nested_projection', async () => {

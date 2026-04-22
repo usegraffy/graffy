@@ -91,9 +91,7 @@ describe('clickhouse_filter_sql', () => {
       },
     );
 
-    expect(sql).toContain(
-      '`id` IN (SELECT `authorId` FROM `default`.`posts`',
-    );
+    expect(sql).toContain('`id` IN (SELECT `authorId` FROM `default`.`posts`');
     expect(sql).toContain("WHERE `title` = 'Extra bar'");
   });
 
@@ -129,9 +127,7 @@ describe('clickhouse_filter_sql', () => {
 
     expect(sql).toContain("`email` = 'a'");
     expect(sql).toContain("match(ifNull(`title`, ''), concat('(?i)', 'foo'))");
-    expect(sql).toContain(
-      '`id` IN (SELECT `authorId` FROM `default`.`posts`',
-    );
+    expect(sql).toContain('`id` IN (SELECT `authorId` FROM `default`.`posts`');
   });
 
   test('join explicit $and stays inside one subquery', () => {

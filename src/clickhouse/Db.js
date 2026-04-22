@@ -53,7 +53,8 @@ function formatDateTime(value, includeMilliseconds) {
 }
 
 function nextVersionValue(type, providedValue) {
-  if (providedValue !== undefined && providedValue !== null) return providedValue;
+  if (providedValue !== undefined && providedValue !== null)
+    return providedValue;
 
   if (type?.startsWith('DateTime64')) {
     return formatDateTime(Date.now(), true);
@@ -163,9 +164,9 @@ export default class Db {
         format: 'JSONEachRow',
       });
     } catch (e) {
-      const message = [e?.message, JSON.stringify(rows)].filter(Boolean).join(
-        '; ',
-      );
+      const message = [e?.message, JSON.stringify(rows)]
+        .filter(Boolean)
+        .join('; ');
       throw Error(`clickhouse.sql_error ${message}`);
     }
   }
@@ -299,7 +300,9 @@ export default class Db {
 
   getInsertRow(row, tableOptions) {
     const out = {};
-    for (const [col, type] of Object.entries(tableOptions.schema?.types || {})) {
+    for (const [col, type] of Object.entries(
+      tableOptions.schema?.types || {},
+    )) {
       if (!(col in row)) continue;
 
       const value = row[col];

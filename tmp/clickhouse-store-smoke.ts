@@ -1,19 +1,19 @@
-import { createClient } from "@clickhouse/client";
-import { randomUUID } from "node:crypto";
-import Graffy from "../src/core/Graffy.js";
-import { clickhouse } from "../src/clickhouse/index.js";
+import { randomUUID } from 'node:crypto';
+import { createClient } from '@clickhouse/client';
+import { clickhouse } from '../src/clickhouse/index.js';
+import Graffy from '../src/core/Graffy.js';
 
 const connection = createClient({
-  url: process.env.CLICKHOUSE_URL || "http://localhost:8123",
-  username: process.env.CLICKHOUSE_USER || "lego",
-  password: process.env.CLICKHOUSE_PASSWORD || "lego",
+  url: process.env.CLICKHOUSE_URL || 'http://localhost:8123',
+  username: process.env.CLICKHOUSE_USER || 'lego',
+  password: process.env.CLICKHOUSE_PASSWORD || 'lego',
 });
 
-const database = "graffy_smoke";
-const table = "workLog";
+const database = 'graffy_smoke';
+const table = 'workLog';
 
 function formatDateTime64(value) {
-  return value.toISOString().replace("T", " ").replace("Z", "");
+  return value.toISOString().replace('T', ' ').replace('Z', '');
 }
 
 async function main() {
@@ -46,12 +46,12 @@ async function main() {
 
   const store = new Graffy();
   store.use(
-    "workLog",
+    'workLog',
     clickhouse({
       database,
       table,
-      idCol: "id",
-      verCol: "time",
+      idCol: 'id',
+      verCol: 'time',
       connection,
     }),
   );
@@ -61,31 +61,31 @@ async function main() {
   const firstId = randomUUID();
   const secondId = randomUUID();
 
-  const firstWrite = await store.write(["workLog", firstId], {
-    tenantId: "tenant-1",
-    code: "screened_in",
+  const firstWrite = await store.write(['workLog', firstId], {
+    tenantId: 'tenant-1',
+    code: 'screened_in',
     time: time1,
     recordIds: {
-      gmailMessageId: "gm-1",
-      sfTaskId: "task-1",
+      gmailMessageId: 'gm-1',
+      sfTaskId: 'task-1',
     },
     data: {
-      stage: "initial",
+      stage: 'initial',
       kept: true,
     },
     $put: true,
   });
 
-  const secondWrite = await store.write(["workLog", secondId], {
-    tenantId: "tenant-1",
-    code: "screened_in",
+  const secondWrite = await store.write(['workLog', secondId], {
+    tenantId: 'tenant-1',
+    code: 'screened_in',
     time: time2,
     recordIds: {
-      gmailMessageId: "gm-1",
-      sfTaskId: "task-1",
+      gmailMessageId: 'gm-1',
+      sfTaskId: 'task-1',
     },
     data: {
-      stage: "written_to_clickhouse",
+      stage: 'written_to_clickhouse',
       kept: true,
       score: 98,
     },
@@ -101,11 +101,11 @@ async function main() {
     data: true,
   });
 
-  const byRecordId = await store.read("workLog", {
+  const byRecordId = await store.read('workLog', {
     $key: {
-      tenantId: "tenant-1",
-      code: "screened_in",
-      $order: ["time"],
+      tenantId: 'tenant-1',
+      code: 'screened_in',
+      $order: ['time'],
       $all: true,
     },
     id: true,
