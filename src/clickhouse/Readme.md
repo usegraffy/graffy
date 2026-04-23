@@ -24,9 +24,11 @@ Write support is append-only. `$put` is mandatory, writes must target a scalar
 id path, and the adapter always does a blind insert. Filter writes, patch-style
 updates, and deletes are not supported.
 
-`verCol` should be backed by a table `DEFAULT` expression. If a write provides a
-value for `verCol`, it is inserted as-is. If not, the column is omitted from
-the insert and ClickHouse supplies the default value.
+`idCol` and `verCol` must be Graffy-compatible: when loaded through the
+ClickHouse client they should be strings or numbers. `verCol` should also be
+backed by a table `DEFAULT` expression. If a write provides a value for
+`verCol`, it is inserted as-is. If not, the column is omitted from the insert
+and ClickHouse supplies the default value.
 
 ## E2E tests
 

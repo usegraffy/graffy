@@ -1,10 +1,4 @@
-import {
-  compareVersion,
-  findFirst,
-  findLast,
-  isBranch,
-  isRange,
-} from '../node/index.js';
+import { findFirst, findLast, isBranch, isRange } from '../node/index.js';
 import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
 import { keyAfter, keyBefore } from './step.js';
 
@@ -41,7 +35,7 @@ export function insertRange(current, change, result, start = 0) {
     const node = current[i];
     // We treat a negative version as a non-existent node
     // as this is a hack used by subscribe.
-    if (isRange(node) && compareVersion(node.version, 0) >= 0) {
+    if (isRange(node) && node.version >= 0) {
       if (cmp(node.key, currentKey) > 0) {
         appliedChange.push({
           key: currentKey,
@@ -97,8 +91,7 @@ export function insertRange(current, change, result, start = 0) {
 
 function mergeRanges(base, node) {
   // assertVersion(node, base.version);
-  if (compareVersion(node.version, base.version) < 0)
-    [node, base] = [base, node];
+  if (node.version < base.version) [node, base] = [base, node];
   // Ensure node is newer than base
 
   return [
@@ -194,7 +187,7 @@ function getNewerNode(node, base) {
       : { ...node, children };
   }
   // assertVersion(node, version);
-  return compareVersion(node.version, base.version) >= 0 ? node : null;
+  return node.version >= base.version ? node : null;
 }
 
 function getNewerChange(node, base) {
@@ -205,7 +198,7 @@ function getNewerChange(node, base) {
     return children.length && { ...node, children };
   }
   // assertVersion(node, version);
-  return compareVersion(node.version, base.version) >= 0 ? node : null;
+  return node.version >= base.version ? node : null;
 }
 
 // function assertVersion(node, version) {

@@ -25,7 +25,7 @@ async function main() {
     query: `
       CREATE TABLE ${database}.${table} (
         id String,
-        time DateTime64(3) DEFAULT now64(3),
+        time Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         tenantId LowCardinality(String),
         code LowCardinality(String),
         recordIds Map(LowCardinality(String), String),

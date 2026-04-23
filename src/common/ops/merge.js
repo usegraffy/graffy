@@ -1,10 +1,4 @@
-import {
-  compareVersion,
-  findFirst,
-  findLast,
-  isBranch,
-  isRange,
-} from '../node/index.js';
+import { findFirst, findLast, isBranch, isRange } from '../node/index.js';
 import { cmp, MAX_KEY, MIN_KEY } from '../util.js';
 import { keyAfter, keyBefore } from './step.js';
 
@@ -42,8 +36,7 @@ export function insertRange(current, change, start = 0) {
 
 function mergeRanges(base, node) {
   // assertVersion(node, base.version);
-  if (compareVersion(node.version, base.version) < 0)
-    [node, base] = [base, node];
+  if (node.version < base.version) [node, base] = [base, node];
   return [
     cmp(base.key, node.key) < 0 && { ...base, end: keyBefore(node.key) },
     node,
@@ -113,7 +106,7 @@ function getNewer(node, base) {
     return children.length === 1 ? null : { ...node, children };
   }
   // assertVersion(node, version);
-  return compareVersion(node.version, version) >= 0 ? node : null;
+  return node.version >= version ? node : null;
 }
 
 // function assertVersion(node, version) {

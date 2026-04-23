@@ -217,7 +217,7 @@ describe('clickhouse_e2e', () => {
     });
   });
 
-  test('native_json_with_datetime64_version_round_trip', async () => {
+  test('native_json_with_int64_version_round_trip', async () => {
     const database = getTestDatabase();
     const connection = getClient();
 
@@ -229,7 +229,7 @@ describe('clickhouse_e2e', () => {
       query: `
         CREATE TABLE ${database}.workLogJson (
           id String,
-          time DateTime64(3) DEFAULT now64(3),
+          time Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
           tenantId LowCardinality(String),
           code LowCardinality(String),
           recordIds Map(LowCardinality(String), String),
@@ -296,8 +296,7 @@ describe('clickhouse_e2e', () => {
       data: true,
     });
 
-    expect(byId).toEqual({
-      time: expect.any(String),
+    expect(byId).toMatchObject({
       tenantId: 't1',
       code: 'sf_sync_read',
       recordIds: {
@@ -311,6 +310,7 @@ describe('clickhouse_e2e', () => {
         },
       },
     });
+    expect(asNum(byId.time)).toBeGreaterThan(0);
 
     const filtered = await store.read('workLogJson', {
       $key: {
