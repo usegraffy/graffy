@@ -58,7 +58,7 @@ function getTableOpts(
   return {
     table: tableName,
     idCol: idCol || 'id',
-    verCol: verCol || 'updatedAt',
+    verCol: verCol || 'time',
     database: tableDatabase,
     final: tableFinal,
     schema,

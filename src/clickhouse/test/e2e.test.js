@@ -250,7 +250,6 @@ describe('clickhouse_e2e', () => {
         database,
         table: 'workLogJson',
         idCol: 'id',
-        verCol: 'time',
         connection,
       }),
     );

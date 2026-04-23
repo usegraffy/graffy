@@ -24,6 +24,8 @@ Write support is append-only. `$put` is mandatory, writes must target a scalar
 id path, and the adapter always does a blind insert. Filter writes, patch-style
 updates, and deletes are not supported.
 
+The default `idCol` is `id`, and the default `verCol` is `time`.
+
 `idCol` and `verCol` must be Graffy-compatible: when loaded through the
 ClickHouse client they should be strings or numbers. `verCol` should also be
 backed by a table `DEFAULT` expression. If a write provides a value for

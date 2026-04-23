@@ -47,7 +47,6 @@ async function main() {
       database,
       table,
       idCol: 'id',
-      verCol: 'time',
       connection,
     }),
   );
