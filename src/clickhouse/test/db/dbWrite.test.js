@@ -2,11 +2,12 @@ import Graffy from '@graffy/core';
 import { jest } from '@jest/globals';
 import { clickhouse } from '../../index.js';
 
-function setupStore(connection) {
+function setupStore(connection, options = {}) {
   const store = new Graffy();
   store.use(
     'users',
     clickhouse({
+      ...options,
       table: 'users',
       idCol: 'id',
       verCol: 'updatedAt',
@@ -41,7 +42,7 @@ describe('clickhouse_db_write', () => {
     expect(query).not.toHaveBeenCalled();
     expect(insert).toHaveBeenCalledTimes(1);
     expect(insert.mock.calls[0][0]).toMatchObject({
-      table: 'default.users',
+      table: '`default`.`users`',
       format: 'JSONEachRow',
       values: [
         {
@@ -51,6 +52,22 @@ describe('clickhouse_db_write', () => {
           settings: '{"foo":10}',
         },
       ],
+    });
+  });
+
+  test('put_by_id_quotes_hyphenated_database_name', async () => {
+    const query = jest.fn().mockResolvedValue([]);
+    const insert = jest.fn().mockResolvedValue(undefined);
+    const store = setupStore({ query, insert }, { database: 'lego-dev-b' });
+
+    await store.write(['users', 'u1'], {
+      name: 'Alice',
+      $put: true,
+    });
+
+    expect(insert).toHaveBeenCalledTimes(1);
+    expect(insert.mock.calls[0][0]).toMatchObject({
+      table: '`lego-dev-b`.`users`',
     });
   });
 

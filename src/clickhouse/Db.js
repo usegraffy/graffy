@@ -14,7 +14,12 @@ import {
   wrap,
   wrapObject,
 } from '@graffy/common';
-import { isStringishType, isUInt8Type, literal } from './sql/escape.js';
+import {
+  isStringishType,
+  isUInt8Type,
+  literal,
+  quoteIdent,
+} from './sql/escape.js';
 import { selectByArgs, selectByIds } from './sql/select.js';
 
 function maybeParseJson(value) {
@@ -101,7 +106,7 @@ export default class Db {
 
     try {
       await this.client.insert({
-        table: `${tableOptions.database || 'default'}.${tableOptions.table}`,
+        table: `${quoteIdent(tableOptions.database || 'default')}.${quoteIdent(tableOptions.table)}`,
         values: rows,
         format: 'JSONEachRow',
       });
