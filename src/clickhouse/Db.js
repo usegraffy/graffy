@@ -1,18 +1,25 @@
 import { createClient } from '@clickhouse/client';
 import {
   decodeArgs,
+  decodeGraph,
   decodeQuery,
   encodeGraph,
   encodePath,
   finalize,
   isEmpty,
   isPlainObject,
+  isRange,
   merge,
   unwrap,
   wrap,
   wrapObject,
 } from '@graffy/common';
-import { literal } from './sql/escape.js';
+import {
+  isStringishType,
+  isUInt8Type,
+  literal,
+  quoteIdent,
+} from './sql/escape.js';
 import { selectByArgs, selectByIds } from './sql/select.js';
 
 function maybeParseJson(value) {
@@ -35,6 +42,23 @@ function maybeParseJson(value) {
 
 function deepCloneJson(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function stripJsonValue(value) {
+  if (value === undefined || value === null) return value ?? null;
+  if (Array.isArray(value)) return value.map((item) => stripJsonValue(item));
+  if (!isPlainObject(value)) return value;
+  if ('$val' in value) return stripJsonValue(value.$val);
+
+  const out = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (key[0] === '$') continue;
+    const next = stripJsonValue(item);
+    if (next === undefined || next === null) continue;
+    out[key] = next;
+  }
+
+  return isEmpty(out) ? null : out;
 }
 
 function applyAggregateAliases(object, aggregateAliases) {
@@ -77,6 +101,23 @@ export default class Db {
     }
   }
 
+  async insert(tableOptions, rows) {
+    if (!rows.length) return;
+
+    try {
+      await this.client.insert({
+        table: `${quoteIdent(tableOptions.database || 'default')}.${quoteIdent(tableOptions.table)}`,
+        values: rows,
+        format: 'JSONEachRow',
+      });
+    } catch (e) {
+      const message = [e?.message, JSON.stringify(rows)]
+        .filter(Boolean)
+        .join('; ');
+      throw Error(`clickhouse.sql_error ${message}`);
+    }
+  }
+
   async ensureSchema(tableOptions) {
     if (!tableOptions.schema?.types) {
       const rows = await this.query(`
@@ -109,9 +150,9 @@ export default class Db {
       const type = schema?.types?.[key];
       if (value === null || value === undefined) {
         out[key] = null;
-      } else if (type === 'UInt8' || type === 'Nullable(UInt8)') {
+      } else if (isUInt8Type(type)) {
         out[key] = Boolean(value);
-      } else if (type === 'String' || type === 'Nullable(String)') {
+      } else if (isStringishType(type)) {
         out[key] = maybeParseJson(value);
       } else {
         out[key] = value;
@@ -138,6 +179,51 @@ export default class Db {
       throw Error(`clickhouse.cursor_desc_non_numeric ${prop}`);
     }
     return -numeric;
+  }
+
+  applyRowChange(row, change, tableOptions) {
+    for (const [col, value] of Object.entries(change)) {
+      if (col[0] === '$') continue;
+
+      const type = tableOptions.schema?.types?.[col];
+      if (
+        isStringishType(type) &&
+        (value === null || Array.isArray(value) || isPlainObject(value))
+      ) {
+        row[col] = stripJsonValue(value);
+      } else {
+        row[col] = value;
+      }
+    }
+  }
+
+  getWriteRow(change, tableOptions) {
+    const row = {};
+    this.applyRowChange(row, change, tableOptions);
+    return row;
+  }
+
+  getInsertRow(row, tableOptions) {
+    const out = {};
+    for (const [col, type] of Object.entries(
+      tableOptions.schema?.types || {},
+    )) {
+      if (!(col in row)) continue;
+
+      const value = row[col];
+      if (value === undefined) continue;
+
+      if (value === null) {
+        out[col] = null;
+      } else if (isUInt8Type(type)) {
+        out[col] = value ? 1 : 0;
+      } else if (isStringishType(type) && typeof value === 'object') {
+        out[col] = JSON.stringify(value);
+      } else {
+        out[col] = value;
+      }
+    }
+    return out;
   }
 
   async read(rootQuery, tableOptions) {
@@ -182,7 +268,7 @@ export default class Db {
         });
 
         object.$key = key;
-        object.$ver = object[tableOptions.verCol] ?? object._version ?? null;
+        object.$ver = object[tableOptions.verCol];
         if (!selection.isAggregate) {
           object.$ref = [...rawPrefix, object[tableOptions.idCol]];
         }
@@ -198,7 +284,7 @@ export default class Db {
       for (const row of rows) {
         const object = this.normalizeRow(row, tableOptions.schema);
         object.$key = object[tableOptions.idCol];
-        object.$ver = object[tableOptions.verCol] ?? object._version ?? null;
+        object.$ver = object[tableOptions.verCol];
         merge(results, encodeGraph(wrapObject(object, rawPrefix)));
       }
     };
@@ -227,5 +313,55 @@ export default class Db {
     if (!isEmpty(idQueries)) promises.push(getByIds());
     await Promise.all(promises);
     return finalize(results, wrap(query, prefix));
+  }
+
+  async write(rootChange, tableOptions) {
+    const { prefix: rawPrefix } = tableOptions;
+    const prefix = encodePath(rawPrefix);
+
+    await this.ensureSchema(tableOptions);
+
+    const change = unwrap(rootChange, prefix);
+    const result = [];
+
+    for (const node of change) {
+      if (isRange(node)) {
+        throw Error('clickhouse_write.delete_unsupported');
+      }
+
+      const arg = decodeArgs(node);
+      const object = decodeGraph(node.children) || {};
+      if (isPlainObject(arg)) {
+        throw Error('clickhouse_write.object_arg_unsupported');
+      }
+
+      if (!object.$put || object.$put !== true) {
+        throw Error('clickhouse_write.put_required');
+      }
+
+      object[tableOptions.idCol] = arg;
+
+      const writtenRow = this.getWriteRow(object, tableOptions);
+
+      await this.insert(tableOptions, [
+        this.getInsertRow(writtenRow, tableOptions),
+      ]);
+
+      merge(
+        result,
+        encodeGraph(
+          wrapObject(
+            {
+              ...writtenRow,
+              $key: writtenRow[tableOptions.idCol],
+              $ver: writtenRow[tableOptions.verCol],
+            },
+            rawPrefix,
+          ),
+        ),
+      );
+    }
+
+    return result;
   }
 }

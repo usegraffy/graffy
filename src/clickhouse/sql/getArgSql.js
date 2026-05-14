@@ -62,9 +62,6 @@ export default function getArgSql(
   }
 
   const where = [];
-  if (options.final !== false && options.schema?.types?._sign) {
-    where.push('`_sign` = 1');
-  }
   if (!isEmpty(filter)) where.push(getFilterSql(filter, options));
 
   if (!hasRangeArg) {

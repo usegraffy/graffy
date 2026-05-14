@@ -3,6 +3,24 @@ export function quoteIdent(name) {
   return `\`${ident}\``;
 }
 
+export function unwrapType(type) {
+  let current = type;
+
+  while (typeof current === 'string') {
+    if (current.startsWith('Nullable(') && current.endsWith(')')) {
+      current = current.slice('Nullable('.length, -1);
+      continue;
+    }
+    if (current.startsWith('LowCardinality(') && current.endsWith(')')) {
+      current = current.slice('LowCardinality('.length, -1);
+      continue;
+    }
+    break;
+  }
+
+  return current;
+}
+
 export function literal(value) {
   if (value === null || value === undefined) return 'NULL';
   if (typeof value === 'boolean') return value ? '1' : '0';
@@ -33,9 +51,14 @@ export function isPlainObject(value) {
 }
 
 export function isUInt8Type(type) {
-  return type === 'UInt8' || type === 'Nullable(UInt8)';
+  return unwrapType(type) === 'UInt8';
 }
 
 export function isStringishType(type) {
-  return type === 'String' || type === 'Nullable(String)';
+  const unwrapped = unwrapType(type);
+  return (
+    unwrapped === 'String' ||
+    /^FixedString\(\d+\)$/.test(unwrapped || '') ||
+    /^Enum(?:8|16)\(/.test(unwrapped || '')
+  );
 }

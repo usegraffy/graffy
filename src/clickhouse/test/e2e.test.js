@@ -81,6 +81,264 @@ describe('clickhouse_e2e', () => {
     );
   });
 
+  describe('write', () => {
+    test('put_by_id_blindly_inserts_and_db_sets_default_ver_col', async () => {
+      const created = await store.write(['users', 'u1'], {
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+        $put: true,
+      });
+
+      expect(created).toMatchObject({
+        id: 'u1',
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+      });
+      expect(created.updatedAt).toBeUndefined();
+
+      const afterCreate = await store.read('users.u1', {
+        updatedAt: true,
+        name: true,
+        email: true,
+        settings: true,
+      });
+      expect(afterCreate).toMatchObject({
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+      });
+      expect(asNum(afterCreate.updatedAt)).toBeGreaterThan(0);
+    });
+
+    test('write_without_put_is_unsupported', async () => {
+      await expect(
+        store.write(['users', 'u1'], {
+          name: 'Alice',
+        }),
+      ).rejects.toThrow('clickhouse_write.put_required');
+    });
+
+    test('delete_is_unsupported', async () => {
+      await expect(store.write(['users', 'u1'], null)).rejects.toThrow(
+        'clickhouse_write.delete_unsupported',
+      );
+    });
+
+    test('filter_put_is_unsupported', async () => {
+      await expect(
+        store.write(['users', { email: 'new@acme.co' }], {
+          name: 'New User',
+          settings: { foo: 1 },
+          $put: true,
+        }),
+      ).rejects.toThrow('clickhouse_write.object_arg_unsupported');
+    });
+  });
+
+  test('dot_path_filter_on_native_map', async () => {
+    const database = getTestDatabase();
+    const connection = getClient();
+
+    await connection.command({
+      query: `DROP TABLE IF EXISTS ${database}.workLog`,
+    });
+
+    await connection.command({
+      query: `
+        CREATE TABLE ${database}.workLog (
+          id String,
+          updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
+          tenantId LowCardinality(String),
+          recordIds Map(LowCardinality(String), String),
+          data Nullable(String)
+        )
+        ENGINE = MergeTree
+        PRIMARY KEY (tenantId, updatedAt)
+        ORDER BY (tenantId, updatedAt, id)
+      `,
+    });
+
+    store.use(
+      'workLog',
+      clickhouse({
+        database,
+        table: 'workLog',
+        idCol: 'id',
+        verCol: 'updatedAt',
+        connection,
+      }),
+    );
+
+    await store.write(['workLog', 'w1'], {
+      tenantId: 't1',
+      recordIds: {
+        gmailMessageId: 'gm-1',
+        sfTaskId: 'sf-1',
+      },
+      data: {
+        code: 'kept',
+      },
+      $put: true,
+    });
+
+    await store.write(['workLog', 'w2'], {
+      tenantId: 't1',
+      recordIds: {
+        gmailMessageId: 'gm-2',
+        sfTaskId: 'sf-2',
+      },
+      data: {
+        code: 'dropped',
+      },
+      $put: true,
+    });
+
+    const result = await store.read('workLog', {
+      $key: {
+        'recordIds.gmailMessageId': 'gm-1',
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+      recordIds: true,
+      tenantId: true,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 'w1',
+      tenantId: 't1',
+      recordIds: {
+        gmailMessageId: 'gm-1',
+        sfTaskId: 'sf-1',
+      },
+    });
+  });
+
+  test('native_json_with_int64_version_round_trip', async () => {
+    const database = getTestDatabase();
+    const connection = getClient();
+
+    await connection.command({
+      query: `DROP TABLE IF EXISTS ${database}.workLogJson`,
+    });
+
+    await connection.command({
+      query: `
+        CREATE TABLE ${database}.workLogJson (
+          id String,
+          time Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
+          tenantId LowCardinality(String),
+          code LowCardinality(String),
+          recordIds Map(LowCardinality(String), String),
+          data JSON
+        )
+        ENGINE = MergeTree
+        PRIMARY KEY (tenantId, code, time)
+        ORDER BY (tenantId, code, time, id)
+      `,
+      clickhouse_settings: {
+        allow_experimental_json_type: 1,
+      },
+    });
+
+    store.use(
+      'workLogJson',
+      clickhouse({
+        database,
+        table: 'workLogJson',
+        idCol: 'id',
+        connection,
+      }),
+    );
+
+    await store.write(['workLogJson', 'w1'], {
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'initial',
+        nested: {
+          source: 'pg',
+        },
+      },
+      $put: true,
+    });
+
+    await store.write(['workLogJson', 'w2'], {
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'written_to_clickhouse',
+        nested: {
+          source: 'lego',
+          status: 'ok',
+        },
+      },
+      $put: true,
+    });
+
+    const byId = await store.read('workLogJson.w1', {
+      time: true,
+      tenantId: true,
+      code: true,
+      recordIds: true,
+      data: true,
+    });
+
+    expect(byId).toMatchObject({
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'initial',
+        nested: {
+          source: 'pg',
+        },
+      },
+    });
+    expect(asNum(byId.time)).toBeGreaterThan(0);
+
+    const filtered = await store.read('workLogJson', {
+      $key: {
+        'recordIds.sfSyncJobId': 'job-1',
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+      code: true,
+      data: true,
+    });
+
+    expect(filtered).toHaveLength(2);
+    expect(filtered[0]).toMatchObject({
+      id: 'w1',
+      code: 'sf_sync_read',
+      data: {
+        stage: 'initial',
+      },
+    });
+    expect(filtered[1]).toMatchObject({
+      id: 'w2',
+      code: 'sf_sync_read',
+      data: {
+        stage: 'written_to_clickhouse',
+      },
+    });
+  });
+
   test('id_lookup_with_nested_projection', async () => {
     await seedUsers([
       { id: 'u1', updatedAt: 1, name: 'Alice', settings: { foo: 10, bar: 5 } },

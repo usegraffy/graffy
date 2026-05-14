@@ -50,7 +50,6 @@ describe('clickhouse_db_read', () => {
             isDeleted: 'UInt8',
             participants: 'Nullable(String)',
             data: 'Nullable(String)',
-            _sign: 'Int8',
           },
         },
       }),
@@ -69,7 +68,6 @@ describe('clickhouse_db_read', () => {
             createdAt: 'Int64',
             isDeleted: 'UInt8',
             data: 'Nullable(String)',
-            _sign: 'Int8',
           },
         },
       }),
@@ -88,7 +86,6 @@ describe('clickhouse_db_read', () => {
             createdAt: 'Int64',
             name: 'String',
             email: 'String',
-            _sign: 'Int8',
           },
         },
         joins: {
@@ -103,7 +100,6 @@ describe('clickhouse_db_read', () => {
                 updatedAt: 'Int64',
                 authorId: 'String',
                 title: 'String',
-                _sign: 'Int8',
               },
             },
           },
@@ -123,7 +119,6 @@ describe('clickhouse_db_read', () => {
           id: 'm1',
           updatedAt: 100,
           data: '{"subject":"Hello"}',
-          _sign: 1,
         },
       ],
     });
@@ -135,7 +130,7 @@ describe('clickhouse_db_read', () => {
     expect(result).toEqual({ data: { subject: 'Hello' } });
     expect(mockQuery).toHaveBeenCalledTimes(1);
     expect(getSqlFromCall(mockQuery.mock.calls[0])).toContain(
-      "WHERE `_sign` = 1 AND `id` IN ('m1')",
+      "WHERE `id` IN ('m1')",
     );
   });
 
@@ -148,7 +143,6 @@ describe('clickhouse_db_read', () => {
           createdAt: 101,
           data: '{"subject":"Tracker subject","internalDate":"101"}',
           participants: '[{"address":"foo@bar.com"}]',
-          _sign: 1,
         },
       ],
     });
@@ -296,7 +290,6 @@ describe('clickhouse_db_read', () => {
           updatedAt: 111,
           name: 'Alice',
           email: 'a',
-          _sign: 1,
         },
       ],
     });
@@ -313,7 +306,7 @@ describe('clickhouse_db_read', () => {
       name: 'Alice',
     });
     expect(getSqlFromCall(mockQuery.mock.calls[0])).toContain(
-      'IN (SELECT `authorId` FROM `default`.`posts` FINAL',
+      'IN (SELECT `authorId` FROM `default`.`posts`',
     );
   });
 });

@@ -37,7 +37,7 @@ function getTableOpts(
   const { table, idCol, verCol, schema, database, final } = options;
   const tableName = table || name;
   const tableDatabase = database || parentDefaults.database || 'default';
-  const tableFinal = final ?? parentDefaults.final ?? true;
+  const tableFinal = final ?? parentDefaults.final ?? false;
 
   const joins = Object.fromEntries(
     Object.entries(options.joins || {}).map(([joinName, joinRaw = {}]) => {
@@ -58,7 +58,7 @@ function getTableOpts(
   return {
     table: tableName,
     idCol: idCol || 'id',
-    verCol: verCol || 'updatedAt',
+    verCol: verCol || 'time',
     database: tableDatabase,
     final: tableFinal,
     schema,
@@ -74,6 +74,7 @@ export const clickhouse =
   (store) => {
     const { connection, ...rawOptions } = options;
     store.on('read', read);
+    store.on('write', write);
 
     const prefix = store.path;
     const tableOpts = getTableOpts(prefix[prefix.length - 1], rawOptions);
@@ -89,6 +90,23 @@ export const clickhouse =
       return Promise.all([readPromise, nextPromise]).then(
         ([readRes, nextRes]) => {
           return merge(readRes, nextRes);
+        },
+      );
+    }
+
+    function write(change, writeOptions, next) {
+      const { chClient, clickhouseClient } = writeOptions || {};
+      const db =
+        chClient || clickhouseClient
+          ? new Db(chClient || clickhouseClient)
+          : defaultDb;
+      const writePromise = db.write(change, tableOpts);
+      const remainingChange = remove(change, encodePath(prefix));
+      const nextPromise = next(remainingChange);
+
+      return Promise.all([writePromise, nextPromise]).then(
+        ([writeRes, nextRes]) => {
+          return merge(writeRes, nextRes);
         },
       );
     }

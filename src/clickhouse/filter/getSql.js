@@ -7,7 +7,7 @@ import {
 import { getLookup } from '../sql/lookup.js';
 import getAst from './getAst.js';
 
-function getTableSql({ database = 'default', table, final = true }) {
+function getTableSql({ database = 'default', table, final = false }) {
   const tableSql = `${quoteIdent(database)}.${quoteIdent(table)}`;
   return final ? `${tableSql} FINAL` : tableSql;
 }
@@ -144,11 +144,7 @@ function getNodeSql(ast, options) {
     const joinOptions = options.joins?.[joinName];
     if (!joinOptions) throw Error(`clickhouse.no_join ${joinName}`);
 
-    const where = [];
-    if (joinOptions.final !== false && joinOptions.schema?.types?._sign) {
-      where.push('`_sign` = 1');
-    }
-    where.push(getNodeSql(ast[2], joinOptions));
+    const where = [getNodeSql(ast[2], joinOptions)];
 
     const rootIdCol = quoteIdent(options.idCol);
     const joinRefCol = quoteIdent(joinOptions.refCol);

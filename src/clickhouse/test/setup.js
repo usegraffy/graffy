@@ -5,12 +5,13 @@ import { promisify } from 'node:util';
 import { createClient } from '@clickhouse/client';
 
 const connOptions = {
-  url: 'http://localhost:18123',
-  username: 'api',
-  password: 'api',
+  url: process.env.CLICKHOUSE_URL || 'http://localhost:18123',
+  username: process.env.CLICKHOUSE_USER || 'api',
+  password: process.env.CLICKHOUSE_PASSWORD || 'api',
 };
 
 const testDatabase = 'graffy_test';
+const useExternalServer = !!process.env.CLICKHOUSE_URL;
 
 const composeFile = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -61,20 +62,22 @@ async function insertRows(table, rows) {
 }
 
 export async function setupClickhouseServer() {
-  try {
-    await runCompose(['down', '-v', '--remove-orphans']);
-  } catch (_) {
-    // Ignore cleanup failures.
-  }
+  if (!useExternalServer) {
+    try {
+      await runCompose(['down', '-v', '--remove-orphans']);
+    } catch (_) {
+      // Ignore cleanup failures.
+    }
 
-  try {
-    await runCompose(['up', '-d']);
-  } catch (e) {
-    console.error(
-      'Could not start a test ClickHouse server using Docker Compose.\n' +
-        'Docker might have printed a detailed error message above.',
-    );
-    throw e;
+    try {
+      await runCompose(['up', '-d']);
+    } catch (e) {
+      console.error(
+        'Could not start a test ClickHouse server using Docker Compose.\n' +
+          'Docker might have printed a detailed error message above.',
+      );
+      throw e;
+    }
   }
 
   for (let i = 0; i < 180; i += 1) {
@@ -95,7 +98,9 @@ export async function teardownClickhouseServer() {
     client = null;
   }
 
-  await runCompose(['down', '-v', '--remove-orphans']);
+  if (!useExternalServer) {
+    await runCompose(['down', '-v', '--remove-orphans']);
+  }
 }
 
 export async function resetTables() {
@@ -115,13 +120,12 @@ export async function resetTables() {
     query: `
       CREATE TABLE ${testDatabase}.users (
         id String,
-        updatedAt Int64,
+        updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         name Nullable(String),
         email Nullable(String),
-        settings Nullable(String),
-        _sign Int8 DEFAULT 1
+        settings Nullable(String)
       )
-      ENGINE = ReplacingMergeTree(updatedAt)
+      ENGINE = MergeTree
       ORDER BY id
     `,
   });
@@ -130,14 +134,13 @@ export async function resetTables() {
     query: `
       CREATE TABLE ${testDatabase}.posts (
         id String,
-        updatedAt Int64,
+        updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         authorId Nullable(String),
         title Nullable(String),
         commenters Nullable(String),
-        scores Nullable(String),
-        _sign Int8 DEFAULT 1
+        scores Nullable(String)
       )
-      ENGINE = ReplacingMergeTree(updatedAt)
+      ENGINE = MergeTree
       ORDER BY id
     `,
   });
@@ -146,12 +149,11 @@ export async function resetTables() {
     query: `
       CREATE TABLE ${testDatabase}.prospect (
         id String,
-        updatedAt Int64,
+        updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         data Nullable(String),
-        isDeleted UInt8,
-        _sign Int8 DEFAULT 1
+        isDeleted UInt8
       )
-      ENGINE = ReplacingMergeTree(updatedAt)
+      ENGINE = MergeTree
       ORDER BY id
     `,
   });
@@ -166,7 +168,6 @@ export async function seedUsers(rows) {
       name: row.name ?? null,
       email: row.email ?? null,
       settings: encodeJsonString(row.settings),
-      _sign: row._sign ?? 1,
     })),
   );
 }
@@ -181,7 +182,6 @@ export async function seedPosts(rows) {
       title: row.title ?? null,
       commenters: encodeJsonString(row.commenters),
       scores: encodeJsonString(row.scores),
-      _sign: row._sign ?? 1,
     })),
   );
 }
@@ -194,7 +194,6 @@ export async function seedProspects(rows) {
       updatedAt: row.updatedAt ?? Date.now() + ix,
       data: encodeJsonString(row.data),
       isDeleted: row.isDeleted ? 1 : 0,
-      _sign: row._sign ?? 1,
     })),
   );
 }

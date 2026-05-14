@@ -15,6 +15,17 @@ describe('clickhouse_filter_sql', () => {
     );
   });
 
+  test('map dot path equals string', () => {
+    expect(
+      getSql(
+        { 'recordIds.gmailMessageId': 'abc' },
+        opt({ recordIds: 'Map(LowCardinality(String), String)' }),
+      ),
+    ).toContain(
+      "if(mapContains(`recordIds`, 'gmailMessageId'), `recordIds`['gmailMessageId'], NULL) = 'abc'",
+    );
+  });
+
   test('dot path null uses missing-key semantics', () => {
     expect(
       getSql({ 'sources.messageId': null }, opt({ sources: 'String' })),
@@ -59,7 +70,6 @@ describe('clickhouse_filter_sql', () => {
           types: {
             id: 'String',
             email: 'String',
-            _sign: 'Int8',
           },
         },
         joins: {
@@ -68,13 +78,11 @@ describe('clickhouse_filter_sql', () => {
             idCol: 'id',
             refCol: 'authorId',
             database: 'default',
-            final: true,
             schema: {
               types: {
                 id: 'String',
                 authorId: 'String',
                 title: 'String',
-                _sign: 'Int8',
               },
             },
             joins: {},
@@ -83,10 +91,8 @@ describe('clickhouse_filter_sql', () => {
       },
     );
 
-    expect(sql).toContain(
-      '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL',
-    );
-    expect(sql).toContain("`_sign` = 1 AND `title` = 'Extra bar'");
+    expect(sql).toContain('`id` IN (SELECT `authorId` FROM `default`.`posts`');
+    expect(sql).toContain("WHERE `title` = 'Extra bar'");
   });
 
   test('join subquery and root filter combination', () => {
@@ -106,7 +112,6 @@ describe('clickhouse_filter_sql', () => {
             idCol: 'id',
             refCol: 'authorId',
             database: 'default',
-            final: true,
             schema: {
               types: {
                 id: 'String',
@@ -122,9 +127,7 @@ describe('clickhouse_filter_sql', () => {
 
     expect(sql).toContain("`email` = 'a'");
     expect(sql).toContain("match(ifNull(`title`, ''), concat('(?i)', 'foo'))");
-    expect(sql).toContain(
-      '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL',
-    );
+    expect(sql).toContain('`id` IN (SELECT `authorId` FROM `default`.`posts`');
   });
 
   test('join explicit $and stays inside one subquery', () => {
@@ -147,6 +150,43 @@ describe('clickhouse_filter_sql', () => {
             idCol: 'id',
             refCol: 'authorId',
             database: 'default',
+            schema: {
+              types: {
+                id: 'String',
+                authorId: 'String',
+                title: 'String',
+              },
+            },
+            joins: {},
+          },
+        },
+      },
+    );
+
+    expect(sql).toContain(
+      '`id` IN (SELECT `authorId` FROM `default`.`posts` WHERE',
+    );
+    expect(sql).toContain("`title` = 'Extra bar'");
+    expect(sql).toContain("match(ifNull(`title`, ''), concat('(?i)', 'foo'))");
+    expect((sql.match(/SELECT `authorId` FROM/g) || []).length).toEqual(1);
+  });
+
+  test('join_subquery_respects_explicit_final_opt_in', () => {
+    const sql = getSql(
+      { posts: { title: 'Extra bar' } },
+      {
+        idCol: 'id',
+        schema: {
+          types: {
+            id: 'String',
+          },
+        },
+        joins: {
+          posts: {
+            table: 'posts',
+            idCol: 'id',
+            refCol: 'authorId',
+            database: 'default',
             final: true,
             schema: {
               types: {
@@ -162,10 +202,7 @@ describe('clickhouse_filter_sql', () => {
     );
 
     expect(sql).toContain(
-      '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL WHERE',
+      '`id` IN (SELECT `authorId` FROM `default`.`posts` FINAL',
     );
-    expect(sql).toContain("`title` = 'Extra bar'");
-    expect(sql).toContain("match(ifNull(`title`, ''), concat('(?i)', 'foo'))");
-    expect((sql.match(/SELECT `authorId` FROM/g) || []).length).toEqual(1);
   });
 });

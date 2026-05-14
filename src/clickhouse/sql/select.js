@@ -12,7 +12,7 @@ const aggOps = {
 
 const aggOpOrder = ['$sum', '$avg', '$max', '$min', '$card'];
 
-export function getTableSql({ database = 'default', table, final = true }) {
+export function getTableSql({ database = 'default', table, final = false }) {
   const tableSql = `${quoteIdent(database)}.${quoteIdent(table)}`;
   return final ? `${tableSql} FINAL` : tableSql;
 }
@@ -105,13 +105,9 @@ export function selectByArgs(args, projection, options) {
 }
 
 export function selectByIds(ids, options) {
-  const where = [];
-  if (options.final !== false && options.schema?.types?._sign) {
-    where.push('`_sign` = 1');
-  }
-  where.push(
+  const where = [
     `${quoteIdent(options.idCol)} IN (${ids.map((id) => literal(id)).join(', ')})`,
-  );
+  ];
   return {
     sql: `SELECT * FROM ${getTableSql(options)} WHERE ${where.join(' AND ')}`,
   };
