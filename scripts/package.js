@@ -62,7 +62,7 @@ function onUpdate(name, fileName) {
         if (argv.link) await link(name);
         return name;
       },
-      { concurrency: os.cpus().length },
+      { concurrency: os.availableParallelism() },
     )
   ).filter(Boolean);
 
