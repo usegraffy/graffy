@@ -18,6 +18,9 @@
       },
       "style": {
         "noParameterAssign": "off"
+      },
+      "suspicious": {
+        "noImplicitAnyLet": "off"
       }
     }
   },
