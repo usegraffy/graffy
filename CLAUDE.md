@@ -10,7 +10,7 @@ npm test
 
 # Run a single test file
 NODE_ENV=testing node --test --experimental-test-module-mocks \
-  --import ./scripts/node-test-setup.js src/cache/cache.nodetest.js
+  --import ./scripts/node-test-setup.js src/cache/cache.test.js
 
 # Run react tests (needs jsdom setup)
 npm run test:react
@@ -32,7 +32,7 @@ npm start
 
 Tests use the **Node.js built-in test runner** (`node:test`) — Jest has been removed.
 
-- Test files are named `*.nodetest.js` (not `*.test.js`)
+- Test files are named `*.test.js` (not `*.test.js`)
 - Imports: `import { describe, test, it, before, after, beforeEach, afterEach, mock } from 'node:test'` and `import assert from 'node:assert/strict'`
 - Assertions use `assert.*` instead of `expect(...)`:
   - `assert.strictEqual(a, b)` — replaces `expect(a).toBe(b)`
@@ -85,7 +85,7 @@ Client → @graffy/client → HTTP/WS → @graffy/server → Graffy store
 ### Toolchain
 
 - **Biome** — Unified linter + formatter (replaces ESLint/Prettier). Config in `biome.json`.
-- **`node:test`** — Built-in test runner. Test files are `*.nodetest.js`. Setup file: `scripts/node-test-setup.js`. React test uses `scripts/jsdom-setup.js`.
+- **`node:test`** — Built-in test runner. Test files are `*.test.js`. Setup file: `scripts/node-test-setup.js`. React test uses `scripts/jsdom-setup.js`.
 - **Vite** — Used for the frontend example/explore packages.
 - **Yarn workspaces** — Links packages together during development.
 - **CI** — GitHub Actions runs on Node 20, 22, 24; includes Playwright for E2E tests.
