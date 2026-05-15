@@ -11,6 +11,7 @@
   "scripts": {
     "format": "biome check --write .",
     "lint": "biome ci .",
+    "lint:types": "tsc",
     "package": "./scripts/package.js",
     "start": "node --strip-types src/example/server.ts",
     "test": "npm run test:node && npm run test:react",
