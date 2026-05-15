@@ -1,7 +1,7 @@
 import { describe, test } from 'node:test';
 import sql from 'sql-template-tag';
 import { patch, put } from '../../sql/upsert.js';
-import expectSql from '../expectSql.nodetest.js';
+import expectSql from '../assertSql.js';
 
 const options = {
   table: 'post',

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import sql from 'sql-template-tag';
 import { selectByArgs, selectByIds } from '../../sql/select.js';
-import expectSql from '../expectSql.nodetest.js';
+import expectSql from '../assertSql.js';
 
 describe('select_sql', () => {
   test('selectByArgs_first', () => {

@@ -3,7 +3,6 @@ import { beforeEach, test } from 'node:test';
 import { encodeGraph, encodeQuery } from '@graffy/common';
 import Graffy from '@graffy/core';
 import { mockBackend } from '@graffy/testing';
-// index.nodetest.js
 import { e } from '@graffy/testing/encoder.js';
 import live from './index.js';
 

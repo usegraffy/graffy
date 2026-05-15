@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import sql, { join } from 'sql-template-tag';
 import getSql from '../../filter/getSql.js';
-import expectSql from '../expectSql.nodetest.js';
+import expectSql from '../assertSql.js';
 
 const opt = (types) => ({ schema: { types } });
 

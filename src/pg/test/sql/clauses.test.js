@@ -8,7 +8,7 @@ import {
   getUpdates,
   lookup,
 } from '../../sql/clauses.js';
-import expectSql from '../expectSql.nodetest.js';
+import expectSql from '../assertSql.js';
 
 describe('clauses', () => {
   test('insert', () => {

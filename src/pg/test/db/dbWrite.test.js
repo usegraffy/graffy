@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, mock, test } from 'node:test';
 import Graffy from '@graffy/core';
 import sql from 'sql-template-tag';
-import expectSql from '../expectSql.nodetest.js';
+import expectSql from '../assertSql.js';
 
 /**
  * @type {(() => Promise<any>) & {
