@@ -1,4 +1,4 @@
-import { addStringify, encodeValue } from '../common';
+import { addStringify, encodeValue } from '../common/index.js';
 
 /** @type {Record<string, any>} */
 export const e = new Proxy(

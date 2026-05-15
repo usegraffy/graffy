@@ -1,6 +1,6 @@
 import isEqual from 'lodash/isEqual.js';
 import React from 'react';
-import { GraffyContext } from './GraffyContext.jsx';
+import { GraffyContext } from './GraffyContext.js';
 
 const { useRef, useState, useEffect, useContext } = React;
 

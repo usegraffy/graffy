@@ -2,7 +2,7 @@ import { isEmpty } from '@graffy/common';
 import sql, { join } from 'sql-template-tag';
 import { getFilterSql } from '../filter/index.js';
 import { getJsonBuildTrusted, lookup } from './clauses.js';
-import { getAggMeta, getArgMeta } from './getMeta';
+import { getAggMeta, getArgMeta } from './getMeta.js';
 
 /**
   Uses the args object (typically passed in the $key attribute)
