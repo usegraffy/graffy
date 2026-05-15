@@ -14,7 +14,7 @@
     "package": "./scripts/package.js",
     "start": "node src/example/server.js",
     "test": "npm run test:node && npm run test:react",
-    "test:node": "NODE_ENV=testing node --test --experimental-test-module-mocks --import ./scripts/node-test-setup.js $(find src -name '*.nodetest.js' -not -path '*/react/*')",
+    "test:node": "NODE_ENV=testing node --test --experimental-test-module-mocks --test-concurrency=1 --import ./scripts/node-test-setup.js $(find src -name '*.nodetest.js' -not -path '*/react/*')",
     "test:react": "NODE_ENV=testing node --test --experimental-test-module-mocks --import ./scripts/node-test-setup.js --import ./scripts/jsdom-setup.js src/react/react.nodetest.js",
     "pg:clean": "docker rm -f graffypg",
     "pg:psql": "docker run --name pgrepl -e POSTGRES_PASSWORD=graffy -d postgres:alpine && until docker exec -it pgrepl psql -U postgres; do sleep 0.5; done ; docker rm -f pgrepl",
