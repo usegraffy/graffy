@@ -159,7 +159,7 @@ function getDefQuery(def, vars, version) {
       let $key;
       // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic while-pop pattern
       while (($key = path.pop())) {
-        porcelainQuery = { $key, $chi: [porcelainQuery] };
+        porcelainQuery = { $key, $chi: [porcelainQuery] } as any;
       }
       const query = encodeQuery(porcelainQuery, version);
       add(defQuery, query);

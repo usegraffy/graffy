@@ -6,7 +6,7 @@ const log = debug('graffy:fill');
 
 const MAX_RECURSIONS = 10;
 
-export default function fill(_) {
+export default function fill(_ = undefined) {
   return (store) => {
     store.on('read', [], async function fillOnRead(query, options, next) {
       let value = await next(query);

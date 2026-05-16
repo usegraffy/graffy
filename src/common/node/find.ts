@@ -1,6 +1,6 @@
 import { cmp, find } from '../util.ts';
 
-export function findFirst(children, target, first, last) {
+export function findFirst(children, target, first = 0, last = children.length) {
   return find(
     children,
     ({ key, end }) => {
@@ -14,7 +14,7 @@ export function findFirst(children, target, first, last) {
   );
 }
 
-export function findLast(children, end, first, last) {
+export function findLast(children, end, first = 0, last = children.length) {
   const ix = findFirst(children, end, first, last);
   return children[ix] && cmp(children[ix].key, end) <= 0 ? ix + 1 : ix;
 }

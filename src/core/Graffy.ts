@@ -16,6 +16,10 @@ import { validateCall, validateOn } from './validate.ts';
 export { unchanged } from './shift.ts';
 
 export default class Graffy {
+  core: Core;
+  path: any[];
+  static unchanged: typeof unchanged;
+
   constructor(path = [], core = new Core()) {
     this.core = core;
     this.path = path;

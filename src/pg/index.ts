@@ -21,7 +21,21 @@ import Db from './Db.ts';
 
 function getTableOpts(
   name,
-  { table, idCol, verCol, joins, schema, verDefault } = {},
+  {
+    table,
+    idCol,
+    verCol,
+    joins,
+    schema,
+    verDefault,
+  }: {
+    table?: string;
+    idCol?: string;
+    verCol?: string;
+    joins?: any;
+    schema?: any;
+    verDefault?: string;
+  } = {},
   parentName = null,
 ) {
   const tableName = table || name;
@@ -30,15 +44,16 @@ function getTableOpts(
     idCol: idCol || 'id',
     verCol: verCol || 'updatedAt',
     joins: Object.fromEntries(
-      Object.entries(joins || {}).map(
-        ([joinName, { refCol = parentName, ...joinOptions }]) => [
+      Object.entries(joins || {}).map(([joinName, joinVal]: [string, any]) => {
+        const { refCol = parentName, ...joinOptions } = joinVal;
+        return [
           joinName,
           {
             refCol,
             ...getTableOpts(joinName, joinOptions, tableName),
           },
-        ],
-      ),
+        ];
+      }),
     ),
     schema,
     verDefault,
@@ -50,7 +65,7 @@ function getTableOpts(
  * @returns {Function}
  */
 export const pg =
-  ({ connection, ...rawOptions }) =>
+  ({ connection, ...rawOptions }: { connection: any; [key: string]: any }) =>
   (store) => {
     store.on('read', read);
     store.on('write', write);

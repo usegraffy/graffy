@@ -3,7 +3,7 @@ import { after, before, beforeEach, describe, mock, test } from 'node:test';
 
 // Capture the connection handler registered by wsServer so tests can simulate
 // WebSocket events without a real network connection.
-const serverHandlers = {};
+const serverHandlers: Record<string, any> = {};
 const mockWss = {
   on: mock.fn((event, handler) => {
     serverHandlers[event] = handler;
@@ -20,12 +20,12 @@ await mock.module('ws', {
   exports: {
     WebSocketServer: MockWebSocketServer,
   },
-});
+} as any);
 
 const { default: wsServer } = await import('./wsServer.ts');
 
 function makeMockWs() {
-  const wsHandlers = {};
+  const wsHandlers: Record<string, any> = {};
   const ws = {
     graffyStreams: {},
     on: mock.fn((event, handler) => {
@@ -44,13 +44,9 @@ describe('wsServer allowedOptions filtering', () => {
 
   // Prevent setInterval (ping loop) from leaking into test output.
   before(() =>
-    mock.timers.enable([
-      'Date',
-      'setTimeout',
-      'setInterval',
-      'clearTimeout',
-      'clearInterval',
-    ]),
+    mock.timers.enable({
+      apis: ['Date', 'setTimeout', 'setInterval'],
+    }),
   );
   after(() => mock.timers.reset());
 

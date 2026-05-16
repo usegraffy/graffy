@@ -19,7 +19,7 @@ export function err(message, { cause = null, ...args } = {}) {
   throw e;
 }
 
-export function errIf(message, condition, args) {
+export function errIf(message, condition, args?) {
   if (condition) err(message, args);
 }
 

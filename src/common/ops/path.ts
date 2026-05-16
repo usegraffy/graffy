@@ -36,7 +36,7 @@ export function unwrap(tree, path) {
   if (!Array.isArray(path)) throw Error(`unwrap.path_not_array ${path}`);
 
   let children = tree;
-  let node = { children };
+  let node: any = { children };
   for (let i = 0; i < path.length; i++) {
     const key = path[i];
     if (!ArrayBuffer.isView(key)) throw Error('unwrap.ranges_unsupported');

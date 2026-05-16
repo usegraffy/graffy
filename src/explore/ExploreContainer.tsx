@@ -12,15 +12,15 @@ export default function ExploreContainer({
   getOptions,
   ...options
 }) {
-  const [store, setStore] = useState();
+  const [store, setStore] = useState<any>(null);
 
   useEffect(() => {
     const store = new Graffy();
     store.use(GraffyFill());
     store.use(GraffyClient(baseUrl, { getOptions }));
     setStore(store);
-    window.store = store;
-    window.graffy = common;
+    (window as any).store = store;
+    (window as any).graffy = common;
   }, [baseUrl, getOptions]);
 
   return store ? (

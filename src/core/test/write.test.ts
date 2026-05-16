@@ -13,8 +13,12 @@ describe('write', () => {
     const handler = mock.fn((change) => change);
     g.onWrite(handler);
     await g.write({ foo: 42 });
-    assert.deepStrictEqual(handler.mock.calls[0].arguments[0], { foo: 42 });
-    assert.deepStrictEqual(handler.mock.calls[0].arguments[1], {});
-    assert.ok(typeof handler.mock.calls[0].arguments[2] === 'function');
+    assert.deepStrictEqual((handler.mock.calls as any[])[0].arguments[0], {
+      foo: 42,
+    });
+    assert.deepStrictEqual((handler.mock.calls as any[])[0].arguments[1], {});
+    assert.ok(
+      typeof (handler.mock.calls as any[])[0].arguments[2] === 'function',
+    );
   });
 });

@@ -5,7 +5,14 @@
 
 const normalCompletion = Promise.resolve({ value: void 0, done: true });
 
-export default function makeStream(init, options = {}) {
+export default function makeStream(
+  init,
+  options: {
+    highWatermark?: number;
+    lowWatermark?: number;
+    debugId?: string;
+  } = {},
+) {
   const payloads = [];
   const requests = [];
   let complete;

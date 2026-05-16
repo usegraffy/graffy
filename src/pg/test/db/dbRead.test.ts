@@ -19,7 +19,7 @@ await mock.module('pg', {
       },
     },
   },
-});
+} as any);
 
 const { pg } = await import('../../index.ts');
 
@@ -34,7 +34,7 @@ describe('postgres', () => {
         verCol: 'version',
         schema: { types: {} },
         verDefault: 'current_timestamp',
-      }),
+      } as any),
     );
   });
 
@@ -58,7 +58,7 @@ describe('postgres', () => {
             },
           ],
         ],
-      }),
+      } as any),
     );
 
     const result = await store.read('user.foo', {
@@ -69,7 +69,7 @@ describe('postgres', () => {
 
     assert.ok(mockQuery.mock.callCount() > 0);
     expectSql(
-      mockQuery.mock.calls[0].arguments[0],
+      (mockQuery.mock.calls as any[])[0].arguments[0],
       sql`SELECT *, "id" AS "$key", current_timestamp AS "$ver"
         FROM "user" WHERE "id" IN ( ${'foo'} )`,
     );

@@ -54,7 +54,10 @@ describe('clickhouse_db_write', () => {
         },
       ],
     })) {
-      assert.deepStrictEqual(insert.mock.calls[0].arguments[0][k], v);
+      assert.deepStrictEqual(
+        (insert.mock.calls as any[])[0].arguments[0][k],
+        v,
+      );
     }
   });
 
@@ -70,7 +73,7 @@ describe('clickhouse_db_write', () => {
 
     assert.strictEqual(insert.mock.callCount(), 1);
     assert.strictEqual(
-      insert.mock.calls[0].arguments[0].table,
+      (insert.mock.calls as any[])[0].arguments[0].table,
       '`lego-dev-b`.`users`',
     );
   });
@@ -97,7 +100,10 @@ describe('clickhouse_db_write', () => {
         },
       ],
     })) {
-      assert.deepStrictEqual(insert.mock.calls[0].arguments[0][k], v);
+      assert.deepStrictEqual(
+        (insert.mock.calls as any[])[0].arguments[0][k],
+        v,
+      );
     }
   });
 

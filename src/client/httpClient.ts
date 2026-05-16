@@ -8,6 +8,7 @@ function getOptionsParam(options) {
 const aggregateQueries = {};
 
 class AggregateQuery {
+  url: string;
   combinedQuery = [];
   readers = [];
   timer = null;
@@ -69,7 +70,7 @@ const httpClient =
   (
     baseUrl,
     {
-      getOptions = async () => {},
+      getOptions = async (..._: any[]) => {},
       watch = 'sse',
       connInfoPath = 'connection',
     } = {},

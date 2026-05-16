@@ -62,15 +62,20 @@ function stripJsonValue(value) {
 }
 
 function applyAggregateAliases(object, aggregateAliases) {
-  Object.entries(aggregateAliases).forEach(([alias, { op, prop }]) => {
-    if (!(alias in object)) return;
-    if (!object[op] || typeof object[op] !== 'object') object[op] = {};
-    object[op][prop] = object[alias];
-    delete object[alias];
-  });
+  Object.entries(aggregateAliases).forEach(
+    ([alias, aliasVal]: [string, any]) => {
+      const { op, prop } = aliasVal;
+      if (!(alias in object)) return;
+      if (!object[op] || typeof object[op] !== 'object') object[op] = {};
+      object[op][prop] = object[alias];
+      delete object[alias];
+    },
+  );
 }
 
 export default class Db {
+  client: any;
+
   constructor(connection) {
     if (connection?.query && typeof connection.query === 'function') {
       this.client = connection;
@@ -144,8 +149,8 @@ export default class Db {
     );
   }
 
-  normalizeRow(row, schema) {
-    const out = {};
+  normalizeRow(row, schema): Record<string, any> {
+    const out: Record<string, any> = {};
     for (const [key, value] of Object.entries(row)) {
       const type = schema?.types?.[key];
       if (value === null || value === undefined) {
@@ -330,7 +335,7 @@ export default class Db {
       }
 
       const arg = decodeArgs(node);
-      const object = decodeGraph(node.children) || {};
+      const object: any = decodeGraph(node.children) || {};
       if (isPlainObject(arg)) {
         throw Error('clickhouse_write.object_arg_unsupported');
       }

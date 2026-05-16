@@ -1,7 +1,7 @@
 import { makeStream } from '@graffy/stream';
 
 export default function makeWatcher() {
-  const listeners = new Set();
+  const listeners = new Set<(change: any) => void>();
 
   function write(change) {
     for (const push of listeners) push(change);

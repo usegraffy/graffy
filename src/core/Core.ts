@@ -31,6 +31,8 @@ function resolve(handlers, firstPayload, firstOptions) {
 }
 
 export default class Core {
+  handlers: Record<string, any[]>;
+
   constructor() {
     this.handlers = {};
   }

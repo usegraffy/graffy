@@ -8,7 +8,7 @@ import { cmp } from '../util.ts';
 export default function getKnown(graph, version = 0) {
   const query = [];
   for (const { key, end, children } of graph) {
-    const node = { key, version };
+    const node: Record<string, any> = { key, version };
     if (end) {
       if (cmp(end, key) !== 0) node.end = end;
       node.value = 1;

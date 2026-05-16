@@ -14,6 +14,7 @@ function Result({ result, loading, error }) {
       ) : (
         <div className="status">No results</div>
       )}
+      {/* @ts-expect-error jsx styled-components */}
       <style jsx>{`
         .error {
           color: #c00;
@@ -116,6 +117,7 @@ export default function Explore(options) {
         <Result {...{ result, loading, error }} />
       )}
 
+      {/* @ts-expect-error jsx styled-components */}
       <style jsx>{`
         .error {
           color: #c00;

@@ -20,7 +20,10 @@ const PING_INTERVAL = 30000;
  *   from the client-supplied options before use. Defaults to `[]` (strip all).
  * @returns
  */
-export default function server(store, { auth, allowedOptions = [] } = {}) {
+export default function server(
+  store,
+  { auth, allowedOptions = [] }: { auth?: any; allowedOptions?: string[] } = {},
+) {
   if (!store) throw new Error('server.store_undef');
 
   const wss = new WebSocketServer({ noServer: true });

@@ -10,8 +10,9 @@
   },
   "scripts": {
     "format": "biome check --write .",
+    "check": "npm run lint && npm run typecheck && npm run test",
     "lint": "biome ci .",
-    "lint:types": "tsc",
+    "typecheck": "tsc",
     "package": "./scripts/package.js",
     "start": "node --strip-types src/example/server.ts",
     "test": "npm run test:node && npm run test:react",

@@ -70,7 +70,11 @@ export default function linkGraph(rootGraph, defs) {
     for (const { value, vars } of strands) {
       const realPath = makeRef(path, vars);
       const realRef = makeRef(value, vars);
-      const node = { key: realPath.pop(), path: encodePath(realRef), version };
+      const node: Record<string, any> = {
+        key: realPath.pop(),
+        path: encodePath(realRef),
+        version,
+      };
 
       const [range] = splitRef(value);
       if (range) node.prefix = true;

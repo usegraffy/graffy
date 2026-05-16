@@ -127,7 +127,13 @@ test('option_update', async () => {
   g.onRead(provider2);
 
   g.read({ foo: true });
-  assert.deepStrictEqual(provider2.mock.calls[0].arguments[0], { foo: true });
-  assert.deepStrictEqual(provider2.mock.calls[0].arguments[1], { opt: 1 });
-  assert.ok(typeof provider2.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider2.mock.calls as any[])[0].arguments[0], {
+    foo: true,
+  });
+  assert.deepStrictEqual((provider2.mock.calls as any[])[0].arguments[1], {
+    opt: 1,
+  });
+  assert.ok(
+    typeof (provider2.mock.calls as any[])[0].arguments[2] === 'function',
+  );
 });

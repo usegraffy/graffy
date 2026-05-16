@@ -28,7 +28,7 @@ await mock.module('pg', {
       },
     },
   },
-});
+} as any);
 
 const { pg } = await import('../../index.ts');
 
@@ -49,7 +49,7 @@ describe('postgres', () => {
           },
         },
         verDefault: 'current_timestamp',
-      }),
+      } as any),
     );
     store.use(
       'googleSession',
@@ -59,7 +59,7 @@ describe('postgres', () => {
         verCol: 'version',
         schema: { types: { userId: 'uuid', token: 'text', version: 'int8' } },
         verDefault: 'current_timestamp',
-      }),
+      } as any),
     );
 
     store.use(
@@ -77,7 +77,7 @@ describe('postgres', () => {
           },
         },
         verDefault: 'current_timestamp',
-      }),
+      } as any),
     );
     store.use(
       'tenant',
@@ -87,7 +87,7 @@ describe('postgres', () => {
         verCol: 'version',
         schema: { types: {} },
         verDefault: 'current_timestamp',
-      }),
+      } as any),
     );
   });
 
@@ -111,7 +111,7 @@ describe('postgres', () => {
         "updatedAt" = default
       WHERE "id" = ${id}
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
-    expectSql(mockQuery.mock.calls[0].arguments[0], sqlQuery);
+    expectSql((mockQuery.mock.calls as any[])[0].arguments[0], sqlQuery);
   });
 
   test('put_by_id_1', async () => {
@@ -128,7 +128,7 @@ describe('postgres', () => {
       ON CONFLICT ("id") DO UPDATE SET
       "id" = "excluded"."id", "name" = "excluded"."name", "updatedAt" = "excluded"."updatedAt"
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
-    expectSql(mockQuery.mock.calls[0].arguments[0], sqlQuery);
+    expectSql((mockQuery.mock.calls as any[])[0].arguments[0], sqlQuery);
   });
 
   test('put_by_args_1', async () => {
@@ -148,7 +148,7 @@ describe('postgres', () => {
         ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
         current_timestamp AS "$ver",
         array[ ${'googleSession'}::text , "id" ]::text[] AS "$ref"`;
-    expectSql(mockQuery.mock.calls[0].arguments[0], sqlQuery);
+    expectSql((mockQuery.mock.calls as any[])[0].arguments[0], sqlQuery);
   });
 
   test('put_by_args_2', async () => {
@@ -172,7 +172,7 @@ describe('postgres', () => {
         ${`{"userId":"userId_01"}`}::jsonb AS "$key" ,
         current_timestamp AS "$ver",
         array[ ${'googleSession'}::text , "id" ]::text[] AS "$ref"`;
-    expectSql(mockQuery.mock.calls[0].arguments[0], sqlQuery);
+    expectSql((mockQuery.mock.calls as any[])[0].arguments[0], sqlQuery);
   });
 
   test('put_by_id_2', async () => {
@@ -188,6 +188,6 @@ describe('postgres', () => {
       VALUES (${'e1'}, ${data.userId}, ${data.tenantId}, default)
       ON CONFLICT ("id") DO UPDATE SET "id" = "excluded"."id", "userId" = "excluded"."userId", "tenantId" = "excluded"."tenantId", "version" = "excluded"."version"
       RETURNING *, "id" AS "$key", current_timestamp AS "$ver"`;
-    expectSql(mockQuery.mock.calls[0].arguments[0], sqlQuery);
+    expectSql((mockQuery.mock.calls as any[])[0].arguments[0], sqlQuery);
   });
 });

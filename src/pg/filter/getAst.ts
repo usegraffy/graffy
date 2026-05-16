@@ -49,7 +49,7 @@ function isValidSubQuery(node) {
   return false;
 }
 
-function construct(node, prop, op) {
+function construct(node, prop?, op?) {
   if (!node || typeof node !== 'object' || (prop && op)) {
     if (op && prop) return [op, prop, node];
     if (prop) return ['$eq', prop, node];
@@ -135,7 +135,9 @@ function simplify(node) {
       node[1] = [
         ...noneq,
         ...Object.entries(eqmap).map(([prop, val]) =>
-          val.length > 1 ? ['$in', prop, val] : ['$eq', prop, val[0]],
+          (val as any[]).length > 1
+            ? ['$in', prop, val]
+            : ['$eq', prop, (val as any[])[0]],
         ),
       ];
     }

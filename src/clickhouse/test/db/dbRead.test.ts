@@ -24,7 +24,7 @@ await mock.module('@clickhouse/client', {
   exports: {
     createClient: () => mockClient,
   },
-});
+} as any);
 
 const { clickhouse } = await import('../../index.ts');
 

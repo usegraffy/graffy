@@ -15,7 +15,7 @@ export default function Query({ query, onChange }) {
 
   return (
     <textarea
-      className={`Query ${error.current ? 'Query--error' : ''}`}
+      className={`Query ${error ? 'Query--error' : ''}`}
       onBlur={onChangElement}
       defaultValue={pretty(query)}
     />

@@ -48,7 +48,7 @@ export default function Socket(
     return id;
   }
 
-  function stop(id, params) {
+  function stop(id, params?) {
     delete handlers[id];
     if (params) send([id, ...params]);
   }

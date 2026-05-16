@@ -18,7 +18,10 @@ const log = debug('graffy:server:http');
  *   from the client-supplied options before use. Defaults to `[]` (strip all).
  * @returns
  */
-export default function server(store, { auth, allowedOptions = [] } = {}) {
+export default function server(
+  store,
+  { auth, allowedOptions = [] }: { auth?: any; allowedOptions?: string[] } = {},
+) {
   if (!store) throw new Error('server.store_undef');
   return async (req, res) => {
     const parsed = url.parse(req.url, true);

@@ -3,11 +3,11 @@ import { makeWatcher, merge, slice } from '@graffy/common';
 
 // const log = debug('graffy:mockBackend');
 
-export default function mockBackend(options = {}) {
+export default function mockBackend(options: { liveQuery?: any } = {}) {
   const state = [];
   const watcher = makeWatcher();
 
-  const backend = {
+  const backend: Record<string, any> = {
     state,
     read: (query) => slice(state, query).known,
     watch: () => watcher.watch(options.liveQuery ? state : undefined),

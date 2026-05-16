@@ -12,10 +12,10 @@ await mock.module('./Socket.ts', {
       isAlive: mock.fn(() => false),
     })),
   },
-});
+} as any);
 
 const client = (await import('./index.ts')).default;
-const MockSocket = (await import('./Socket.ts')).default;
+const MockSocket = (await import('./Socket.ts')).default as any;
 
 describe('wsClient', () => {
   // @ts-expect-error
@@ -92,7 +92,7 @@ for (const description of ['httpClient', 'async httpClient']) {
     const value = '12345';
 
     beforeEach(() => {
-      globalThis.fetch.mock.resetCalls();
+      (globalThis.fetch as any).mock.resetCalls();
       if (description.startsWith('async')) {
         getOptions = mock.fn(async () => ({ value }));
       } else {
@@ -106,14 +106,17 @@ for (const description of ['httpClient', 'async httpClient']) {
       await store.read({ demo: 1 });
       assert.ok(getOptions.mock.callCount() > 0);
       assert.deepStrictEqual(
-        globalThis.fetch.mock.calls[0].arguments[0],
+        (globalThis.fetch as any).mock.calls[0].arguments[0],
         `${connectionUrl}?opts=${encodeURIComponent(JSON.stringify({ value }))}&op=read`,
       );
-      assert.deepStrictEqual(globalThis.fetch.mock.calls[0].arguments[1], {
-        body: JSON.stringify(pack([{ key: e.demo, version: 0, value: 1 }])),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      });
+      assert.deepStrictEqual(
+        (globalThis.fetch as any).mock.calls[0].arguments[1],
+        {
+          body: JSON.stringify(pack([{ key: e.demo, version: 0, value: 1 }])),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        },
+      );
     });
 
     // This test case will test batch output of graffy
@@ -125,27 +128,30 @@ for (const description of ['httpClient', 'async httpClient']) {
         store.read({ anotherDemo: 1 }),
       ]);
       assert.ok(getOptions.mock.callCount() > 0);
-      assert.strictEqual(globalThis.fetch.mock.callCount(), 1);
+      assert.strictEqual((globalThis.fetch as any).mock.callCount(), 1);
       assert.deepStrictEqual(
-        globalThis.fetch.mock.calls[0].arguments[0],
+        (globalThis.fetch as any).mock.calls[0].arguments[0],
         `${connectionUrl}?opts=${encodeURIComponent(JSON.stringify({ value }))}&op=read`,
       );
-      assert.deepStrictEqual(globalThis.fetch.mock.calls[0].arguments[1], {
-        body: JSON.stringify(
-          pack([
-            { key: e.anotherDemo, version: 0, value: 2 },
-            { key: e.demo, version: 0, value: 2 },
-          ]),
-        ),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      });
+      assert.deepStrictEqual(
+        (globalThis.fetch as any).mock.calls[0].arguments[1],
+        {
+          body: JSON.stringify(
+            pack([
+              { key: e.anotherDemo, version: 0, value: 2 },
+              { key: e.demo, version: 0, value: 2 },
+            ]),
+          ),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        },
+      );
     });
 
     test('store write', async () => {
       await store.write({ demo: 1 });
       assert.ok(getOptions.mock.callCount() > 0);
-      const result = globalThis.fetch.mock.calls;
+      const result = (globalThis.fetch as any).mock.calls;
       assert.strictEqual(
         result[0].arguments[0],
         `${connectionUrl}?opts=${encodeURIComponent(JSON.stringify({ value }))}&op=write`,

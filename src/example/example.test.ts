@@ -15,7 +15,7 @@ describe('integration', () => {
   let browser;
   before(() => {
     return Promise.all([
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         server = fork(`${`${__dirname}/server.ts`}`, {
           env: { PORT: String(PORT) },
           silent: true,

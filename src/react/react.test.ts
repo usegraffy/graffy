@@ -22,7 +22,7 @@ describe('useQuery', () => {
     await g.write('demo', { value });
 
     wrapper = function _Wrapper({ children }) {
-      return createElement(GraffyProvider, { store: g }, children);
+      return createElement(GraffyProvider as any, { store: g }, children);
     };
   });
 
@@ -47,9 +47,17 @@ describe('useQuery', () => {
     await expectLifeCycle(result, data);
     assert.ok(backend.read.mock.callCount() > 0);
     const query = encodeQuery(data);
-    assert.deepStrictEqual(backend.read.mock.calls[0].arguments[0], query);
-    assert.deepStrictEqual(backend.read.mock.calls[0].arguments[1], {});
-    assert.ok(typeof backend.read.mock.calls[0].arguments[2] === 'function');
+    assert.deepStrictEqual(
+      (backend.read.mock.calls as any[])[0].arguments[0],
+      query,
+    );
+    assert.deepStrictEqual(
+      (backend.read.mock.calls as any[])[0].arguments[1],
+      {},
+    );
+    assert.ok(
+      typeof (backend.read.mock.calls as any[])[0].arguments[2] === 'function',
+    );
   });
 
   test('refetch', async () => {
@@ -69,7 +77,7 @@ describe('useQuery', () => {
 
     // call refetch
     act(() => {
-      result.current.refetch();
+      (result.current as any).refetch();
     });
 
     await expectLifeCycle(result, newData);

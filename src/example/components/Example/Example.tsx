@@ -23,9 +23,9 @@ function getQuery(range) {
 }
 
 export default function Example() {
-  const [range, setRange] = useState({ $first: PAGE_SIZE });
+  const [range, setRange] = useState<any>({ $first: PAGE_SIZE });
   const q = getQuery(range);
-  const { data, loading, error } = useQuery(q);
+  const { data, loading, error } = useQuery(q) as any;
 
   if (error) {
     return <div>{error.message}</div>;

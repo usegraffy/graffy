@@ -3,13 +3,16 @@ import { afterEach, beforeEach, describe, mock, test } from 'node:test';
 import Socket from './Socket.ts';
 
 class MockWebSocket {
+  send: ReturnType<typeof mock.fn>;
+  close: ReturnType<typeof mock.fn>;
+  static instances: MockWebSocket[] = [];
+
   constructor() {
     this.send = mock.fn();
     this.close = mock.fn();
     MockWebSocket.instances.push(this);
   }
 }
-MockWebSocket.instances = [];
 
 describe('Socket', () => {
   let socket;
@@ -17,13 +20,9 @@ describe('Socket', () => {
   let actualWebSocket;
 
   beforeEach(() => {
-    mock.timers.enable([
-      'Date',
-      'setTimeout',
-      'setInterval',
-      'clearTimeout',
-      'clearInterval',
-    ]);
+    mock.timers.enable({
+      apis: ['Date', 'setTimeout', 'setInterval'],
+    });
     MockWebSocket.instances.splice(0);
     actualWebSocket = globalThis.WebSocket;
     // @ts-expect-error
@@ -87,13 +86,9 @@ describe('Socket', () => {
       mock.timers.tick(11000);
       ws.onmessage({ data: '[":ping"]' });
       mock.timers.reset();
-      mock.timers.enable([
-        'Date',
-        'setTimeout',
-        'setInterval',
-        'clearTimeout',
-        'clearInterval',
-      ]);
+      mock.timers.enable({
+        apis: ['Date', 'setTimeout', 'setInterval'],
+      });
       mock.timers.tick(11000); // Re-advance Date.now()
 
       mock.timers.tick(41000);

@@ -27,7 +27,7 @@ function deserializeKey(key) {
   return encodeValue(key);
 }
 
-export function pack(children, parentVersion) {
+export function pack(children, parentVersion?) {
   if (!Array.isArray(children)) return children;
   const array = children.map((node) =>
     props.reduce(
@@ -48,7 +48,7 @@ export function pack(children, parentVersion) {
   return array;
 }
 
-export function unpack(children, parentVersion) {
+export function unpack(children, parentVersion?) {
   if (!Array.isArray(children)) return children;
   const node = children.map(([key, type, ...values]) =>
     props.reduce(

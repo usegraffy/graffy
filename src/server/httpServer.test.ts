@@ -56,7 +56,7 @@ describe('httpServer allowedOptions filtering', () => {
       await handler(req, makeRes());
 
       assert.strictEqual(store.call.mock.callCount(), 1);
-      const [, , options] = store.call.mock.calls[0].arguments;
+      const [, , options] = (store.call.mock.calls as any[])[0].arguments;
       assert.ok(!('pgClient' in options));
       assert.strictEqual(options.userId, 'alice');
     });
@@ -73,7 +73,7 @@ describe('httpServer allowedOptions filtering', () => {
       });
       await handler(req, makeRes());
 
-      const [, , options] = store.call.mock.calls[0].arguments;
+      const [, , options] = (store.call.mock.calls as any[])[0].arguments;
       assert.deepStrictEqual(options, { userId: 'bob', role: 'admin' });
     });
 
@@ -87,7 +87,7 @@ describe('httpServer allowedOptions filtering', () => {
       await handler(req, makeRes());
 
       assert.strictEqual(store.call.mock.callCount(), 1);
-      const [, , options] = store.call.mock.calls[0].arguments;
+      const [, , options] = (store.call.mock.calls as any[])[0].arguments;
       assert.deepStrictEqual(options, {});
     });
 
@@ -105,7 +105,7 @@ describe('httpServer allowedOptions filtering', () => {
       await handler(req, makeRes());
 
       assert.strictEqual(auth.mock.callCount(), 1);
-      const [, , authOptions] = auth.mock.calls[0].arguments;
+      const [, , authOptions] = (auth.mock.calls as any[])[0].arguments;
       assert.ok(!('pgClient' in authOptions));
       assert.strictEqual(authOptions.userId, 'alice');
     });
@@ -113,13 +113,9 @@ describe('httpServer allowedOptions filtering', () => {
 
   describe('GET (EventStream / watch)', () => {
     before(() =>
-      mock.timers.enable([
-        'Date',
-        'setTimeout',
-        'setInterval',
-        'clearTimeout',
-        'clearInterval',
-      ]),
+      mock.timers.enable({
+        apis: ['Date', 'setTimeout', 'setInterval'],
+      }),
     );
     after(() => mock.timers.reset());
 
@@ -137,7 +133,7 @@ describe('httpServer allowedOptions filtering', () => {
       await handler(req, makeRes());
 
       assert.strictEqual(store.call.mock.callCount(), 1);
-      const [, , options] = store.call.mock.calls[0].arguments;
+      const [, , options] = (store.call.mock.calls as any[])[0].arguments;
       assert.ok(!('pgClient' in options));
       assert.strictEqual(options.userId, 'alice');
       assert.strictEqual(options.raw, true);
@@ -154,7 +150,7 @@ describe('httpServer allowedOptions filtering', () => {
       });
       await handler(req, makeRes());
 
-      const [, , options] = store.call.mock.calls[0].arguments;
+      const [, , options] = (store.call.mock.calls as any[])[0].arguments;
       assert.deepStrictEqual(options, { userId: 'carol', raw: true });
     });
 
@@ -173,7 +169,7 @@ describe('httpServer allowedOptions filtering', () => {
       await handler(req, makeRes());
 
       assert.strictEqual(auth.mock.callCount(), 1);
-      const [, , authOptions] = auth.mock.calls[0].arguments;
+      const [, , authOptions] = (auth.mock.calls as any[])[0].arguments;
       assert.ok(!('pgClient' in authOptions));
       assert.strictEqual(authOptions.userId, 'alice');
     });

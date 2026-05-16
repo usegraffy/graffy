@@ -10,7 +10,7 @@ const PRE_CHI_PUT = Symbol('PREFIX_CHILDREN_$PUT');
   @param {any[]} nodes
   @param {{ isGraph?: boolean }} options
 */
-function decode(nodes = [], { isGraph } = {}) {
+function decode(nodes = [], { isGraph }: { isGraph?: boolean } = {}) {
   function decodeChildren(nodes) {
     let result = [];
     let allStrs = true;
@@ -60,7 +60,9 @@ function decode(nodes = [], { isGraph } = {}) {
       if (isPrefix(node)) {
         const decodedChildren = decodePrefixNode(node);
         if (PRE_CHI_PUT in decodedChildren) {
-          prefixChildPuts.push(...decodedChildren[PRE_CHI_PUT]);
+          prefixChildPuts.push(
+            ...((decodedChildren as any)[PRE_CHI_PUT] as any[]),
+          );
         }
         pushResult(...decodedChildren);
       } else if (isGraph && isRange(node)) pushResult(decodeRangeNode(node));
@@ -80,8 +82,8 @@ function decode(nodes = [], { isGraph } = {}) {
       result = result.reduce(
         (collection, item) => {
           if (Array.isArray(item)) {
-            collection[item.$key] = item;
-            delete item.$key;
+            collection[(item as any).$key] = item;
+            delete (item as any).$key;
             return collection;
           }
 
@@ -163,15 +165,16 @@ function decode(nodes = [], { isGraph } = {}) {
       child.$key = { ...args, ...child.$key };
     }
 
-    if (children.$put === true) {
-      children[PRE_CHI_PUT] = [{ ...args, $all: true }];
-    } else if (Array.isArray(children.$put)) {
-      children[PRE_CHI_PUT] = children.$put.map((rarg) => ({
+    const ch = children as any;
+    if (ch.$put === true) {
+      ch[PRE_CHI_PUT] = [{ ...args, $all: true }];
+    } else if (Array.isArray(ch.$put)) {
+      ch[PRE_CHI_PUT] = ch.$put.map((rarg) => ({
         ...args,
         ...rarg,
       }));
-    } else if (isDef(children.$put)) {
-      children[PRE_CHI_PUT] = [{ ...args, ...children.$put }];
+    } else if (isDef(ch.$put)) {
+      ch[PRE_CHI_PUT] = [{ ...args, ...ch.$put }];
     }
 
     return children;
@@ -179,12 +182,12 @@ function decode(nodes = [], { isGraph } = {}) {
 
   function decodeBranchNode(node) {
     const child = decodeChildren(node.children);
-    child.$key = decodeArgs(node);
+    (child as any).$key = decodeArgs(node);
     return child;
   }
 
   function decodeLeafNode(node) {
-    const child = isGraph ? { $val: node.value } : {};
+    const child: any = isGraph ? { $val: node.value } : {};
     child.$key = decodeArgs(node);
     return child;
   }

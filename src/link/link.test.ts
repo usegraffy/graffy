@@ -109,7 +109,10 @@ describe('link', () => {
     });
 
     assert.deepStrictEqual(res, exp);
-    assert.deepStrictEqual(res.ali.posts[0].$ref, exp.ali.posts[0].$ref);
+    assert.deepStrictEqual(
+      (res as any).ali.posts[0].$ref,
+      (exp as any).ali.posts[0].$ref,
+    );
   });
 
   test('read_with_args', async () => {

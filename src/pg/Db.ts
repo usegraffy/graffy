@@ -25,6 +25,8 @@ const log = debug('graffy:pg:db');
 const { Pool, Client, types } = pg;
 
 export default class Db {
+  client: any;
+
   constructor(connection) {
     if (
       typeof connection === 'object' &&
@@ -37,7 +39,7 @@ export default class Db {
     }
   }
 
-  async query(sql, tableOptions) {
+  async query(sql, tableOptions?) {
     log(`Making SQL query: ${sql.text}`, sql.values);
     const cubeOid =
       Number.parseInt(tableOptions?.schema?.typeOids?.cube || '0', 10) || null;
@@ -100,7 +102,7 @@ export default class Db {
     It mutates the argument, to "persist" the results and
     avoid this query in every operation.
   */
-  async ensureSchema(tableOptions, typeOids) {
+  async ensureSchema(tableOptions, typeOids?) {
     if (tableOptions.schema) return;
     const { table, verCol, joins } = tableOptions;
 
@@ -268,7 +270,7 @@ export default class Db {
         throw Error('pg_write.write_range_unsupported');
       }
 
-      const object = decodeGraph(node.children);
+      const object = decodeGraph(node.children) as any;
       if (isPlainObject(arg)) {
         mergeObject(object, arg);
       } else {

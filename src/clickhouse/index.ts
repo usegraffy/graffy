@@ -30,9 +30,17 @@ import Db from './Db.ts';
  */
 function getTableOpts(
   name,
-  options = {},
+  options: {
+    table?: string;
+    idCol?: string;
+    verCol?: string;
+    schema?: any;
+    database?: string;
+    final?: boolean;
+    joins?: any;
+  } = {},
   parentName = null,
-  parentDefaults = {},
+  parentDefaults: { database?: string; final?: boolean } = {},
 ) {
   const { table, idCol, verCol, schema, database, final } = options;
   const tableName = table || name;
@@ -40,19 +48,21 @@ function getTableOpts(
   const tableFinal = final ?? parentDefaults.final ?? false;
 
   const joins = Object.fromEntries(
-    Object.entries(options.joins || {}).map(([joinName, joinRaw = {}]) => {
-      const { refCol = parentName, ...joinOptions } = joinRaw;
-      return [
-        joinName,
-        {
-          refCol: refCol || parentName || tableName,
-          ...getTableOpts(joinName, joinOptions, tableName, {
-            database: tableDatabase,
-            final: tableFinal,
-          }),
-        },
-      ];
-    }),
+    Object.entries(options.joins || {}).map(
+      ([joinName, joinRaw]: [string, any]) => {
+        const { refCol = parentName, ...joinOptions } = joinRaw || {};
+        return [
+          joinName,
+          {
+            refCol: refCol || parentName || tableName,
+            ...getTableOpts(joinName, joinOptions, tableName, {
+              database: tableDatabase,
+              final: tableFinal,
+            }),
+          },
+        ];
+      },
+    ),
   );
 
   return {
@@ -70,7 +80,18 @@ function getTableOpts(
  * @param {ClickhouseOptions & { connection?: any }} [options]
  */
 export const clickhouse =
-  (options = {}) =>
+  (
+    options: {
+      connection?: any;
+      table?: string;
+      idCol?: string;
+      verCol?: string;
+      schema?: any;
+      database?: string;
+      final?: boolean;
+      joins?: any;
+    } = {},
+  ) =>
   (store) => {
     const { connection, ...rawOptions } = options;
     store.on('read', read);

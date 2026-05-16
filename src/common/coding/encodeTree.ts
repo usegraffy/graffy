@@ -18,7 +18,10 @@ const ROOT_KEY = Symbol();
   @param {any} value
   @param {{version?: number, isGraph?: boolean}} options
 */
-function encode(value, { version, isGraph } = {}) {
+function encode(
+  value,
+  { version, isGraph }: { version?: number; isGraph?: boolean } = {},
+) {
   const links = [];
 
   function pushLink($ref, $ver, props, $val, $chi) {
@@ -120,7 +123,10 @@ function encode(value, { version, isGraph } = {}) {
           (filter || isDef(page.$cursor))
         ) {
           object.$key = isDef(page.$cursor) ? page.$cursor : page;
-          const wrapper = { $key: filter || {}, $chi: [object] };
+          const wrapper: Record<string, any> = {
+            $key: filter || {},
+            $chi: [object],
+          };
           if (isGraph) wrapper.$put = foundPuts;
           const node = makeNode(wrapper, key, ver);
           if (!filter) node.key = MIN_KEY;
@@ -163,7 +169,8 @@ function encode(value, { version, isGraph } = {}) {
     }
 
     if (isDef($key) && (Number.isInteger(key) || !isDef(key))) key = $key;
-    const node = key === ROOT_KEY || !isDef(key) ? {} : encodeArgs(key);
+    const node: Record<string, any> =
+      key === ROOT_KEY || !isDef(key) ? {} : encodeArgs(key);
     // console.log('Set version', node.key, ver);
     node.version = ver;
 

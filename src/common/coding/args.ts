@@ -30,9 +30,11 @@ const pageProps = {
   $cursor: 1,
 };
 
-export function splitArgs(arg) {
-  const page = {};
-  const filter = {};
+export function splitArgs(
+  arg,
+): [Record<string, any> | undefined, Record<string, any> | undefined] {
+  const page: Record<string, any> = {};
+  const filter: Record<string, any> = {};
   for (const p in arg) (p in pageProps ? page : filter)[p] = arg[p];
   return [
     isEmpty(page) ? undefined : page,
@@ -40,7 +42,11 @@ export function splitArgs(arg) {
   ];
 }
 
-export function encode(arg) {
+export function encode(arg): {
+  key?: Uint8Array<ArrayBuffer>;
+  end?: Uint8Array<ArrayBuffer>;
+  limit?: number;
+} {
   if (!isPlainObject(arg)) return { key: encodeValue(arg) };
 
   const [page, filter] = splitArgs(arg);
@@ -49,7 +55,6 @@ export function encode(arg) {
   if (!page) return { key: encodeValue(filter || {}) };
 
   const { $cursor, ...range } = page;
-  // @ts-expect-error
   const { $first, $all, $last, $after, $before, $since, $until } = range;
   const hasRange = !isEmpty(range);
 
@@ -70,7 +75,11 @@ export function encode(arg) {
 
   if (isDef($last)) [key, end] = [end, key];
 
-  const node = { key };
+  const node: {
+    key?: Uint8Array<ArrayBuffer>;
+    end?: Uint8Array<ArrayBuffer>;
+    limit?: number;
+  } = { key };
   if (isDef(end)) node.end = end;
   if ($first || $last) node.limit = $first || $last;
 
@@ -90,7 +99,7 @@ export function decode(node) {
   const reverse = cmp(key, end) > 0;
   const [lower, upper] = reverse ? [eParts, kParts] : [kParts, eParts];
 
-  const args = {};
+  const args: Record<string, any> = {};
 
   if (limit) {
     args[reverse ? '$last' : '$first'] = limit;

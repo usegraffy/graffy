@@ -196,10 +196,10 @@ function addPageMeta(graph, args) {
     return;
   }
 
-  const [{ $first, $last, ...bounds }, filter] = splitArgs(args);
+  const [page, filter] = splitArgs(args);
+  const { $first, $last, ...bounds } = page!;
   const count = $first || $last;
-  /** @type {any} */
-  const $page = { ...filter, ...bounds, $all: true };
+  const $page: Record<string, any> = { ...filter, ...bounds, $all: true };
 
   if (graph.length === count) {
     // This result was limited by the count; update the "outer" bound.

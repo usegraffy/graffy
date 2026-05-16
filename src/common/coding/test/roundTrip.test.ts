@@ -87,8 +87,7 @@ describe('graph', () => {
   });
 
   test('val_array', () => {
-    /** @type number[] & { $val?: true } */
-    const array = [1, 2, 3];
+    const array = [1, 2, 3] as number[] & { $val?: true };
     array.$val = true;
     roundTrip({ foo: array }, { foo: [1, 2, 3] }, (decoded) => {
       assert.strictEqual(decoded.foo.$val, true);

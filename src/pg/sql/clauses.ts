@@ -284,12 +284,12 @@ function stripAttributes(object) {
   }
 
   return Object.entries(object).reduce(
-    (/** @type {null|Record<string,any>} */ out, [key, val]) => {
+    (out: null | Record<string, any>, [key, val]) => {
       if (key === '$put' || val === null) return out;
       if (out === null) out = {};
       out[key] = stripAttributes(val);
       return out;
     },
-    null,
+    null as null | Record<string, any>,
   );
 }

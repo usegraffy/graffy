@@ -30,7 +30,7 @@ test.skip('encodeGraph regression', () => {
     ],
   };
 
-  porcelain.participant.$put = [
+  (porcelain.participant as any).$put = [
     {
       tenantId: 'c126cf52-2c80-45e3-8419-eb8fbff041f0',
       $since: [1675174298184, '3692f0c4-3c51-4aba-9b13-abfdcbd349d7'],

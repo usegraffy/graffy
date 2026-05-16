@@ -8,7 +8,11 @@ import { merge, setVersion, slice } from './index.ts';
  * @param {number | false} version
  * @returns any
  */
-export default function finalize(graph, query, version = Date.now()) {
+export default function finalize(
+  graph,
+  query,
+  version: number | false = Date.now(),
+) {
   let result = [{ key: MIN_KEY, end: MAX_KEY, version: 0 }];
   merge(result, graph);
   if (query) result = slice(result, query).known || [];

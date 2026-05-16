@@ -13,7 +13,12 @@ import { wrap } from './path.ts';
 import { keyAfter, keyBefore } from './step.ts';
 
 class Result {
-  constructor(root) {
+  root: Result;
+  known?: any[];
+  unknown?: any[];
+  linked?: any[];
+
+  constructor(root?) {
     // When linked queries are added, they are forwarded to the root.
     this.root = root || this;
   }
@@ -35,7 +40,7 @@ class Result {
   }
 }
 
-export default function slice(graph, query, root) {
+export default function slice(graph, query, root?) {
   const result = new Result(root);
   let currentQuery = query;
   while (currentQuery) {

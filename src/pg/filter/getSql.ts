@@ -22,7 +22,7 @@ const opSql = {
   $keyctd: sql`?&`,
 };
 
-function getBinarySql(lhs, type, op, value, textLhs) {
+function getBinarySql(lhs, type, op, value, textLhs?) {
   if (value === null && op === '$eq') return sql`${lhs} IS NULL`;
   if (value === null && op === '$neq') return sql`${lhs} IS NOT NULL`;
 

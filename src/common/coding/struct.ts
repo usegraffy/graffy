@@ -93,13 +93,12 @@ export function encode(value) {
   return buffer;
 }
 
-const nextKey = new WeakMap();
+const nextKey = new WeakMap<object, string>();
 
 export function decode(buffer) {
   let i = 0;
 
-  /** @type {Array<{ [prop: string]: any }|Array>} */
-  const stack = [[]];
+  const stack: (any[] | Record<string, any>)[] = [[]];
 
   function readString() {
     const start = i;
@@ -118,7 +117,7 @@ export function decode(buffer) {
       current.push(value);
     } else {
       if (nextKey.has(current)) {
-        current[nextKey.get(current)] = value;
+        current[nextKey.get(current)!] = value;
         nextKey.delete(current);
       } else {
         nextKey.set(current, value);

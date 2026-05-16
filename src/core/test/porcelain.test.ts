@@ -55,16 +55,16 @@ test('Porcelain read', async () => {
 
   assert.ok(onReadBooks.mock.callCount() > 0);
   assert.deepStrictEqual(
-    onReadBooks.mock.calls[0].arguments[0],
+    (onReadBooks.mock.calls as any[])[0].arguments[0],
     expectedBooksQuery,
   );
   assert.deepStrictEqual(
-    onReadBooks.mock.calls[0].arguments[0].$key,
-    expectedBooksQuery.$key,
+    ((onReadBooks.mock.calls as any[])[0].arguments[0] as any).$key,
+    (expectedBooksQuery as any).$key,
   );
   assert.ok(onReadUsers.mock.callCount() > 0);
   assert.deepStrictEqual(
-    onReadUsers.mock.calls[0].arguments[0],
+    (onReadUsers.mock.calls as any[])[0].arguments[0],
     expectedUsersQuery,
   );
   assert.deepStrictEqual(result, expectedResult);
@@ -152,8 +152,7 @@ test('read array value', async () => {
   const result = await store.read({ foo: 1 });
   assert.ok(provider.mock.callCount() > 0);
 
-  /** @type {string[] & { $val?: true }} */
-  const expected = ['hello', 'world'];
+  const expected: any = ['hello', 'world'];
   expected.$val = true;
   assert.deepStrictEqual(result, { foo: expected });
 });
@@ -286,9 +285,13 @@ test('read_leaf', async () => {
   store.onRead('foo', provider);
   const res = await store.read('foo.bar', true);
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: true });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: true,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.strictEqual(res, 44);
 });
 
@@ -298,9 +301,13 @@ test('write_leaf', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo.bar', 45);
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: 45 });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: 45,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.strictEqual(res, 45);
 });
 
@@ -310,9 +317,13 @@ test('delete_leaf', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo.bar', null);
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: null });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: null,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.strictEqual(res, null);
 });
 
@@ -322,9 +333,13 @@ test('read_key', async () => {
   store.onRead('foo', provider);
   const res = await store.read('foo', { $key: 'bar' });
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: true });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: true,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.deepStrictEqual(res, [44]); // Can't add $key:bar on the number 44
 });
 
@@ -334,9 +349,13 @@ test('read_array_key', async () => {
   store.onRead('foo', provider);
   const res = await store.read('foo', [{ $key: 'bar' }]);
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: true });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: true,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.deepStrictEqual(res, [44]);
 });
 
@@ -346,9 +365,13 @@ test('write_key', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', { $key: 'bar', $val: 44 });
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: 44 });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: 44,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.deepStrictEqual(res, { bar: 44 });
 });
 
@@ -358,9 +381,13 @@ test('write_array_key', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', [{ $key: 'bar', $val: 44 }]);
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], { bar: 44 });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
+    bar: 44,
+  });
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.deepStrictEqual(res, { bar: 44 });
 });
 
@@ -370,13 +397,15 @@ test('write_key_put', async () => {
   store.onWrite('foo', provider);
   const res = await store.write('foo', { $key: 'bar', $put: true, baz: 4 });
 
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[0], {
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[0], {
     bar: { baz: 4 },
   });
-  assert.deepStrictEqual(provider.mock.calls[0].arguments[1], {});
-  assert.ok(typeof provider.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual((provider.mock.calls as any[])[0].arguments[1], {});
+  assert.ok(
+    typeof (provider.mock.calls as any[])[0].arguments[2] === 'function',
+  );
   assert.deepStrictEqual(res, { bar: { baz: 4 } });
-  assert.strictEqual(res.bar.$put, true);
+  assert.strictEqual((res as any).bar.$put, true);
 });
 
 test('onReadWithNext', async () => {
@@ -416,9 +445,16 @@ test('modified_next_options', async () => {
   });
   store.onRead('user', mockOnRead);
   await store.read('user', query, { foo: 2 });
-  assert.deepStrictEqual(mockOnRead.mock.calls[0].arguments[0], query);
-  assert.deepStrictEqual(mockOnRead.mock.calls[0].arguments[1], { bar: true });
-  assert.ok(typeof mockOnRead.mock.calls[0].arguments[2] === 'function');
+  assert.deepStrictEqual(
+    (mockOnRead.mock.calls as any[])[0].arguments[0],
+    query,
+  );
+  assert.deepStrictEqual((mockOnRead.mock.calls as any[])[0].arguments[1], {
+    bar: true,
+  });
+  assert.ok(
+    typeof (mockOnRead.mock.calls as any[])[0].arguments[2] === 'function',
+  );
 });
 
 describe('unchanged', () => {

@@ -1,8 +1,7 @@
 export { default as mockBackend } from './mockBackend.ts';
 export { default as pretty } from './pretty.ts';
 
-/** @param {boolean | any} $put */
-export const put = (obj, $put = true) => {
+export const put = (obj, $put: any = true) => {
   Object.defineProperty(obj, '$put', { value: $put });
   return obj;
 };
@@ -13,7 +12,7 @@ export const ref = ($ref, obj = {}) => {
 };
 
 /** @param {string} $key */
-export const key = ($key, obj = {}) => {
+export const key = ($key, obj: Record<string, any> = {}) => {
   obj.$key = $key;
   return obj;
 };
@@ -30,7 +29,7 @@ export const keyref = ($key, $ref, obj = {}) => {
  * @param {RangeResult} obj
  * @returns RangeResult;
  */
-export const page = ($page, size, obj = []) => {
+export const page = ($page, size, obj: any = []) => {
   const { $first, $last, $all, $after, $since, $before, $until, ...filter } =
     $page;
   obj.$page = { ...$page, $all: true };
