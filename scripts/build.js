@@ -29,8 +29,8 @@ export default async function build(name, version) {
   // paths, preventing tsc from emitting their source files into this package's
   // output directory.
   const esmOptions = {
-    target: ts.ScriptTarget.ES2020,
-    module: ts.ModuleKind.ESNext,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
     rewriteRelativeImportExtensions: true,
     preserveSymlinks: true,
@@ -40,12 +40,13 @@ export default async function build(name, version) {
     strict: false,
     esModuleInterop: true,
     noEmitOnError: false,
+    types: ['node'],
     outDir: dst(name),
   };
 
   const esmProgram = ts.createProgram([src(name, 'index.ts')], esmOptions);
-  /* const { diagnostics: esmDiags } = */ esmProgram.emit();
-  // reportDiags(name, [...ts.getPreEmitDiagnostics(esmProgram), ...esmDiags]);
+  const { diagnostics: esmDiags } = esmProgram.emit();
+  reportDiags(name, [...ts.getPreEmitDiagnostics(esmProgram), ...esmDiags]);
 
   // tsc does not rewrite .ts→.js in .d.ts files when rewriteRelativeImportExtensions
   // is set; fix that manually.
@@ -64,47 +65,12 @@ export default async function build(name, version) {
         /\.tsx?$/.test(sf.fileName),
     );
 
-  /*
-  await mkdir(dst(name, 'cjs'), { recursive: true });
-
-  for (const sf of pkgSourceFiles) {
-    const relPath = relative(src(name), sf.fileName);
-    const outPath = join(dst(name, 'cjs'), relPath).replace(/\.tsx?$/, '.js');
-    await mkdir(dirname(outPath), { recursive: true });
-
-    const { outputText } = ts.transpileModule(sf.getFullText(), {
-      compilerOptions: {
-        target: ts.ScriptTarget.ES2020,
-        module: ts.ModuleKind.CommonJS,
-        esModuleInterop: true,
-        jsx: ts.JsxEmit.ReactJSX,
-      },
-      fileName: sf.fileName,
-    });
-
-    // ts.transpileModule does not rewrite .ts→.js in require() paths
-    await writeFile(outPath, rewriteTsExtensions(outputText));
-  }
-
-  await writeFile(
-    dst(name, 'cjs', 'package.json'),
-    JSON.stringify({ type: 'commonjs' }),
-  );
-  */
-
   const imports = scanImports(pkgSourceFiles);
   await writePackageJson(name, packageName, description, version, imports);
 
   console.log(`INFO [${name}] built`);
   return true;
 }
-
-// function rewriteTsExtensions(js) {
-//   return js.replace(
-//     /require\((['"])(\.[^'"]+)\.tsx?(['"])\)/g,
-//     'require($1$2.js$3)',
-//   );
-// }
 
 async function fixDtsExtensions(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -123,20 +89,20 @@ async function fixDtsExtensions(dir) {
   }
 }
 
-// function reportDiags(name, diags) {
-//   const host = ts.createCompilerHost({});
-//   for (const diag of diags) {
-//     // Skip errors from node_modules (cross-package implicit-any noise)
-//     const file = diag.file?.fileName ?? '';
-//     if (file.includes('/node_modules/')) continue;
-//     const msg = ts.formatDiagnostic(diag, host).trim();
-//     if (diag.category === ts.DiagnosticCategory.Error) {
-//       console.error(`ERR  [${name}] ${msg}`);
-//     } else {
-//       console.warn(`WARN [${name}] ${msg}`);
-//     }
-//   }
-// }
+function reportDiags(name, diags) {
+  const host = ts.createCompilerHost({});
+  for (const diag of diags) {
+    // Skip errors from node_modules (cross-package implicit-any noise)
+    const file = diag.file?.fileName ?? '';
+    if (file.includes('/node_modules/')) continue;
+    const msg = ts.formatDiagnostic(diag, host).trim();
+    if (diag.category === ts.DiagnosticCategory.Error) {
+      console.error(`ERR  [${name}] ${msg}`);
+    } else {
+      console.warn(`WARN [${name}] ${msg}`);
+    }
+  }
+}
 
 function scanImports(sourceFiles) {
   const imports = {};
@@ -193,21 +159,10 @@ async function writePackageJson(
       {
         name: packageName,
         description,
-        author: 'aravind (https://github.com/aravindet)',
+        author: 'graffy team (https://github.com/usegraffy)',
         version,
-        main: './cjs/index.js',
-        exports: {
-          '.': {
-            import: './index.js',
-            // require: './cjs/index.js',
-            types: './index.d.ts',
-          },
-          './*': {
-            import: './*.js',
-            // require: './cjs/*.js',
-            types: './*.d.ts',
-          },
-        },
+        type: 'module',
+        main: './index.js',
         types: './index.d.ts',
         repository: {
           type: 'git',

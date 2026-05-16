@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "jsx": "preserve",

@@ -2,8 +2,5 @@
   "name": "@graffy/server",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
-  "browserslist": [
-    "maintained node versions"
-  ]
+  "main": "index.ts"
 }
