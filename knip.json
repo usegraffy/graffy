@@ -1,8 +1,8 @@
 {
   "workspaces": {
     "src/example": {
-      "entry": ["server.ts"],
-      "project": ["**/*.ts"]
+      "entry": ["server.ts", "example.tsx"],
+      "project": ["**/*.{ts,tsx}"]
     },
     "src/*": {
       "project": ["**/*.ts"]

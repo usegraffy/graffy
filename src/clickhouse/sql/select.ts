@@ -12,7 +12,7 @@ const aggOps = {
 
 const aggOpOrder = ['$sum', '$avg', '$max', '$min', '$card'];
 
-export function getTableSql({ database = 'default', table, final = false }) {
+function getTableSql({ database = 'default', table, final = false }) {
   const tableSql = `${quoteIdent(database)}.${quoteIdent(table)}`;
   return final ? `${tableSql} FINAL` : tableSql;
 }

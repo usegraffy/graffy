@@ -13,7 +13,7 @@ export default function merge(current, changes) {
   return current;
 }
 
-export function insertRange(current, change, start = 0) {
+function insertRange(current, change, start = 0) {
   const { key, end } = change;
   const keyIx = findFirst(current, key, start);
   const endIx = findLast(current, end, keyIx);
@@ -44,7 +44,7 @@ function mergeRanges(base, node) {
   ].filter(Boolean);
 }
 
-export function insertNode(current, change, start = 0) {
+function insertNode(current, change, start = 0) {
   if (!current) throw new Error(`merge.insertNode: ${current}`);
   const key = change.key;
   const index = findFirst(current, key, start);

@@ -39,7 +39,7 @@ export const lookup = (prop, options) => {
   throw Error(`pg.cannot_lookup ${prop}`);
 };
 
-export const lookupNumeric = (prop) => {
+const lookupNumeric = (prop) => {
   const [prefix, ...suffix] = prop.split('.');
   return suffix.length
     ? sql`CASE WHEN "${raw(prefix)}" #> ${suffix} = 'null'::jsonb

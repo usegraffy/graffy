@@ -6,19 +6,19 @@ import { decode as decodeString, encode as encodeString } from './string.ts';
   Sortable encoding of JSON objects for Graffy keys.
 
   The constraints are:
-  - Sorting a byte stream should 
+  - Sorting a byte stream should
 */
 
-export const END = 0;
-export const NULL = 1;
-export const FALSE = 2;
-export const TRUE = 3;
-export const NUM = 4;
+const END = 0;
+const NULL = 1;
+const FALSE = 2;
+const TRUE = 3;
+const NUM = 4;
 export const STR = 5;
-export const ARR = 6;
-export const OBJ = 7;
+const ARR = 6;
+const OBJ = 7;
 
-export const EOK = 127; // end-of-key
+const EOK = 127; // end-of-key
 
 function encodeArray(array) {
   return [ARR, ...array.flatMap((value) => encodeParts(value)), END];

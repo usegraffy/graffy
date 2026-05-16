@@ -5,8 +5,6 @@ import Pagination from './Pagination.tsx';
 import Spinner from './Spinner.tsx';
 import VisitorList from './VisitorList.tsx';
 
-// import Query from './Query.tsx';
-
 const PAGE_SIZE = 12;
 
 function getQuery(range) {

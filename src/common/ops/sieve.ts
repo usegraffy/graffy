@@ -12,7 +12,7 @@ export default function sieve(current, changes, result = []) {
   return result;
 }
 
-export function insertRange(current, change, result, start = 0) {
+function insertRange(current, change, result, start = 0) {
   const { key, end } = change;
   const keyIx = findFirst(current, key, start);
   const endIx = findLast(current, end, keyIx);
@@ -101,7 +101,7 @@ function mergeRanges(base, node) {
   ].filter(Boolean);
 }
 
-export function insertNode(current, change, result, start = 0) {
+function insertNode(current, change, result, start = 0) {
   const key = change.key;
   const index = findFirst(current, key, start);
   const node = current[index];
