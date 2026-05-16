@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, mock, test } from 'node:test';
 import Graffy from '@graffy/core';
-import { clickhouse } from '../../index.ts';
+import clickhouse from '../../index.ts';
 
 function setupStore(connection, options = {}) {
   const store = new Graffy();

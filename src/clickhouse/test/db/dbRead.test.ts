@@ -20,13 +20,13 @@ const mockClient = {
   query: mockQuery,
 };
 
-await mock.module('@clickhouse/client', {
+mock.module('@clickhouse/client', {
   exports: {
     createClient: () => mockClient,
   },
 } as any);
 
-const { clickhouse } = await import('../../index.ts');
+const { default: clickhouse } = await import('../../index.ts');
 
 function getSqlFromCall(call) {
   const [args] = call.arguments;
