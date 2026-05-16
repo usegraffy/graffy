@@ -7,7 +7,7 @@ import { keyAfter as aft, keyBefore as bef } from '../step.ts';
 
 describe('slice', () => {
   test('empty', () => {
-    assert.deepEqual(slice([], []), {});
+    assert.deepEqual(slice([], []), { known: undefined, unknown: undefined });
   });
 
   test('simple', () => {
@@ -111,7 +111,7 @@ describe('range', () => {
           },
         ],
       ),
-      { known: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }] },
+      { known: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }], unknown: undefined },
     );
   });
 
@@ -134,6 +134,7 @@ describe('range', () => {
           { key: aft(e.bar), end: bef(e.bat), version: 1 },
           { key: e.bat, value: 2, version: 1 },
         ],
+        unknown: undefined,
       },
     );
   });
@@ -158,6 +159,7 @@ describe('range', () => {
           { key: e.bat, value: 2, version: 1 },
           { key: aft(e.bat), end: e.egg, version: 1 },
         ],
+        unknown: undefined,
       },
     );
   });
@@ -210,6 +212,7 @@ describe('range', () => {
           { key: e.foo, value: 3, version: 1 },
           { key: aft(e.foo), end: e.fuz, version: 1 },
         ],
+        unknown: undefined,
       },
     );
   });
@@ -228,6 +231,7 @@ describe('range', () => {
         [{ key: e.ark, end: e.foo, limit: 3, num: 1, version: 0 }],
       ),
       {
+        known: undefined,
         unknown: [{ key: e.ark, end: e.foo, limit: 3, num: 1, version: 0 }],
       },
     );
@@ -257,6 +261,7 @@ describe('range', () => {
           { key: e.foo, value: 3, version: 1 },
           { key: aft(e.foo), end: MAX_KEY, version: 1 },
         ],
+        unknown: undefined,
       },
     );
   });
@@ -397,6 +402,7 @@ describe('version', () => {
         ],
       ),
       {
+        known: undefined,
         unknown: [
           {
             key: e.bat,
@@ -466,6 +472,7 @@ describe('version', () => {
             children: [{ key: e.x, version: 0, value: 42 }],
           },
         ],
+        unknown: undefined,
       },
     );
   });
