@@ -81,43 +81,41 @@ describe('clickhouse_e2e', () => {
   });
 
   describe('write', () => {
-    test(
-      'put_by_id_blindly_inserts_and_db_sets_default_ver_col',
-      { timeout: 120000 },
-      async () => {
-        const created = await store.write(['users', 'u1'], {
-          name: 'Alice',
-          email: 'alice@acme.co',
-          settings: { foo: 10 },
-          $put: true,
-        });
+    test('put_by_id_blindly_inserts_and_db_sets_default_ver_col', {
+      timeout: 120000,
+    }, async () => {
+      const created = await store.write(['users', 'u1'], {
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+        $put: true,
+      });
 
-        for (const [k, v] of Object.entries({
-          id: 'u1',
-          name: 'Alice',
-          email: 'alice@acme.co',
-          settings: { foo: 10 },
-        })) {
-          assert.deepStrictEqual(created[k], v);
-        }
-        assert.strictEqual(created.updatedAt, undefined);
+      for (const [k, v] of Object.entries({
+        id: 'u1',
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+      })) {
+        assert.deepStrictEqual(created[k], v);
+      }
+      assert.strictEqual(created.updatedAt, undefined);
 
-        const afterCreate = await store.read('users.u1', {
-          updatedAt: true,
-          name: true,
-          email: true,
-          settings: true,
-        });
-        for (const [k, v] of Object.entries({
-          name: 'Alice',
-          email: 'alice@acme.co',
-          settings: { foo: 10 },
-        })) {
-          assert.deepStrictEqual(afterCreate[k], v);
-        }
-        assert.ok(asNum(afterCreate.updatedAt) > 0);
-      },
-    );
+      const afterCreate = await store.read('users.u1', {
+        updatedAt: true,
+        name: true,
+        email: true,
+        settings: true,
+      });
+      for (const [k, v] of Object.entries({
+        name: 'Alice',
+        email: 'alice@acme.co',
+        settings: { foo: 10 },
+      })) {
+        assert.deepStrictEqual(afterCreate[k], v);
+      }
+      assert.ok(asNum(afterCreate.updatedAt) > 0);
+    });
 
     test('write_without_put_is_unsupported', { timeout: 120000 }, async () => {
       await assert.rejects(
@@ -231,19 +229,18 @@ describe('clickhouse_e2e', () => {
     }
   });
 
-  test(
-    'native_json_with_int64_version_round_trip',
-    { timeout: 120000 },
-    async () => {
-      const database = getTestDatabase();
-      const connection = getClient();
+  test('native_json_with_int64_version_round_trip', {
+    timeout: 120000,
+  }, async () => {
+    const database = getTestDatabase();
+    const connection = getClient();
 
-      await connection.command({
-        query: `DROP TABLE IF EXISTS ${database}.workLogJson`,
-      });
+    await connection.command({
+      query: `DROP TABLE IF EXISTS ${database}.workLogJson`,
+    });
 
-      await connection.command({
-        query: `
+    await connection.command({
+      query: `
         CREATE TABLE ${database}.workLogJson (
           id String,
           time Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
@@ -256,100 +253,99 @@ describe('clickhouse_e2e', () => {
         PRIMARY KEY (tenantId, code, time)
         ORDER BY (tenantId, code, time, id)
       `,
-        clickhouse_settings: {
-          allow_experimental_json_type: 1,
-        },
-      });
+      clickhouse_settings: {
+        allow_experimental_json_type: 1,
+      },
+    });
 
-      store.use(
-        'workLogJson',
-        clickhouse({
-          database,
-          table: 'workLogJson',
-          idCol: 'id',
-          connection,
-        }),
-      );
+    store.use(
+      'workLogJson',
+      clickhouse({
+        database,
+        table: 'workLogJson',
+        idCol: 'id',
+        connection,
+      }),
+    );
 
-      await store.write(['workLogJson', 'w1'], {
-        tenantId: 't1',
-        code: 'sf_sync_read',
-        recordIds: {
-          googleIntegrationId: 'gi-1',
-          sfSyncJobId: 'job-1',
+    await store.write(['workLogJson', 'w1'], {
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'initial',
+        nested: {
+          source: 'pg',
         },
-        data: {
-          stage: 'initial',
-          nested: {
-            source: 'pg',
-          },
-        },
-        $put: true,
-      });
+      },
+      $put: true,
+    });
 
-      await store.write(['workLogJson', 'w2'], {
-        tenantId: 't1',
-        code: 'sf_sync_read',
-        recordIds: {
-          googleIntegrationId: 'gi-1',
-          sfSyncJobId: 'job-1',
+    await store.write(['workLogJson', 'w2'], {
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'written_to_clickhouse',
+        nested: {
+          source: 'lego',
+          status: 'ok',
         },
-        data: {
-          stage: 'written_to_clickhouse',
-          nested: {
-            source: 'lego',
-            status: 'ok',
-          },
-        },
-        $put: true,
-      });
+      },
+      $put: true,
+    });
 
-      const byId = await store.read('workLogJson.w1', {
-        time: true,
-        tenantId: true,
-        code: true,
-        recordIds: true,
-        data: true,
-      });
+    const byId = await store.read('workLogJson.w1', {
+      time: true,
+      tenantId: true,
+      code: true,
+      recordIds: true,
+      data: true,
+    });
 
-      for (const [k, v] of Object.entries({
-        tenantId: 't1',
-        code: 'sf_sync_read',
-        recordIds: {
-          googleIntegrationId: 'gi-1',
-          sfSyncJobId: 'job-1',
+    for (const [k, v] of Object.entries({
+      tenantId: 't1',
+      code: 'sf_sync_read',
+      recordIds: {
+        googleIntegrationId: 'gi-1',
+        sfSyncJobId: 'job-1',
+      },
+      data: {
+        stage: 'initial',
+        nested: {
+          source: 'pg',
         },
-        data: {
-          stage: 'initial',
-          nested: {
-            source: 'pg',
-          },
-        },
-      })) {
-        assert.deepStrictEqual(byId[k], v);
-      }
-      assert.ok(asNum(byId.time) > 0);
+      },
+    })) {
+      assert.deepStrictEqual(byId[k], v);
+    }
+    assert.ok(asNum(byId.time) > 0);
 
-      const filtered = await store.read('workLogJson', {
-        $key: {
-          'recordIds.sfSyncJobId': 'job-1',
-          $order: ['id'],
-          $all: true,
-        },
-        id: true,
-        code: true,
-        data: true,
-      });
+    const filtered = await store.read('workLogJson', {
+      $key: {
+        'recordIds.sfSyncJobId': 'job-1',
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+      code: true,
+      data: true,
+    });
 
-      assert.strictEqual(filtered.length, 2);
-      assert.strictEqual(filtered[0].id, 'w1');
-      assert.strictEqual(filtered[0].code, 'sf_sync_read');
-      assert.strictEqual(filtered[0].data.stage, 'initial');
-      assert.strictEqual(filtered[1].id, 'w2');
-      assert.strictEqual(filtered[1].code, 'sf_sync_read');
-      assert.strictEqual(filtered[1].data.stage, 'written_to_clickhouse');
-    },
-  );
+    assert.strictEqual(filtered.length, 2);
+    assert.strictEqual(filtered[0].id, 'w1');
+    assert.strictEqual(filtered[0].code, 'sf_sync_read');
+    assert.strictEqual(filtered[0].data.stage, 'initial');
+    assert.strictEqual(filtered[1].id, 'w2');
+    assert.strictEqual(filtered[1].code, 'sf_sync_read');
+    assert.strictEqual(filtered[1].data.stage, 'written_to_clickhouse');
+  });
 
   test('id_lookup_with_nested_projection', { timeout: 120000 }, async () => {
     await seedUsers([
@@ -681,90 +677,84 @@ describe('clickhouse_e2e', () => {
       assert.strictEqual(byAmount[1010], 2);
     });
 
-    test(
-      'all_ops_with_negative_and_missing_values',
-      { timeout: 120000 },
-      async () => {
-        await seedProspects([
-          { id: 'p5', updatedAt: 5, data: { Amount: -5 }, isDeleted: false },
-          { id: 'p6', updatedAt: 6, data: {}, isDeleted: false },
-          { id: 'p7', updatedAt: 7, data: { Amount: null }, isDeleted: false },
-        ]);
+    test('all_ops_with_negative_and_missing_values', {
+      timeout: 120000,
+    }, async () => {
+      await seedProspects([
+        { id: 'p5', updatedAt: 5, data: { Amount: -5 }, isDeleted: false },
+        { id: 'p6', updatedAt: 6, data: {}, isDeleted: false },
+        { id: 'p7', updatedAt: 7, data: { Amount: null }, isDeleted: false },
+      ]);
 
-        const result = await store.read('prospect', {
-          $key: { isDeleted: false, $group: true },
-          $count: true,
-          $sum: { 'data.Amount': true },
-          $avg: { 'data.Amount': true },
-          $max: { 'data.Amount': true },
-          $min: { 'data.Amount': true },
-          $card: { id: true },
-        });
+      const result = await store.read('prospect', {
+        $key: { isDeleted: false, $group: true },
+        $count: true,
+        $sum: { 'data.Amount': true },
+        $avg: { 'data.Amount': true },
+        $max: { 'data.Amount': true },
+        $min: { 'data.Amount': true },
+        $card: { id: true },
+      });
 
-        assert.strictEqual(asNum(result[0].$count), 5);
-        assert.strictEqual(asNum(result[0].$sum['data.Amount']), 10095);
-        assert.strictEqual(asNum(result[0].$avg['data.Amount']), 2019);
-        assert.strictEqual(asNum(result[0].$max['data.Amount']), 10000);
-        assert.strictEqual(asNum(result[0].$min['data.Amount']), -5);
-        assert.strictEqual(asNum(result[0].$card.id), 5);
-      },
-    );
+      assert.strictEqual(asNum(result[0].$count), 5);
+      assert.strictEqual(asNum(result[0].$sum['data.Amount']), 10095);
+      assert.strictEqual(asNum(result[0].$avg['data.Amount']), 2019);
+      assert.strictEqual(asNum(result[0].$max['data.Amount']), 10000);
+      assert.strictEqual(asNum(result[0].$min['data.Amount']), -5);
+      assert.strictEqual(asNum(result[0].$card.id), 5);
+    });
 
-    test(
-      'group_pagination_with_after_cursor',
-      { timeout: 120000 },
-      async () => {
-        const page1 = await store.read('prospect', {
-          $key: { $group: ['isDeleted'], $first: 1 },
-          $count: true,
-          $sum: { 'data.Amount': true },
-        });
+    test('group_pagination_with_after_cursor', {
+      timeout: 120000,
+    }, async () => {
+      const page1 = await store.read('prospect', {
+        $key: { $group: ['isDeleted'], $first: 1 },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
 
-        assert.strictEqual(page1.length, 1);
+      assert.strictEqual(page1.length, 1);
 
-        const page2 = await store.read('prospect', {
-          $key: {
-            $group: ['isDeleted'],
-            $first: 1,
-            $after: page1[0].$key.$cursor,
+      const page2 = await store.read('prospect', {
+        $key: {
+          $group: ['isDeleted'],
+          $first: 1,
+          $after: page1[0].$key.$cursor,
+        },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
+
+      assert.strictEqual(page2.length, 1);
+
+      const merged = [page1[0], page2[0]];
+      const byDeleted = Object.fromEntries(
+        merged.map((row) => [
+          asNum(row.$key.$cursor[0]),
+          {
+            count: asNum(row.$count),
+            sum: asNum(row.$sum['data.Amount']),
           },
-          $count: true,
-          $sum: { 'data.Amount': true },
-        });
+        ]),
+      );
 
-        assert.strictEqual(page2.length, 1);
+      assert.deepStrictEqual(byDeleted[0], { count: 2, sum: 10100 });
+      assert.deepStrictEqual(byDeleted[1], { count: 2, sum: 1010 });
+    });
 
-        const merged = [page1[0], page2[0]];
-        const byDeleted = Object.fromEntries(
-          merged.map((row) => [
-            asNum(row.$key.$cursor[0]),
-            {
-              count: asNum(row.$count),
-              sum: asNum(row.$sum['data.Amount']),
-            },
-          ]),
-        );
+    test('group_true_last_range_preserves_aggregate_row', {
+      timeout: 120000,
+    }, async () => {
+      const result = await store.read('prospect', {
+        $key: { isDeleted: false, $group: true, $last: 1 },
+        $count: true,
+        $sum: { 'data.Amount': true },
+      });
 
-        assert.deepStrictEqual(byDeleted[0], { count: 2, sum: 10100 });
-        assert.deepStrictEqual(byDeleted[1], { count: 2, sum: 1010 });
-      },
-    );
-
-    test(
-      'group_true_last_range_preserves_aggregate_row',
-      { timeout: 120000 },
-      async () => {
-        const result = await store.read('prospect', {
-          $key: { isDeleted: false, $group: true, $last: 1 },
-          $count: true,
-          $sum: { 'data.Amount': true },
-        });
-
-        assert.strictEqual(result.length, 1);
-        assert.strictEqual(asNum(result[0].$count), 2);
-        assert.strictEqual(asNum(result[0].$sum['data.Amount']), 10100);
-      },
-    );
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(asNum(result[0].$count), 2);
+      assert.strictEqual(asNum(result[0].$sum['data.Amount']), 10100);
+    });
   });
 
   describe('join', () => {
@@ -841,63 +831,56 @@ describe('clickhouse_e2e', () => {
       assert.strictEqual(getRows(negativeRangeRes).length, 0);
     });
 
-    test(
-      'explicit_and_on_join_applies_to_same_join_row',
-      { timeout: 120000 },
-      async () => {
-        await seedUsers([
-          { id: 'u3', updatedAt: 3, name: 'Carol', email: 'c' },
-        ]);
-        await seedPosts([
-          {
-            id: 'p3',
-            updatedAt: 3,
-            authorId: 'u3',
-            title: 'First title',
-            commenters: ['alice'],
-          },
-          {
-            id: 'p4',
-            updatedAt: 4,
-            authorId: 'u3',
-            title: 'Second title',
-            commenters: ['bob'],
-          },
-        ]);
+    test('explicit_and_on_join_applies_to_same_join_row', {
+      timeout: 120000,
+    }, async () => {
+      await seedUsers([{ id: 'u3', updatedAt: 3, name: 'Carol', email: 'c' }]);
+      await seedPosts([
+        {
+          id: 'p3',
+          updatedAt: 3,
+          authorId: 'u3',
+          title: 'First title',
+          commenters: ['alice'],
+        },
+        {
+          id: 'p4',
+          updatedAt: 4,
+          authorId: 'u3',
+          title: 'Second title',
+          commenters: ['bob'],
+        },
+      ]);
 
-        const crossRowAndRes = await store.read('users', {
-          $key: {
-            posts: {
-              $and: [
-                { title: 'First title' },
-                { commenters: { $cts: ['bob'] } },
-              ],
-            },
-            $all: true,
-            $order: ['name'],
+      const crossRowAndRes = await store.read('users', {
+        $key: {
+          posts: {
+            $and: [{ title: 'First title' }, { commenters: { $cts: ['bob'] } }],
           },
-          name: true,
-        });
-        assert.strictEqual(getRows(crossRowAndRes).length, 0);
+          $all: true,
+          $order: ['name'],
+        },
+        name: true,
+      });
+      assert.strictEqual(getRows(crossRowAndRes).length, 0);
 
-        const sameRowAndRes = await store.read('users', {
-          $key: {
-            posts: {
-              $and: [
-                { title: 'Second title' },
-                { commenters: { $cts: ['bob'] } },
-              ],
-            },
-            $all: true,
-            $order: ['name'],
+      const sameRowAndRes = await store.read('users', {
+        $key: {
+          posts: {
+            $and: [
+              { title: 'Second title' },
+              { commenters: { $cts: ['bob'] } },
+            ],
           },
-          name: true,
-        });
-        assert.deepStrictEqual(
-          getRows(sameRowAndRes).map((row) => row.name),
-          ['Carol'],
-        );
-      },
-    );
+          $all: true,
+          $order: ['name'],
+        },
+        name: true,
+      });
+      assert.deepStrictEqual(
+        getRows(sameRowAndRes).map((row) => row.name),
+        ['Carol'],
+      );
+    });
   });
 });

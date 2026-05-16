@@ -111,7 +111,10 @@ describe('range', () => {
           },
         ],
       ),
-      { known: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }], unknown: undefined },
+      {
+        known: [{ key: MIN_KEY, end: MAX_KEY, version: 1 }],
+        unknown: undefined,
+      },
     );
   });
 

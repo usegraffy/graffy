@@ -20,4 +20,4 @@ function printUnused() {
   });
 }
 
-export { extraDeps, depVersions, peerDepVersions, use, printUnused };
+export { depVersions, extraDeps, peerDepVersions, printUnused, use };
