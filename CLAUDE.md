@@ -22,7 +22,7 @@ npm run lint
 npm run format
 
 # Start example server
-npm start
+npm start:example
 
 # Package/publish
 ./scripts/package.js <version> [--publish] [--link]

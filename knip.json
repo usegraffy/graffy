@@ -1,0 +1,15 @@
+{
+  "workspaces": {
+    "src/example": {
+      "entry": ["server.ts"],
+      "project": ["**/*.ts"]
+    },
+    "src/*": {
+      "project": ["**/*.ts"]
+    },
+    "scripts": {
+      "entry": ["package.js"],
+      "project": ["**/*.js"]
+    }
+  }
+}

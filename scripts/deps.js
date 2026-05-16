@@ -1,7 +1,7 @@
 import { read } from './utils.js';
 
 const {
-  dependencies: extraDeps,
+  // dependencies: extraDeps,
   devDependencies: depVersions,
   peerDependencies: peerDepVersions,
 } = read('package.json');
@@ -12,12 +12,12 @@ function use(dep) {
   used[dep] = true;
 }
 
-function printUnused() {
-  [extraDeps, depVersions, peerDepVersions].forEach((deps) => {
-    for (const dep in deps) {
-      if (!used[dep]) console.log(dep);
-    }
-  });
-}
+// function printUnused() {
+//   [extraDeps, depVersions, peerDepVersions].forEach((deps) => {
+//     for (const dep in deps) {
+//       if (!used[dep]) console.log(dep);
+//     }
+//   });
+// }
 
-export { depVersions, extraDeps, peerDepVersions, printUnused, use };
+export { depVersions, peerDepVersions, use };
