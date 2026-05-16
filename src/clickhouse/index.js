@@ -69,7 +69,7 @@ function getTableOpts(
 /**
  * @param {ClickhouseOptions & { connection?: any }} [options]
  */
-export const clickhouse =
+const clickhouse =
   (options = {}) =>
   (store) => {
     const { connection, ...rawOptions } = options;
@@ -112,4 +112,4 @@ export const clickhouse =
     }
   };
 
-export const ch = clickhouse;
+export default clickhouse;

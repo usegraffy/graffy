@@ -24,7 +24,7 @@ jest.unstable_mockModule('@clickhouse/client', () => ({
   createClient: () => mockClient,
 }));
 
-const { clickhouse } = await import('../../index.js');
+const { default: clickhouse } = await import('../../index.js');
 
 function getSqlFromCall(call) {
   const [args] = call;

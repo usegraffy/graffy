@@ -1,6 +1,6 @@
 import Graffy from '@graffy/core';
 import { jest } from '@jest/globals';
-import { clickhouse } from '../../index.js';
+import clickhouse from '../../index.js';
 
 function setupStore(connection, options = {}) {
   const store = new Graffy();
