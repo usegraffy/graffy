@@ -1,0 +1,150 @@
+const valid = {
+  $eq: true,
+  $lt: true,
+  $gt: true,
+  $lte: true,
+  $gte: true,
+  $re: true,
+  $ire: true,
+  $text: true,
+  $and: true,
+  $or: true,
+  $any: true,
+  $all: true,
+  $has: true,
+  $cts: true,
+  $ctd: true,
+  $keycts: true,
+  $keyctd: true,
+};
+
+const inverse = {
+  $eq: '$neq',
+  $neq: '$eq',
+  $in: '$nin',
+  $nin: '$in',
+  $lt: '$gte',
+  $gte: '$lt',
+  $gt: '$lte',
+  $lte: '$gt',
+};
+
+export default function getAst(filter) {
+  return simplify(construct(filter));
+}
+
+function isValidSubQuery(node) {
+  if (!node || typeof node !== 'object') return false;
+
+  const keys = Object.keys(node);
+  for (const key of keys) {
+    if (key[0] === '$' && !['$and', '$or', '$not'].includes(key)) return false;
+    if (key[0] !== '$') return true;
+  }
+
+  for (const key in node) {
+    if (!isValidSubQuery(node[key])) return false;
+  }
+
+  return true;
+}
+
+function construct(node, prop?, op?) {
+  if (!node || typeof node !== 'object' || (prop && op)) {
+    if (op && prop) return [op, prop, node];
+    if (prop) return ['$eq', prop, node];
+    throw Error(`clickhouse_ast.expected_prop_before:${JSON.stringify(node)}`);
+  }
+  if (Array.isArray(node)) {
+    return ['$or', node.map((item) => construct(item, prop, op))];
+  }
+
+  if (prop && isValidSubQuery(node)) {
+    return ['$sub', prop, construct(node)];
+  }
+
+  return [
+    '$and',
+    Object.entries(node).map(([key, val]) => {
+      if (key === '$or' || key === '$and') {
+        return [key, construct(val, prop, op)[1]];
+      }
+      if (key === '$not') {
+        return [key, construct(val, prop, op)];
+      }
+
+      if (key[0] === '$') {
+        if (!valid[key]) throw Error(`clickhouse_ast.invalid_op:${key}`);
+        if (op) throw Error(`clickhouse_ast.unexpected_op:${op} before:${key}`);
+        if (!prop) throw Error(`clickhouse_ast.expected_prop_before:${key}`);
+        return construct(val, prop, key);
+      }
+      return construct(val, key);
+    }),
+  ];
+}
+
+function simplify(node) {
+  const op = node[0];
+
+  if (op === '$and' || op === '$or') {
+    node[1] = node[1].map((subnode) => simplify(subnode));
+  } else if (op === '$not') {
+    node[1] = simplify(node[1]);
+  } else if (op === '$sub') {
+    node[2] = simplify(node[2]);
+  }
+
+  if (op === '$and') {
+    if (!node[1].length) return true;
+    if (node[1].includes(false)) return false;
+    node[1] = node[1].filter((item) => item !== true);
+  } else if (op === '$or') {
+    if (!node[1].length) return false;
+    if (node[1].includes(true)) return true;
+    node[1] = node[1].filter((item) => item !== false);
+  } else if (op === '$not' && typeof node[1] === 'boolean') {
+    return !node[1];
+  }
+
+  if (op === '$or') {
+    const { eqmap, noneq, change } = node[1].reduce(
+      (acc, item) => {
+        if (item[0] !== '$eq' || item[2] === null) {
+          acc.noneq.push(item);
+        } else if (acc.eqmap[item[1]]) {
+          acc.change = true;
+          acc.eqmap[item[1]].push(item[2]);
+          return acc;
+        } else {
+          acc.eqmap[item[1]] = [item[2]];
+        }
+        return acc;
+      },
+      { eqmap: {}, noneq: [], change: false },
+    );
+
+    if (change) {
+      node[1] = [
+        ...noneq,
+        ...Object.entries(eqmap).map(([prop, val]) =>
+          (val as any[]).length > 1
+            ? ['$in', prop, val]
+            : ['$eq', prop, (val as any[])[0]],
+        ),
+      ];
+    }
+  }
+
+  if ((op === '$and' || op === '$or') && node[1].length === 1) {
+    return node[1][0];
+  }
+
+  if (op === '$not') {
+    const [subop, ...subargs] = node[1];
+    const invop = inverse[subop];
+    return invop ? [invop, ...subargs] : node;
+  }
+
+  return node;
+}

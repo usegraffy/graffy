@@ -1,21 +1,18 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
-import { build as viteBuild } from 'vite';
+import { /* dirname, */ join /*, relative*/ } from 'node:path';
+import ts from 'typescript';
 import { depVersions, peerDepVersions, use } from './deps.js';
 import { dst, ownPattern, read, src } from './utils.js';
 
 const depPattern = /^[^@][^/]*|^@[^/]*\/[^/]*/;
+// Matches bare-specifier `from 'pkg'` and `import 'pkg'` (excludes relative/node: paths)
+const importRe = /(?:from|import)\s+['"]([^'"./][^'"]*)['"]/gm;
 
-// ESM-only deps are built into the bundle rather than
-// keeping them external, to prevent installation errors
-// in commonJS projects.
-const esmOnlyDeps = ['sql-template-tag', 'nanoid'];
-
-export default async function build(name, version, watch, onUpdate) {
+export default async function build(name, version) {
   let packageName;
   let description;
 
-  // Copy the Readme file first. If there is no readme, skip this directory.
   try {
     ({ name: packageName } = read('src', name, 'package.json'));
     const readme = (await readFile(src(name, 'Readme.md'))).toString();
@@ -27,131 +24,156 @@ export default async function build(name, version, watch, onUpdate) {
     return false;
   }
 
-  const imports = {};
-  let importsUpdated = false;
+  // ESM compilation with declarations.
+  // preserveSymlinks: true keeps workspace @graffy/* paths as node_modules/...
+  // paths, preventing tsc from emitting their source files into this package's
+  // output directory.
+  const esmOptions = {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.NodeNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    rewriteRelativeImportExtensions: true,
+    preserveSymlinks: true,
+    jsx: ts.JsxEmit.ReactJSX,
+    declaration: true,
+    skipLibCheck: true,
+    strict: false,
+    esModuleInterop: true,
+    noEmitOnError: false,
+    types: ['node'],
+    outDir: dst(name),
+  };
 
-  // Perform the vite build
-  const out = await viteBuild({
-    root: src(name),
-    build: {
-      lib: {
-        entry: 'index.js',
-        formats: ['es', 'cjs'],
-        fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`,
-      },
-      outDir: dst(name),
-      emptyOutDir: false,
-      rollupOptions: {
-        external: (id, _parentId, _isResolved) => {
-          if (id[0] === '/' || id[0] === '.') return false;
-          const dep = id.match(depPattern)[0];
-          if (esmOnlyDeps.includes(dep)) return false;
+  const esmProgram = ts.createProgram([src(name, 'index.ts')], esmOptions);
+  const { diagnostics: esmDiags } = esmProgram.emit();
+  reportDiags(name, [...ts.getPreEmitDiagnostics(esmProgram), ...esmDiags]);
 
-          if (!imports[id]) {
-            imports[id] = true;
-            importsUpdated = true;
-          }
-          return true;
-        },
-      },
-      brotliSize: false,
-      minify: false,
-      watch: watch ? {} : null,
-    },
-    clearScreen: false,
-    logLevel: 'warn',
-  });
+  // tsc does not rewrite .ts→.js in .d.ts files when rewriteRelativeImportExtensions
+  // is set; fix that manually.
+  await fixDtsExtensions(dst(name));
 
-  if (watch) {
-    let signalInitialBuild = null;
+  // CJS: transpile each source file in this package individually.
+  // ts.transpileModule avoids the moduleResolution: Bundler + CommonJS conflict.
 
-    out.on('change', (fileName) => {
-      if (onUpdate) onUpdate(name, fileName);
-    });
+  const pkgSrcPrefix = `${src(name)}/`;
+  const pkgSourceFiles = esmProgram
+    .getSourceFiles()
+    .filter(
+      (sf) =>
+        !sf.isDeclarationFile &&
+        sf.fileName.startsWith(pkgSrcPrefix) &&
+        /\.tsx?$/.test(sf.fileName),
+    );
 
-    out.on('event', async (e) => {
-      if (e.code !== 'BUNDLE_END') return;
+  const imports = scanImports(pkgSourceFiles);
+  await writePackageJson(name, packageName, description, version, imports);
 
-      console.log(
-        `INFO [${name}] updated${importsUpdated ? ' (new imports)' : ''}`,
-      );
-
-      if (importsUpdated || signalInitialBuild) {
-        importsUpdated = false;
-        await writePackageJson(imports);
-      }
-
-      if (signalInitialBuild) {
-        signalInitialBuild();
-        signalInitialBuild = null;
-      }
-    });
-
-    await new Promise((res) => {
-      signalInitialBuild = res;
-    });
-
-    console.log(`INFO [${name}] built, watching for changes...`);
-    return true;
-  }
-  writePackageJson(imports);
   console.log(`INFO [${name}] built`);
   return true;
+}
 
-  async function writePackageJson(imports) {
-    let dependencies;
-    let peerDependencies;
-
-    Object.keys(imports).forEach((imp) => {
-      const dep = imp.match(depPattern)[0];
-      use(dep);
-      if (peerDepVersions[dep]) {
-        peerDependencies = peerDependencies || {};
-        peerDependencies[dep] = peerDepVersions[dep];
-      } else {
-        dependencies = dependencies || {};
-        if (ownPattern.test(dep)) {
-          dependencies[dep] = version;
-        } else if (depVersions[dep]) {
-          dependencies[dep] = depVersions[dep];
-        } else if (builtinModules.includes(dep) || dep.startsWith('node:')) {
-          console.log(`INFO [${name}] ignoring built-in ${dep}`);
-        } else {
-          console.warn(`WARN [${name}] unversioned package ${dep}`);
-          dependencies[dep] = 'x';
-        }
-      }
-    });
-
-    // Write package.json
-    await writeFile(
-      dst(name, 'package.json'),
-      JSON.stringify(
-        {
-          name: packageName,
-          description,
-          author: 'aravind (https://github.com/aravindet)',
-          version,
-          main: './index.cjs',
-          exports: {
-            import: './index.mjs',
-            require: './index.cjs',
-          },
-          module: './index.mjs',
-          types: './types/index.d.ts',
-          repository: {
-            type: 'git',
-            url: 'git+https://github.com/usegraffy/graffy.git',
-          },
-          license: 'Apache-2.0',
-          dependencies,
-          peerDependencies,
-        },
-        null,
-        2,
-      ),
-    );
+async function fixDtsExtensions(dir) {
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await fixDtsExtensions(fullPath);
+    } else if (entry.name.endsWith('.d.ts')) {
+      const content = await readFile(fullPath, 'utf8');
+      const fixed = content.replace(
+        /(\bfrom\s+['"])(\..*?)\.tsx?(['"]\s*;?)/g,
+        '$1$2.js$3',
+      );
+      if (fixed !== content) await writeFile(fullPath, fixed);
+    }
   }
 }
 
-export function onUpdate() {}
+function reportDiags(name, diags) {
+  const host = ts.createCompilerHost({});
+  for (const diag of diags) {
+    // Skip errors from node_modules (cross-package implicit-any noise)
+    const file = diag.file?.fileName ?? '';
+    if (file.includes('/node_modules/')) continue;
+    const msg = ts.formatDiagnostic(diag, host).trim();
+    if (diag.category === ts.DiagnosticCategory.Error) {
+      console.error(`ERR  [${name}] ${msg}`);
+    } else {
+      console.warn(`WARN [${name}] ${msg}`);
+    }
+  }
+}
+
+function scanImports(sourceFiles) {
+  const imports = {};
+  for (const sf of sourceFiles) {
+    const content = sf.getFullText();
+    importRe.lastIndex = 0;
+    let match;
+    // biome-ignore lint/suspicious/noAssignInExpressions: This is much more concise than the alternative
+    while ((match = importRe.exec(content)) !== null) {
+      const spec = match[1];
+      const dep = spec.match(depPattern)?.[0];
+      if (dep && !builtinModules.includes(dep) && !dep.startsWith('node:')) {
+        imports[spec] = true;
+      }
+    }
+  }
+  return imports;
+}
+
+async function writePackageJson(
+  name,
+  packageName,
+  description,
+  version,
+  imports,
+) {
+  let dependencies;
+  let peerDependencies;
+
+  Object.keys(imports).forEach((imp) => {
+    const dep = imp.match(depPattern)[0];
+    use(dep);
+    if (peerDepVersions[dep]) {
+      peerDependencies = peerDependencies || {};
+      peerDependencies[dep] = peerDepVersions[dep];
+    } else {
+      dependencies = dependencies || {};
+      if (ownPattern.test(dep)) {
+        dependencies[dep] = version;
+      } else if (depVersions[dep]) {
+        dependencies[dep] = depVersions[dep];
+      } else if (builtinModules.includes(dep) || dep.startsWith('node:')) {
+        console.log(`INFO [${name}] ignoring built-in ${dep}`);
+      } else {
+        console.warn(`WARN [${name}] unversioned package ${dep}`);
+        dependencies[dep] = 'x';
+      }
+    }
+  });
+
+  await writeFile(
+    dst(name, 'package.json'),
+    JSON.stringify(
+      {
+        name: packageName,
+        description,
+        author: 'graffy team (https://github.com/usegraffy)',
+        version,
+        type: 'module',
+        main: './index.js',
+        types: './index.d.ts',
+        repository: {
+          type: 'git',
+          url: 'git+https://github.com/usegraffy/graffy.git',
+        },
+        license: 'Apache-2.0',
+        dependencies,
+        peerDependencies,
+      },
+      null,
+      2,
+    ),
+  );
+}
