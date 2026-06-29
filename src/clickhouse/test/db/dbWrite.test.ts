@@ -61,6 +61,46 @@ describe('clickhouse_db_write', () => {
     }
   });
 
+  test('multiple_puts_are_inserted_as_one_batch', async () => {
+    const query = mock.fn(async () => []);
+    const insert = mock.fn(async () => undefined);
+    const store = setupStore({ query, insert });
+
+    await store.write('users', [
+      {
+        $key: 'u1',
+        name: 'Alice',
+        settings: { foo: 10 },
+        $put: true,
+      },
+      {
+        $key: 'u2',
+        name: 'Bob',
+        email: 'bob@acme.co',
+        $put: true,
+      },
+    ]);
+
+    assert.strictEqual(query.mock.callCount(), 0);
+    assert.strictEqual(insert.mock.callCount(), 1);
+    assert.deepStrictEqual((insert.mock.calls as any[])[0].arguments[0], {
+      table: '`default`.`users`',
+      values: [
+        {
+          id: 'u1',
+          name: 'Alice',
+          settings: '{"foo":10}',
+        },
+        {
+          id: 'u2',
+          name: 'Bob',
+          email: 'bob@acme.co',
+        },
+      ],
+      format: 'JSONEachRow',
+    });
+  });
+
   test('put_by_id_quotes_hyphenated_database_name', async () => {
     const query = mock.fn(async () => []);
     const insert = mock.fn(async () => undefined);
