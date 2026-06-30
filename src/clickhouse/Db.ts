@@ -328,6 +328,7 @@ export default class Db {
 
     const change = unwrap(rootChange, prefix);
     const result = [];
+    const rows = [];
 
     for (const node of change) {
       if (isRange(node)) {
@@ -348,9 +349,7 @@ export default class Db {
 
       const writtenRow = this.getWriteRow(object, tableOptions);
 
-      await this.insert(tableOptions, [
-        this.getInsertRow(writtenRow, tableOptions),
-      ]);
+      rows.push(this.getInsertRow(writtenRow, tableOptions));
 
       merge(
         result,
@@ -366,6 +365,8 @@ export default class Db {
         ),
       );
     }
+
+    await this.insert(tableOptions, rows);
 
     return result;
   }
