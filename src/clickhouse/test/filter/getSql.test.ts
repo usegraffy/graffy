@@ -60,6 +60,59 @@ describe('clickhouse_filter_sql', () => {
     );
   });
 
+  test('text uses case-insensitive substring search', () => {
+    assert.strictEqual(
+      getSql(
+        { searchText: { $text: 'Alice Example' } },
+        opt({ searchText: 'String' }),
+      ),
+      "lowerUTF8(`searchText`) LIKE lowerUTF8('%Alice Example%')",
+    );
+    assert.strictEqual(
+      getSql(
+        { searchText: { $text: '50%_off' } },
+        opt({ searchText: 'String' }),
+      ),
+      "lowerUTF8(`searchText`) LIKE lowerUTF8('%50\\\\%\\\\_off%')",
+    );
+  });
+
+  test('text rejects JSON and non-string columns', () => {
+    assert.throws(
+      () => getSql({ count: { $text: '10' } }, opt({ count: 'Int64' })),
+      /clickhouse\.text_requires_string count/,
+    );
+    assert.throws(
+      () =>
+        getSql(
+          { 'settings.name': { $text: 'Alice' } },
+          opt({ settings: 'String' }),
+        ),
+      /clickhouse\.text_requires_string settings/,
+    );
+  });
+
+  test('has checks exact array membership', () => {
+    assert.strictEqual(
+      getSql({ tags: { $has: 'buyer' } }, opt({ tags: 'Array(String)' })),
+      "has(`tags`, 'buyer')",
+    );
+    assert.strictEqual(
+      getSql(
+        { tags: { $has: ['buyer', 'seller'] } },
+        opt({ tags: 'Array(String)' }),
+      ),
+      "hasAll(`tags`, ['buyer', 'seller'])",
+    );
+  });
+
+  test('has rejects non-array columns', () => {
+    assert.throws(
+      () => getSql({ name: { $has: 'Alice' } }, opt({ name: 'String' })),
+      /clickhouse\.has_requires_array name/,
+    );
+  });
+
   test('cts on array of objects', () => {
     const result = getSql(
       { participants: { $cts: [{ address: 'foo@bar.com' }] } },

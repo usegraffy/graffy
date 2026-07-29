@@ -123,7 +123,12 @@ export async function resetTables() {
         updatedAt Int64 DEFAULT toUnixTimestamp64Milli(now64(3)),
         name Nullable(String),
         email Nullable(String),
-        settings Nullable(String)
+        settings Nullable(String),
+        searchText String,
+        tags Array(String),
+        INDEX idx_search_text lowerUTF8(searchText)
+          TYPE ngrambf_v1(3, 32768, 3, 0) GRANULARITY 1,
+        INDEX idx_tags tags TYPE bloom_filter
       )
       ENGINE = MergeTree
       ORDER BY id
@@ -168,6 +173,10 @@ export async function seedUsers(rows) {
       name: row.name ?? null,
       email: row.email ?? null,
       settings: encodeJsonString(row.settings),
+      searchText:
+        row.searchText ??
+        [row.name, row.email].filter((value) => value != null).join(' '),
+      tags: row.tags ?? [],
     })),
   );
 }
