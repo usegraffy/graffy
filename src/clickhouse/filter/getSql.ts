@@ -40,18 +40,6 @@ function getTextSql(lookup, value) {
   return `lowerUTF8(${lookup.rawExpr}) LIKE lowerUTF8(${literal(`%${escaped}%`)})`;
 }
 
-function getHasSql(lookup, value) {
-  if (!unwrapType(lookup.type)?.startsWith('Array(')) {
-    throw Error(`clickhouse.has_requires_array ${lookup.root}`);
-  }
-
-  if (Array.isArray(value)) {
-    return `hasAll(${lookup.rawExpr}, [${value.map((item) => literal(item)).join(', ')}])`;
-  }
-
-  return `has(${lookup.rawExpr}, ${literal(value)})`;
-}
-
 function getInSql(lookup, op, value, type) {
   const values = value.filter((item) => item !== null);
   const hasNull = values.length !== value.length;
@@ -77,6 +65,11 @@ function getInSql(lookup, op, value, type) {
 }
 
 function getCtsSql(lookup, value) {
+  if (unwrapType(lookup.type)?.startsWith('Array(')) {
+    const values = Array.isArray(value) ? value : [value];
+    return `hasAll(${lookup.rawExpr}, [${values.map((item) => literal(item)).join(', ')}])`;
+  }
+
   if (Array.isArray(value) && value.every((item) => isPlainObject(item))) {
     return value
       .map((needle) => {
@@ -139,10 +132,6 @@ function getBinarySql(node, options) {
 
   if (op === '$text') {
     return getTextSql(lookup, value);
-  }
-
-  if (op === '$has') {
-    return getHasSql(lookup, value);
   }
 
   if (op === '$cts') {

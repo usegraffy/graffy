@@ -92,24 +92,17 @@ describe('clickhouse_filter_sql', () => {
     );
   });
 
-  test('has checks exact array membership', () => {
+  test('cts checks exact native-array membership', () => {
     assert.strictEqual(
-      getSql({ tags: { $has: 'buyer' } }, opt({ tags: 'Array(String)' })),
-      "has(`tags`, 'buyer')",
+      getSql({ tags: { $cts: 'buyer' } }, opt({ tags: 'Array(String)' })),
+      "hasAll(`tags`, ['buyer'])",
     );
     assert.strictEqual(
       getSql(
-        { tags: { $has: ['buyer', 'seller'] } },
+        { tags: { $cts: ['buyer', 'seller'] } },
         opt({ tags: 'Array(String)' }),
       ),
       "hasAll(`tags`, ['buyer', 'seller'])",
-    );
-  });
-
-  test('has rejects non-array columns', () => {
-    assert.throws(
-      () => getSql({ name: { $has: 'Alice' } }, opt({ name: 'String' })),
-      /clickhouse\.has_requires_array name/,
     );
   });
 

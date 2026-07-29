@@ -390,7 +390,7 @@ describe('clickhouse_e2e', () => {
 
     const byText = await store.read('users', {
       $key: {
-        searchText: { $text: 'ALICE' },
+        name: { $text: 'ALICE' },
         $order: ['id'],
         $all: true,
       },
@@ -403,7 +403,7 @@ describe('clickhouse_e2e', () => {
 
     const byTag = await store.read('users', {
       $key: {
-        tags: { $has: 'buyer' },
+        tags: { $cts: ['buyer'] },
         $order: ['id'],
         $all: true,
       },
@@ -411,19 +411,6 @@ describe('clickhouse_e2e', () => {
     });
     assert.deepStrictEqual(
       getRows(byTag).map(({ id }) => id),
-      ['u1'],
-    );
-
-    const byTags = await store.read('users', {
-      $key: {
-        tags: { $has: ['buyer', 'customer'] },
-        $order: ['id'],
-        $all: true,
-      },
-      id: true,
-    });
-    assert.deepStrictEqual(
-      getRows(byTags).map(({ id }) => id),
       ['u1'],
     );
   });
