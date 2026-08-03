@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:24.8
+    image: clickhouse/clickhouse-server:26.4
     container_name: graffych
     environment:
       CLICKHOUSE_USER: api

@@ -3,6 +3,7 @@ import {
   isStringishType,
   literal,
   quoteIdent,
+  unwrapType,
 } from '../sql/escape.ts';
 import { getLookup } from '../sql/lookup.ts';
 import getAst from './getAst.ts';
@@ -30,6 +31,15 @@ function getRegexSql(lookup, op, value) {
   return `match(${lookup.textExpr}, ${pattern})`;
 }
 
+function getTextSql(lookup, value) {
+  if (lookup.isJsonPath || !isStringishType(lookup.type)) {
+    throw Error(`clickhouse.text_requires_string ${lookup.root}`);
+  }
+
+  const escaped = String(value).replace(/([\\%_])/g, '\\$1');
+  return `lowerUTF8(${lookup.rawExpr}) LIKE lowerUTF8(${literal(`%${escaped}%`)})`;
+}
+
 function getInSql(lookup, op, value, type) {
   const values = value.filter((item) => item !== null);
   const hasNull = values.length !== value.length;
@@ -55,6 +65,11 @@ function getInSql(lookup, op, value, type) {
 }
 
 function getCtsSql(lookup, value) {
+  if (unwrapType(lookup.type)?.startsWith('Array(')) {
+    const values = Array.isArray(value) ? value : [value];
+    return `hasAll(${lookup.rawExpr}, [${values.map((item) => literal(item)).join(', ')}])`;
+  }
+
   if (Array.isArray(value) && value.every((item) => isPlainObject(item))) {
     return value
       .map((needle) => {
@@ -113,6 +128,10 @@ function getBinarySql(node, options) {
 
   if (op === '$re' || op === '$ire') {
     return getRegexSql(lookup, op, value);
+  }
+
+  if (op === '$text') {
+    return getTextSql(lookup, value);
   }
 
   if (op === '$cts') {

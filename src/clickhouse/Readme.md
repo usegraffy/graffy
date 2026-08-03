@@ -7,7 +7,10 @@ Current scope is intentionally minimal and focused on tracker-like workloads:
 - ID reads and `$key` reads
 - Range args: `$all`, `$first`, `$last`, `$order`, `$after`, `$before`
 - Filter operators: `$eq`, `$not`, `$lt`, `$lte`, `$gt`, `$gte`, `$re`, `$ire`,
-  `$cts`, plus list shorthand (`prop: [a, b]`)
+  `$text`, `$cts`, plus list shorthand (`prop: [a, b]`)
+- `$text` performs case-insensitive substring search and is designed for a
+  matching `lowerUTF8(column)` `ngrambf_v1` index. For native `Array(...)`
+  columns, `$cts` checks that every supplied value is present.
 - Dot-path filters on JSON-encoded string columns and native `Map(...)`
   columns (for example `sources.messageId` or `recordIds.gmailMessageId`)
 - Nested projection from JSON-encoded string columns

@@ -368,6 +368,53 @@ describe('clickhouse_e2e', () => {
     });
   });
 
+  test('native_text_search_and_array_membership', {
+    timeout: 120000,
+  }, async () => {
+    await seedUsers([
+      {
+        id: 'u1',
+        updatedAt: 1,
+        name: 'Alice Example',
+        email: 'alice@example.com',
+        tags: ['buyer', 'customer'],
+      },
+      {
+        id: 'u2',
+        updatedAt: 2,
+        name: 'Bob Example',
+        email: 'bob@example.com',
+        tags: ['seller'],
+      },
+    ]);
+
+    const byText = await store.read('users', {
+      $key: {
+        name: { $text: 'ALICE' },
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+    });
+    assert.deepStrictEqual(
+      getRows(byText).map(({ id }) => id),
+      ['u1'],
+    );
+
+    const byTag = await store.read('users', {
+      $key: {
+        tags: { $cts: ['buyer'] },
+        $order: ['id'],
+        $all: true,
+      },
+      id: true,
+    });
+    assert.deepStrictEqual(
+      getRows(byTag).map(({ id }) => id),
+      ['u1'],
+    );
+  });
+
   test('order_by_json_path_asc_and_desc', { timeout: 120000 }, async () => {
     await seedUsers([
       {
