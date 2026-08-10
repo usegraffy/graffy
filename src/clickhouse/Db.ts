@@ -20,7 +20,7 @@ import {
   literal,
   quoteIdent,
 } from './sql/escape.ts';
-import { selectByArgs, selectByIds } from './sql/select.ts';
+import { mergeProjections, selectByArgs, selectByIds } from './sql/select.ts';
 
 function maybeParseJson(value) {
   if (typeof value !== 'string') return value;
@@ -284,7 +284,20 @@ export default class Db {
     };
 
     const getByIds = async () => {
-      const selection = selectByIds(Object.keys(idQueries), tableOptions);
+      let projection: Record<string, any> | null = {};
+      for (const children of Object.values(idQueries)) {
+        if (!children) {
+          projection = null;
+          break;
+        }
+        projection = mergeProjections(projection, decodeQuery(children));
+      }
+
+      const selection = selectByIds(
+        Object.keys(idQueries),
+        projection,
+        tableOptions,
+      );
       const rows = await this.query(selection.sql);
       for (const row of rows) {
         const object = this.normalizeRow(row, tableOptions.schema);
