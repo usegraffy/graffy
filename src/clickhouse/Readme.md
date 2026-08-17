@@ -13,7 +13,11 @@ Current scope is intentionally minimal and focused on tracker-like workloads:
   columns, `$cts` checks that every supplied value is present.
 - Dot-path filters on JSON-encoded string columns and native `Map(...)`
   columns (for example `sources.messageId` or `recordIds.gmailMessageId`)
-- Nested projection from JSON-encoded string columns
+- Projection pushdown for ID and `$key` reads. Graffy selects only requested
+  columns plus the ID, version, and ordering values needed for read metadata
+  and pagination. Nested projections on JSON-encoded strings use
+  `JSONExtractRaw`; native `JSON` projections read direct subcolumns. Both are
+  rebuilt into the requested nested shape before decoding.
 - Join filters via subqueries (for example `$key: { syncJob: { ... } }`)
 - Aggregates: `$count`, `$sum`, `$avg`, `$max`, `$min`, `$card` with
   `$group: true` and `$group: [..]`

@@ -345,6 +345,22 @@ describe('clickhouse_e2e', () => {
     assert.strictEqual(filtered[1].id, 'w2');
     assert.strictEqual(filtered[1].code, 'sf_sync_read');
     assert.strictEqual(filtered[1].data.stage, 'written_to_clickhouse');
+
+    const nestedProjection = await store.read('workLogJson.w2', {
+      data: {
+        nested: {
+          source: true,
+        },
+      },
+    });
+
+    assert.deepStrictEqual(nestedProjection, {
+      data: {
+        nested: {
+          source: 'lego',
+        },
+      },
+    });
   });
 
   test('id_lookup_with_nested_projection', { timeout: 120000 }, async () => {

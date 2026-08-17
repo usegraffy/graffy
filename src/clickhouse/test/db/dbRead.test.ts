@@ -88,6 +88,7 @@ describe('clickhouse_db_read', () => {
             createdAt: 'Int64',
             name: 'String',
             email: 'String',
+            settings: 'Nullable(String)',
           },
         },
         joins: {
@@ -132,9 +133,11 @@ describe('clickhouse_db_read', () => {
 
     assert.deepStrictEqual(result, { data: { subject: 'Hello' } });
     assert.strictEqual(mockQuery.mock.callCount(), 1);
-    assert.ok(
-      getSqlFromCall(mockQuery.mock.calls[0]).includes("WHERE `id` IN ('m1')"),
-    );
+    const sql = getSqlFromCall(mockQuery.mock.calls[0]);
+    assert.ok(sql.includes("JSONExtractRaw(ifNull(`data`, '{}'), 'subject')"));
+    assert.ok(sql.includes("'JSON') AS `data`, `id`, `updatedAt`"));
+    assert.ok(sql.includes("WHERE `id` IN ('m1')"));
+    assert.ok(!sql.includes('SELECT *'));
   });
 
   test('range_read_with_cts_and_nested_projection', async () => {
@@ -180,7 +183,43 @@ describe('clickhouse_db_read', () => {
     })) {
       assert.deepStrictEqual(result[0].$key[k], v);
     }
-    assert.ok(getSqlFromCall(mockQuery.mock.calls[0]).includes('arrayExists'));
+    const sql = getSqlFromCall(mockQuery.mock.calls[0]);
+    assert.ok(sql.includes('arrayExists'));
+    for (const column of ['id', 'data', 'participants', 'updatedAt']) {
+      assert.ok(sql.includes(`\`${column}\``));
+    }
+    assert.ok(!sql.includes('SELECT *'));
+    assert.ok(!sql.includes('`createdAt`'));
+  });
+
+  test('id_lookups_merge_nested_projections', async () => {
+    mockQuery.mock.mockImplementationOnce(async () => ({
+      json: async () => [
+        {
+          id: 'u1',
+          updatedAt: 100,
+          settings: '{"foo":1}',
+        },
+        {
+          id: 'u2',
+          updatedAt: 101,
+          settings: '{"bar":{"baz":2}}',
+        },
+      ],
+    }));
+
+    await store.read('users', [
+      { $key: 'u1', settings: { foo: true } },
+      { $key: 'u2', settings: { bar: { baz: true } } },
+    ]);
+
+    assert.strictEqual(mockQuery.mock.callCount(), 1);
+    const sql = getSqlFromCall(mockQuery.mock.calls[0]);
+    assert.ok(sql.includes("JSONExtractRaw(ifNull(`settings`, '{}'), 'foo')"));
+    assert.ok(
+      sql.includes("JSONExtractRaw(ifNull(`settings`, '{}'), 'bar', 'baz')"),
+    );
+    assert.ok(sql.includes("WHERE `id` IN ('u1', 'u2')"));
   });
 
   test('aggregate_group_true_count_and_sum', async () => {
@@ -321,6 +360,11 @@ describe('clickhouse_db_read', () => {
     assert.ok(
       getSqlFromCall(mockQuery.mock.calls[0]).includes(
         'IN (SELECT `authorId` FROM `default`.`posts`',
+      ),
+    );
+    assert.ok(
+      getSqlFromCall(mockQuery.mock.calls[0]).includes(
+        'SELECT `name`, `id`, `updatedAt`',
       ),
     );
   });

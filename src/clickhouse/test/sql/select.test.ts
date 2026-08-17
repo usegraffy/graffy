@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { selectByArgs, selectByIds } from '../../sql/select.ts';
+import {
+  mergeProjections,
+  selectByArgs,
+  selectByIds,
+} from '../../sql/select.ts';
 
 function normalize(sql) {
   return sql
@@ -19,7 +23,9 @@ describe('clickhouse_select_sql', () => {
         id: 'String',
         updatedAt: 'Int64',
         isDeleted: 'UInt8',
+        name: 'String',
         participants: 'Nullable(String)',
+        nativeData: 'JSON',
       },
     },
   };
@@ -47,7 +53,7 @@ describe('clickhouse_select_sql', () => {
   });
 
   test('selectByIds', () => {
-    const { sql } = selectByIds(['a', 'b'], options);
+    const { sql } = selectByIds(['a', 'b'], null, options);
     assert.strictEqual(
       normalize(sql),
       normalize(`
@@ -58,13 +64,156 @@ describe('clickhouse_select_sql', () => {
   });
 
   test('selectByIds_with_explicit_final', () => {
-    const { sql } = selectByIds(['a'], { ...options, final: true });
+    const { sql } = selectByIds(['a'], null, {
+      ...options,
+      final: true,
+    });
     assert.strictEqual(
       normalize(sql),
       normalize(`
         SELECT * FROM \`default\`.\`user\` FINAL
         WHERE \`id\` IN ('a')
       `),
+    );
+  });
+
+  test('selectByArgs_pushes_projection_and_cursor_columns', () => {
+    const { sql } = selectByArgs(
+      {
+        $order: ['isDeleted'],
+        $first: 10,
+      },
+      {
+        name: true,
+        participants: { address: true },
+      },
+      options,
+    );
+
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          SELECT \`name\`, CAST(concat(
+            '{', '"address":',
+            ifNull(nullIf(JSONExtractRaw(
+              ifNull(\`participants\`, '{}'), 'address'
+            ), ''), 'null'), '}'
+          ), 'JSON') AS \`participants\`,
+          \`id\`, \`updatedAt\`, \`isDeleted\`
+        `),
+      ),
+    );
+    assert.ok(normalize(sql).includes('ORDER BY `isDeleted` ASC LIMIT 10'));
+  });
+
+  test('selectByIds_pushes_projection_and_metadata_columns', () => {
+    const { sql } = selectByIds(
+      ['a', 'b'],
+      {
+        participants: { address: true },
+      },
+      options,
+    );
+
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          CAST(concat(
+            '{', '"address":',
+            ifNull(nullIf(JSONExtractRaw(
+              ifNull(\`participants\`, '{}'), 'address'
+            ), ''), 'null'), '}'
+          ), 'JSON') AS \`participants\`
+        `),
+      ),
+    );
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          \`id\`, \`updatedAt\`
+          FROM \`default\`.\`user\`
+          WHERE \`id\` IN ('a', 'b')
+        `),
+      ),
+    );
+  });
+
+  test('native_json_projection_reads_only_requested_subcolumn', () => {
+    const { sql } = selectByArgs(
+      { $order: ['id'], $all: true },
+      {
+        nativeData: {
+          foo: { bar: { baz: true } },
+        },
+      },
+      options,
+    );
+
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          ifNull(
+            toJSONString(\`nativeData\`.\`foo\`.\`bar\`.\`baz\`),
+            'null'
+          )
+        `),
+      ),
+    );
+    assert.ok(sql.includes("'JSON') AS `nativeData`"));
+    assert.ok(!normalize(sql).includes('SELECT `nativeData`'));
+  });
+
+  test('nested_order_path_is_added_to_partial_json_projection', () => {
+    const { sql } = selectByArgs(
+      { $order: ['participants.cursor.rank'], $first: 10 },
+      { participants: { address: true } },
+      options,
+    );
+
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          JSONExtractRaw(
+            ifNull(\`participants\`, '{}'), 'cursor', 'rank'
+          )
+        `),
+      ),
+    );
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          ORDER BY JSONExtractString(
+            ifNull(\`participants\`, '{}'), 'cursor', 'rank'
+          ) ASC
+        `),
+      ),
+    );
+  });
+
+  test('projection_unknown_column_throws', () => {
+    assert.throws(
+      () => selectByArgs({ $all: true }, { missing: true }, options),
+      /clickhouse.no_column missing/,
+    );
+  });
+
+  test('mergeProjections_combines_nested_id_read_shapes', () => {
+    assert.deepStrictEqual(
+      mergeProjections(
+        { data: { foo: true } },
+        { data: { bar: { baz: true } }, name: true },
+      ),
+      {
+        data: {
+          foo: true,
+          bar: { baz: true },
+        },
+        name: true,
+      },
+    );
+    assert.deepStrictEqual(
+      mergeProjections({ data: { foo: true } }, { data: true }),
+      { data: true },
     );
   });
 
