@@ -54,6 +54,22 @@ export function isUInt8Type(type) {
   return unwrapType(type) === 'UInt8';
 }
 
+// Types `toFloat64` accepts directly. Anything else is parsed as text with
+// `toFloat64OrZero`, which only accepts String (Enum, Array, UUID, ... still
+// fail there, as they always did).
+const NUMERIC_TYPE_RE =
+  /^(?:U?Int(?:8|16|32|64|128|256)|Float(?:32|64)|Decimal(?:32|64|128|256)?(?:\(.*\))?|Bool|Date(?:32)?|DateTime(?:64)?(?:\(.*\))?)$/;
+
+export function isNumericType(type) {
+  return NUMERIC_TYPE_RE.test(unwrapType(type) || '');
+}
+
+// Nullable, possibly wrapped in LowCardinality. Unlike unwrapType this keeps
+// the Nullable marker, which is the whole point.
+export function isNullableType(type) {
+  return /^(?:LowCardinality\()?Nullable\(/.test(type || '');
+}
+
 export function isStringishType(type) {
   const unwrapped = unwrapType(type);
   return (

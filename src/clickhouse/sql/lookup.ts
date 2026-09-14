@@ -1,4 +1,10 @@
-import { isStringishType, literal, quoteIdent, unwrapType } from './escape.ts';
+import {
+  isNumericType,
+  isStringishType,
+  literal,
+  quoteIdent,
+  unwrapType,
+} from './escape.ts';
 
 function splitTopLevelArgs(value) {
   const parts = [];
@@ -27,6 +33,14 @@ function getMapTypes(type) {
   return keyType && valueType ? { keyType, valueType } : null;
 }
 
+// `toFloat64OrZero` only accepts String. Columns that are already numeric
+// (Int64, DateTime, Decimal, ...) have to go through plain `toFloat64`.
+function getNumericExpr(expr, type) {
+  return isNumericType(type)
+    ? `toFloat64(${expr})`
+    : `toFloat64OrZero(${expr})`;
+}
+
 export function getLookup(prop, options) {
   const [root, ...suffix] = prop.split('.');
   const types = options?.schema?.types || {};
@@ -50,7 +64,7 @@ export function getLookup(prop, options) {
           ? `ifNull(${rootExpr}, '')`
           : `toString(${rootExpr})`,
       rawExpr: rootExpr,
-      numericExpr: `toFloat64OrZero(${rootExpr})`,
+      numericExpr: getNumericExpr(rootExpr, type),
     };
   }
 
@@ -74,7 +88,7 @@ export function getLookup(prop, options) {
         ? `ifNull(${rawExpr}, '')`
         : `toString(${rawExpr})`,
       rawExpr,
-      numericExpr: `toFloat64OrZero(${rawExpr})`,
+      numericExpr: getNumericExpr(rawExpr, mapTypes.valueType),
     };
   }
 

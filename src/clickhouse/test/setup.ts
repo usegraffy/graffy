@@ -125,6 +125,7 @@ export async function resetTables() {
         email Nullable(String),
         settings Nullable(String),
         tags Array(String),
+        score Nullable(Int64),
         INDEX idx_name lowerUTF8(ifNull(name, ''))
           TYPE ngrambf_v1(3, 32768, 3, 0) GRANULARITY 1,
         INDEX idx_tags tags TYPE bloom_filter
@@ -173,6 +174,7 @@ export async function seedUsers(rows) {
       email: row.email ?? null,
       settings: encodeJsonString(row.settings),
       tags: row.tags ?? [],
+      score: row.score ?? null,
     })),
   );
 }
