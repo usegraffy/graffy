@@ -26,6 +26,7 @@ describe('clickhouse_select_sql', () => {
         name: 'String',
         participants: 'Nullable(String)',
         nativeData: 'JSON',
+        score: 'Nullable(Int64)',
       },
     },
   };
@@ -50,6 +51,132 @@ describe('clickhouse_select_sql', () => {
         LIMIT 10
       `),
     );
+  });
+
+  test('descending_bound_on_numeric_column_skips_string_parser', () => {
+    const { sql } = selectByArgs(
+      {
+        $order: ['!updatedAt', 'id'],
+        $after: [-1789099943715, 'a'],
+        $first: 10,
+      },
+      null,
+      options,
+    );
+
+    assert.ok(
+      normalize(sql).includes(
+        normalize("(-(toFloat64(`updatedAt`)), `id`) > (-1789099943715, 'a')"),
+      ),
+    );
+    assert.ok(
+      normalize(sql).includes(normalize('ORDER BY `updatedAt` DESC, `id` ASC')),
+    );
+  });
+
+  test('descending_bound_on_json_path_keeps_string_parser', () => {
+    const { sql } = selectByArgs(
+      {
+        $order: ['!participants.rank'],
+        $after: [-5],
+        $first: 10,
+      },
+      null,
+      options,
+    );
+
+    assert.ok(
+      normalize(sql).includes(
+        normalize(`
+          (-(toFloat64OrZero(JSONExtractString(
+            ifNull(\`participants\`, '{}'), 'rank'
+          )))) > (-5)
+        `),
+      ),
+    );
+  });
+
+  test('descending_on_string_column_throws_at_build_time', () => {
+    assert.throws(
+      () => selectByArgs({ $order: ['!name'], $first: 10 }, null, options),
+      /clickhouse_arg\.order_desc_non_numeric name/,
+    );
+  });
+
+  test('nullable_numeric_desc_bound_is_null_safe', () => {
+    const withValue = selectByArgs(
+      { $order: ['!score', 'id'], $after: [-20, 'u2'], $first: 2 },
+      null,
+      options,
+    );
+    assert.ok(
+      normalize(withValue.sql).includes(
+        normalize(
+          "(isNotNull(`score`), -(ifNull(toFloat64(`score`), 0)), `id`) > (1, -20, 'u2')",
+        ),
+      ),
+    );
+    assert.ok(
+      normalize(withValue.sql).includes(
+        normalize('ORDER BY `score` DESC NULLS FIRST, `id` ASC LIMIT 2'),
+      ),
+    );
+
+    const withNull = selectByArgs(
+      { $order: ['!score', 'id'], $after: [null, 'u2'], $first: 2 },
+      null,
+      options,
+    );
+    assert.ok(
+      normalize(withNull.sql).includes(
+        normalize(
+          "(isNotNull(`score`), -(ifNull(toFloat64(`score`), 0)), `id`) > (0, 0, 'u2')",
+        ),
+      ),
+    );
+  });
+
+  test('nullable_string_asc_bound_is_null_safe', () => {
+    const { sql } = selectByArgs(
+      { $order: ['participants', 'id'], $since: [null, 'u2'], $first: 2 },
+      null,
+      options,
+    );
+    assert.ok(
+      normalize(sql).includes(
+        normalize(
+          "(isNotNull(`participants`), ifNull(`participants`, ''), `id`) >= (0, '', 'u2')",
+        ),
+      ),
+    );
+    assert.ok(
+      normalize(sql).includes(
+        normalize('ORDER BY `participants` ASC NULLS FIRST, `id` ASC'),
+      ),
+    );
+  });
+
+  test('last_reverses_scan_and_null_placement', () => {
+    const { sql } = selectByArgs(
+      { $order: ['!score', 'id'], $before: [-20, 'u2'], $last: 2 },
+      null,
+      options,
+    );
+    assert.ok(
+      normalize(sql).includes(
+        normalize('ORDER BY `score` ASC NULLS LAST, `id` DESC LIMIT 2'),
+      ),
+    );
+  });
+
+  test('non_nullable_columns_keep_plain_bound_and_order', () => {
+    const { sql } = selectByArgs(
+      { $order: ['!updatedAt', 'id'], $after: [-20, 'u2'], $first: 2 },
+      null,
+      options,
+    );
+    assert.ok(!sql.includes('isNotNull'));
+    assert.ok(!sql.includes('NULLS'));
   });
 
   test('selectByIds', () => {
@@ -294,9 +421,9 @@ describe('clickhouse_select_sql', () => {
           SELECT
           \`isDeleted\` AS \`__group_0\`,
           count() AS \`$count\`,
-          avg(toFloat64OrZero(\`updatedAt\`)) AS \`__agg_0\`,
-          max(toFloat64OrZero(\`updatedAt\`)) AS \`__agg_1\`,
-          min(toFloat64OrZero(\`updatedAt\`)) AS \`__agg_2\`,
+          avg(toFloat64(\`updatedAt\`)) AS \`__agg_0\`,
+          max(toFloat64(\`updatedAt\`)) AS \`__agg_1\`,
+          min(toFloat64(\`updatedAt\`)) AS \`__agg_2\`,
           uniqExact(\`id\`) AS \`__agg_3\`
         `),
       ),
@@ -337,7 +464,7 @@ describe('clickhouse_select_sql', () => {
     );
     assert.ok(
       normalize(selection.sql).includes(
-        normalize('sum(toFloat64OrZero(`updatedAt`)) AS `__agg_0`'),
+        normalize('sum(toFloat64(`updatedAt`)) AS `__agg_0`'),
       ),
     );
     assert.ok(
@@ -349,17 +476,17 @@ describe('clickhouse_select_sql', () => {
     );
     assert.ok(
       normalize(selection.sql).includes(
-        normalize('avg(toFloat64OrZero(`updatedAt`)) AS `__agg_2`'),
+        normalize('avg(toFloat64(`updatedAt`)) AS `__agg_2`'),
       ),
     );
     assert.ok(
       normalize(selection.sql).includes(
-        normalize('max(toFloat64OrZero(`updatedAt`)) AS `__agg_3`'),
+        normalize('max(toFloat64(`updatedAt`)) AS `__agg_3`'),
       ),
     );
     assert.ok(
       normalize(selection.sql).includes(
-        normalize('min(toFloat64OrZero(`updatedAt`)) AS `__agg_4`'),
+        normalize('min(toFloat64(`updatedAt`)) AS `__agg_4`'),
       ),
     );
     assert.ok(

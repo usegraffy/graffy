@@ -1,21 +1,87 @@
 import { isEmpty } from '@graffy/common';
 import getFilterSql from '../filter/getSql.ts';
-import { literal } from './escape.ts';
+import {
+  isNullableType,
+  isNumericType,
+  literal,
+  unwrapType,
+} from './escape.ts';
 import { getLookup } from './lookup.ts';
 
 const MAX_LIMIT = 4096;
 
-function getBoundCond(boundCols, bound, kind) {
+// A NULL-free stand-in used only as the second tuple element when
+// isNotNull() is already 0, so its value never decides the order.
+function getNullDefault(type) {
+  if (isNumericType(type)) return '0';
+  const unwrapped = unwrapType(type) || '';
+  if (unwrapped === 'String' || /^FixedString\(\d+\)$/.test(unwrapped)) {
+    return "''";
+  }
+  return null;
+}
+
+// Describes one $order item: the SQL that goes into the bound tuple, how a
+// cursor value maps onto it, and the ORDER BY fragment.
+//
+// A tuple comparison containing NULL is NULL, so rows with a NULL order
+// column would silently drop off every page after the first. For nullable
+// columns the tuple gets (isNotNull(col), ifNull(col, default)) instead, and
+// ORDER BY pins NULLS FIRST so SQL agrees with graffy's cursor encoding,
+// where null sorts below every number and string.
+function getOrderCol(orderItem, options, $last) {
+  const desc = orderItem[0] === '!';
+  const prop = desc ? orderItem.slice(1) : orderItem;
+  const lookup = getLookup(prop, options);
+
+  // Descending is implemented by negating, which only works on numbers.
+  // JSON paths are parsed from text with toFloat64OrZero, so they pass.
+  if (desc && !lookup.isJsonPath && !isNumericType(lookup.type)) {
+    throw Error(`clickhouse_arg.order_desc_non_numeric ${prop}`);
+  }
+
+  const nullable =
+    lookup.isMapPath || (!lookup.isJsonPath && isNullableType(lookup.type));
+  const nullDefault = nullable ? getNullDefault(lookup.type) : null;
+
+  const direction = desc === !!$last ? 'ASC' : 'DESC';
+  const nulls =
+    nullDefault === null ? '' : $last ? ' NULLS LAST' : ' NULLS FIRST';
+  const order = `${lookup.orderExpr} ${direction}${nulls}`;
+
+  if (nullDefault === null) {
+    return {
+      order,
+      exprs: [desc ? `-(${lookup.numericExpr})` : lookup.orderExpr],
+      toBound: (value) => [literal(value)],
+    };
+  }
+
+  const valueExpr = desc
+    ? `-(ifNull(${lookup.numericExpr}, 0))`
+    : `ifNull(${lookup.orderExpr}, ${nullDefault})`;
+
+  return {
+    order,
+    exprs: [`isNotNull(${lookup.rawExpr})`, valueExpr],
+    toBound: (value) =>
+      value === null || value === undefined
+        ? ['0', nullDefault]
+        : ['1', literal(value)],
+  };
+}
+
+function getBoundCond(orderCols, bound, kind) {
   if (
     !Array.isArray(bound) ||
     !bound.length ||
-    boundCols.length !== bound.length
+    orderCols.length !== bound.length
   ) {
     throw Error(`clickhouse_arg.bad_query bound:${JSON.stringify(bound)}`);
   }
 
-  const lhs = `(${boundCols.join(', ')})`;
-  const rhs = `(${bound.map((item) => literal(item)).join(', ')})`;
+  const lhs = `(${orderCols.flatMap((col) => col.exprs).join(', ')})`;
+  const rhs = `(${orderCols.flatMap((col, ix) => col.toBound(bound[ix])).join(', ')})`;
 
   switch (kind) {
     case '$after':
@@ -93,40 +159,20 @@ export default function getArgSql(
   }
 
   const orderSpec = groupSpec || $order || [options.idCol];
-
-  const boundCols = orderSpec.map((orderItem) => {
-    if (orderItem[0] === '!') {
-      return `-(${getLookup(orderItem.slice(1), options).numericExpr})`;
-    }
-    return getLookup(orderItem, options).orderExpr;
-  });
+  const orderCols = orderSpec.map((orderItem) =>
+    getOrderCol(orderItem, options, $last),
+  );
 
   Object.entries({ $after, $before, $since, $until }).forEach(
     ([kind, value]) => {
-      if (value) where.push(getBoundCond(boundCols, value, kind));
+      if (value) where.push(getBoundCond(orderCols, value, kind));
     },
   );
-
-  const order = orderSpec
-    .map((orderItem) => {
-      const desc = orderItem[0] === '!';
-      const prop = desc ? orderItem.slice(1) : orderItem;
-      const lookup = getLookup(prop, options);
-      const direction = desc
-        ? $last
-          ? 'ASC'
-          : 'DESC'
-        : $last
-          ? 'DESC'
-          : 'ASC';
-      return `${lookup.orderExpr} ${direction}`;
-    })
-    .join(', ');
 
   return {
     where,
     orderSpec,
-    order,
+    order: orderCols.map((col) => col.order).join(', '),
     groupSpec,
     limit: Math.min(MAX_LIMIT, $first || $last || MAX_LIMIT),
     ensureSingleRow: false,

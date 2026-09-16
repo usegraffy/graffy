@@ -485,6 +485,148 @@ describe('clickhouse_e2e', () => {
     );
   });
 
+  test('paginate_desc_on_numeric_column', { timeout: 120000 }, async () => {
+    await seedUsers([
+      { id: 'u1', updatedAt: 10, name: 'A', email: 'a' },
+      { id: 'u2', updatedAt: 20, name: 'B', email: 'b' },
+      { id: 'u3', updatedAt: 30, name: 'C', email: 'c' },
+    ]);
+
+    const first = await store.read('users', {
+      $key: { $order: ['!updatedAt', 'id'], $first: 2 },
+      name: true,
+    });
+
+    assert.deepStrictEqual(
+      getRows(first).map(({ name }) => name),
+      ['C', 'B'],
+    );
+
+    const cursor = getRows(first)[1].$key.$cursor;
+    assert.deepStrictEqual([asNum(cursor[0]), cursor[1]], [-20, 'u2']);
+
+    const next = await store.read('users', {
+      $key: { $order: ['!updatedAt', 'id'], $after: cursor, $first: 2 },
+      name: true,
+    });
+
+    assert.deepStrictEqual(
+      getRows(next).map(({ name }) => name),
+      ['A'],
+    );
+  });
+
+  test('paginate_desc_over_nullable_numeric_column', {
+    timeout: 120000,
+  }, async () => {
+    await seedUsers([
+      { id: 'u1', name: 'A', score: 30 },
+      { id: 'u2', name: 'B', score: null },
+      { id: 'u3', name: 'C', score: 10 },
+      { id: 'u4', name: 'D', score: null },
+      { id: 'u5', name: 'E', score: 20 },
+    ]);
+
+    const order = ['!score', 'id'];
+    const seen = [];
+    let after;
+    for (let page = 0; page < 4; page += 1) {
+      const rows = getRows(
+        await store.read('users', {
+          $key: {
+            $order: order,
+            $first: 2,
+            ...(after ? { $after: after } : {}),
+          },
+          name: true,
+        }),
+      );
+      if (!rows.length) break;
+      seen.push(...rows.map(({ name }) => name));
+      after = rows[rows.length - 1].$key.$cursor;
+    }
+
+    // NULLs first (graffy encodes null below every number), then descending.
+    assert.deepStrictEqual(seen, ['B', 'D', 'A', 'E', 'C']);
+
+    const firstPage = getRows(
+      await store.read('users', {
+        $key: { $order: order, $first: 2 },
+        name: true,
+      }),
+    );
+    assert.deepStrictEqual(firstPage[0].$key.$cursor, [null, 'u2']);
+    assert.deepStrictEqual(firstPage[1].$key.$cursor, [null, 'u4']);
+  });
+
+  test('paginate_asc_over_nullable_string_column', {
+    timeout: 120000,
+  }, async () => {
+    await seedUsers([
+      { id: 'u1', name: 'A', email: 'b@x' },
+      { id: 'u2', name: 'B', email: null },
+      { id: 'u3', name: 'C', email: 'a@x' },
+      { id: 'u4', name: 'D', email: null },
+    ]);
+
+    const order = ['email', 'id'];
+    const first = getRows(
+      await store.read('users', {
+        $key: { $order: order, $first: 2 },
+        name: true,
+      }),
+    );
+    assert.deepStrictEqual(
+      first.map(({ name }) => name),
+      ['B', 'D'],
+    );
+
+    const next = getRows(
+      await store.read('users', {
+        $key: { $order: order, $first: 2, $after: first[1].$key.$cursor },
+        name: true,
+      }),
+    );
+    assert.deepStrictEqual(
+      next.map(({ name }) => name),
+      ['C', 'A'],
+    );
+  });
+
+  test('last_page_over_nullable_numeric_column', {
+    timeout: 120000,
+  }, async () => {
+    await seedUsers([
+      { id: 'u1', name: 'A', score: 30 },
+      { id: 'u2', name: 'B', score: null },
+      { id: 'u3', name: 'C', score: 10 },
+    ]);
+
+    const rows = getRows(
+      await store.read('users', {
+        $key: { $order: ['!score', 'id'], $last: 2 },
+        name: true,
+      }),
+    );
+    // Reading from the end: the two lowest scores, returned in forward order.
+    assert.deepStrictEqual(
+      rows.map(({ name }) => name),
+      ['A', 'C'],
+    );
+  });
+
+  test('descending_on_string_column_is_rejected', {
+    timeout: 120000,
+  }, async () => {
+    await assert.rejects(
+      store.read('users', {
+        $key: { $order: ['!name'], $first: 2 },
+        name: true,
+      }),
+      /clickhouse_arg\.order_desc_non_numeric name/,
+    );
+  });
+
   test('json_array_contains_and_projection', { timeout: 120000 }, async () => {
     await seedUsers([
       {
